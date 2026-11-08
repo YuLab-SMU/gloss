@@ -12,6 +12,10 @@
 
 Every existing family is strong on one axis and stops at a boundary we could measure. None combines faithful geometry, an open world and semantics checked against data.
 
+![Schematic. A small scatter plot on the left sends four lanes to the right: redraw in another engine, hit-test a raster image, tag elements at the device, ask a model to read the SVG. Each lane ends at a red bar labelled with its boundary: the figure changes, the row is guessed, unknown layers get no data, nothing checks the answer. A dashed blue box on the right, reached by no lane, reads: same geometry, any input, checked against data.](figures/prior-art-routes-v4.png)
+
+*Figure 1. **Every existing route stops at a boundary.** Schematic (AI-generated), not data. Each lane is one family from the table below, and each red label is the boundary we measured or found reported. plotly and canvasXpress drifted 6–32% of pixels (§3). Shiny recovered 0 of 32 rows under `coord_polar` (§2). maidr's unknown-layer processor returns empty data (§1). On R charts, GPT-4o and DeepSeek-V3 reach element-role F1 of 0.692 and 0.959, and nothing checks either answer (§4). Prompt, rounds and the one pixel fix: [`figures/prior-art-routes-v4.prompt.md`](figures/prior-art-routes-v4.prompt.md).*
+
 1. **Redrawing in another engine changes the figure, sometimes without a warning.** On five test figures, plotly and canvasXpress differed from the original by 6–32% of pixels. plotly kept only the last panel of a patchwork and dropped all 32 ggrepel labels; canvasXpress turned a forest plot into a bar chart with the axes swapped (§3).
 2. **Hit-testing a raster guesses the row, and the guess fails off the easy path.** Shiny's `nearPoints` recovered 32 of 32 rows on eight plain layouts, but 1 of 32 with `geom_jitter`, 0 of 32 under `coord_polar`, and 0 of 32 for any layer after the first (§2).
 3. **Device-level tagging gets geometry and grob identity exactly, but binds data only where someone wrote a processor.** maidr has about 40 per-geom processors, and its unknown-layer processor returns empty data. Wrapping every leaf grob in ggiraph's tracer tagged 133 of 134 primitives with byte-identical geometry (§1).
@@ -152,6 +156,10 @@ A raster plus an index is a viable fallback for dense layers.
 | (c) ggrepel | 4.8% | warns, **all 32 labels dropped**, 6.5% | own label placement, 8.6%; no leader lines |
 | (d) ComplexHeatmap | 2.0% | error, or blank when wrapped as a grob | error, or stack overflow when wrapped as a grob |
 | (e) pointrange forest plot | 1.6% | correct, 5.7% | **silently a bar chart with the axes swapped** (screenshot checked), 31.8% |
+
+![Three rows of real screenshots, three columns each. Patchwork: svglite shows both panels (2.2% of pixels differ); plotly shows only the box plot, framed red (26.6%); canvasXpress shows both panels (18.9%). ggrepel: svglite shows labelled points (4.8%); plotly shows points with no labels, framed red (6.5%); canvasXpress shows its own small labels (8.6%). Forest plot: svglite (1.6%) and plotly (5.7%) show point ranges; canvasXpress shows a bar chart with swapped axes, framed red (31.8%).](figures/prior-art-redraw-evidence.png)
+
+*Figure 2. **Redrawing in another engine changed the figure, sometimes without a warning.** Real 700×500 screenshots from the 2026-11-07 experiments, for three of the five test figures. Columns: the svglite baseline, `plotly::ggplotly()`, `canvasXpress()`. Red frames mark the failures in the table above. Under each shot is the share of pixels off by more than 16 levels against the ggplot2 PNG, read from `dev_docs/research/translate/pixel_diffs.csv`. Built by [`figures/src/prior-art-redraw-evidence.R`](figures/src/prior-art-redraw-evidence.R).*
 
 **A pixel diff alone cannot catch these failures.** plotly dropped every label and still scored better than canvasXpress. Verification needs per-layer element counts and row bindings as well.
 

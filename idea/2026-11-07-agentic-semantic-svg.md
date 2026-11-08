@@ -11,6 +11,10 @@
 
 An exported R figure knows its geometry and nothing else. ggai already holds what is needed to recover the rest: the plotting code, the data, the built data and the grob tree. So export can be split in two. A deterministic step tags every SVG element with the grob, panel and data row that produced it. An agent then adds what code cannot determine (bindings for unknown layers, meaning, relations, an interaction design), and every claim it makes that touches the data is checked before it reaches the output. **The agent annotates; it never redraws.**
 
+![Archival collage. A glossed manuscript page with a crisp scatter plot as its central block. Four marginal notes in vermilion ink connect to four vermilion dots by straight leader lines. Three of those notes carry a small green tick; the fourth is struck through in red. The plot itself is untouched.](figures/agentic-svg-hero-v1.jpg)
+
+*Figure 1. **The agent annotates; it never redraws.** Hero image (AI-generated), not data, in the same series as the design doc's hero. The central plot is untouched. The vermilion glosses stand for agent annotations, and their leader lines for anchors to single elements. A green tick marks a claim that passed its check against the data; the struck-through gloss is one the checks rejected. Prompt: [`figures/agentic-svg-hero-v1.prompt.md`](figures/agentic-svg-hero-v1.prompt.md).*
+
 ## What the spikes showed
 
 1. **The exported SVG cannot tell data from decoration.** svglite drew 134 primitives with 0 ids. There were 35 circles for 32 rows; the 3 extras were legend keys.
@@ -152,6 +156,10 @@ A plain ComplexHeatmap is no longer a differentiator, because maidr covers heat 
 ## What became of it (2026-11-08)
 
 The idea became gloss, and five parts changed on the way. [design.qmd](../dev_docs/design.qmd) is the authority for each.
+
+![Schematic. Left: an unchanged scatter plot. Middle: the substrate, a read-only table linking each drawn element to its leaf grob, panel and data row. Right: three layers of records anchored to those elements by dotted lines. Bottom: four projections: an interactive HTML page, an ARIA tree, a text description and a Web Annotation export.](../man/figures/README-overview.png)
+
+*Figure 2. **What the export pipeline became: the geometry stays put and semantics accumulate as anchored records.** The gloss overview schematic from the README (design, not measured). Compare it with the four-stage pipeline above: the agent is no longer a stage, the output files are projections, and records survive a change to the figure.*
 
 1. **An export pipeline became a long-lived substrate.** A one-shot exporter loses work every time the figure changes. gloss captures the figure once into a read-only substrate, and semantics are append-only records anchored to elements; SVG and HTML are projections of a moment ([ADR-0002](../dev_docs/decisions/0002-semantic-substrate-with-append-only-records.md), design §record). The S0–S4 levels map onto record layers (design, glossary).
 2. **The three capture candidates gave way to group delimiting plus a probe.** Each leaf grob is wrapped in a graphics-engine group and a probe that draws nothing, so the device itself says which element belongs to which grob. Count segmentation and per-leaf rendering were rejected; the colour-coded pick stays as a fallback for devices without groups and as an optional cross-check ([ADR-0001](../dev_docs/decisions/0001-capture-by-group-delimiting-and-probes.md), design §capture).
