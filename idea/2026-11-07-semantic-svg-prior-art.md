@@ -52,11 +52,15 @@ What is left to build, and what is not:
 **The count check makes draw order checkable.** 6 of 62 leaves emitted a different number of elements than expected. All of them were grid lines with NA breaks or a NaN ribbon; none were data marks. With a tracer, the draw-order risk shrinks from "align the whole SVG" to "check the count inside each grob".
 
 **Where it stops.**
-- **Silent misbinding.** Labels `"a\nb\nc"` and `"d"` emit 4 text elements. Line "c" gets the second label's id, with no warning.
+- **Silent misbinding.** Labels `"a\nb\nc"` and `"d"` emit 4 text elements. Line "c" gets the second label's id, with no warning (Figure 2).
 - **A count mismatch drops everything.** 4 elements for 3 ids: ggiraph warns and drops them all.
 - **Overlap blocks clicks.** Clicking "Valiant" selected "Merc 280C".
 - **Unstable ids.** The canvas id is random and `_eN` is a running counter.
 - **Untagged by default.** Without the tag-everything wrapper, plain ggplot layers, base `plot()` and ComplexHeatmap (0 of 212 elements) get no ids.
+
+![Schematic. Left card, "By order: the i-th id goes to the i-th element": four letter tiles a, b, c, d tagged id 1, id 1, id 2 and id 2; the id 2 under c is red with a cross, and a red line reads "c gets the second label's id, with no warning". Right card, "By group: the device puts each element in its group": a, b and c sit in a dashed blue box labelled group 1, d alone in group 2, with a green tick.](figures/prior-art-order-v1.png)
+
+*Figure 2. **Assigning ids by order misbinds silently; grouping does not.** Schematic (AI-generated), not data; the case is the measured one above. ggiraph recycles 2 ids over 4 elements with `rep(each = )` and assigns them in order, so line c gets id 2. When the device puts each leaf's output in its own group, membership comes from the device, not from order. This is the mechanism gloss adopted (design doc, ADR-0001). English twin of the design doc's figure. Prompt: [`figures/prior-art-order-v1.prompt.md`](figures/prior-art-order-v1.prompt.md).*
 
 **JS runtime.** One delegated listener sits on the `<svg>` root (Craft `web-listeners-list`: 0 listeners on marks, 5–6 on the root, all pointing to `MouseHandler.handleEvent`). Elements are found with attribute selectors and styled by toggling classes; non-interactive marks get `pointer-events: none`.
 
@@ -107,6 +111,10 @@ The result is gridSVG-compatible `<g id="<name>.<k>">` with exact geometry. This
 | `coord_polar` | 0/32 |
 | any layer after the first | 0/32 |
 
+![Schematic. Inside a plot card, three pairs of marks: a hollow grey circle (raw position) joined by a thin line to a solid dot (drawn, jittered position). A fourth solid dot, labelled "click", is far from its own hollow circle above it; a red dashed line runs from it to the nearest hollow circle, which is red, crossed out, and labelled "nearest raw row: a different row". Footer: "geom_jitter: 1 of 32 rows recovered".](figures/prior-art-hittest-v2.png)
+
+*Figure 3. **Hit-testing guesses the row from the raw columns.** Schematic (AI-generated), not data; the footer is the measured result in the table above. `nearPoints()` projects the raw columns to pixels and returns the nearest row. `geom_jitter` moves each drawn point away from its raw position, so a click on a drawn point can land nearest to another row's raw position. Prompt and the rejected first round: [`figures/prior-art-hittest-v2.prompt.md`](figures/prior-art-hittest-v2.prompt.md).*
+
 **Where it stops.**
 - Engines without a real coordmap: patchwork, lattice, grid and ComplexHeatmap get a meaningless whole-image coordmap (a click on a live patchwork sent `x=0.5`). Base `par(mfrow)` maps only the last panel.
 - Legend clicks are dropped. A brush cannot cross facets.
@@ -116,7 +124,11 @@ The result is gridSVG-compatible `<g id="<name>.<k>">` with exact geometry. This
 
 **How it works.** `htPositionsOnDevice` (`R/interactive.R:560`) records each heatmap block's device box with `deviceLoc` right after `draw()`. A click maps to a cell by fraction × slice size over the cluster order.
 
-**What we measured.** 80,000 cells need only a 6-row, 4.5 KB position table, and the exact cell is recovered. It works off Shiny, on a plain PNG device.
+**What we measured.** 80,000 cells need only a 6-row, 4.5 KB position table, and the exact cell is recovered. It works off Shiny, on a plain PNG device (Figure 4).
+
+![Schematic. Two heatmap slices, each inside a dashed blue box labelled "block boxes recorded after draw()", feed an arrow into a card titled "position table", captioned "6 rows, 4.5 KB for 80,000 cells". In the lower slice one cell is outlined in orange-red under a cursor, and a line from it reads "click → cell by fraction × slice size".](figures/prior-art-ich-v1.png)
+
+*Figure 4. **Positions recorded after drawing map a click to the exact cell.** Schematic (AI-generated), not data; the numbers are the measured ones above. InteractiveComplexHeatmap records each block's device box right after `draw()`; a click's fraction across a block, times the slice size, picks the cell in cluster order. No guessing is involved, which is why it recovers the exact cell where Shiny's nearest-neighbour test does not (Figure 3). Prompt: [`figures/prior-art-ich-v1.prompt.md`](figures/prior-art-ich-v1.prompt.md).*
 
 **Where it stops.** Annotation values are joined by index, for 4 annotation types only. Dendrograms, annotation tracks and legends cannot be clicked.
 
@@ -159,7 +171,7 @@ A raster plus an index is a viable fallback for dense layers.
 
 ![Three rows of real screenshots, three columns each. Patchwork: svglite shows both panels (2.2% of pixels differ); plotly shows only the box plot, framed red (26.6%); canvasXpress shows both panels (18.9%). ggrepel: svglite shows labelled points (4.8%); plotly shows points with no labels, framed red (6.5%); canvasXpress shows its own small labels (8.6%). Forest plot: svglite (1.6%) and plotly (5.7%) show point ranges; canvasXpress shows a bar chart with swapped axes, framed red (31.8%).](figures/prior-art-redraw-evidence.png)
 
-*Figure 2. **Redrawing in another engine changed the figure, sometimes without a warning.** Real 700×500 screenshots from the 2026-11-07 experiments, for three of the five test figures. Columns: the svglite baseline, `plotly::ggplotly()`, `canvasXpress()`. Red frames mark the failures in the table above. Under each shot is the share of pixels off by more than 16 levels against the ggplot2 PNG, read from `dev_docs/research/translate/pixel_diffs.csv`. Built by [`figures/src/prior-art-redraw-evidence.R`](figures/src/prior-art-redraw-evidence.R).*
+*Figure 5. **Redrawing in another engine changed the figure, sometimes without a warning.** Real 700×500 screenshots from the 2026-11-07 experiments, for three of the five test figures. Columns: the svglite baseline, `plotly::ggplotly()`, `canvasXpress()`. Red frames mark the failures in the table above. Under each shot is the share of pixels off by more than 16 levels against the ggplot2 PNG, read from `dev_docs/research/translate/pixel_diffs.csv`. Built by [`figures/src/prior-art-redraw-evidence.R`](figures/src/prior-art-redraw-evidence.R).*
 
 **A pixel diff alone cannot catch these failures.** plotly dropped every label and still scored better than canvasXpress. Verification needs per-layer element counts and row bindings as well.
 

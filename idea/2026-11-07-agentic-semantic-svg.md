@@ -72,6 +72,10 @@ Renamed from L0–L4 to avoid clashing with Lundgard & Satyanarayan's L1–L4.
 | S3 | Domain meaning and relations | Agent |
 | S4 | Interaction intent, from a closed vocabulary (DIVI taxonomy: target × type × input) | Agent |
 
+![Schematic. Five stacked bars, S0 at the bottom. S0 "geometry · graphics device" is grey. S1 "structure · deterministic" is blue. S2 "data binding · deterministic, or agent-proposed and verified" is half blue, half orange-red. S3 "meaning and relations · agent" and S4 "interaction intent · agent, from a closed vocabulary" are orange-red.](figures/agentic-levels-v1.png)
+
+*Figure 2. **Five semantic levels, and who produces each.** Schematic (AI-generated), not data; it restates the table above. Colour says who produces a level: grey for the graphics device, blue for deterministic code, orange-red for the agent. S2 is split because ggplot layers whose built data determines the binding are bound by code, and every other layer needs an agent proposal that is then verified. Prompt: [`figures/agentic-levels-v1.prompt.md`](figures/agentic-levels-v1.prompt.md).*
+
 ## Pipeline
 
 ```
@@ -100,6 +104,10 @@ figure.svg / figure.html
 report  dangling ids = 0; per-grob counts match (fail closed);
         Direct claims verified against built rows; pixel diff vs same-session PNG
 ```
+
+![Schematic. A row of boxes joined by arrows: "code + data", then "1 skeleton" (deterministic, blue), "2 semantics" (agent, orange-red), "3 compile" (deterministic, blue), "4 verify" (deterministic, blue), then a file icon "figure.svg / figure.html". Under stage 2, in red: "sees a compressed skeleton, never the full SVG".](figures/agentic-pipeline-v1.png)
+
+*Figure 3. **The 2026-11-07 pipeline: the agent writes semantics, never geometry.** Schematic (AI-generated), not data; it restates the diagram above. Only stage 2 involves a model, and its input is the compressed skeleton (groups, counts, boxes), never the full SVG. One simplification: stage 3 writes the files and stage 4 checks them and writes a report, which is not drawn. Figure 4 shows what this pipeline became. Prompt: [`figures/agentic-pipeline-v1.prompt.md`](figures/agentic-pipeline-v1.prompt.md).*
 
 ### Stage 1 details (changed by the survey)
 
@@ -159,7 +167,7 @@ The idea became gloss, and five parts changed on the way. [design.qmd](../dev_do
 
 ![Schematic. Left: an unchanged scatter plot. Middle: the substrate, a read-only table linking each drawn element to its leaf grob, panel and data row. Right: three layers of records anchored to those elements by dotted lines. Bottom: four projections: an interactive HTML page, an ARIA tree, a text description and a Web Annotation export.](../man/figures/README-overview.png)
 
-*Figure 2. **What the export pipeline became: the geometry stays put and semantics accumulate as anchored records.** The gloss overview schematic from the README (design, not measured). Compare it with the four-stage pipeline above: the agent is no longer a stage, the output files are projections, and records survive a change to the figure.*
+*Figure 4. **What the export pipeline became: the geometry stays put and semantics accumulate as anchored records.** The gloss overview schematic from the README (design, not measured). Compare it with the four-stage pipeline in Figure 3: the agent is no longer a stage, the output files are projections, and records survive a change to the figure.*
 
 1. **An export pipeline became a long-lived substrate.** A one-shot exporter loses work every time the figure changes. gloss captures the figure once into a read-only substrate, and semantics are append-only records anchored to elements; SVG and HTML are projections of a moment ([ADR-0002](../dev_docs/decisions/0002-semantic-substrate-with-append-only-records.md), design §record). The S0–S4 levels map onto record layers (design, glossary).
 2. **The three capture candidates gave way to group delimiting plus a probe.** Each leaf grob is wrapped in a graphics-engine group and a probe that draws nothing, so the device itself says which element belongs to which grob. Count segmentation and per-leaf rendering were rejected; the colour-coded pick stays as a fallback for devices without groups and as an optional cross-check ([ADR-0001](../dev_docs/decisions/0001-capture-by-group-delimiting-and-probes.md), design §capture).
