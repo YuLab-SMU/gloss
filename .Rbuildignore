@@ -1,0 +1,12 @@
+^AGENTS\.md$
+^CLAUDE\.md$
+^LICENSE\.md$
+^dev_docs$
+^dev_logs$
+^plan$
+^idea$
+^bench$
+^\.github$
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.quarto$

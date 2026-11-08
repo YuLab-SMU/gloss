@@ -1,0 +1,20 @@
+Package: gloss
+Title: Layered, Verifiable Semantics for R Figures
+Version: 0.0.0.9000
+Authors@R:
+    person("Yonghe", "Xia", email = "xiayh17@gmail.com", role = c("aut", "cre"))
+Description: Builds a semantic substrate for an R figure that has already
+    been drawn with 'ggplot2', 'patchwork', 'ComplexHeatmap', base graphics
+    or 'grid'. Every drawn element is traced to the grob, viewport, panel and
+    data row it came from. Agents and people then add layered, append-only
+    records anchored to those elements, each checked against the data where
+    it makes a claim, and project them to interactive, accessible SVG or
+    HTML. The figure's geometry is never redrawn.
+License: MIT + file LICENSE
+URL: https://github.com/YuLab-SMU/gloss
+BugReports: https://github.com/YuLab-SMU/gloss/issues
+Encoding: UTF-8
+Depends:
+    R (>= 4.2.0)
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)

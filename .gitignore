@@ -1,0 +1,50 @@
+# OS and editor
+.DS_Store
+Thumbs.db
+.Rproj.user/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# R session and local state
+.Rhistory
+.RData
+.Ruserdata
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+.Renviron
+.Renviron.*
+.Rprofile
+*.pem
+*.key
+credentials
+credentials.*
+secrets.*
+token
+token.*
+
+# Local agent configs that may contain credentials
+.claude/
+.cursor/
+.mcp.json
+
+# Build and check artifacts
+gloss.Rcheck/
+*.tar.gz
+Rplots.pdf
+tests/testthat/Rplots.pdf
+
+# Quarto rendered products (keep .qmd source only)
+.quarto/
+dev_docs/*.html
+dev_docs/*.pdf
+dev_docs/*_files/
+
+# Local data
+*.rds
+*.rda
+*.sqlite
