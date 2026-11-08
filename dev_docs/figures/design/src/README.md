@@ -11,8 +11,11 @@ Sources for the figures in `dev_docs/design.qmd` and for `man/figures/README-ove
 | `../fig-capture.png` | `fig-capture.svg` | schematic (literal values from a real capture) | `rsvg-convert -z 1.25 dev_docs/figures/design/src/fig-capture.svg -o dev_docs/figures/design/fig-capture.png` |
 | `../fig-rebase.png` | `fig-rebase.svg` | schematic (design, not measured) | `rsvg-convert -z 1.25 dev_docs/figures/design/src/fig-rebase.svg -o dev_docs/figures/design/fig-rebase.png` |
 | `../hero-manuscript-gloss-v1.jpg` | `../hero-manuscript-gloss-v1.prompt.md` | AI-generated hero image, no data | see the sidecar |
+| `../fig-perturb.png` | `fig-perturb.R` | data (computed from `mtcars`; one perturbed and one counterfactual version) | `Rscript dev_docs/figures/design/src/fig-perturb.R` |
+| `../fig-decisive-v1.png` | `../fig-decisive-v1.prompt.md` | AI-generated schematic, stylized, not data | see the sidecar |
+| `../fig-masked-v1.png` | `../fig-masked-v1.prompt.md` | AI-generated schematic, stylized, not data | see the sidecar |
 
-`theme_research.R` is the shared house style: warm canvas, a centred claim title, and a rounded panel. The R scripts need ggplot2 and ragg. The SVGs need `rsvg-convert` with Helvetica Neue, Menlo and a CJK font (Hiragino Sans GB or PingFang SC). After rendering, open the PNG to check how fonts fell back.
+`theme_research.R` is the shared house style: warm canvas, a centred claim title, and a rounded panel. The R scripts need ggplot2 and ragg; `fig-perturb.R` also needs patchwork. The SVGs need `rsvg-convert` with Helvetica Neue, Menlo and a CJK font (Hiragino Sans GB or PingFang SC). After rendering, open the PNG to check how fonts fell back.
 
 Every figure uses the same visual grammar:
 
