@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="1760" height="790" viewBox="0 0 1760 790">
+  <!--
+    Re-anchoring after the figure changes (design, not implemented). F3 "dissociation"
+    layout: one record, three edits, the three resolution outcomes of design.qmd
+    (unique / missing / ambiguous). Mazda RX4 has cyl = 6, so filter(cyl != 6) drops it.
+    Render: rsvg-convert -z 1.25 fig-rebase.svg -o ../fig-rebase.png
+  -->
+  <style>
+    .sans  { font-family: "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .mono  { font-family: Menlo, "SF Mono", "Hiragino Sans GB", monospace; }
+    .title { font-size: 40px; font-weight: 700; fill: #1F1E1D; }
+    .sub   { font-size: 20px; fill: #87867F; }
+    .plabel{ font-size: 21px; fill: #5E5D59; font-weight: 600; }
+    .code  { font-size: 16px; fill: #1F1E1D; }
+    .rec   { font-size: 18px; fill: #C8553D; }
+    .sel   { font-size: 16px; fill: #4C75AD; }
+    .small { font-size: 15px; fill: #87867F; }
+    .ok    { font-size: 17px; fill: #3B8C5A; }
+    .bad   { font-size: 17px; fill: #D65451; }
+    .arr   { fill: none; stroke: #87867F; stroke-width: 2; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#87867F"/>
+    </marker>
+  </defs>
+
+  <rect width="1760" height="790" fill="#F0EEE6"/>
+  <text class="sans title" x="880" y="74" text-anchor="middle">改了图以后，记录靠锚点重新找回目标</text>
+  <text class="sans sub" x="880" y="112" text-anchor="middle">设计示意（尚未实现）：同一条记录在三种修改下重新解析锚点</text>
+
+  <!-- the one record, shared by all three cards -->
+  <text class="sans small" x="880" y="160" text-anchor="middle">同一条记录</text>
+  <rect x="430" y="172" width="900" height="76" rx="14" fill="#FFFFFF" stroke="#C8553D" stroke-width="2"/>
+  <text class="mono rec" x="880" y="204" text-anchor="middle">meaning · “Mazda RX4 是转子发动机” · by human</text>
+  <text class="mono sel" x="880" y="232" text-anchor="middle">锚点：数据键 points["Mazda RX4"]</text>
+  <path class="arr" d="M600,252 C600,280 325,276 325,300" marker-end="url(#ah)"/>
+  <path class="arr" d="M880,252 V300" marker-end="url(#ah)"/>
+  <path class="arr" d="M1160,252 C1160,280 1435,276 1435,300" marker-end="url(#ah)"/>
+
+  <!-- card template: label, header band = the edit, body = resolution + status + result -->
+  <g id="card-1">
+    <text class="sans plabel" x="60" y="328">改标题、改配色</text>
+    <rect x="60" y="342" width="530" height="410" rx="20" fill="#FDFCF9"/>
+    <path d="M60,438 V362 Q60,342 80,342 H570 Q590,342 590,362 V438 Z" fill="#F4F2EC"/>
+    <line x1="60" y1="438" x2="590" y2="438" stroke="#DEDCD4" stroke-width="2"/>
+    <rect x="60" y="342" width="530" height="410" rx="20" fill="none" stroke="#C8C7BF" stroke-width="2"/>
+    <text class="mono code" x="84" y="380">p + labs(title = "车重与油耗") +</text>
+    <text class="mono code" x="84" y="410">  scale_colour_brewer()</text>
+    <text class="sans small" x="84" y="472">重新解析锚点</text>
+    <rect x="84" y="484" width="482" height="44" rx="10" fill="#FFFFFF" stroke="#B9CDE8" stroke-width="1.6"/>
+    <text class="mono sel" x="100" y="512">points["Mazda RX4"]</text>
+    <text class="sans ok" x="550" y="512" text-anchor="end">✓ 唯一</text>
+    <text class="sans small" x="84" y="566">记录状态</text>
+    <rect x="84" y="578" width="482" height="44" rx="10" fill="#FFFFFF" stroke="#C8553D" stroke-width="2"/>
+    <text class="mono rec" x="100" y="606" font-size="16">meaning 记录 → 有效</text>
+    <text class="sans ok" x="325" y="680" text-anchor="middle">✓ 不需要修复</text>
+    <text class="sans small" x="325" y="708" text-anchor="middle">元素 id 由结构算出，也没有变</text>
+  </g>
+
+  <g id="card-2">
+    <text class="sans plabel" x="615" y="328">换数据子集：去掉 6 缸车</text>
+    <rect x="615" y="342" width="530" height="410" rx="20" fill="#FDFCF9"/>
+    <path d="M615,438 V362 Q615,342 635,342 H1125 Q1145,342 1145,362 V438 Z" fill="#F4F2EC"/>
+    <line x1="615" y1="438" x2="1145" y2="438" stroke="#DEDCD4" stroke-width="2"/>
+    <rect x="615" y="342" width="530" height="410" rx="20" fill="none" stroke="#C8C7BF" stroke-width="2"/>
+    <text class="mono code" x="639" y="380">ggplot(filter(mtcars, cyl != 6),</text>
+    <text class="mono code" x="639" y="410">       aes(wt, mpg)) + …</text>
+    <text class="sans small" x="639" y="472">重新解析锚点</text>
+    <rect x="639" y="484" width="482" height="44" rx="10" fill="#FFFFFF" stroke="#B9CDE8" stroke-width="1.6"/>
+    <text class="mono sel" x="655" y="512">points["Mazda RX4"]</text>
+    <text class="sans bad" x="1105" y="512" text-anchor="end">✗ 丢失</text>
+    <text class="sans small" x="639" y="566">记录状态</text>
+    <rect x="639" y="578" width="482" height="44" rx="10" fill="#FFFFFF" stroke="#C8553D" stroke-width="2"/>
+    <text class="mono rec" x="655" y="606" font-size="16">meaning 记录 → 失效</text>
+    <text class="sans bad" x="880" y="680" text-anchor="middle">✗ 依赖它的记录一起失效</text>
+    <text class="sans small" x="880" y="708" text-anchor="middle">整组列入修复清单，交给修复阶段</text>
+  </g>
+
+  <g id="card-3">
+    <text class="sans plabel" x="1170" y="328">追加新数据：同一辆车又测了一次</text>
+    <rect x="1170" y="342" width="530" height="410" rx="20" fill="#FDFCF9"/>
+    <path d="M1170,438 V362 Q1170,342 1190,342 H1680 Q1700,342 1700,362 V438 Z" fill="#F4F2EC"/>
+    <line x1="1170" y1="438" x2="1700" y2="438" stroke="#DEDCD4" stroke-width="2"/>
+    <rect x="1170" y="342" width="530" height="410" rx="20" fill="none" stroke="#C8C7BF" stroke-width="2"/>
+    <text class="mono code" x="1194" y="380">ggplot(rbind(mtcars, new_runs),</text>
+    <text class="mono code" x="1194" y="410">       aes(wt, mpg)) + …</text>
+    <text class="sans small" x="1194" y="472">重新解析锚点</text>
+    <rect x="1194" y="484" width="482" height="44" rx="10" fill="#FFFFFF" stroke="#B9CDE8" stroke-width="1.6"/>
+    <text class="mono sel" x="1210" y="512">points["Mazda RX4"]</text>
+    <text class="sans bad" x="1660" y="512" text-anchor="end">✗ 不唯一：2 个候选</text>
+    <text class="sans small" x="1194" y="566">记录状态</text>
+    <rect x="1194" y="578" width="482" height="44" rx="10" fill="#FFFFFF" stroke="#C8553D" stroke-width="2"/>
+    <text class="mono rec" x="1210" y="606" font-size="16">meaning 记录 → 失效</text>
+    <text class="sans bad" x="1435" y="680" text-anchor="middle">✗ 附上 2 个候选</text>
+    <text class="sans small" x="1435" y="708" text-anchor="middle">由修复阶段或人选定，新的选择也是一条记录</text>
+  </g>
+</svg>

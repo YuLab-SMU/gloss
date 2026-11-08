@@ -1,30 +1,22 @@
 # gloss
 
-gloss reads an R figure that has already been drawn, and keeps what it learns.
+gloss reads an R figure that has already been drawn and traces every shape back to the grob, panel and data row behind it. People and AI agents can then attach notes to those shapes, and any note that makes a claim is checked against the data. The figure itself is never redrawn.
 
-Every drawn element is traced back to the grob, viewport, panel and data row it came from. On top of that substrate, agents and people add **glosses**: layered, append-only records anchored to elements. Each record has provenance, and each claim carries a check against the data. The figure's geometry is never touched. SVG and HTML files are projections of the substrate and its layers; a single file can carry the whole bundle and be restored later.
+> **Status: design phase.** There is no package code yet. The numbers below come from spike scripts in [`dev_docs/research/`](https://github.com/YuLab-SMU/gloss/tree/main/dev_docs/research). The interface shown is planned, not implemented.
 
-The name comes from medieval manuscript glosses: notes anchored to particular words, added by many readers over time, layer upon layer, with the text itself left untouched.
+![Schematic. Left: an unchanged scatter plot. Middle: the substrate, a read-only table linking each drawn element to its leaf grob, panel and data row. Right: three layers of records anchored to those elements by dotted lines. Bottom: four projections: an interactive HTML page, an ARIA tree, a text description and a Web Annotation export.](man/figures/README-overview.png)
 
-## Status
+## Why
 
-Design phase. There is no package code yet.
+Export the usual faceted mtcars scatter plot with svglite and you get 134 drawn primitives, none of which carries an id. Three of the 35 circles are legend keys, and in the SVG they look exactly like data points. Point at one and ask "which car is that?", and the file has no answer.
 
-- Design (Chinese): [`dev_docs/design.qmd`](dev_docs/design.qmd)
-- Prior art and measured evidence (Chinese): [`dev_docs/research-report.qmd`](dev_docs/research-report.qmd)
-- Spike scripts and outputs: [`dev_docs/research/`](dev_docs/research/README.md)
-- Decisions: [`dev_docs/decisions/`](dev_docs/decisions/README.md)
+Existing tools each solve half of the problem. ggiraph, gridSVG and maidr tag elements while they are drawn, so the geometry stays exact, but they bind data only for geoms someone has written a handler for. A model reading the SVG can take any figure but has no ground truth: on the same R figures, GPT-4o and DeepSeek-V3 identify element roles with F1 of 0.692 and 0.959, and neither can tell when it is wrong.
 
-## Six capabilities
+## What the spikes show
 
-| Capability | What it does |
-|---|---|
-| Identify | Every drawn element knows its leaf grob, viewport and panel |
-| Classify | Data mark, guide, reference line, decoration or annotation: rules first, an agent for the remainder |
-| Organize | Structure tree, data tree and semantic groups, mapped onto each other |
-| Attach semantics | Meaning, relations, verifiable claims and narrative, as anchored layered records |
-| Operate | One operation vocabulary shared by R, the browser runtime and agents |
-| Update | Re-capture after code or data changes, re-anchor, and repair only what broke |
+- **Every drawn element can be traced to where it came from.** gloss wraps each leaf grob in a graphics group plus a probe that draws nothing. On six kinds of input (ggplot facets, patchwork, base, ComplexHeatmap, ggrepel, 10,000 points), the output matches plain svglite element for element, and the only unowned element is the device background.
+- **Code settles most of the semantics.** Naming-convention rules alone classify 481 of the 486 elements in three test figures. The five that remain are annotation text and a base-graphics legend. Those are the cases an agent handles, and the ones where a classification has to be correctable.
+- **Claims are checked, not trusted.** The plot carries the note "heavier = thirstier". The slope of mpg on weight is negative in only 5 of the 6 groups that `geom_smooth()` draws. The exception is automatic 4-cylinder cars, of which there are just 3. gloss shows the note together with its exception instead of presenting it as fact.
 
 ## Planned interface (not implemented)
 
@@ -35,9 +27,30 @@ gl_write(fig, "fig.html")          # interactive, accessible projection with the
 fig <- gl_read("fig.html")         # restore it later and keep working
 ```
 
+## Six capabilities
+
+| Capability | What it does | Evidence so far |
+|---|---|---|
+| Identify | Traces each drawn element to its leaf grob, viewport and panel | Measured on 6 kinds of input |
+| Classify | Labels each element as a data mark, guide, reference line, decoration or annotation, using rules first and an agent for the rest | 481 of 486 elements by naming rules alone |
+| Organize | Builds the structure tree, the data tree and semantic groups, and maps each onto the others | Structure tree rebuilt for ggplot |
+| Attach semantics | Records meaning, relations, checkable claims and narrative as anchored, layered records | One claim check run by script; the rest is design |
+| Operate | Provides one set of operations (select, style, show/hide, tooltip, overlay, ...) shared by R, the browser and agents | Design |
+| Update | Re-captures after the code or data changes, re-anchors records, and sends only the broken ones for repair | Design |
+
+## The name
+
+A gloss is a note in a medieval manuscript, anchored to a particular word and written by one of many readers over the years, while the text itself stays untouched. gloss does the same for a figure: records are anchored to elements, appended in layers by agents and people, and the geometry is never changed.
+
+## Read more
+
+- [Design](https://github.com/YuLab-SMU/gloss/blob/main/dev_docs/design.qmd) (Chinese): the decisions, the evidence behind each one, risks and milestones.
+- [Prior art and measured evidence](https://github.com/YuLab-SMU/gloss/blob/main/dev_docs/research-report.qmd) (Chinese): what ggiraph, gridSVG, maidr, Shiny, plotly, canvasXpress and the literature do, and where each stops.
+- [Decisions](https://github.com/YuLab-SMU/gloss/tree/main/dev_docs/decisions): architecture decision records.
+
 ## Origin
 
-gloss started on 2026-11-07 as an idea inside [ggai](https://github.com/YuLab-SMU/ggai) under the working name `semsvg`, and became a standalone package on 2026-11-08 ([ggai ADR-0004](https://github.com/YuLab-SMU/ggai/blob/main/dev_docs/decisions/0004-semantic-figure-substrate-as-standalone-package.md)). The two packages do not depend on each other.
+gloss started on 2026-11-07 as an idea inside [ggai](https://github.com/YuLab-SMU/ggai) under the working name `semsvg`. It became a standalone package on 2026-11-08 ([ggai ADR-0004](https://github.com/YuLab-SMU/ggai/blob/main/dev_docs/decisions/0004-semantic-figure-substrate-as-standalone-package.md)). The two packages do not depend on each other.
 
 ## License
 

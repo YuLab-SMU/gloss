@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="1760" height="830" viewBox="0 0 1760 830">
+  <!--
+    Capture mechanism (ADR-0001) for dev_docs/design.qmd. F2 "zoom lens" layout.
+    Literal values are real: leaf007 / vp / box come from wrapping the running
+    example ggplot (mtcars, facet_wrap(~am)) with the probe in
+    dev_docs/research/capture-groups/probe.R; the panel-1 point layer draws 19 circles.
+    Render: rsvg-convert -z 1.25 fig-capture.svg -o ../fig-capture.png
+  -->
+  <style>
+    .sans  { font-family: "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .mono  { font-family: Menlo, "SF Mono", "Hiragino Sans GB", monospace; }
+    .title { font-size: 40px; font-weight: 700; fill: #1F1E1D; }
+    .sub   { font-size: 20px; fill: #87867F; }
+    .plabel{ font-size: 21px; fill: #5E5D59; font-weight: 600; }
+    .tree  { font-size: 16px; fill: #87867F; }
+    .code  { font-size: 16px; fill: #1F1E1D; }
+    .out   { font-size: 15px; fill: #1F1E1D; }
+    .note  { font-size: 16px; fill: #4C75AD; }
+    .hdr   { font-size: 17px; fill: #1F1E1D; font-weight: 600; }
+    .res   { font-size: 19px; fill: #3D3D3A; }
+    .zoom  { fill: none; stroke: #4C75AD; stroke-width: 1.6; stroke-dasharray: 6 6; }
+    .arr   { fill: none; stroke: #87867F; stroke-width: 2.2; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#87867F"/>
+    </marker>
+  </defs>
+
+  <rect width="1760" height="830" fill="#F0EEE6"/>
+  <text class="sans title" x="880" y="76" text-anchor="middle">每个叶子 grob 画出的图元，由设备直接归进自己的组</text>
+  <text class="sans sub" x="880" y="116" text-anchor="middle">示意图：组划界加探针（ADR-0001），以分面散点图第 1 个面板的点图层为例</text>
+
+  <!-- left: the forced grob tree, low contrast; one leaf framed -->
+  <text class="sans plabel" x="60" y="180">grob 树（grid.force() 展开后）</text>
+  <rect x="60" y="198" width="560" height="470" rx="20" fill="#FDFCF9" stroke="#C8C7BF" stroke-width="2"/>
+  <g class="mono tree">
+    <text x="86" y="250">layout</text>
+    <text x="86" y="286">├─ background</text>
+    <text x="86" y="322">├─ panel-1-1.10-7-10-7</text>
+    <text x="86" y="358">│  ├─ grill</text>
+    <text x="86" y="394">│  ├─ <tspan fill="#1F1E1D">geom_point.points.13</tspan></text>
+    <text x="86" y="430">│  ├─ geom_smooth …</text>
+    <text x="86" y="466">│  └─ GRID.text.50</text>
+    <text x="86" y="502">├─ panel-2-1.10-11-10-11 …</text>
+    <text x="86" y="538">├─ axis-l-1-1 …</text>
+    <text x="86" y="574">├─ strip-t-1-1 …</text>
+    <text x="86" y="610">└─ guide-box-right …</text>
+  </g>
+  <rect class="zoom" x="140" y="373" width="203" height="30" rx="6" stroke-dasharray="5 4" stroke-width="2.2"/>
+  <path class="zoom" d="M343,373 L680,198"/>
+  <path class="zoom" d="M343,403 L680,668"/>
+
+  <!-- middle: the wrapper -->
+  <text class="sans plabel" x="680" y="180">包装：叶子换成「探针 + 组」</text>
+  <rect x="680" y="198" width="500" height="470" rx="20" fill="#FDFCF9" stroke="#C8C7BF" stroke-width="2"/>
+  <path d="M680,392 V218 Q680,198 700,198 H1160 Q1180,198 1180,218 V392 Z" fill="#F4F2EC"/>
+  <line x1="680" y1="392" x2="1180" y2="392" stroke="#DEDCD4" stroke-width="2"/>
+  <g class="mono code">
+    <text x="706" y="240">gTree(</text>
+    <text x="706" y="270">  children = gList(</text>
+    <text x="706" y="300">    probe("leaf007"),</text>
+    <text x="706" y="330">    groupGrob(leaf_without_vp)),</text>
+    <text x="706" y="360">  vp = leaf$vp)</text>
+  </g>
+  <g class="sans note">
+    <text x="706" y="430"><tspan class="mono">probe()</tspan>：不画任何东西，只在绘制时</text>
+    <text x="706" y="456">记下 viewport 路径和设备坐标框</text>
+    <text x="706" y="500"><tspan class="mono">groupGrob()</tspan>：设备把这个叶子画出的</text>
+    <text x="706" y="526">全部图元放进同一个组</text>
+    <text x="706" y="570"><tspan class="mono">vp</tspan> 提到外层：否则 gridGraphics</text>
+    <text x="706" y="596">按名字查找的 viewport 会找不到</text>
+    <text x="706" y="640" fill="#87867F">只用 grid 公开 API，渲染一次</text>
+  </g>
+
+  <path class="arr" d="M1188,433 H1232" marker-end="url(#ah)"/>
+
+  <!-- right: what one ordinary svglite render gives -->
+  <text class="sans plabel" x="1240" y="180">普通 svglite 渲染后得到</text>
+  <rect x="1240" y="198" width="460" height="226" rx="20" fill="#EEF3FA" stroke="#4C75AD" stroke-width="2"/>
+  <text class="sans hdr" x="1262" y="232">设备给出的组 → 元素归属</text>
+  <g class="mono out">
+    <text x="1262" y="270">&lt;g id="group-6"&gt;</text>
+    <text x="1262" y="298">  &lt;circle cx=… cy=… r=…/&gt;</text>
+    <text x="1262" y="326">  &lt;circle cx=… cy=… r=…/&gt;</text>
+    <text x="1262" y="354">  …（共 19 个 circle）</text>
+    <text x="1262" y="382">&lt;/g&gt;</text>
+  </g>
+  <rect x="1240" y="442" width="460" height="226" rx="20" fill="#EEF3FA" stroke="#4C75AD" stroke-width="2"/>
+  <text class="sans hdr" x="1262" y="476">探针的记录 → 坐标映射</text>
+  <g class="mono out">
+    <text x="1262" y="514">leaf007</text>
+    <text x="1262" y="544">vp  layout::panel-1-1.10-7-10-7</text>
+    <text x="1262" y="568">      ::GRID.VP.1</text>
+    <text x="1262" y="598">box 33.1, 31.5 – 228.0, 319.9</text>
+    <text x="1262" y="622">    （bigpts，设备坐标）</text>
+    <text x="1262" y="652" fill="#87867F">SVG 里不留下任何探针痕迹</text>
+  </g>
+
+  <!-- result notes -->
+  <text class="sans res" x="880" y="736" text-anchor="middle"><tspan fill="#3B8C5A">✓</tspan> 6 类输入的绘制序列都与普通 svglite 逐元素相同，只有设备背景没有归属</text>
+  <text class="sans res" x="880" y="776" text-anchor="middle"><tspan fill="#D65451">✗</tspan> 某个叶子画出的元素数与预期不符时，只保留结构信息，不做数据绑定，也不循环补齐</text>
+</svg>

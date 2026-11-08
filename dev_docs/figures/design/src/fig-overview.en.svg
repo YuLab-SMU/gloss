@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="940" viewBox="0 0 1760 940">
+  <!--
+    Key figure for README.md (English). Chinese twin: fig-overview.zh.svg.
+    Visual grammar (whole document):
+      grey / ink        the figure itself; geometry from the device, never redrawn
+      blue  #4C75AD     what code determines (substrate, rules, checks)
+      orange-red #C8553D records (glosses) and their dotted anchor leaders
+      red   #D65451     a failed check / something to look at (always with a symbol)
+    Render: rsvg-convert -z 1.25 fig-overview.en.svg -o ../../../../man/figures/README-overview.png
+  -->
+  <style>
+    .sans  { font-family: "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .mono  { font-family: Menlo, "SF Mono", "Hiragino Sans GB", monospace; }
+    .title { font-size: 42px; font-weight: 700; fill: #1F1E1D; }
+    .sub   { font-size: 21px; fill: #87867F; }
+    .plabel{ font-size: 21px; fill: #5E5D59; font-weight: 600; }
+    .head  { font-size: 16px; fill: #87867F; }
+    .blue  { font-size: 16px; fill: #4C75AD; font-weight: 600; }
+    .row   { font-size: 17px; fill: #1F1E1D; }
+    .rec   { font-size: 17px; fill: #C8553D; }
+    .prov  { font-size: 14px; fill: #87867F; }
+    .lname { font-size: 15px; fill: #B86E5C; }
+    .arrowl{ font-size: 19px; fill: #5E5D59; }
+    .body  { font-size: 16px; fill: #3D3D3A; }
+    .pname { font-size: 18px; fill: #1F1E1D; font-weight: 700; }
+    .ink   { fill: #5E5D59; }
+    .lead  { fill: none; stroke: #C8553D; stroke-width: 2.2; stroke-dasharray: 2 6; stroke-linecap: round; }
+    .arr   { fill: none; stroke: #87867F; stroke-width: 2.2; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#87867F"/>
+    </marker>
+  </defs>
+
+  <rect width="1760" height="940" fill="#F0EEE6"/>
+  <text class="sans title" x="880" y="78" text-anchor="middle">The drawing never changes; meaning is layered on top</text>
+  <text class="sans sub" x="880" y="118" text-anchor="middle">Schematic: the four parts of one ggplot scatter plot in gloss</text>
+
+  <!-- ① the drawn figure -->
+  <text class="sans plabel" x="50" y="180">① The figure, already drawn</text>
+  <rect x="50" y="198" width="320" height="362" rx="20" fill="#FDFCF9" stroke="#C8C7BF" stroke-width="2"/>
+  <line x1="92" y1="228" x2="92" y2="500" stroke="#87867F" stroke-width="1.6"/>
+  <line x1="92" y1="500" x2="350" y2="500" stroke="#87867F" stroke-width="1.6"/>
+  <g stroke="#87867F" stroke-width="1.6">
+    <line x1="86" y1="290" x2="92" y2="290"/><line x1="86" y1="360" x2="92" y2="360"/><line x1="86" y1="430" x2="92" y2="430"/>
+    <line x1="150" y1="500" x2="150" y2="506"/><line x1="220" y1="500" x2="220" y2="506"/><line x1="290" y1="500" x2="290" y2="506"/>
+  </g>
+  <line x1="108" y1="270" x2="346" y2="466" stroke="#B0AEA5" stroke-width="3"/>
+  <g class="ink">
+    <circle cx="115" cy="268" r="6"/><circle cx="131" cy="292" r="6"/><circle cx="150" cy="281" r="6"/>
+    <circle cx="170" cy="318" r="6"/><circle cx="186" cy="301" r="6"/><circle cx="206" cy="342" r="6"/>
+    <circle cx="226" cy="330" r="6"/><circle cx="241" cy="366" r="6"/><circle cx="260" cy="383" r="6"/>
+    <circle cx="276" cy="361" r="6"/><circle cx="296" cy="411" r="6"/><circle cx="311" cy="426" r="6"/>
+    <circle cx="330" cy="441" r="6"/><circle cx="344" cy="472" r="6"/>
+  </g>
+  <text class="mono" x="262" y="250" text-anchor="middle" font-size="15" fill="#5E5D59">heavier = thirstier</text>
+  <text class="sans head" x="210" y="538" text-anchor="middle">Drawn by the device, never redrawn</text>
+
+  <!-- arrow ① → ② -->
+  <text class="mono arrowl" x="425" y="404" text-anchor="middle">gloss(p)</text>
+  <path class="arr" d="M378,420 H470" marker-end="url(#ah)"/>
+
+  <!-- ② the substrate -->
+  <text class="sans plabel" x="480" y="180">② Substrate: captured once, then read-only</text>
+  <rect x="480" y="198" width="580" height="362" rx="20" fill="#EEF3FA" stroke="#4C75AD" stroke-width="2"/>
+  <text class="sans blue" x="500" y="232">Graphics interface</text>
+  <text class="sans blue" x="904" y="232">Data interface</text>
+  <text class="sans head" x="516" y="262">Element</text>
+  <text class="sans head" x="680" y="262">Leaf grob · panel</text>
+  <text class="sans head" x="904" y="262">Data row</text>
+  <rect x="500" y="276" width="540" height="52" rx="12" fill="#FFFFFF" stroke="#B9CDE8" stroke-width="1.6"/>
+  <text class="mono row" x="516" y="308">e017 circle</text>
+  <text class="mono row" x="680" y="308">geom_point · am=1</text>
+  <text class="mono row" x="904" y="308">"Mazda RX4"</text>
+  <rect x="500" y="344" width="540" height="52" rx="12" fill="#FFFFFF" stroke="#B9CDE8" stroke-width="1.6"/>
+  <text class="mono row" x="516" y="376">e055 polyline</text>
+  <text class="mono row" x="680" y="376">geom_smooth · am=0</text>
+  <text class="mono row" x="904" y="376">fit, cyl=4</text>
+  <rect x="500" y="412" width="540" height="52" rx="12" fill="#FFFFFF" stroke="#B9CDE8" stroke-width="1.6"/>
+  <text class="mono row" x="516" y="444">e101 text</text>
+  <text class="mono row" x="680" y="444">annotate · am=0</text>
+  <text class="mono row" x="904" y="444">—</text>
+  <text class="sans body" x="500" y="500">Also: geometry queries, pixel ↔ data coordinates,</text>
+  <text class="sans body" x="500" y="526">row keys (inferred, changeable), sniffed context</text>
+
+  <!-- ③ records -->
+  <text class="sans plabel" x="1130" y="180">③ Records: appended in layers, anchored</text>
+  <g id="sheet-claim">
+    <rect x="1130" y="198" width="580" height="108" rx="16" fill="#FBF1EC" stroke="#EECAB4" stroke-width="1.6"/>
+    <text class="mono lname" x="1148" y="222">claim layer</text>
+    <rect x="1148" y="234" width="544" height="60" rx="12" fill="#FFFFFF" stroke="#C8553D" stroke-width="2"/>
+    <text class="mono rec" x="1166" y="259">"heavier = thirstier" · check: trend &lt; 0</text>
+    <text class="mono prov" x="1166" y="282">by agent:claim · <tspan fill="#D65451">✗ holds in 5 of 6 groups</tspan></text>
+  </g>
+  <g id="sheet-relation">
+    <rect x="1130" y="324" width="580" height="108" rx="16" fill="#FBF1EC" stroke="#EECAB4" stroke-width="1.6"/>
+    <text class="mono lname" x="1148" y="348">relation layer</text>
+    <rect x="1148" y="360" width="544" height="60" rx="12" fill="#FFFFFF" stroke="#C8553D" stroke-width="2"/>
+    <text class="mono rec" x="1166" y="385">e101 (the note) → describes geom_smooth</text>
+    <text class="mono prov" x="1166" y="408">by human · <tspan fill="#3B8C5A">✓ both ends resolve</tspan></text>
+  </g>
+  <g id="sheet-structure">
+    <rect x="1130" y="450" width="580" height="108" rx="16" fill="#FBF1EC" stroke="#EECAB4" stroke-width="1.6"/>
+    <text class="mono lname" x="1148" y="474">structure layer</text>
+    <rect x="1148" y="486" width="544" height="60" rx="12" fill="#FFFFFF" stroke="#C8553D" stroke-width="2"/>
+    <text class="mono rec" x="1166" y="511">e101 · role = annotation</text>
+    <text class="mono prov" x="1166" y="534">by agent:classify · <tspan fill="#3B8C5A">✓ consistency check passed</tspan></text>
+  </g>
+
+  <!-- anchors: dotted leaders from records to substrate rows -->
+  <path class="lead" d="M1148,264 C1090,264 1100,370 1044,370"/>
+  <path class="lead" d="M1148,390 C1096,390 1096,372 1044,372"/>
+  <path class="lead" d="M1148,392 C1100,392 1094,438 1044,438"/>
+  <path class="lead" d="M1148,516 C1090,516 1100,440 1044,440"/>
+  <circle cx="1040" cy="370" r="5" fill="#C8553D"/>
+  <circle cx="1040" cy="438" r="5" fill="#C8553D"/>
+  <text class="sans head" x="1095" y="588" text-anchor="middle" fill="#C8553D">dotted = anchor</text>
+
+  <!-- ②+③ → ④ -->
+  <path class="arr" d="M770,566 V610 H1420 V566"/>
+  <path class="arr" d="M1095,610 V662" marker-end="url(#ah)"/>
+  <text class="mono arrowl" x="1110" y="644">gl_write()</text>
+  <path class="arr" d="M260,668 C260,610 520,620 520,568" stroke-dasharray="7 6" marker-end="url(#ah)"/>
+  <text class="mono arrowl" x="540" y="612">gl_read()</text>
+
+  <!-- ④ projections -->
+  <text class="sans plabel" x="50" y="700">④ Projections: built from substrate + records, rebuilt any time</text>
+  <g id="proj">
+    <rect x="50" y="716" width="400" height="190" rx="18" fill="#FDFCF9" stroke="#C8C7BF" stroke-width="2"/>
+    <path d="M50,770 V734 Q50,716 68,716 H432 Q450,716 450,734 V770 Z" fill="#F4F2EC"/>
+    <text class="mono pname" x="72" y="751">fig.html / fig.svg</text>
+    <text class="sans body" x="72" y="806">Interactive page: hover for the data row,</text>
+    <text class="sans body" x="72" y="832">click a legend key to filter, keyboard nav.</text>
+    <text class="sans body" x="72" y="858">Embeds the bundle; gl_read() restores it</text>
+
+    <rect x="470" y="716" width="400" height="190" rx="18" fill="#FDFCF9" stroke="#C8C7BF" stroke-width="2"/>
+    <path d="M470,770 V734 Q470,716 488,716 H852 Q870,716 870,734 V770 Z" fill="#F4F2EC"/>
+    <text class="mono pname" x="492" y="751">ARIA tree</text>
+    <text class="sans body" x="492" y="806">graphics-document / object / symbol</text>
+    <text class="sans body" x="492" y="832">roles and descriptions for screen readers</text>
+
+    <rect x="890" y="716" width="400" height="190" rx="18" fill="#FDFCF9" stroke="#C8C7BF" stroke-width="2"/>
+    <path d="M890,770 V734 Q890,716 908,716 H1272 Q1290,716 1290,734 V770 Z" fill="#F4F2EC"/>
+    <text class="mono pname" x="912" y="751">Text description</text>
+    <text class="sans body" x="912" y="806">For people and text-only models;</text>
+    <text class="sans body" x="912" y="832">claims that fail their check are not stated as fact</text>
+
+    <rect x="1310" y="716" width="400" height="190" rx="18" fill="#FDFCF9" stroke="#C8C7BF" stroke-width="2"/>
+    <path d="M1310,770 V734 Q1310,716 1328,716 H1692 Q1710,716 1710,734 V770 Z" fill="#F4F2EC"/>
+    <text class="mono pname" x="1332" y="751">Web Annotation</text>
+    <text class="sans body" x="1332" y="806">One-way export to the W3C data model:</text>
+    <text class="sans body" x="1332" y="832">record → Annotation, anchor → Target</text>
+  </g>
+</svg>
