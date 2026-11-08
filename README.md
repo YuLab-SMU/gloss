@@ -10,6 +10,10 @@ gloss reads an R figure that has already been drawn and traces every shape back 
 
 Export the usual faceted mtcars scatter plot with svglite and you get 134 drawn primitives, none of which carries an id. Three of the 35 circles are legend keys, and in the SVG they look exactly like data points. Point at one and ask "which car is that?", and the file has no answer.
 
+![Schematic, AI-generated. Two panels show the same scatter plot with a downward trend. Left, "plain SVG export": a cursor points at one dot under a speech bubble asking "Which car is this?", and the footer reads "134 shapes, 0 ids: no answer". Right, "with gloss": the same dot is ringed in blue and labelled "Mazda RX4 · mtcars row 1 · panel am = 1".](man/figures/README-question-v3.png)
+
+*The same question, put to a plain SVG export and to gloss. Schematic (AI-generated), not a screenshot: gloss has no code yet, and the plot is drawn as one simplified panel. The 134 shapes are the svglite export of the faceted mtcars plot described above; Mazda RX4 is row 1 of `mtcars`, with `am = 1`. Prompt, rounds and the one pixel fix: [`README-question-v3.prompt.md`](https://github.com/YuLab-SMU/gloss/blob/main/dev_docs/figures/design/README-question-v3.prompt.md).*
+
 Existing tools each solve half of the problem. ggiraph, gridSVG and maidr tag elements while they are drawn, so the geometry stays exact, but they bind data only for geoms someone has written a handler for. A model reading the SVG can take any figure but has no ground truth: on the same R figures, GPT-4o and DeepSeek-V3 identify element roles with F1 of 0.692 and 0.959, and neither can tell when it is wrong.
 
 ## What the spikes show
