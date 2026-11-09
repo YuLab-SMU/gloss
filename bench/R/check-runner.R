@@ -54,6 +54,20 @@ synthetic <- list(
 expect <- c("base", "base", "base", "ggplot", "ggplot", "grid", "heatmap")
 ok <- check("synthetic", synthetic, expect)
 
+# Part 1b: freeze each synthetic figure the way harvest.R does, then rerun the
+# frozen copy offline (no third-party code).
+source("bench/R/harvest.R")
+figures_root <- file.path(tempdir(), "check-runner", "figures")
+r <- run_script(synthetic, file.path(tempdir(), "check-runner", "freeze"), seed = 1)
+for (k in seq_len(nrow(r$candidates))) {
+  id <- sprintf("synthetic-%03d", k)
+  meta <- list(id = id, stratum = "synthetic", kind = "synthetic", psu = "check-runner.R", rewrites = list())
+  dir <- freeze_figure(id, synthetic, r$candidates[k, ], tempdir(), meta)
+  e <- check_eligibility(dir, r$candidates$engine[k])
+  cat(sprintf("  frozen %s (%s): eligible %s\n", id, r$candidates$engine[k], e$ok))
+  if (!e$ok) ok <- FALSE
+}
+
 if (identical(Sys.getenv("GLOSS_BENCH_THIRD_PARTY"), "true")) {
   smp <- read_csv(file.path(bench_root, "sample.csv"))
   stopifnot(!c("13-scatter-plot.Rmd", "164-area-chart-ggplot2.Rmd", "ComplexHeatmap::Heatmap") %in% smp$psu)
