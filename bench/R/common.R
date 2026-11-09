@@ -1,0 +1,106 @@
+# Shared paths, pinned sources and small helpers for the bench scripts.
+# Sourced by every script in bench/R/. Run scripts from the repository root.
+
+bench_root <- normalizePath("bench", mustWork = TRUE)
+cache_root <- path.expand(Sys.getenv("GLOSS_BENCH_CACHE", "~/.cache/gloss-bench"))
+src_root <- file.path(cache_root, "src")
+lib_root <- file.path(cache_root, "lib")
+for (d in c(src_root, lib_root)) dir.create(d, recursive = TRUE, showWarnings = FALSE)
+
+seed <- 20261109L
+bioc_version <- "3.21"
+cran_repo <- "https://cloud.r-project.org"
+
+sources <- list(
+  gallery = list(
+    repo = "https://github.com/holtzy/R-graph-gallery.git",
+    sha = "8be6801aa6643931cedb22283dfa69e305c8bf79",
+    raw = "https://raw.githubusercontent.com/holtzy/R-graph-gallery/8be6801aa6643931cedb22283dfa69e305c8bf79"
+  ),
+  exts = list(
+    url = "https://raw.githubusercontent.com/ggplot2-exts/gallery/10a7d4033993d91744cc95c60a2f696851adca8a/_config.yml",
+    sha = "10a7d4033993d91744cc95c60a2f696851adca8a"
+  ),
+  bioc = list(
+    url = sprintf("https://bioconductor.org/packages/%s/bioc/VIEWS", "3.21"),
+    version = "3.21"
+  )
+)
+
+fetch <- function(url, dest) {
+  if (!file.exists(dest)) {
+    dir.create(dirname(dest), recursive = TRUE, showWarnings = FALSE)
+    status <- system2("curl", c("-sS", "-L", "--fail", "--max-time", "600", "-o", shQuote(dest), shQuote(url)))
+    if (status != 0) stop("download failed: ", url)
+  }
+  dest
+}
+
+md5 <- function(path) unname(tools::md5sum(path))
+
+write_csv <- function(x, path) {
+  x <- as.data.frame(x, stringsAsFactors = FALSE)
+  utils::write.csv(x, path, row.names = FALSE, fileEncoding = "UTF-8")
+  invisible(path)
+}
+
+read_csv <- function(path) utils::read.csv(path, stringsAsFactors = FALSE, fileEncoding = "UTF-8")
+
+# Debian-control style records (Bioconductor VIEWS) into a data frame.
+read_dcf_text <- function(path, fields) {
+  x <- read.dcf(path, fields = fields)
+  x <- as.data.frame(x, stringsAsFactors = FALSE)
+  x[] <- lapply(x, function(v) gsub("\\s+", " ", trimws(ifelse(is.na(v), "", v))))
+  x
+}
+
+# Packages a piece of R code asks for: library(), require(), requireNamespace(), pkg::
+code_packages <- function(code) {
+  code <- paste(code, collapse = "\n")
+  pat <- c(
+    "(?:library|require|requireNamespace)\\(\\s*[\"']?([A-Za-z][A-Za-z0-9.]*)",
+    "([A-Za-z][A-Za-z0-9.]*):::?[A-Za-z._]"
+  )
+  out <- unlist(lapply(pat, function(p) {
+    m <- regmatches(code, gregexpr(p, code, perl = TRUE))[[1]]
+    sub(p, "\\1", m, perl = TRUE)
+  }))
+  setdiff(unique(out), c("base", "utils", "stats", "graphics", "grDevices", "methods", "datasets", "grid", "tools", "parallel", "splines", "stats4", "tcltk", "compiler"))
+}
+
+# R chunks of an R Markdown file: header options as text, code, and whether
+# knitr would evaluate it (eval = FALSE / F skipped; other options ignored).
+rmd_chunks <- function(path) {
+  x <- readLines(path, warn = FALSE, encoding = "UTF-8")
+  open <- grep("^\\s*```+\\s*\\{r([ ,}].*)?$", x)
+  fence <- grep("^\\s*```+\\s*$", x)
+  out <- list()
+  for (i in seq_along(open)) {
+    close <- fence[fence > open[i]][1]
+    if (is.na(close)) break
+    header <- x[open[i]]
+    code <- if (close > open[i] + 1) x[(open[i] + 1):(close - 1)] else character()
+    eval <- !grepl("eval\\s*=\\s*(FALSE|F)\\b", header)
+    out[[length(out) + 1]] <- list(header = header, code = code, eval = eval, line = open[i])
+  }
+  out
+}
+
+# Static guess of the drawing engine from code text. Used for the frame and
+# for reporting; the engine of a sampled figure is what the runner observes.
+guess_engine <- function(code) {
+  code <- paste(code, collapse = "\n")
+  has <- function(p) grepl(p, code, perl = TRUE)
+  widget <- has("\\b(ggplotly|plot_ly|leaflet|networkD3|dygraph|streamgraph|highchart|hchart|echarts4r|e_charts|d3tree|collapsibleTree|circlepackeR|chorddiag|reactable|datatable|gt\\(|kable|girafe|visNetwork|sankeyNetwork|forceNetwork|wordcloud2|rbokeh|tmap_mode\\(\"view)\\b")
+  if (has("library\\(\\s*patchwork") || has("patchwork::")) return("patchwork")
+  if (has("\\bHeatmap\\(") || has("ComplexHeatmap")) return("heatmap")
+  if (has("\\b(ggplot|qplot|ggarrange|ggpairs|ggsurvplot|ggraph|ggtree|waffle|ggmap|ggbetweenstats|ggscatterstats)\\(")) return("ggplot")
+  if (has("\\b(xyplot|bwplot|levelplot|histogram|densityplot|splom|wireframe|cloud|dotplot|barchart|stripplot)\\(") && has("lattice")) return("grid")
+  if (has("\\bgrid\\.(newpage|draw|rect|lines|points|text|polygon)\\(")) return("grid")
+  if (has("(^|[^._A-Za-z])(plot|barplot|hist|boxplot|pie|image|heatmap|pairs|matplot|stripchart|dotchart|mosaicplot|contour|persp|symbols|sunflowerplot|smoothScatter|coplot|stars|plot\\.new|chordDiagram|circos\\.[a-z]+|treemap|radarchart|venn\\.diagram|vioplot|wordcloud|beeswarm|map|plotCI|display\\.brewer\\.all)\\("))
+    return("base")
+  if (widget) return("widget")
+  if (has("\\b(gt|gt_[a-z_]+|kbl|kable_[a-z_]+|tbl_[a-z_]+|flextable|formattable)\\(")) return("table")
+  if (has("\\b(rgl|plot3d|persp3d|plot_gg|plot_3d)\\b")) return("rgl")
+  "none"
+}

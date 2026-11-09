@@ -1,0 +1,42 @@
+# bench
+
+The gloss benchmark: R figures with runnable code and data, sampled from published sources, split into a development set and a held-out set. Not part of the package build. The design is [design §评测设计](../dev_docs/design.qmd); the plan that builds v0 is [plan/2026-11-09-bench-v0.md](../plan/2026-11-09-bench-v0.md).
+
+## Rules
+
+- Rules, prompts and thresholds are tuned on the development set only.
+- The held-out set only produces reported numbers. Every run on it is archived in `runs/`; any change made after looking at its results is reported as such.
+- Predictions go into `predictions.md`, committed before the run they predict.
+- Figures that fail are counted, never dropped: every sampled unit has an outcome row.
+
+## Layout
+
+| Path | What it holds |
+|---|---|
+| `R/common.R` | paths, pinned sources, seed, helpers |
+| `R/frame.R` | builds the sampling frames |
+| `frame/*.csv`, `frame/sources.json` | one frame per stratum, and the source versions they came from |
+
+Later tasks add `sample.csv`, `figures/<id>/`, `runs/`, `split.csv` and a checksum manifest.
+
+## Sources (v0)
+
+| Stratum | Frame | Pinned at |
+|---|---|---|
+| gallery | R Graph Gallery posts (`*.Rmd`, `package/*.Rmd`) | commit `8be6801` |
+| exts | ggplot2 extensions gallery entries marked as on CRAN | commit `10a7d40` of `ggplot2-exts/gallery` |
+| bioc | Bioconductor software packages in the Visualization view with vignettes | Bioconductor 3.21 VIEWS |
+| patchwork | Gallery posts loading patchwork, and patchwork help topics with examples | as above; patchwork 1.3.2 |
+| heatmap | ComplexHeatmap help topics with examples, and Bioconductor packages with vignettes importing ComplexHeatmap | ComplexHeatmap 2.26.0; Bioconductor 3.21 |
+
+TidyTuesday, listed in the design, is not in v0: its official repository has data but no figure code (see the plan's scope changes).
+
+Sampling seed: `20261109`.
+
+## Rebuilding
+
+Run from the repository root. Sources and downloads go to `~/.cache/gloss-bench/` (override with `GLOSS_BENCH_CACHE`), never into the repository.
+
+```sh
+Rscript bench/R/frame.R
+```
