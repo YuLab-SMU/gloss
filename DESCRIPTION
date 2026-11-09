@@ -16,5 +16,31 @@ BugReports: https://github.com/YuLab-SMU/gloss/issues
 Encoding: UTF-8
 Depends:
     R (>= 4.2.0)
+Imports:
+    cli,
+    digest,
+    grDevices,
+    grid,
+    jsonlite,
+    methods,
+    rlang,
+    stats,
+    svglite (>= 2.2.0),
+    tools,
+    utils,
+    xml2
+Suggests:
+    ComplexHeatmap,
+    ggplot2,
+    ggrepel,
+    gridGraphics,
+    knitr,
+    patchwork,
+    ragg,
+    shiny,
+    systemfonts,
+    testthat (>= 3.0.0),
+    withr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
+RoxygenNote: 8.0.0
