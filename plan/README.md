@@ -26,7 +26,8 @@ See [`_template.md`](_template.md).
 
 ## Active plans
 
-- [2026-11-09-m0-substrate.md](2026-11-09-m0-substrate.md): M0, the substrate. Tasks 1–8 and 10 done; Task 9 (benchmark sampling, split and freeze) open.
+- [2026-11-09-m0-substrate.md](2026-11-09-m0-substrate.md): M0, the substrate. Tasks 1–8 and 10 done; Task 9 (benchmark sampling, split and freeze) carried out under the bench v0 plan.
+- [2026-11-09-bench-v0.md](2026-11-09-bench-v0.md): sample and freeze the benchmark; first capture feedback on the development set.
 
 ## Completed plans
 
