@@ -22,3 +22,5 @@ See [`_template.md`](_template.md).
 | [0001](0001-capture-by-group-delimiting-and-probes.md) | Capture elements by graphics-group delimiting plus probes | Accepted | 2026-11-08 |
 | [0002](0002-semantic-substrate-with-append-only-records.md) | A long-lived semantic substrate with append-only, anchored records | Accepted | 2026-11-08 |
 | [0003](0003-plugin-based-core.md) | Plugin-based core | Accepted | 2026-11-08 |
+| [0004](0004-engine-dispatch-through-the-registry.md) | `gloss()` dispatches to engine plugins through the registry | Accepted | 2026-11-09 |
+| [0005](0005-bundle-format-v0.md) | Bundle format v0 | Accepted | 2026-11-09 |
