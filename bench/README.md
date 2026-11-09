@@ -16,8 +16,9 @@ The gloss benchmark: R figures with runnable code and data, sampled from publish
 | `R/common.R` | paths, pinned sources, seed, helpers |
 | `R/frame.R` | builds the sampling frames |
 | `frame/*.csv`, `frame/sources.json` | one frame per stratum, and the source versions they came from |
+| `R/sample.R`, `sample.csv` | the PSU sample: stratum, rank in the stratum's permutation, weight |
 
-Later tasks add `sample.csv`, `figures/<id>/`, `runs/`, `split.csv` and a checksum manifest.
+Later tasks add `figures/<id>/`, `runs/`, `split.csv` and a checksum manifest.
 
 ## Sources (v0)
 
@@ -31,7 +32,7 @@ Later tasks add `sample.csv`, `figures/<id>/`, `runs/`, `split.csv` and a checks
 
 TidyTuesday, listed in the design, is not in v0: its official repository has data but no figure code (see the plan's scope changes).
 
-Sampling seed: `20261109`.
+Sampling seed: `20261109`; stratum *h* (in the order gallery, exts, bioc, patchwork, heatmap) uses `20261109 + h` with `RNGkind("Mersenne-Twister", "Inversion", "Rejection")`. Allocation: 70, 30, 30, 15, 15.
 
 ## Rebuilding
 
@@ -39,4 +40,5 @@ Run from the repository root. Sources and downloads go to `~/.cache/gloss-bench/
 
 ```sh
 Rscript bench/R/frame.R
+Rscript bench/R/sample.R
 ```
