@@ -10,7 +10,7 @@ register_engine_patchwork <- function() {
     packages = c("patchwork", "ggplot2"),
     prepare = function(x, width, height) {
       plots <- patchwork_plots(x)
-      list(plot = x, plots = plots, built = lapply(plots, ggplot2::ggplot_build))
+      list(plot = x, plots = plots, built = lapply(plots, build_ggplot))
     },
     grob = function(state) patchwork::patchworkGrob(state$plot),
     tables = function(state) {

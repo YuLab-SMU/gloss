@@ -7,7 +7,7 @@ register_engine_ggplot <- function() {
     classes = c("ggplot", "ggplot2::ggplot"),
     packages = "ggplot2",
     prepare = function(x, width, height) {
-      list(plot = x, built = ggplot2::ggplot_build(x))
+      list(plot = x, built = build_ggplot(x))
     },
     grob = function(state) ggplot2::ggplot_gtable(state$built),
     tables = function(state) ggplot_tables(state$plot, state$built),
@@ -18,6 +18,20 @@ register_engine_ggplot <- function() {
         ggplot2::geom_point()
     }
   )
+}
+
+# ggplot_build(), refusing an extension whose own ggplot_build() method
+# returns something other than a built ggplot (gganimate's "gganim_built"):
+# gloss captures one static ggplot and cannot draw it.
+build_ggplot <- function(x) {
+  built <- ggplot2::ggplot_build(x)
+  if (!inherits(built, c("ggplot_built", "ggplot2::ggplot_built"))) {
+    cli::cli_abort(c(
+      "{.cls {class(x)[1]}} builds into {.cls {class(built)[1]}}, not a built ggplot.",
+      i = "Its own {.fn ggplot_build} method changes what is drawn (an animation, for example); gloss captures one static ggplot."
+    ))
+  }
+  built
 }
 
 quo_vars <- function(q) {

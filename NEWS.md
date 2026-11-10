@@ -1,5 +1,10 @@
 # gloss 0.0.0.9000
 
+## Fixes found by the bench development set (2026-11-10)
+
+- A ggplot without layers is captured, alone or as a wrapped patchwork element (`wrap_elements()`, `wrap_ggplot_grob()`); it used to fail with "subscript out of bounds".
+- A ggplot extension whose own `ggplot_build()` returns something other than a built ggplot (gganimate's animations) is refused with the reason, instead of failing while drawing.
+
 ## M0: the substrate (2026-11-09)
 
 - `gloss()` captures a ggplot, patchwork, ComplexHeatmap, base (through gridGraphics) or grid figure into a read-only substrate. Each leaf grob is drawn once inside its own graphics group with a zero-output probe, so every drawn element is attributed by the device to its leaf, viewport and panel. A leaf whose expected and drawn element counts differ is marked `count_mismatch` and is not bindable. Masked figures are refused.

@@ -119,6 +119,21 @@ test_that("a ggplot without layers, alone or wrapped in patchwork, is captured",
   expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain))
 })
 
+test_that("a ggplot extension that builds into something else is refused, alone or in patchwork", {
+  # gganimate's ggplot_build() returns a "gganim_built", not a built ggplot;
+  # drawing it failed with "no applicable method for `@`" (bench gallery-053).
+  skip_if_no("ggplot2", "patchwork")
+  registerS3method("ggplot_build", "gloss_test_anim",
+                   function(plot, ...) structure(list(), class = "gloss_test_anim_built"),
+                   envir = asNamespace("ggplot2"))
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  anim <- p
+  class(anim) <- c("gloss_test_anim", class(anim))
+  expect_error(gloss(anim, context = FALSE), "not a built ggplot")
+  expect_error(gloss(patchwork::wrap_plots(p, anim), context = FALSE), "not a built ggplot")
+  expect_equal(gloss(p, context = FALSE)$meta$engine, "ggplot")
+})
+
 test_that("fills, clipping paths and gTree alpha are captured unchanged", {
   cases <- list(
     gradient = grid::rectGrob(width = 0.8, height = 0.6,
