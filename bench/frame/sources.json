@@ -1,5 +1,5 @@
 {
-  "built": "2026-11-09",
+  "built": "2026-11-10",
   "gallery": {
     "repo": "https://github.com/holtzy/R-graph-gallery.git",
     "sha": "8be6801aa6643931cedb22283dfa69e305c8bf79",
@@ -31,8 +31,9 @@
   },
   "out_of_scope": {
     "rule": "help topic whose examples have no executable line (blank, comment or bare NULL only)",
+    "heatmap_rule": "heatmap stratum (2026-11-10): also a ComplexHeatmap help topic whose examples call none of Heatmap, Heatmap3D, HeatmapList, densityHeatmap, frequencyHeatmap, oncoPrint, UpSet, pheatmap",
     "patchwork": 0,
-    "heatmap": 153
+    "heatmap": 222
   },
   "tidytuesday": "not in the v0 frame: the official repository holds data, readmes and images but no figure code"
 }

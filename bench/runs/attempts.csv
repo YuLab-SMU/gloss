@@ -158,18 +158,11 @@ Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server
 "patchwork-017","patchwork","gallery","package/ggiraph.Rmd","missing data","eval path[1]=""../HtmlWidget"": No such file or directory",0,NA,NA,NA,NA,"",7.37559843063354
 "patchwork-018","patchwork","topic","patchwork::plot_spacer","retained","",2,1,4,"patchwork","patchwork","",1.24585366249084
 "heatmap-005","heatmap","vignette","BloodGen3Module","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",22.8102073669434
-"heatmap-007","heatmap","topic","ComplexHeatmap::c.ColorMapping","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.713089227676392
 "heatmap-008","heatmap","topic","ComplexHeatmap::decorate_annotation","retained","",1,1,4,"heatmap","HeatmapList","",2.27199006080627
-"heatmap-009","heatmap","topic","ComplexHeatmap::is_abs_unit","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.67515230178833
 "heatmap-012","heatmap","topic","ComplexHeatmap::Extract.Heatmap","retained","",4,1,6,"heatmap","Heatmap","",3.55874609947205
 "heatmap-016","heatmap","vignette","ClustAll","no figure","figures of other engines: grid x1 (also shown: knitr_kable, sankeyNetwork htmlwidget)",0,NA,NA,NA,NA,"",102.819268465042
-"heatmap-017","heatmap","topic","ComplexHeatmap::anno_barplot","no figure","figures of other engines: grid x2",0,NA,NA,NA,NA,"",0.767474174499512
-"heatmap-019","heatmap","topic","ComplexHeatmap::bar3D","no figure","figures of other engines: grid x1",0,NA,NA,NA,NA,"",0.737725496292114
 "heatmap-021","heatmap","vignette","SPONGE","code error","eval object 'trained.model' not found (also shown: knitr_kable)",0,NA,NA,NA,NA,"",13.966655254364
-"heatmap-024","heatmap","topic","ComplexHeatmap::cluster_within_group","no figure","figures of other engines: grid x1",0,NA,NA,NA,NA,"",0.897743463516235
 "heatmap-026","heatmap","topic","ComplexHeatmap::anno_summary","retained","",2,1,4,"heatmap","Heatmap","",2.93841004371643
 "heatmap-028","heatmap","vignette","gmoviz","code error","eval Summation of cell padding on y-direction are larger than the height of
 the cells.",0,NA,NA,NA,NA,"",7.49138641357422
-"heatmap-030","heatmap","topic","ComplexHeatmap::set_nameAssign","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.728486299514771
-"heatmap-031","heatmap","topic","ComplexHeatmap::default_axis_param","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.753970384597778
 "heatmap-034","heatmap","vignette","barbieQ","retained","",1,12,1,"heatmap","HeatmapList","bartools",192.483590364456

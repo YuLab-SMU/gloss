@@ -1,0 +1,8 @@
+"id","stratum","kind","psu","outcome","detail","n_figures","chunk","expr","engine","class","missing_packages","seconds"
+"heatmap-007","heatmap","topic","ComplexHeatmap::c.ColorMapping","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.713089227676392
+"heatmap-009","heatmap","topic","ComplexHeatmap::is_abs_unit","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.67515230178833
+"heatmap-017","heatmap","topic","ComplexHeatmap::anno_barplot","no figure","figures of other engines: grid x2",0,NA,NA,NA,NA,"",0.767474174499512
+"heatmap-019","heatmap","topic","ComplexHeatmap::bar3D","no figure","figures of other engines: grid x1",0,NA,NA,NA,NA,"",0.737725496292114
+"heatmap-024","heatmap","topic","ComplexHeatmap::cluster_within_group","no figure","figures of other engines: grid x1",0,NA,NA,NA,NA,"",0.897743463516235
+"heatmap-030","heatmap","topic","ComplexHeatmap::set_nameAssign","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.728486299514771
+"heatmap-031","heatmap","topic","ComplexHeatmap::default_axis_param","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.753970384597778

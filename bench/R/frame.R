@@ -82,11 +82,28 @@ rd_topics <- function(pkg) {
 
 # A topic whose examples have no executable line is kept in the frame (so the
 # sample's permutations do not move) but marked out of scope; sample.R skips it.
-topic_rows <- function(pkg) {
+# `keep`, if given, is a further test on the example code.
+topic_rows <- function(pkg, keep = NULL) {
   db <- tools::Rd_db(pkg)
   t <- rd_topics(pkg)
-  in_scope <- vapply(t, function(x) has_example_code(rd_example_code(db[[paste0(x, ".Rd")]])), TRUE, USE.NAMES = FALSE)
+  in_scope <- vapply(t, function(x) {
+    code <- rd_example_code(db[[paste0(x, ".Rd")]])
+    has_example_code(code) && (is.null(keep) || keep(code))
+  }, TRUE, USE.NAMES = FALSE)
   data.frame(psu = paste0(pkg, "::", t), kind = "topic", in_scope = in_scope, stringsAsFactors = FALSE)
+}
+
+# Heatmap stratum, help topics (2026-11-10, plan Scope changes): in scope only
+# if the examples call a ComplexHeatmap function that returns a Heatmap or
+# HeatmapList. Help topics for utilities, or for annotations, dendrograms and
+# 3-D bars drawn alone, never give a heatmap. Not applied to vignettes: their
+# heatmaps often come from the package's own functions returning a Heatmap
+# (barbieQ's plotSamplePairCorrelation()), which a static test cannot see.
+heatmap_returning <- c("Heatmap", "Heatmap3D", "HeatmapList", "densityHeatmap", "frequencyHeatmap",
+                       "oncoPrint", "UpSet", "pheatmap")
+calls_heatmap <- function(code) {
+  code <- sub("#.*$", "", code)
+  any(grepl(paste0("(^|[^A-Za-z0-9._])(", paste(heatmap_returning, collapse = "|"), ")\\s*\\("), code))
 }
 
 # --- engine strata
@@ -96,7 +113,7 @@ patchwork <- rbind(
 )
 ch_users <- views$Package[views$imports_complexheatmap & views$has_vignette]
 heatmap <- rbind(
-  topic_rows("ComplexHeatmap"),
+  topic_rows("ComplexHeatmap", keep = calls_heatmap),
   data.frame(psu = sort(ch_users), kind = "bioc", in_scope = TRUE, stringsAsFactors = FALSE)
 )
 heatmap <- heatmap[heatmap$psu != "ComplexHeatmap", ]
@@ -119,6 +136,8 @@ info <- list(
   strata = list(gallery = nrow(gallery), exts = nrow(exts), bioc = nrow(bioc),
                 patchwork = nrow(patchwork), heatmap = nrow(heatmap)),
   out_of_scope = list(rule = "help topic whose examples have no executable line (blank, comment or bare NULL only)",
+                      heatmap_rule = paste("heatmap stratum (2026-11-10): also a ComplexHeatmap help topic whose examples call none of",
+                                           paste(heatmap_returning, collapse = ", ")),
                       patchwork = sum(!patchwork$in_scope), heatmap = sum(!heatmap$in_scope)),
   tidytuesday = "not in the v0 frame: the official repository holds data, readmes and images but no figure code"
 )
