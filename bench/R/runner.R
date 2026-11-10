@@ -270,16 +270,29 @@ vendor_data <- function(chunks, dir, gallery = FALSE) {
 # ---- the worker ----------------------------------------------------------------
 
 # Runs inside a fresh R process. Self-contained: callr ships only this function.
-run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, recover, capture, repo) {
+run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, recover, capture, repo,
+                       device = "pdf") {
   setwd(dir)
   set.seed(seed)
+  # The device the code draws on. "svg" (capture runs) is gloss's own device,
+  # svglite, 7 x 5 in like gloss's default: a grob built while the code runs
+  # (ggplot titles, legends) carries the measurements of the device open at
+  # the time, so a grid.grab() made on pdf(NULL) and drawn by gloss on svglite
+  # mixed two devices' text metrics (bench run 2026-11-10-1131, exts-007).
+  # Its last page is also the reference the captured scene is compared with.
+  devs <- new.env()
+  new_dev <- function() {
+    if (identical(device, "svg")) {
+      devs$svg_pages <- svglite::svgstring(width = 7, height = 5, standalone = TRUE)
+      devs$num <- grDevices::dev.cur()
+    } else grDevices::pdf(NULL, width = 7, height = 5)
+  }
   # knitr::include_graphics() of an image shipped with a vignette's sources but
   # not with the installed package draws nothing; as in the vignette's own
   # build, where the file exists, it must not stop the run
-  options(warn = 0, device = function(...) grDevices::pdf(NULL, width = 7, height = 5),
-          knitr.graphics.error = FALSE)
+  options(warn = 0, device = function(...) new_dev(), knitr.graphics.error = FALSE)
   open_dev <- function() {
-    grDevices::pdf(NULL, width = 7, height = 5)
+    new_dev()
     grDevices::dev.control("enable")
   }
   open_dev()
@@ -374,6 +387,18 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
   cand <- cand[!is.na(cand$kind), , drop = FALSE]
   result <- list(candidates = cand, error = err, n_expr = n_expr, out_classes = unique(out_classes),
                  elapsed = as.numeric(difftime(Sys.time(), t0, units = "secs")))
+  # what the code drew, as svglite draws it: its last page, read before
+  # recovery (grid.grab() draws on the device). An open svglite page leaves
+  # its clip groups open, so the missing </g> are added before </svg>; where
+  # recovery draws nothing, that page is compared with the closed one.
+  close_groups <- function(x) {
+    open_g <- lengths(regmatches(x, gregexpr("<g[ >]", x))) - lengths(regmatches(x, gregexpr("</g>", x)))
+    if (open_g <= 0L) return(x)
+    sub("</svg>\\s*$", paste0(strrep("</g>\n", open_g), "</svg>\n"), x)
+  }
+  pre_pages <- if (!is.null(devs$svg_pages)) as.character(devs$svg_pages())
+  closed_page <- NULL
+  ref_page <- if (length(pre_pages)) close_groups(pre_pages[length(pre_pages)])
   if (recover) {
     fig <- NULL; kind <- NA_character_
     if (last_obj) { fig <- last_value; kind <- "object" }
@@ -384,6 +409,13 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
     }
     result$recovered <- list(kind = kind, class = if (is.null(fig)) NA else class(fig)[1],
                              engine = if (is.null(fig)) NA else if (kind == "object") engine_of(fig) else kind)
+    if (!is.null(devs$svg_pages)) {
+      untouched <- identical(as.character(devs$svg_pages()), pre_pages)
+      if (devs$num %in% grDevices::dev.list()) grDevices::dev.off(devs$num)
+      pg <- as.character(devs$svg_pages())
+      closed_page <- if (untouched && length(pg)) pg[length(pg)] else NULL
+      result$reference <- list(pages = length(pg), untouched = untouched, same_as_closed = NA)
+    }
     if (capture && !is.null(fig)) {
       suppressMessages(pkgload::load_all(repo, quiet = TRUE, export_all = FALSE, helpers = FALSE))
       t1 <- Sys.time()
@@ -416,6 +448,23 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
           cap$unowned_bg <- NA_integer_
           cap$unowned_other <- NA_character_
         }
+        # fidelity: the captured scene draws exactly what the code drew on
+        # svglite (tag, attributes and text of every primitive, in order)
+        if (!is.null(ref_page) && !is.na(ref_page)) {
+          sig <- get("scene_signatures", asNamespace("gloss"))
+          if (!is.null(closed_page))
+            result$reference$same_as_closed <- isTRUE(tryCatch(identical(sig(ref_page), sig(closed_page)), error = function(e) FALSE))
+          a <- tryCatch(sig(s$scene), error = function(e) NULL)
+          b <- tryCatch(sig(ref_page), error = function(e) NULL)
+          if (!is.null(a) && !is.null(b)) {
+            cap$faithful <- identical(a, b)
+            cap$prims_scene <- length(a); cap$prims_ref <- length(b)
+            # primitives without a match in the other scene, either way (a
+            # multiset difference: one inserted element does not shift the rest)
+            ta <- table(a); tb <- table(b); common <- intersect(names(ta), names(tb))
+            cap$prims_differ <- length(a) + length(b) - 2L * sum(pmin(ta[common], tb[common]))
+          }
+        }
       }
       result$capture <- cap
     }
@@ -430,7 +479,7 @@ offline_env <- c(http_proxy = "http://127.0.0.1:9", https_proxy = "http://127.0.
                  ALL_PROXY = "http://127.0.0.1:9", no_proxy = "", NO_PROXY = "")
 
 run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
-                       recover = FALSE, capture = FALSE) {
+                       recover = FALSE, capture = FALSE, device = "pdf") {
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   env <- c(callr::rcmd_safe_env(), R_LIBS_USER = paste(bench_libpaths(), collapse = .Platform$path.sep))
   if (offline) env <- c(env, offline_env)
@@ -439,7 +488,7 @@ run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
              args = list(setup = script$setup, chunks = script$chunks, dir = normalizePath(dir),
                          seed = seed, figure_classes = figure_classes, skip_print = outside_classes,
                          recover = recover,
-                         capture = capture, repo = normalizePath(".")),
+                         capture = capture, repo = normalizePath("."), device = device),
              libpath = bench_libpaths(), env = env, timeout = timeout, show = FALSE,
              package = FALSE),
     error = function(e) e)

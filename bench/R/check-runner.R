@@ -25,11 +25,24 @@ check <- function(name, script, expect_engines) {
   for (k in seq_len(nrow(r$candidates))) {
     c1 <- r$candidates[k, ]
     frozen <- list(setup = script$setup, chunks = truncate_script(script, c1$chunk, c1$expr))
-    r2 <- run_script(frozen, dir, seed = 1, timeout = 300, offline = TRUE, recover = TRUE, capture = TRUE)
-    cat(sprintf("  figure %d: recovered %s/%s, capture %s, %s elements, %s leaves, unowned %s (background %s)%s\n", k,
+    r2 <- run_script(frozen, dir, seed = 1, timeout = 300, offline = TRUE, recover = TRUE, capture = TRUE,
+                     device = "svg")
+    cat(sprintf("  figure %d: recovered %s/%s, capture %s, %s elements, %s leaves, unowned %s (background %s), faithful %s (%s of %s primitives differ)%s\n", k,
                 r2$recovered$kind, r2$recovered$engine, r2$capture$status, r2$capture$elements %||% NA,
                 r2$capture$leaves %||% NA, r2$capture$unowned %||% NA, r2$capture$unowned_bg %||% NA,
+                r2$capture$faithful %||% NA, r2$capture$prims_differ %||% NA, r2$capture$prims_ref %||% NA,
                 if (is.null(r2$capture$message)) "" else paste(":", r2$capture$message)))
+    cat(sprintf("    reference: untouched by recovery %s, open page = closed page %s\n",
+                r2$reference$untouched %||% NA, r2$reference$same_as_closed %||% NA))
+    # the fidelity check answers for every figure; where recovery drew nothing
+    # the repaired open page equals the closed one; ggplot, heatmap and grid
+    # scenes equal what the code drew. (Base figures recorded on svglite gain
+    # gridGraphics' "graphics-background" leaf, one primitive: reported, not asserted.)
+    fa <- r2$capture$faithful %||% NA
+    if (is.na(fa) || isFALSE(r2$reference$same_as_closed) ||
+        (!identical(c1$engine, "base") && !isTRUE(fa))) {
+      cat("!! fidelity check: faithful", fa, ", open page = closed page", r2$reference$same_as_closed %||% NA, "\n"); ok <- FALSE
+    }
     if (!identical(r2$recovered$engine, c1$engine) || !identical(r2$capture$status, "captured")) ok <- FALSE
     # the background test must give an answer: 0 or 1, never NA; a ggplot draws one
     bg <- r2$capture$unowned_bg %||% NA

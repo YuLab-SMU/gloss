@@ -142,11 +142,13 @@ figure_env <- function(meta) {
   bench_envs[[name]]
 }
 
-check_eligibility <- function(dir, engine, timeout = 300, capture = FALSE) {
+# A capture run draws on svglite, gloss's device (see run_worker); the
+# eligibility checks keep pdf(NULL), as at the freeze.
+check_eligibility <- function(dir, engine, timeout = 300, capture = FALSE, device = if (capture) "svg" else "pdf") {
   meta <- jsonlite::read_json(file.path(dir, "meta.json"))
   use_env(figure_env(meta))
   r <- run_script(frozen_script(dir), prepare_run_dir(dir), seed = meta$seed, timeout = timeout,
-                  offline = TRUE, recover = TRUE, capture = capture)
+                  offline = TRUE, recover = TRUE, capture = capture, device = device)
   list(ok = is.null(r$error) && identical(r$recovered$engine, engine), run = r)
 }
 
