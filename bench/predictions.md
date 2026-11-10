@@ -76,3 +76,16 @@ After predictions 1–4 were scored on runs 1 and 2, the owner narrowed the heat
 #### Era-matched Bioconductor environment and freeze (2026-11-10; made after looking)
 
 After predictions 1–4 were scored, the owner also moved the bioc and heatmap strata to an era-matched environment (Bioconductor 3.21 with CRAN 2025-10-29; plan Scope changes), and the 45 PSUs of those strata were rerun. The frozen counts are **109 of 160 eligible** (gallery 54, exts 26, bioc 12, patchwork 11, heatmap 6), against 103 on run 2 above. They come after both changes, both made after looking, and are not a test of predictions 1–4; the scores above stand. Predictions 5–8 are untouched: no capture has run.
+
+### How predictions 5–8 are scored (fixed 2026-11-10, before any capture run)
+
+Written after the freeze (`e985d82`) and before `bench/R/capture.R` has run on any benchmark figure. The predictions themselves are unchanged; this fixes how their words are counted.
+
+- **Run.** The development set, 55 figures (`split.csv`), once: `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev`, at a clean commit recorded in the run's JSON. The first complete run is the one scored. Any rerun after a fix to gloss or the harness is reported beside it as made after looking, and never replaces it.
+- **Outcome of a figure.** *captured*; *refused* (mask, no engine, device without groups, integrity check: gloss stops and says why); *error* (anything else `gloss()` raises); *timeout* (900 s; every figure reran within 300 s without capture); *rerun failure* (the frozen figure no longer reruns or recovers its recorded engine: a harness or environment outcome, not capture's).
+- **Prediction 5** (at least 90% capture without error): captured ÷ figures that rerun and recover their engine. Refusals count against it, as the prediction's own reasoning lists masks among the failures; timeouts count against it. Captured ÷ 55 is reported too.
+- **Prediction 6** (grid scenes fail more often than returned objects): among figures that rerun, the share not captured, for figures recovered by `grid.grab()` (`recovered = grid`) against figures recovered as returned objects (`recovered = object`). Right if the first share is larger. The development set has 4 grid figures, so the verdict is reported with its counts.
+- **Prediction 7** (at least 30% of captured figures have a leaf with a count mismatch): among captured figures, the share with `leaves_mismatch ≥ 1`.
+- **Prediction 8** (in at least 95% of captured figures, the only element without a leaf is the device background): among captured figures, the share where every unowned element is the device background (`unowned == unowned_bg`), counting figures with no unowned element as meeting it. The device background is the first element when it is a rect covering the SVG's viewBox (`runner.R`).
+- Everything is also reported per engine, from `split.csv`.
+
