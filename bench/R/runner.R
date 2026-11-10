@@ -136,14 +136,18 @@ install_reason <- function(pkg, notes) {
 # present, installed or failed, with the reason for a failure. A download
 # through the proxy fails now and then (SSL connect error), so failed downloads
 # are retried. Build output goes to the log (quiet = FALSE): with quiet = TRUE
-# a failed build left only "installation of package ... failed".
+# a failed build left only "installation of package ... failed". R CMD INSTALL
+# writes through system2(), outside R's sink(), so the log takes the child
+# process's whole stdout and stderr, not a sink (check-runner Part 1d).
 ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log"), tries = 3L, env = active_env()) {
   pkgs <- unique(pkgs[nzchar(pkgs)])
   if (!length(pkgs)) return(data.frame(package = character(), status = character(), reason = character()))
   missing <- pkgs[!installed_anywhere(pkgs, env)]
   notes <- character()
   if (length(missing)) {
-    notes <- callr::r(function(pkgs, lib, bioc, cran, log, tries, env_name) {
+    out <- tempfile("install-", fileext = ".log")
+    on.exit(if (file.exists(out)) { file.append(log, out); unlink(out) }, add = TRUE)
+    notes <- callr::r(function(pkgs, lib, bioc, cran, tries, env_name) {
       # BiocManager validates the version online; through the proxy that fails now and then
       repos <- NULL
       for (k in seq_len(tries)) {
@@ -158,10 +162,8 @@ ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log"), tr
       # container binaries for 3.21)
       first <- if (.Platform$pkgType == "source") "source" else "binary"
       # errors from install.packages() arrive as messages, most failures as
-      # warnings: log all three and keep the warnings
-      con <- file(log, open = "a")
-      sink(con, type = "output"); sink(con, type = "message")
-      on.exit({ sink(type = "message"); sink(type = "output"); close(con) })
+      # warnings: all three reach the log (stdout and stderr), and the
+      # warnings are also kept
       cat("\n==== ", format(Sys.time()), paste0("[", env_name, "]"), paste(pkgs, collapse = " "), "\n")
       acc <- new.env()
       acc$notes <- character()
@@ -185,9 +187,9 @@ ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log"), tr
         k <- k + 1L
       }
       acc$notes
-    }, args = list(pkgs = missing, lib = env$lib, bioc = bioc_version, cran = env$cran, log = log, tries = tries,
+    }, args = list(pkgs = missing, lib = env$lib, bioc = bioc_version, cran = env$cran, tries = tries,
                    env_name = env$name),
-    libpath = bench_libpaths(env), timeout = 3600, show = FALSE)
+    libpath = bench_libpaths(env), timeout = 3600, stdout = out, stderr = "2>&1")
   }
   ok <- installed_anywhere(pkgs, env)
   status <- ifelse(!pkgs %in% missing, "present", ifelse(ok, "installed", "failed"))

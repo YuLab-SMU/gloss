@@ -186,6 +186,51 @@ pure_ok <- tryCatch(check_pure(), error = function(e) { cat("!! pure checks:", c
 cat("\n== outcome classes, package names, install reasons, URL rewrites:", if (pure_ok) "OK" else "FAILED", "\n")
 if (!pure_ok) ok <- FALSE
 
+# Part 1d: a package that fails to build leaves its build error in the install
+# log, installed alone (R's serial path) and beside another package (the
+# parallel make path). R CMD INSTALL writes through system2(), outside R's
+# sink(), so the bioc-environment harvest's log held no build output at all
+# (2026-11-10). A local repository and a throwaway library and environment:
+# nothing reaches the bench libraries. BiocManager still checks its version online.
+check_install_log <- function() {
+  root <- file.path(tempdir(), "check-install-log")
+  unlink(root, recursive = TRUE)
+  contrib <- file.path(root, "repo", "src", "contrib")
+  dir.create(contrib, recursive = TRUE)
+  marker <- "GLOSS-BUILD-MARKER broken on purpose"
+  old_wd <- setwd(contrib)  # R CMD build writes the tarball here
+  on.exit(setwd(old_wd), add = TRUE)
+  for (p in c("glossgood", "glossbroken")) {
+    d <- file.path(root, "pkgs", p)
+    dir.create(file.path(d, "R"), recursive = TRUE)
+    writeLines(c(paste("Package:", p), "Version: 0.0.1", "Title: Check Package", "Description: Check package.",
+                 "License: MIT", "Author: check", "Maintainer: check <check@example.org>"), file.path(d, "DESCRIPTION"))
+    writeLines("", file.path(d, "NAMESPACE"))
+    writeLines(if (p == "glossbroken") sprintf('stop("%s")', marker) else "f <- function() 1", file.path(d, "R", "f.R"))
+    system2(file.path(R.home("bin"), "R"), c("CMD", "build", "--no-build-vignettes", shQuote(d)),
+            stdout = FALSE, stderr = FALSE)
+  }
+  setwd(old_wd)
+  stopifnot(length(Sys.glob(file.path(contrib, "gloss*_0.0.1.tar.gz"))) == 2L)
+  tools::write_PACKAGES(contrib, type = "source")
+  env <- list(name = "check", cran = paste0("file://", file.path(root, "repo")), lib = file.path(root, "lib"))
+  dir.create(env$lib)
+  good <- TRUE
+  for (pk in list("glossbroken", c("glossgood", "glossbroken"))) {
+    log <- file.path(root, paste0("install-", length(pk), ".log"))
+    st <- ensure_packages(pk, log = log, tries = 1L, env = env)
+    want <- ifelse(st$package == "glossbroken", "failed", "installed")
+    has <- file.exists(log) && any(grepl(marker, readLines(log), fixed = TRUE))
+    cat(sprintf("  %s: %s; build error in the log: %s\n", paste(pk, collapse = " + "),
+                paste(st$package, st$status, collapse = ", "), has))
+    if (!identical(st$status, want) || !has) good <- FALSE
+  }
+  good
+}
+inst_ok <- tryCatch(check_install_log(), error = function(e) { cat("!! install log check:", conditionMessage(e), "\n"); FALSE })
+cat("\n== install log keeps build output:", if (inst_ok) "OK" else "FAILED", "\n")
+if (!inst_ok) ok <- FALSE
+
 if (identical(Sys.getenv("GLOSS_BENCH_THIRD_PARTY"), "true")) {
   smp <- read_csv(file.path(bench_root, "sample.csv"))
   # Expected figures, counted from the sources: 13-scatter-plot has four
