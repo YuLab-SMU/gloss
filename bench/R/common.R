@@ -4,12 +4,14 @@
 bench_root <- normalizePath("bench", mustWork = TRUE)
 cache_root <- path.expand(Sys.getenv("GLOSS_BENCH_CACHE", "~/.cache/gloss-bench"))
 src_root <- file.path(cache_root, "src")
-lib_root <- file.path(cache_root, "lib")
+# one package library per platform and R version, so host and container never share one
+lib_root <- file.path(cache_root, "lib", R.version$platform, paste(R.version$major, sub("\\..*$", "", R.version$minor), sep = "."))
 for (d in c(src_root, lib_root)) dir.create(d, recursive = TRUE, showWarnings = FALSE)
 
 seed <- 20261109L
 bioc_version <- "3.21"
-cran_repo <- "https://cloud.r-project.org"
+# the container sets a dated snapshot (bench/docker/run.sh); the host default is unpinned
+cran_repo <- Sys.getenv("GLOSS_BENCH_CRAN", "https://cloud.r-project.org")
 
 sources <- list(
   gallery = list(

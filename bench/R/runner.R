@@ -94,13 +94,18 @@ ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log")) {
   missing <- pkgs[!installed_anywhere(pkgs)]
   if (length(missing)) {
     callr::r(function(pkgs, lib, bioc, cran, log) {
-      repos <- c(BiocManager::repositories(version = bioc), CRAN = cran)
+      repos <- BiocManager::repositories(version = bioc)
+      repos[["CRAN"]] <- cran  # always the pinned CRAN, never the session's option
+      # Linux (the container) installs type "source": Posit Package Manager
+      # serves CRAN binaries under it; Bioconductor packages compile (no arm64
+      # container binaries for 3.21)
+      first <- if (.Platform$pkgType == "source") "source" else "binary"
       sink(file(log, open = "a"), type = "output")
       cat("\n==== ", format(Sys.time()), paste(pkgs, collapse = " "), "\n")
-      try(utils::install.packages(pkgs, lib = lib, repos = repos, type = "binary",
+      try(utils::install.packages(pkgs, lib = lib, repos = repos, type = first,
                                   dependencies = c("Depends", "Imports", "LinkingTo"), quiet = TRUE, Ncpus = 4))
       still <- pkgs[!pkgs %in% rownames(utils::installed.packages(lib.loc = .libPaths()))]
-      if (length(still))
+      if (length(still) && first != "source")
         try(utils::install.packages(still, lib = lib, repos = repos, type = "source",
                                     dependencies = c("Depends", "Imports", "LinkingTo"), quiet = TRUE, Ncpus = 4))
       sink(type = "output")
