@@ -26,7 +26,7 @@ refusal <- function(msg) {
   if (grepl("No engine plugin handles", msg)) return("refused: no engine")
   if (grepl("does not support graphics groups", msg)) return("refused: device without groups")
   if (grepl("integrity check failed", msg)) return("refused: integrity check")
-  NA_character_
+  NULL  # not a refusal: the caller falls back to "error" (NA here labelled 4 errors NA, run 2026-11-10-1131)
 }
 
 # The repository commit the run used (no git in the container: read .git).

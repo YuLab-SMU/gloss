@@ -1,0 +1,61 @@
+run: 2026-11-10-1131-capture-dev.csv | 55 figures
+
+status NA read as "error" (capture.R labelling bug, fixed after the run): 4 figures
+
+Outcomes by engine
+           outcome
+engine      captured error Sum
+  base            10     0  10
+  ggplot          31     1  32
+  grid             3     1   4
+  heatmap          3     0   3
+  patchwork        4     2   6
+  Sum             51     4  55
+
+Status detail
+
+captured    error 
+      51        4 
+
+Not captured
+            id    engine recovered status
+   gallery-053    ggplot    object  error
+   gallery-056      grid      grid  error
+ patchwork-001 patchwork    object  error
+ patchwork-006 patchwork    object  error
+                                                                   message
+ no applicable method for `@` applied to an object of class "gganim_built"
+                                                no such index at level 1\n
+                                                   subscript out of bounds
+                                                   subscript out of bounds
+
+Prediction 5 (>= 90% capture without error)
+  captured / figures that rerun: 51/55 = 93% 
+  captured / all development figures: 51/55 = 93% 
+  verdict: right 
+
+Prediction 6 (grid scenes fail more often than returned objects)
+  not captured, recovered by grid.grab(): 1/3 = 33% 
+  not captured, returned objects: 3/42 = 7% 
+  not captured, base (recordPlot), for reference: 0/10 = 0% 
+  verdict: right (n = 3 grid, 42 objects) 
+
+Prediction 7 (>= 30% of captured figures have a leaf with a count mismatch)
+   35/51 = 69% | verdict: right 
+  by engine:
+     base 5/10 = 50% 
+     ggplot 25/31 = 81% 
+     grid 1/3 = 33% 
+     heatmap 0/3 = 0% 
+     patchwork 4/4 = 100% 
+
+Prediction 8 (>= 95% of captured figures: the only unowned element is the device background)
+   51/51 = 100% | verdict: right 
+
+Capture size and time (captured figures)
+    engine  n median_elements median_leaves median_seconds max_seconds
+      base 10              88            56           0.26        2.80
+    ggplot 31             100            15           0.26        9.83
+      grid  3             226            57           0.30        0.40
+   heatmap  3             257            15           0.90        0.95
+ patchwork  4             190            35           0.46        1.43

@@ -13,6 +13,12 @@ dev <- split[split$set == "dev", ]
 if (!setequal(cap$id, dev$id)) stop("the run does not cover the development set: ", nrow(cap), " of ", nrow(dev), " figures")
 cat("run:", basename(file), "|", nrow(cap), "figures\n\n")
 
+# capture.R up to 803437f wrote status NA when gloss() raised an error that is
+# not a known refusal (refusal() returned NA_character_, which `%||% "error"`
+# does not replace); every other branch writes a string. NA therefore means error.
+n_na <- sum(is.na(cap$status) | cap$status == "NA")
+if (n_na) cat("status NA read as \"error\" (capture.R labelling bug, fixed after the run):", n_na, "figures\n\n")
+cap$status[is.na(cap$status) | cap$status == "NA"] <- "error"
 cap$outcome <- ifelse(cap$status == "captured", "captured",
                ifelse(startsWith(cap$status, "refused"), "refused",
                ifelse(cap$status == "timeout", "timeout",
