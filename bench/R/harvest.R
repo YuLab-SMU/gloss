@@ -54,25 +54,28 @@ packages_in_error <- function(msg) {
 
 # Outcome of a PSU that gave no figure of its stratum, from its last run (NULL
 # if nothing ran), the packages that failed to install and their reasons.
-# Output outside the population (a widget, a table) with no figure counts as
-# outside the population even if the run then stopped; the detail says so.
+# "Outside population" only for a clean run that drew nothing on the device and
+# showed a widget or a table: a run that stopped is classified by its error
+# (a vignette that prints a table and then fails before its figures is a code
+# error), and a run that drew figures of another engine is "no figure" of the
+# stratum's engine. Widget or table output is named in the detail either way.
 psu_outcome <- function(last, failed, note = "", install_detail = "") {
   if (is.null(last)) {
     return(list(outcome = if (length(failed)) "missing package" else "no code",
                 detail = if (length(failed)) install_detail else note))
   }
   err <- last$error
-  stopped <- if (!is.null(err)) paste(err$stage, err$message) else ""
-  if (!length(failed) && outside_population(last$out_classes)) {
-    detail <- paste(unique(grep(outside_classes, last$out_classes, value = TRUE)), collapse = ", ")
-    if (nzchar(stopped)) detail <- paste0(detail, "; then stopped: ", stopped)
-    return(list(outcome = "outside population", detail = detail))
+  shown <- unique(grep(outside_classes, last$out_classes, value = TRUE))
+  shown <- if (length(shown)) paste(shown, collapse = ", ") else ""
+  if (!length(failed) && is.null(err) && !nrow(last$candidates) && nzchar(shown)) {
+    return(list(outcome = "outside population", detail = shown))
   }
-  detail <- if (nzchar(stopped)) stopped else if (nrow(last$candidates)) {
+  detail <- if (!is.null(err)) paste(err$stage, err$message) else if (nrow(last$candidates)) {
     # ran cleanly, but its figures are not of the stratum's engine
     n <- table(last$candidates$engine)
     paste("figures of other engines:", paste(names(n), n, sep = " x", collapse = ", "))
   } else "ran without error, no figure"
+  if (nzchar(shown)) detail <- paste0(detail, " (also shown: ", shown, ")")
   if (length(failed)) detail <- paste0(install_detail, " | run: ", detail)
   list(outcome = classify_failure(err, failed), detail = detail)
 }

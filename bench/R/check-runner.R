@@ -115,8 +115,19 @@ check_pure <- function() {
   run_of <- function(message, out_classes = character())
     list(candidates = none, out_classes = out_classes,
          error = list(chunk = 1L, expr = 1L, stage = "eval", message = message))
+  clean <- function(out_classes = character(), engines = character())
+    list(candidates = data.frame(chunk = seq_along(engines), expr = rep(1L, length(engines)), kind = engines, class = engines,
+                                 engine = engines),
+         out_classes = out_classes, error = NULL)
   cases <- list(
-    list(run_of("cannot open the connection", "collapsibleTree htmlwidget"), "outside population"),
+    # a widget and nothing else: outside the population
+    list(clean("collapsibleTree htmlwidget"), "outside population"),
+    # a table, then a failure before the figures (SPONGE): the error decides
+    list(run_of("object 'trained.model' not found", "knitr_kable"), "code error"),
+    # a table and a widget, plus a heatmap drawn by a wrapper as a grid scene
+    # (ClustAll, heatmap stratum): figures of another engine, not outside
+    list(clean(c("knitr_kable", "sankeyNetwork htmlwidget"), "grid"), "no figure"),
+    list(run_of("cannot open the connection", "collapsibleTree htmlwidget"), "missing data"),
     list(run_of("cannot open URL 'data/tissue_lowres_5a.jpeg'"), "missing data"),
     list(run_of("cannot open URL 'https://example.org/x.csv'"), "needs network"),
     list(run_of("Required packages are missing: randomForest"), "missing package"),
