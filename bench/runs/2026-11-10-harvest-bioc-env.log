@@ -1,0 +1,52 @@
+[1/45] bioc-001 YAPSA: retained 
+[2/45] bioc-002 BrowserViz: no figure ran without error, no figure
+[3/45] bioc-003 scTreeViz: retained 
+[4/45] bioc-004 NOISeq: retained 
+[5/45] bioc-005 Voyager: retained 
+[6/45] bioc-006 epivizrServer: no figure ran without error, no figure
+[7/45] bioc-007 chevreulProcess: no figure ran without error, no figure
+[8/45] bioc-008 CAGEfightR: retained 
+[9/45] bioc-009 Basic4Cseq: retained 
+[10/45] bioc-010 RCy3: no figure ran without error, no figure
+[11/45] bioc-011 SigFuge: code error eval argument is of length zero
+[12/45] bioc-012 wiggleplotr: retained 
+[13/45] bioc-013 biocGraph: retained 
+[14/45] bioc-014 DifferentialRegulation: retained 
+[15/45] bioc-015 condiments: outside population knitr_kable
+[16/45] bioc-016 ChIPseeker: retained 
+[17/45] bioc-017 scPipe: retained 
+[18/45] bioc-018 GenomicOZone: no figure ran without error, no figure
+[19/45] bioc-019 flowPlots: retained 
+[20/45] bioc-020 sincell: code error eval argument is of length zero
+[21/45] bioc-021 MicrobiotaProcess: retained 
+[22/45] bioc-022 psichomics: no figure ran without error, no figure
+[23/45] bioc-023 ribosomeProfilingQC: retained 
+[24/45] bioc-024 visiumStitched: offline: needs network eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+
+[25/45] bioc-025 mariner: offline: needs network eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+
+[26/45] bioc-026 rWikiPathways: no figure ran without error, no figure
+[27/45] bioc-027 schex: offline: needs network eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+
+[28/45] bioc-028 atSNP: retained 
+[29/45] bioc-029 MicrobiomeProfiler: no figure ran without error, no figure
+[30/45] bioc-030 EBImage: code error eval could not find function "output"
+[31/45] heatmap-005 BloodGen3Module: no figure ran without error, no figure
+[32/45] heatmap-008 ComplexHeatmap::decorate_annotation: retained 
+[33/45] heatmap-012 ComplexHeatmap::Extract.Heatmap: retained 
+[34/45] heatmap-016 ClustAll: no figure figures of other engines: grid x1 (also shown: knitr_kable, sankeyNetwork htmlwi
+[35/45] heatmap-021 SPONGE: code error eval object 'trained.model' not found (also shown: knitr_kable)
+[36/45] heatmap-026 ComplexHeatmap::anno_summary: retained 
+[37/45] heatmap-028 gmoviz: code error eval Summation of cell padding on y-direction are larger than the height of
+the 
+[38/45] heatmap-034 barbieQ: retained 
+[39/45] heatmap-036 ComplexHeatmap::anno_block: retained 
+[40/45] heatmap-037 RiboCrypt: missing data eval cannot open the connection
+[41/45] heatmap-039 MAPFX: outside population knitr_kable
+[42/45] heatmap-040 ASURAT: timeout timeout ! callr timed out
+[43/45] heatmap-041 ComplexHeatmap::attach_annotation-Heatmap-method: retained 
+[44/45] heatmap-042 GeDi: missing package GeDi: installation of 2 packages failed:  ‘GeneTonic’, ‘GeDi’
+[45/45] heatmap-048 MPAC: no figure figures of other engines: ggplot x2, grid x3

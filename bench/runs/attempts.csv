@@ -102,6 +102,45 @@ Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server NA"
 "exts-028","exts","examples","lemon","retained","",5,1,6,"grid","grid","",2.12123847007751
 "exts-029","exts","examples","ggpage","retained","",7,1,8,"ggplot","ggplot2::ggplot","",2.57287812232971
 "exts-030","exts","examples","ggstatsplot","retained","",3,1,4,"ggplot","ggplot2::ggplot","",2.69058084487915
+"bioc-001","bioc","vignette","YAPSA","retained","",2,7,1,"grid","grid","",453.398581504822
+"bioc-002","bioc","vignette","BrowserViz","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",10.6819152832031
+"bioc-003","bioc","vignette","scTreeViz","retained","",3,10,7,"grid","grid","",502.223420619965
+"bioc-004","bioc","vignette","NOISeq","retained","",23,16,2,"base","base","",30.2486135959625
+"bioc-005","bioc","vignette","Voyager","retained","",5,18,1,"patchwork","patchwork","",383.856267929077
+"bioc-006","bioc","vignette","epivizrServer","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.360785484313965
+"bioc-007","bioc","vignette","chevreulProcess","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",104.999906539917
+"bioc-008","bioc","vignette","CAGEfightR","retained","",6,65,2,"grid","grid","",261.016657352448
+"bioc-009","bioc","vignette","Basic4Cseq","retained","",1,21,1,"base","base","",358.173317432404
+"bioc-010","bioc","vignette","RCy3","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",68.7689769268036
+"bioc-011","bioc","vignette","SigFuge","code error","eval argument is of length zero",0,NA,NA,NA,NA,"",114.48704791069
+"bioc-012","bioc","vignette","wiggleplotr","retained","",8,10,2,"ggplot","ggplot2::ggplot","",70.5187132358551
+"bioc-013","bioc","vignette","biocGraph","retained","",22,32,2,"base","base","",45.2204873561859
+"bioc-014","bioc","vignette","DifferentialRegulation","retained","",10,39,1,"grid","grid","",148.307857036591
+"bioc-015","bioc","vignette","condiments","outside population","knitr_kable",0,NA,NA,NA,NA,"",133.198390245438
+"bioc-016","bioc","vignette","ChIPseeker","retained","",20,28,1,"ggplot","ggplot2::ggplot","",676.325134038925
+"bioc-017","bioc","vignette","scPipe","retained","",4,10,1,"ggplot","ggplot2::ggplot","",136.826189041138
+"bioc-018","bioc","vignette","GenomicOZone","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",81.8179590702057
+"bioc-019","bioc","vignette","flowPlots","retained","",9,20,2,"base","base","",25.7297027111053
+"bioc-020","bioc","vignette","sincell","code error","eval argument is of length zero",0,NA,NA,NA,NA,"",65.3227269649506
+"bioc-021","bioc","vignette","MicrobiotaProcess","retained","",8,6,11,"patchwork","patchwork","",234.99609541893
+"bioc-022","bioc","vignette","psichomics","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",263.396159648895
+"bioc-023","bioc","vignette","ribosomeProfilingQC","retained","",14,27,1,"base","base","org.Hg.eg.db",670.588957071304
+"bioc-024","bioc","vignette","visiumStitched","offline: needs network","eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server
+  Consider rerunning with 'localHub=TRUE' NA",4,7,1,"ggplot","ggplot2::ggplot","",121.5179271698
+"bioc-025","bioc","vignette","mariner","offline: needs network","eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server
+  Consider rerunning with 'localHub=TRUE' NA",1,29,2,"grid","grid","",258.760303497314
+"bioc-026","bioc","vignette","rWikiPathways","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",31.7296390533447
+"bioc-027","bioc","vignette","schex","offline: needs network","eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server
+  Consider rerunning with 'localHub=TRUE' NA",10,17,3,"ggplot","ggplot2::ggplot","",73.4743926525116
+"bioc-028","bioc","vignette","atSNP","retained","",1,20,2,"grid","grid","",277.109752178192
+"bioc-029","bioc","vignette","MicrobiomeProfiler","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",20.4410743713379
+"bioc-030","bioc","vignette","EBImage","code error","eval could not find function ""output""",0,NA,NA,NA,NA,"",0.150025129318237
 "patchwork-001","patchwork","topic","patchwork::wrap_elements","retained","",4,1,3,"patchwork","patchwork","",1.18038392066956
 "patchwork-002","patchwork","gallery","414-map-multiple-charts-in-ggiraph.Rmd","missing data","eval path[1]=""HtmlWidget"": No such file or directory",0,NA,NA,NA,NA,"",2.52499175071716
 "patchwork-004","patchwork","topic","patchwork::wrap_plots","retained","",4,1,9,"patchwork","patchwork","",2.25683522224426
@@ -117,3 +156,19 @@ Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server NA"
 "patchwork-016","patchwork","gallery","web-vertical-line-chart-with-ggplot2.Rmd","missing package","urbnmapr: package ‘urbnmapr’ is not available for this version of R | run: eval there is no package called ‘urbnmapr’",0,NA,NA,NA,NA,"urbnmapr",21.3095757961273
 "patchwork-017","patchwork","gallery","package/ggiraph.Rmd","missing data","eval path[1]=""../HtmlWidget"": No such file or directory",0,NA,NA,NA,NA,"",7.37559843063354
 "patchwork-018","patchwork","topic","patchwork::plot_spacer","retained","",2,1,4,"patchwork","patchwork","",1.24585366249084
+"heatmap-005","heatmap","vignette","BloodGen3Module","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",38.9641804695129
+"heatmap-008","heatmap","topic","ComplexHeatmap::decorate_annotation","retained","",1,1,4,"heatmap","HeatmapList","",2.20774626731873
+"heatmap-012","heatmap","topic","ComplexHeatmap::Extract.Heatmap","retained","",4,1,6,"heatmap","Heatmap","",3.36499714851379
+"heatmap-016","heatmap","vignette","ClustAll","no figure","figures of other engines: grid x1 (also shown: knitr_kable, sankeyNetwork htmlwidget)",0,NA,NA,NA,NA,"",209.97057723999
+"heatmap-021","heatmap","vignette","SPONGE","code error","eval object 'trained.model' not found (also shown: knitr_kable)",0,NA,NA,NA,NA,"",150.69326043129
+"heatmap-026","heatmap","topic","ComplexHeatmap::anno_summary","retained","",2,1,4,"heatmap","Heatmap","",3.19312739372253
+"heatmap-028","heatmap","vignette","gmoviz","code error","eval Summation of cell padding on y-direction are larger than the height of
+the cells.",0,NA,NA,NA,NA,"",28.6932544708252
+"heatmap-034","heatmap","vignette","barbieQ","retained","",1,12,1,"heatmap","HeatmapList","bartools",230.060814142227
+"heatmap-036","heatmap","topic","ComplexHeatmap::anno_block","retained","",5,1,8,"heatmap","HeatmapList","",3.95157742500305
+"heatmap-037","heatmap","vignette","RiboCrypt","missing data","eval cannot open the connection",0,NA,NA,NA,NA,"",75.7958345413208
+"heatmap-039","heatmap","vignette","MAPFX","outside population","knitr_kable",0,NA,NA,NA,NA,"",552.416213274002
+"heatmap-040","heatmap","vignette","ASURAT","timeout","timeout ! callr timed out",0,NA,NA,NA,NA,"",941.28023147583
+"heatmap-041","heatmap","topic","ComplexHeatmap::attach_annotation-Heatmap-method","retained","",2,1,8,"heatmap","Heatmap","",4.00790977478027
+"heatmap-042","heatmap","vignette","GeDi","missing package","GeDi: installation of 2 packages failed:  ‘GeneTonic’, ‘GeDi’",0,NA,NA,NA,NA,"GeDi",155.712990045547
+"heatmap-048","heatmap","vignette","MPAC","no figure","figures of other engines: ggplot x2, grid x3",0,NA,NA,NA,NA,"",41.3082602024078
