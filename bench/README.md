@@ -17,8 +17,18 @@ The gloss benchmark: R figures with runnable code and data, sampled from publish
 | `R/frame.R` | builds the sampling frames |
 | `frame/*.csv`, `frame/sources.json` | one frame per stratum, and the source versions they came from |
 | `R/sample.R`, `sample.csv` | the PSU sample: stratum, rank in the stratum's permutation, weight |
+| `R/runner.R`, `R/harvest.R` | run a PSU in a subprocess, find its figures, install packages, vendor URL data, freeze one figure |
+| `R/offline-check.R`, `R/spot-check.R` | rerun frozen figures with no network (all of them; 10 of them 3 times) |
+| `R/attribution.R`, `figures/SOURCES.md` | source, version and license of each frozen figure |
+| `R/split.R`, `split.csv`, `MANIFEST.md5` | the seeded development / held-out split and the checksums of the freeze |
+| `figures/<id>/` | one frozen figure: `code.R`, `meta.json` (in git), `data/` (not in git) |
+| `runs/` | outcome rows of every attempt (`attempts.csv`), check results, logs, archived earlier runs |
+| `predictions.md` | predictions, committed before the runs they predict, and their scores |
+| `docker/` | the pinned container (`run.sh`, `image`) in which all third-party code runs |
 
-Later tasks add `figures/<id>/`, `runs/`, `split.csv` and a checksum manifest.
+Data vendored from URLs (`figures/<id>/data/`, 7 figures) is not in git: several sources state no license (owner's decision, 2026-11-10). Its checksums are in `MANIFEST.md5` and its URLs in `meta.json`.
+
+Two package environments, each with its own library: `cran` (CRAN snapshot 2026-10-22) for the gallery, exts and patchwork strata; `bioc` (Bioconductor 3.21 with CRAN 2025-10-29, the last day 3.21 was the release) for bioc and heatmap. Each figure's `meta.json` records its environment, and reruns use it.
 
 ## Sources (v0)
 

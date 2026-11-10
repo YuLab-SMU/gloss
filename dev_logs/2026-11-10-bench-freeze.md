@@ -1,0 +1,48 @@
+# 2026-11-10 — Bench v0 frozen: era-matched Bioconductor environment, 109 eligible, 55 / 54 split
+
+- **Related plan:** [plan/2026-11-09-bench-v0.md](../plan/2026-11-09-bench-v0.md) (active; Tasks 1–5 done, Tasks 6–7 open)
+- **Related ADRs:** none
+- **Worked on by:** Yonghe Xia, Claude
+- **Follows:** [2026-11-09-bench-harvest.md](2026-11-09-bench-harvest.md)
+
+## What changed
+
+The owner chose an era-matched CRAN for the Bioconductor strata (plan Scope changes). Earlier on this date `daaba57` built it; this session reran the 45 affected PSUs in it, repeated the no-network pass and the spot check, fixed the install log, and froze the benchmark.
+
+| Commit | Files | Change |
+|---|---|---|
+| `daaba57` | `bench/R/common.R`, `runner.R`, `harvest.R`, `capture.R`, `setup-container.R`, `bench/docker/run.sh` | two package environments, `cran` (CRAN 2026-10-22) and `bioc` (Bioconductor 3.21, CRAN 2025-10-29), each in its own library; `meta.json` records a figure's environment and reruns use it |
+| `938d928` | `bench/runs/attempts.csv`, `-harvest-bioc-env.log` | the 45 bioc and heatmap rows rerun in `bioc` |
+| `2a1ef2d` | `bench/R/runner.R`, `check-runner.R` | the install log takes the install child's stdout and stderr; check Part 1d |
+| `019bc60`, `cd28963` | `bench/runs/offline-check.*`, `spot-check.*` | no-network pass and spot check on the final pool |
+| `e985d82` | `bench/figures/` (code and metadata), `SOURCES.md`, `split.csv`, `MANIFEST.md5`, `bench/R/attribution.R`, `.gitignore` | the freeze; vendored data stays out of git |
+
+## Measured
+
+- Suite: 7 files, 45 tests, 268 expectations, 0 failed, 0 skipped (`NOT_CRAN=true`, `devtools::test()`; run after the harness fix and at the end of the session). No package code changed.
+- `daaba57`'s checks (earlier on this date, before this session): host `check-runner.R` OK, and a mutation that drops the library filter fails it; in the container ggplot2 and ComplexHeatmap load from each environment's own library, and `densityHeatmap` gives 4 heatmaps in `bioc`; setup in `bioc`: ggplot2 4.0.0, ComplexHeatmap 2.24.1, svglite 2.2.2.
+- **Rerun in `bioc`** (`bench/docker/run.sh Rscript bench/R/harvest.R` on the 45 PSUs, harness `daaba57`), against the `cran`-environment rows archived in `runs/2026-11-10-bioc-heatmap-cran-env-attempts.csv`: 39 outcomes identical, 6 changed. Newly retained: bioc-008 CAGEfightR, bioc-017 scPipe, bioc-021 MicrobiotaProcess (were "missing package"), bioc-012 wiggleplotr (was "code error": dplyr's `select_()` is defunct in current dplyr). Changed class: heatmap-037 RiboCrypt "missing package" → "missing data" (`cannot open the connection`), heatmap-039 MAPFX "missing package" → "outside population" (a table only). Retained: bioc 11 → 15, heatmap 6 → 6. The 17 PSUs retained in both environments kept the same figure (chunk, expression, engine, class all equal).
+- Outcomes now, bioc: retained 15, no figure 8, code error 3, needs network 3, outside population 1. Heatmap: retained 6, no figure 3, code error 2, missing data 1, missing package 1 (GeDi), outside population 1, timeout 1 (ASURAT).
+- **No-network pass** (`GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/offline-check.R`, every figure in its recorded environment): 109 of 112. The same 3 fail as before: bioc-003 scTreeViz, bioc-005 Voyager, bioc-028 atSNP (runtime data through BiocFileCache/ExperimentHub). The 4 newly retained figures pass.
+- **Eligible 109 of 160 (68%):** gallery 54/70, exts 26/30, bioc 12/30, patchwork 11/15, heatmap 6/15. Engines: ggplot 61, base 19, patchwork 14, grid 9, heatmap 6.
+- **Spot check** (`GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/spot-check.R`, seed 20261110): the pool grew from 103 to 109, so the draw changed (bioc-016, -019, -023 in `bioc`; exts-009, -013, -029; gallery-009, -022, -056, -067). 10 of 10 recover their engine 3 of 3 times.
+- **Install log.** `~/.cache/gloss-bench/install.log` after the rerun: 0 lines matching `installing *source* package`, `gcc`, `g++` or `DONE (`. `Rscript bench/R/check-runner.R` with the new Part 1d, before the fix: statuses right (`glossbroken` failed, `glossgood` installed), build error in the log FALSE alone and FALSE beside another package, `runner check: FAILED`; after: TRUE, TRUE, `runner check: OK`. Container (`bench/docker/run.sh Rscript bench/R/check-runner.R`, Part 1 only): TRUE, TRUE, OK.
+- **GeDi** (a one-off install of GeneTonic into a temporary library in `bioc`, with the fixed log): `ERROR: lazy loading failed for package 'GeneTonic'`; `object 'backbone.extract' is not exported by 'namespace:backbone'`; backbone in the `bioc` library is 3.0.2, from the 2025-10-29 snapshot.
+- **Attribution** (`GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/attribution.R`): 112 figures, 13 distinct licenses: Gallery MIT 57, MIT + file LICENSE 26, GPL-3 10, Artistic-2.0 7, GPL (>= 2) 4, one each of Apache 2.0, CC0, GPL (>= 3.0), GPL (>= 3), GPL (>=3) + file LICENSE, GPL-2, GPL-3 + file LICENSE, LGPL-3. 7 figures carry vendored data: 14 files, 9.6 MB, not committed; copied to `~/.cache/gloss-bench/archive/2026-11-10-freeze-data/`, md5 of all 14 equal to the working tree.
+- **Split** (`Rscript bench/R/split.R`, twice; byte-identical `split.csv` and `MANIFEST.md5`): development 55 (bioc 6, exts 13, gallery 27, heatmap 3, patchwork 6), held-out 54 (the same, patchwork 5). Engines dev / held-out: ggplot 32/29, base 10/9, patchwork 6/8, grid 4/5, heatmap 3/3. The 3 figures that failed the no-network pass are not in it. Manifest: 250 files. Freeze commit `e985d82`: 226 files under `bench/figures/`, none under `data/`.
+- Not run: the container check's third-party part after `2a1ef2d` (it ran at `daaba57`; the fix touches only the install path, which Part 1d covers); rerunning the 7 data-dependent figures from a fresh clone (they cannot run there without the data); capture on any benchmark figure.
+
+## Surprises
+
+- **The install log never held build output, although `daaba57` said it did.** `quiet = FALSE` was not enough: R CMD INSTALL writes through `system2()`, straight to the process's stdout, which `sink()` does not see and callr dropped. A correction to that commit's message, which cannot be edited. → plan scope change (correction); fixed in `2a1ef2d` with check Part 1d.
+- **Era matching also fixed a "code error".** wiggleplotr's vignette calls `dplyr::select_()`, defunct in the 2026 dplyr, so the "some code errors may have the same cause" note in the previous log was right at least once. 4 of the 6 "missing package" outcomes became figures; the other 2 now fail later, for other reasons. → recorded here and in the plan's Task 5 result; nowhere else.
+- **An end-of-release snapshot cannot undo CRAN breaking a Bioconductor package within that release.** GeneTonic 3.2.0 needs `backbone.extract`, which the backbone already on CRAN on 2025-10-29 no longer exports, so GeDi's vignette could not have been built on Bioconductor 3.21 at the end of its release period either. → plan scope change (with the correction); the outcome stands.
+- **The era change gained nothing in the heatmap stratum.** Its 3 "missing package" vignettes now install, and all 3 still fail (missing data, a table only, GeneTonic). The stratum stays at 6, 3 per set: too few for per-engine claims about heatmaps. → reported as such in Task 6; nowhere else yet.
+- **A retained figure can name a URL that was never fetched.** gallery-038's code holds a shapefile URL whose download failed (`ok: false`); the figure comes before it is used. The first attribution table listed it as vendored data (8 figures, against 7 `data/` directories). → `attribution.R` lists only rewrites that produced a file; nowhere else.
+- **7 frozen figures cannot run from a fresh clone**, a consequence of keeping their data out of git. → plan scope change; What's next.
+
+## What's next
+
+- Plan Task 6: capture on the 55 development figures (`bench/R/capture.R`; predictions 5–8 committed in `1c8ed12`), counts per engine, every failure classed, predictions scored. Heatmap: 3 figures, reported as too few.
+- Plan Task 7: the design doc's dated note (frame used, TidyTuesday dropped, the two era environments, data out of git) and closing M0 Task 9.
+- Open: a script that refetches the 7 figures' data from the URLs in `meta.json` and checks it against `MANIFEST.md5`, or a deposit of the full set before any external use; the runtime BiocFileCache/ExperimentHub data that kept 3 figures out.
