@@ -12,7 +12,13 @@ if (length(runs)) stop("capture runs already exist; the split must be made befor
 att <- read_csv(file.path(bench_root, "runs", "attempts.csv"))
 smp <- read_csv(file.path(bench_root, "sample.csv"))
 stopifnot(setequal(att$id, smp$id))
-ret <- att[att$outcome == "retained", ]
+# a figure is eligible only if it also reran in a container with no network
+oc_file <- file.path(bench_root, "runs", "offline-check.csv")
+if (!file.exists(oc_file)) stop("run bench/R/offline-check.R (no network) before the split")
+oc <- read_csv(oc_file)
+stopifnot(setequal(oc$id, att$id[att$outcome == "retained"]))
+cat("offline check:", sum(oc$ok), "of", nrow(oc), "retained figures rerun with no network\n")
+ret <- att[att$outcome == "retained" & att$id %in% oc$id[oc$ok], ]
 stopifnot(all(dir.exists(file.path(bench_root, "figures", ret$id))))
 
 strata <- c("gallery", "exts", "bioc", "patchwork", "heatmap")
@@ -32,7 +38,7 @@ split <- split[order(match(split$id, smp$id)), ]
 write_csv(split, file.path(bench_root, "split.csv"))
 
 files <- c(list.files(file.path(bench_root, "figures"), recursive = TRUE, full.names = TRUE),
-           file.path(bench_root, c("sample.csv", "split.csv", "runs/attempts.csv")),
+           file.path(bench_root, c("sample.csv", "split.csv", "runs/attempts.csv", "runs/offline-check.csv")),
            list.files(file.path(bench_root, "frame"), full.names = TRUE))
 files <- sort(files)
 rel <- sub(paste0("^", bench_root, "/"), "", files)
