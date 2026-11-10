@@ -1,0 +1,26 @@
+          7           5           3 
+DL index: 15 
+[ 1] viewport
+[ 2] up
+[ 3] viewport
+[ 4] text/grob/gDesc                name=GRID.text.1          children=0 names(children)=0 childrenOrder=0 | kid names: 
+[ 5] up
+[ 6] viewport
+[ 7] viewport
+[ 8] rect/grob/gDesc                name=subgroup-1           children=0 names(children)=0 childrenOrder=0 | kid names: 
+ [ 8] rect/grob/gDesc                name=subgroup-2           children=0 names(children)=0 childrenOrder=0 | kid names: 
+ [ 8] rect/grob/gDesc                name=subgroup-3           children=0 names(children)=0 childrenOrder=0 | kid names: 
+ [ 8] rect/grob/gDesc                name=subgroup-4           children=0 names(children)=0 childrenOrder=0 | kid names: 
+ [ 8] rect/grob/gDesc                name=subgroup-1           children=0 names(children)=0 childrenOrder=0 | kid names: 
+ [ 8] rect/grob/gDesc                name=subgroup-2           children=0 names(children)=0 childrenOrder=0 | kid names: 
+ [ 8] rect/grob/gDesc                name=subgroup-1           children=0 names(children)=0 childrenOrder=0 | kid names: 
+ [ 8] rect/grob/gDesc                name=subgroup-2           children=0 names(children)=0 childrenOrder=0 | kid names: 
+ [ 8] rect/grob/gDesc                name=subgroup-3           children=0 names(children)=0 childrenOrder=0 | kid names: 
+[ 9] rect/grob/gDesc                name=GRID.rect.30         children=0 names(children)=0 childrenOrder=0 | kid names: 
+[10] text/grob/gDesc                name=GRID.text.2          children=0 names(children)=0 childrenOrder=0 | kid names: 
+[11] rect/grob/gDesc                name=group-1              children=0 names(children)=0 childrenOrder=0 | kid names: 
+ [11] rect/grob/gDesc                name=group-2              children=0 names(children)=0 childrenOrder=0 | kid names: 
+ [11] rect/grob/gDesc                name=group-3              children=0 names(children)=0 childrenOrder=0 | kid names: 
+[12] rect/grob/gDesc                name=GRID.rect.41         children=0 names(children)=0 childrenOrder=0 | kid names: 
+[13] text/grob/gDesc                name=GRID.text.31         children=0 names(children)=0 childrenOrder=0 | kid names: 
+[14] up

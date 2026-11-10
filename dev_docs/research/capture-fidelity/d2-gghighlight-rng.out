@@ -1,0 +1,9 @@
+label_key: Type
+class: ggplot2::ggplot ggplot ggplot2::gg S7_object gg 
+layers: GeomLine, GeomLine, GeomLabelRepel 
+label layer seed param: NA 
+two plain prints, RNG not pinned: identical=FALSE differ=5
+two plain prints, same seed before each: identical=TRUE differ=0
+in-place capture, RNG not restored : identical=FALSE differ=4 
+in-place capture, RNG restored     : identical=TRUE differ=0 
+print() consumes RNG: TRUE 

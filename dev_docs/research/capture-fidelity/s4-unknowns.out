@@ -1,0 +1,36 @@
+== A. random numbers: where must the RNG state be saved? ==
+  print(p), state before print() restored   : identical=FALSE differ=56 
+  build, then draw; state before draw restored: identical=TRUE  differ=0 
+  ... and equals print(p) from the same seed  : identical=TRUE  differ=0 
+  print(p), nothing restored                  : identical=FALSE differ=56 
+  print(p), state at page start (hook) restored: identical=FALSE differ=56 
+  self-check: wrapped B against plain redraw A1 : identical=TRUE  differ=0 
+  self-check: plain redraw A1 against the page A0: identical=FALSE differ=56 
+
+== B. a page recorded on another device, replayed on svglite ==
+  recorded on svglite : page kind grid | wrapped = replayed: identical=TRUE  differ=0 | replayed = print(p) on svglite: identical=TRUE  differ=0
+  recorded on pdf     : page kind grid | wrapped = replayed: identical=TRUE  differ=0 | replayed = print(p) on svglite: identical=FALSE differ=242
+
+== C. what the in-place route refuses or keeps (same checks as the grob route) ==
+  gradient     identical=TRUE  differ=0 | leaves 1 | mismatch 0   [gloss() today: captured, identical=TRUE  differ=0]
+  pattern      identical=TRUE  differ=0 | leaves 1 | mismatch 0   [gloss() today: captured, identical=TRUE  differ=0]
+  clip_path    identical=TRUE  differ=0 | leaves 2 | mismatch 0   [gloss() today: captured, identical=TRUE  differ=0]
+  gtree_alpha  identical=TRUE  differ=0 | leaves 2 | mismatch 0   [gloss() today: captured, identical=TRUE  differ=0]
+  rotated_vp   identical=TRUE  differ=0 | leaves 1 | mismatch 1   [gloss() today: captured, identical=TRUE  differ=0]
+  mask         REFUSED: The figure uses a mask, which group capture cannot keep. ℹ R does not apply a viewport mask to graphics groups   [gloss() today: refused: The figure uses a mask, which group capt]
+  own_group    REFUSED: Capture integrity check failed: 1 probe drew but the device wrote 2 groups. ℹ A leaf that defines its own grap   [gloss() today: refused: Capture integrity check failed: 1 probe ]
+  clip_grob    identical=TRUE  differ=0 | leaves 1 | mismatch 0   [gloss() today: captured, identical=TRUE  differ=0]
+  viewport left open, grid.edit() after drawing: identical=TRUE  differ=0 | leaves 2 | vp of box: open 
+
+== D. pages the code can leave behind ==
+  nothing                          pages 1 | page kind empty  | base entries 0, grid grobs 0
+  base then grid on top            pages 1 | page kind mixed  | base entries 7, grid grobs 1
+  grid then base on top            pages 2 | page kind mixed  | base entries 7, grid grobs 1
+  4 base pages                     pages 4 | page kind base   | base entries 24, grid grobs 0
+  2 grid pages                     pages 2 | page kind grid   | base entries 0, grid grobs 1
+  2 ggplots, no new page between   pages 1 | page kind grid   | base entries 0, grid grobs 2
+
+== E. cost of drawing the page twice and comparing (host) ==
+    1000 points: gloss() today 0.09 s | page capture 0.08 s | comparing (two signature passes) 0.02 s | identical=TRUE
+   10000 points: gloss() today 0.39 s | page capture 0.39 s | comparing (two signature passes) 0.19 s | identical=TRUE
+  100000 points: gloss() today 3.54 s | page capture 3.67 s | comparing (two signature passes) 2.16 s | identical=TRUE
