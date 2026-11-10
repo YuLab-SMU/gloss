@@ -30,7 +30,7 @@ classify_failure <- function(err, install_failed = character()) {
   if (grepl(missing_package_re, msg)) return("missing package")
   # a relative path handed to url() or download.file() is missing data, not network
   if (grepl("cannot open URL '(?!(https?|ftp)://)", msg, perl = TRUE)) return("missing data")
-  if (grepl("resolve host|Failed to connect|Couldn't connect|cannot open URL|proxy|SSL|HTTP error|Timeout was reached|internet|curl_fetch|download.*fail", msg, ignore.case = TRUE)) return("needs network")
+  if (grepl("resolve host|Failed to connect|Couldn't connect|cannot open URL|proxy|SSL|HTTP error|HTTP [45][0-9][0-9]|Timeout was reached|internet|curl_fetch|download.*fail", msg, ignore.case = TRUE)) return("needs network")
   if (grepl("cannot open (file|the connection|\")|No such file|does not exist|not found in.*path", msg, ignore.case = TRUE)) return("missing data")
   "code error"
 }

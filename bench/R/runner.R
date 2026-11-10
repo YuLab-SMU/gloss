@@ -135,7 +135,14 @@ ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log"), tr
   notes <- character()
   if (length(missing)) {
     notes <- callr::r(function(pkgs, lib, bioc, cran, log, tries) {
-      repos <- BiocManager::repositories(version = bioc)
+      # BiocManager validates the version online; through the proxy that fails now and then
+      repos <- NULL
+      for (k in seq_len(tries)) {
+        repos <- tryCatch(BiocManager::repositories(version = bioc), error = function(e) e)
+        if (!inherits(repos, "error")) break
+        Sys.sleep(10 * k)
+      }
+      if (inherits(repos, "error")) stop(repos)
       repos[["CRAN"]] <- cran  # always the pinned CRAN, never the session's option
       # Linux (the container) installs type "source": Posit Package Manager
       # serves CRAN binaries under it; Bioconductor packages compile (no arm64
@@ -254,7 +261,11 @@ vendor_data <- function(chunks, dir, gallery = FALSE) {
 run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, recover, capture, repo) {
   setwd(dir)
   set.seed(seed)
-  options(warn = 0, device = function(...) grDevices::pdf(NULL, width = 7, height = 5))
+  # knitr::include_graphics() of an image shipped with a vignette's sources but
+  # not with the installed package draws nothing; as in the vignette's own
+  # build, where the file exists, it must not stop the run
+  options(warn = 0, device = function(...) grDevices::pdf(NULL, width = 7, height = 5),
+          knitr.graphics.error = FALSE)
   open_dev <- function() {
     grDevices::pdf(NULL, width = 7, height = 5)
     grDevices::dev.control("enable")

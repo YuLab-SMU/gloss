@@ -51,8 +51,9 @@ synthetic <- list(
     c("grid::grid.newpage()", "grid::grid.rect(gp = grid::gpar(fill = 'grey90'))", "grid::grid.points(grid::unit(c(.2, .5), 'npc'), grid::unit(c(.3, .6), 'npc'))"),
     # 7: a ComplexHeatmap drawn with draw()
     c("m <- matrix(seq_len(20) / 3, 4)", "ComplexHeatmap::draw(ComplexHeatmap::Heatmap(m))"),
-    # 8: a lattice plot: a visible trellis value draws only when auto-printed
-    c("lattice::xyplot(y ~ x, d)"),
+    # 8: a lattice plot: a visible trellis value draws only when auto-printed,
+    # after a static image that is not installed (no figure, no stop)
+    c("knitr::include_graphics('figures/not-installed.png')", "lattice::xyplot(y ~ x, d)"),
     # 9: an htmlwidget-like visible value and an error: no figure, run stops
     c("structure(list(), class = 'htmlwidget')", "stop('boom')", "plot(1)")
   )
@@ -119,7 +120,8 @@ check_pure <- function() {
     list(run_of("cannot open URL 'data/tissue_lowres_5a.jpeg'"), "missing data"),
     list(run_of("cannot open URL 'https://example.org/x.csv'"), "needs network"),
     list(run_of("Required packages are missing: randomForest"), "missing package"),
-    list(run_of("Cannot open \"data/x.shp\"; The source could be corrupt or not supported."), "missing data"))
+    list(run_of("Cannot open \"data/x.shp\"; The source could be corrupt or not supported."), "missing data"),
+    list(run_of("HTTP 405 Method Not Allowed."), "needs network"))
   for (k in seq_along(cases)) {
     got <- psu_outcome(cases[[k]][[1]], failed = character())$outcome
     if (!identical(got, cases[[k]][[2]])) {
