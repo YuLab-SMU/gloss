@@ -154,7 +154,15 @@ harvest_psu <- function(row) {
       out$outcome <- "outside population"; out$detail <- paste(last$out_classes, collapse = " ")
     } else {
       out$outcome <- classify_failure(last$error, failed)
-      out$detail <- substr(paste(last$error$stage, last$error$message), 1, 300)
+      out$detail <- if (!is.null(last$error)) {
+        substr(paste(last$error$stage, last$error$message), 1, 300)
+      } else if (nrow(last$candidates)) {
+        # ran cleanly, but its figures are not of the stratum's engine
+        n <- table(last$candidates$engine)
+        paste("figures of other engines:", paste(names(n), n, sep = " x", collapse = ", "))
+      } else {
+        "ran without error, no figure"
+      }
     }
     out$seconds <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
     return(out)
