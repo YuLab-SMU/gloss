@@ -47,6 +47,8 @@ for (k in seq_len(nrow(todo))) {
 }
 env <- list(set = set, figures = nrow(todo), started = stamp, R = R.version.string,
             image = Sys.getenv("GLOSS_BENCH_IMAGE_DIGEST", NA),
-            packages = lapply(setNames(nm = c("gloss", "ggplot2", "ComplexHeatmap", "patchwork", "svglite", "gridGraphics", "grid")),
-                              function(p) tryCatch(as.character(utils::packageVersion(p, lib.loc = c(bench_libpaths(), "."))), error = function(e) NA)))
+            environments = lapply(bench_envs, function(e) list(
+              cran = e$cran,
+              packages = lapply(setNames(nm = c("gloss", "ggplot2", "ComplexHeatmap", "patchwork", "svglite", "gridGraphics", "grid")),
+                                function(p) tryCatch(as.character(utils::packageVersion(p, lib.loc = c(bench_libpaths(e), "."))), error = function(err) NA)))))
 jsonlite::write_json(env, sub("\\.csv$", ".json", out_file), auto_unbox = TRUE, pretty = TRUE)

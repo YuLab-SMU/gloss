@@ -135,8 +135,16 @@ prepare_run_dir <- function(fig_dir) {
 }
 
 # Rerun a frozen figure with the network blocked; the recovered engine must match.
+# The environment a frozen figure was harvested in (meta.json), else its stratum's.
+figure_env <- function(meta) {
+  name <- meta$environment$name %||% env_for_stratum(meta$stratum %||% "")$name
+  if (is.null(bench_envs[[name]])) stop("unknown package environment ", name, " in meta.json")
+  bench_envs[[name]]
+}
+
 check_eligibility <- function(dir, engine, timeout = 300, capture = FALSE) {
   meta <- jsonlite::read_json(file.path(dir, "meta.json"))
+  use_env(figure_env(meta))
   r <- run_script(frozen_script(dir), prepare_run_dir(dir), seed = meta$seed, timeout = timeout,
                   offline = TRUE, recover = TRUE, capture = capture)
   list(ok = is.null(r$error) && identical(r$recovered$engine, engine), run = r)
@@ -226,6 +234,7 @@ harvest_psu <- function(row) {
   }
   meta <- list(id = row$id, stratum = row$stratum, kind = row$kind, psu = row$psu,
                vignette = b$vignette %||% NULL, rewrites = b$rewrites,
+               environment = list(name = active_env()$name, cran = active_env()$cran, bioconductor = bioc_version),
                packages = b$pkgs, harvested = format(Sys.time(), tz = "UTC", usetz = TRUE))
   fig_dir <- freeze_figure(row$id, script, chosen, work_dir, meta)
   e <- check_eligibility(fig_dir, chosen$engine)
@@ -249,6 +258,7 @@ if (sys.nframe() == 0L) {
   dir.create(dirname(attempts_file), showWarnings = FALSE)
   for (k in seq_len(nrow(todo))) {
     row <- todo[k, ]
+    use_env(env_for_stratum(row$stratum))
     res <- tryCatch(harvest_psu(row), error = function(e) data.frame(
       id = row$id, stratum = row$stratum, kind = row$kind, psu = row$psu, outcome = "harness error",
       detail = conditionMessage(e), n_figures = 0L, chunk = NA, expr = NA, engine = NA, class = NA,

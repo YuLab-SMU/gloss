@@ -57,7 +57,7 @@ gallery_script <- function(psu, root = file.path(src_root, "gallery")) {
        chunk_labels = vapply(chunks, `[[`, "", "header"), nbsp = count_nbsp(unlist(code)))
 }
 
-topic_code <- function(pkg, topic, lib = c(lib_root, .libPaths())) {
+topic_code <- function(pkg, topic, lib = bench_libpaths()) {
   db <- tools::Rd_db(pkg, lib.loc = lib)
   rd <- db[[paste0(topic, ".Rd")]]
   if (is.null(rd)) stop("no help topic ", pkg, "::", topic)
@@ -71,7 +71,7 @@ topic_script <- function(pkg, topic) {
        chunk_labels = paste0(pkg, "::", topic), nbsp = attr(code, "nbsp"))
 }
 
-package_topics <- function(pkg, lib = c(lib_root, .libPaths())) {
+package_topics <- function(pkg, lib = bench_libpaths()) {
   db <- tools::Rd_db(pkg, lib.loc = lib)
   has_ex <- vapply(db, function(rd) any(vapply(rd, function(s) identical(attr(s, "Rd_tag"), "\\examples"), TRUE)), TRUE)
   db <- db[has_ex]
@@ -79,7 +79,7 @@ package_topics <- function(pkg, lib = c(lib_root, .libPaths())) {
   sort(sub("\\.Rd$", "", names(db)[has_code]))
 }
 
-vignette_files <- function(pkg, lib = c(lib_root, .libPaths())) {
+vignette_files <- function(pkg, lib = bench_libpaths()) {
   info <- tools::getVignetteInfo(pkg, lib.loc = lib)
   if (!nrow(info)) return(data.frame())
   data.frame(dir = info[, "Dir"], file = info[, "File"], r = info[, "R"], stringsAsFactors = FALSE)
@@ -107,10 +107,17 @@ vignette_script <- function(pkg, vig) {
 
 # ---- packages ----------------------------------------------------------------
 
-bench_libpaths <- function() unique(c(lib_root, .libPaths()))
+# The active environment's library, then the session's (the image's site and
+# base libraries); the other environments' libraries are never on the path.
+bench_libpaths <- function(env = active_env()) {
+  others <- vapply(Filter(function(e) e$name != env$name, bench_envs), `[[`, "", "lib")
+  sess <- .libPaths()
+  sess <- sess[!normalizePath(sess, mustWork = FALSE) %in% normalizePath(others, mustWork = FALSE)]
+  unique(c(env$lib, sess))
+}
 
-installed_anywhere <- function(pkgs) {
-  have <- rownames(utils::installed.packages(lib.loc = bench_libpaths()))
+installed_anywhere <- function(pkgs, env = active_env()) {
+  have <- rownames(utils::installed.packages(lib.loc = bench_libpaths(env)))
   pkgs %in% have
 }
 
@@ -124,17 +131,19 @@ install_reason <- function(pkg, notes) {
   if (length(x)) paste(x, collapse = "; ") else "install failed (see install.log)"
 }
 
-# Install missing packages into the bench library (CRAN and Bioconductor 3.21).
-# Returns one row per requested package: present, installed or failed, with
-# the reason for a failure. A download through the proxy fails now and then
-# (SSL connect error), so failed downloads are retried.
-ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log"), tries = 3L) {
+# Install missing packages into the active environment's library (its CRAN
+# snapshot and Bioconductor 3.21). Returns one row per requested package:
+# present, installed or failed, with the reason for a failure. A download
+# through the proxy fails now and then (SSL connect error), so failed downloads
+# are retried. Build output goes to the log (quiet = FALSE): with quiet = TRUE
+# a failed build left only "installation of package ... failed".
+ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log"), tries = 3L, env = active_env()) {
   pkgs <- unique(pkgs[nzchar(pkgs)])
   if (!length(pkgs)) return(data.frame(package = character(), status = character(), reason = character()))
-  missing <- pkgs[!installed_anywhere(pkgs)]
+  missing <- pkgs[!installed_anywhere(pkgs, env)]
   notes <- character()
   if (length(missing)) {
-    notes <- callr::r(function(pkgs, lib, bioc, cran, log, tries) {
+    notes <- callr::r(function(pkgs, lib, bioc, cran, log, tries, env_name) {
       # BiocManager validates the version online; through the proxy that fails now and then
       repos <- NULL
       for (k in seq_len(tries)) {
@@ -153,12 +162,12 @@ ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log"), tr
       con <- file(log, open = "a")
       sink(con, type = "output"); sink(con, type = "message")
       on.exit({ sink(type = "message"); sink(type = "output"); close(con) })
-      cat("\n==== ", format(Sys.time()), paste(pkgs, collapse = " "), "\n")
+      cat("\n==== ", format(Sys.time()), paste0("[", env_name, "]"), paste(pkgs, collapse = " "), "\n")
       acc <- new.env()
       acc$notes <- character()
       install <- function(p, type) withCallingHandlers(
         try(utils::install.packages(p, lib = lib, repos = repos, type = type,
-                                    dependencies = c("Depends", "Imports", "LinkingTo"), quiet = TRUE, Ncpus = 4)),
+                                    dependencies = c("Depends", "Imports", "LinkingTo"), quiet = FALSE, Ncpus = 4)),
         warning = function(w) {
           acc$notes <- c(acc$notes, conditionMessage(w))
           cat("Warning:", conditionMessage(w), "\n")
@@ -176,10 +185,11 @@ ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log"), tr
         k <- k + 1L
       }
       acc$notes
-    }, args = list(pkgs = missing, lib = lib_root, bioc = bioc_version, cran = cran_repo, log = log, tries = tries),
-    libpath = bench_libpaths(), timeout = 3600, show = FALSE)
+    }, args = list(pkgs = missing, lib = env$lib, bioc = bioc_version, cran = env$cran, log = log, tries = tries,
+                   env_name = env$name),
+    libpath = bench_libpaths(env), timeout = 3600, show = FALSE)
   }
-  ok <- installed_anywhere(pkgs)
+  ok <- installed_anywhere(pkgs, env)
   status <- ifelse(!pkgs %in% missing, "present", ifelse(ok, "installed", "failed"))
   data.frame(package = pkgs, status = status,
              reason = ifelse(status == "failed", vapply(pkgs, install_reason, "", notes = notes), ""),

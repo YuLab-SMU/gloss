@@ -13,6 +13,32 @@ bioc_version <- "3.21"
 # the container sets a dated snapshot (bench/docker/run.sh); the host default is unpinned
 cran_repo <- Sys.getenv("GLOSS_BENCH_CRAN", "https://cloud.r-project.org")
 
+# Package environments (plan Scope changes, 2026-11-10). Code runs against the
+# CRAN of its own era, each environment in its own library, never falling back
+# to the other's:
+#   cran: the Gallery commit's date (gallery, exts, patchwork strata);
+#   bioc: the last day Bioconductor 3.21 was the release, 2025-10-29 (3.22 came
+#         out 2025-10-30, bioconductor.org/config.yaml), for bioc and heatmap.
+# The image's own site library is shared by both, as before.
+bench_envs <- list(
+  cran = list(name = "cran", cran = cran_repo, lib = lib_root),
+  bioc = list(name = "bioc", cran = Sys.getenv("GLOSS_BENCH_CRAN_BIOC", "https://cloud.r-project.org"),
+              lib = file.path(cache_root, "lib-bioc", R.version$platform,
+                              paste(R.version$major, sub("\\..*$", "", R.version$minor), sep = ".")))
+)
+dir.create(bench_envs$bioc$lib, recursive = TRUE, showWarnings = FALSE)
+env_for_stratum <- function(stratum) if (stratum %in% c("bioc", "heatmap")) bench_envs$bioc else bench_envs$cran
+
+# The active environment: set per PSU (harvest) or per frozen figure (reruns).
+.bench_state <- new.env()
+.bench_state$env <- bench_envs$cran
+use_env <- function(env) {
+  stopifnot(is.list(env), env$name %in% names(bench_envs))
+  .bench_state$env <- env
+  invisible(env)
+}
+active_env <- function() .bench_state$env
+
 sources <- list(
   gallery = list(
     repo = "https://github.com/holtzy/R-graph-gallery.git",

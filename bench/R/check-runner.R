@@ -160,6 +160,26 @@ check_pure <- function() {
                        'img <- jpeg::readJPEG("data/a.jpeg")'))) {
     cat("!! rewrite_literal gave:", rw, sep = "\n"); good <- FALSE
   }
+  # package environments: strata map to their era; neither environment's path
+  # holds the other's library, even when the session has it on its path
+  if (!identical(env_for_stratum("heatmap")$name, "bioc") || !identical(env_for_stratum("bioc")$name, "bioc") ||
+      !identical(env_for_stratum("gallery")$name, "cran") || !identical(env_for_stratum("patchwork")$name, "cran")) {
+    cat("!! env_for_stratum\n"); good <- FALSE
+  }
+  old_paths <- .libPaths()
+  .libPaths(c(bench_envs$cran$lib, bench_envs$bioc$lib, old_paths))
+  lp_b <- bench_libpaths(bench_envs$bioc); lp_c <- bench_libpaths(bench_envs$cran)
+  .libPaths(old_paths)
+  norm <- function(x) normalizePath(x, mustWork = FALSE)
+  if (!identical(norm(lp_b[1]), norm(bench_envs$bioc$lib)) || norm(bench_envs$cran$lib) %in% norm(lp_b) ||
+      !identical(norm(lp_c[1]), norm(bench_envs$cran$lib)) || norm(bench_envs$bioc$lib) %in% norm(lp_c)) {
+    cat("!! bench_libpaths mixes environments:\n", lp_b, "\n", lp_c, "\n"); good <- FALSE
+  }
+  if (!identical(figure_env(list(stratum = "heatmap"))$name, "bioc") ||
+      !identical(figure_env(list(stratum = "gallery"))$name, "cran") ||
+      !identical(figure_env(list(stratum = "synthetic", environment = list(name = "bioc")))$name, "bioc")) {
+    cat("!! figure_env\n"); good <- FALSE
+  }
   good
 }
 pure_ok <- tryCatch(check_pure(), error = function(e) { cat("!! pure checks:", conditionMessage(e), "\n"); FALSE })
@@ -175,16 +195,30 @@ if (identical(Sys.getenv("GLOSS_BENCH_THIRD_PARTY"), "true")) {
   # (ComplexHeatmap::Heatmap was used here first: its examples are only
   # "# There is no example" and NULL, so it tested nothing.)
   stopifnot(!c("13-scatter-plot.Rmd", "164-area-chart-ggplot2.Rmd", "ComplexHeatmap::densityHeatmap") %in% smp$psu)
+  # each runs in its stratum's package environment (the heatmap topic: bioc)
   third <- list(
-    list("gallery-base", gallery_script("13-scatter-plot.Rmd"), rep("base", 4)),
-    list("gallery-ggplot", gallery_script("164-area-chart-ggplot2.Rmd"), rep("ggplot", 2)),
-    list("heatmap-topic", topic_script("ComplexHeatmap", "densityHeatmap"), rep("heatmap", 4))
+    list("gallery-base", function() gallery_script("13-scatter-plot.Rmd"), rep("base", 4), "cran"),
+    list("gallery-ggplot", function() gallery_script("164-area-chart-ggplot2.Rmd"), rep("ggplot", 2), "cran"),
+    list("heatmap-topic", function() topic_script("ComplexHeatmap", "densityHeatmap"), rep("heatmap", 4), "bioc")
   )
+  # where a figure package loads from, in each environment: its own library, never the other's
+  for (e in bench_envs) {
+    use_env(e)
+    for (p in c("ggplot2", "ComplexHeatmap")) {
+      where <- tryCatch(callr::r(function(p) find.package(p), args = list(p = p), libpath = bench_libpaths(e)),
+                        error = function(err) NA_character_)
+      inside <- !is.na(where) && startsWith(normalizePath(where), normalizePath(e$lib))
+      cat(sprintf("== env %s: %s from %s\n", e$name, p, where))
+      if (!inside) { cat("!! expected under", e$lib, "\n"); ok <- FALSE }
+    }
+  }
   for (t in third) {
+    use_env(bench_envs[[t[[4]]]])
+    t[[2]] <- t[[2]]()
     inst <- ensure_packages(code_packages(unlist(t[[2]]$chunks)))
     if (any(inst$status == "failed")) cat("!! packages failed:", inst$package[inst$status == "failed"], "\n")
     r <- run_script(t[[2]], file.path(tempdir(), "check-runner", t[[1]]), seed = 1, timeout = 300)
-    cat("\n==", t[[1]], ":", nrow(r$candidates), "figures,", r$n_expr, "expressions,",
+    cat("\n==", t[[1]], paste0("[", t[[4]], "]"), ":", nrow(r$candidates), "figures,", r$n_expr, "expressions,",
         if (!is.null(r$error)) paste("stopped:", r$error$stage, r$error$message), "\n")
     print(r$candidates)
     if (!identical(r$candidates$engine, t[[3]])) {

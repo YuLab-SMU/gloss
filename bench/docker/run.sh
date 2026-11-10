@@ -13,6 +13,10 @@ CACHE=${GLOSS_BENCH_CACHE:-$HOME/.cache/gloss-bench}
 # hrbrthemes (archived then) and left 86 of 344 Gallery posts needing an
 # absent package; this date leaves 35 (bench/R/snapshot-coverage.R).
 CRAN=${GLOSS_BENCH_CRAN:-https://p3m.dev/cran/__linux__/noble/2026-10-22}
+# Bioconductor PSUs (bioc and heatmap strata) run against CRAN as of the last
+# day Bioconductor 3.21 was the release (3.22: 2025-10-30), in their own library:
+# with the 2026-10-22 snapshot, 6 of their packages failed to build or load (2026-11-10).
+CRAN_BIOC=${GLOSS_BENCH_CRAN_BIOC:-https://p3m.dev/cran/__linux__/noble/2025-10-29}
 mkdir -p "$CACHE" "$REPO/bench/figures" "$REPO/bench/runs"
 # Forward the host's HTTP(S) proxy, if any: a direct route from the container
 # failed 2 of 5 requests here (one hung, one timed out), the proxied route 0 of 12 (2026-11-09)
@@ -34,6 +38,7 @@ exec docker run --rm $NET $PROXY \
   -v "$CACHE":/cache \
   -e GLOSS_BENCH_CACHE=/cache \
   -e GLOSS_BENCH_CRAN="$CRAN" \
+  -e GLOSS_BENCH_CRAN_BIOC="$CRAN_BIOC" \
   -e GLOSS_BENCH_THIRD_PARTY="${GLOSS_BENCH_THIRD_PARTY:-}" \
   -e GLOSS_BENCH_OFFLINE="${GLOSS_BENCH_OFFLINE:-}" \
   -e GLOSS_BENCH_IMAGE_DIGEST="$IMAGE" \
