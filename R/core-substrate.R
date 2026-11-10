@@ -94,10 +94,14 @@ find_engine <- function(x, engine = NULL) {
 }
 
 # A subclass with its own print() method can draw a different figure from the
-# grob the engine builds: ggbreak's print.ggcut draws a cut axis, ggExtra's
-# print.ggExtraPlot draws marginal plots. gloss captured the uncut plot / the
-# gtable alone, with no error (bench 2026-11-10: exts-018, gallery-052).
+# grob the engine builds: ggbreak's print.ggcut draws a cut axis, and gloss
+# captured the uncut plot with no error (bench 2026-11-10: exts-018).
 # Refuse before capture instead of silently capturing another figure.
+# The check is by class, so it also refuses objects whose print() draws
+# exactly the grob the engine would: ggExtra's print.ggExtraPlot is
+# grid.draw(x) (gallery-052; 83 = 83 primitives, dev log
+# 2026-11-10-page-capture-spike). Known over-refusal, kept until the capture
+# route is decided (idea/2026-11-10-page-capture.md).
 # Only print() is checked: extensions whose ggplot_build() returns something
 # other than a built ggplot are already refused by build_ggplot().
 standard_print_methods <- function() {

@@ -4,7 +4,7 @@
 
 - A ggplot without layers is captured, alone or as a wrapped patchwork element (`wrap_elements()`, `wrap_ggplot_grob()`); it used to fail with "subscript out of bounds".
 - A ggplot extension whose own `ggplot_build()` returns something other than a built ggplot (gganimate's animations) is refused with the reason, instead of failing while drawing.
-- A figure whose `print()` method is not a standard draw path (ggbreak's cut axis, ggExtra's marginal plots) is refused with the reason, instead of being captured as a different figure with no error.
+- A figure whose `print()` method is not a standard draw path (ggbreak's cut axis, ggExtra's marginal plots) is refused with the reason, instead of being captured as a different figure with no error. Correction (2026-11-10, later): only ggbreak's figure was captured as a different one. ggExtra's `print()` draws the same grob gloss captured; it is refused because the check is by class, which is stricter than needed.
 - A clipping grob (`grid::clipGrob()`) keeps clipping the leaves drawn after it. It used to be wrapped in a graphics group like any leaf, which ended its clip with the group: the following leaves were captured unclipped, with no error. It is no longer listed as a leaf (it draws nothing).
 - Bench capture runs (development only) now record a fidelity verdict per figure, the primitives that differ, known exceptions with their reason, and which leaves carry a count mismatch.
 

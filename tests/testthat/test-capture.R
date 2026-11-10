@@ -136,10 +136,11 @@ test_that("a ggplot extension that builds into something else is refused, alone 
 })
 
 test_that("a figure that prints through its own method is refused, not captured as another figure", {
-  # A subclass with its own print() draws something other than the grob the
-  # engine builds. ggbreak's ggcut (exts-018) prints a cut axis, ggExtra's
-  # ggMarginal() (gallery-052) prints marginal plots; gloss captured the
-  # uncut plot / the gtable alone, with no error (bench 2026-11-10).
+  # A subclass with its own print() can draw something other than the grob the
+  # engine builds: ggbreak's ggcut (exts-018) prints a cut axis and gloss
+  # captured the uncut plot, with no error (bench 2026-11-10). The check is by
+  # class: ggExtra's ggMarginal() (gallery-052) is refused too, although its
+  # print() draws the same grob (a known over-refusal, see R/core-substrate.R).
   skip_if_no("ggplot2")
   own_print <- function(x, ...) invisible(NULL)
   assign("print.gloss_test_print", own_print, envir = globalenv())
