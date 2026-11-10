@@ -68,8 +68,11 @@ ggplot_tables <- function(plot, built) {
       )
     }
   }
+  # built data follows the built plot's layers: ggplot_build() adds a
+  # geom_blank layer to a plot that has none (wrapped patchwork elements)
+  built_layers <- built$plot$layers %||% plot$layers
   for (i in seq_along(built$data)) {
-    l <- plot$layers[[i]]
+    l <- if (i <= length(built_layers)) built_layers[[i]] else NULL
     out[[length(out) + 1L]] <- list(
       name = sprintf("built_layer%d", i), role = "built", layer = i, data = built$data[[i]],
       description = sprintf("built data of layer %d (%s, %s)", i, class(l$geom)[1], class(l$stat)[1])

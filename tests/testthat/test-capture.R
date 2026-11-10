@@ -101,6 +101,24 @@ test_that("engines are chosen by class and can be named", {
   expect_error(gloss(1:3), "No engine plugin")
 })
 
+test_that("a ggplot without layers, alone or wrapped in patchwork, is captured", {
+  # ggplot_build() adds a geom_blank layer to a plot without layers, so the
+  # built data has one entry more than plot$layers. Wrapped elements
+  # (wrap_elements(), wrap_ggplot_grob()) are such plots; two development
+  # figures of the benchmark failed here (bench run 2026-11-10-1131).
+  skip_if_no("ggplot2", "patchwork")
+  empty <- gloss(ggplot2::ggplot(mtcars), context = FALSE)
+  expect_equal(empty$meta$engine, "ggplot")
+  expect_true(any(vapply(empty$tables, function(t) identical(t$role, "built"), logical(1))))
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  wrapped <- p + patchwork::wrap_elements(panel = grid::textGrob("a note"))
+  fig <- gloss(wrapped, context = FALSE)
+  expect_equal(fig$meta$engine, "patchwork")
+  expect_true(any(fig$substrate$elements$text %in% "a note"))
+  plain <- plain_svg(function() print(wrapped), 7, 5)
+  expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain))
+})
+
 test_that("fills, clipping paths and gTree alpha are captured unchanged", {
   cases <- list(
     gradient = grid::rectGrob(width = 0.8, height = 0.6,
