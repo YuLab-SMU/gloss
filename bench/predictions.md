@@ -89,3 +89,22 @@ Written after the freeze (`e985d82`) and before `bench/R/capture.R` has run on a
 - **Prediction 8** (in at least 95% of captured figures, the only element without a leaf is the device background): among captured figures, the share where every unowned element is the device background (`unowned == unowned_bg`), counting figures with no unowned element as meeting it. The device background is the first element when it is a rect covering the SVG's viewBox (`runner.R`).
 - Everything is also reported per engine, from `split.csv`.
 
+#### Predictions 5–8 on the development set (scored 2026-11-10)
+
+Run: `runs/2026-11-10-1131-capture-dev.csv` (`GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev` at `803437f`, clean tree), scored by `bench/R/score-capture.R` with the rules above (`runs/2026-11-10-1131-capture-dev-score.txt`). 55 figures: 51 captured, 4 errors, 0 refused, 0 timeouts, 0 rerun failures. The run wrote the 4 errors' status as NA (a labelling bug in `capture.R`: `refusal()` returned `NA_character_`, which `%||%` does not replace); the scorer reads NA as error and says so.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 5. ≥ 90% capture without error | 51/55 = 93% | right |
+| 6. grid scenes fail more often than returned objects | 1/3 = 33% against 3/42 = 7% | right, on 3 grid figures |
+| 7. ≥ 30% of captured figures have a count mismatch | 35/51 = 69% (ggplot 25/31, patchwork 4/4, base 5/10, grid 1/3, heatmap 0/3) | right |
+| 8. ≥ 95%: the only unowned element is the background | 51/51 = 100% | right |
+
+- The 4 errors: two layerless ggplots inside patchwork (`wrap_elements()`, `wrap_ggplot_grob()`), a gloss bug; a gganimate animation, which gloss went on to draw instead of refusing; a treemap whose `grid.grab()` scene grid itself cannot draw. None was a refusal, so the plan's rule applies: M1 waits for capture fixes.
+- Prediction 6 is right for the reason it gave: the one grid failure is a grabbed scene that lost its viewport structure (`grid.grab()` warns "viewport overwritten").
+- Prediction 7 is right by a wide margin and says little: 69% of figures have a count mismatch somewhere. What it costs depends on which leaves mismatch (data layers or gridlines), which the run does not record.
+
+**Second run, made after looking** (`runs/2026-11-10-1159-capture-dev.csv`, at `087476c`, after the fixes `c237e0e`, `bc78662`, `087476c`): 53 captured, 1 refused (the gganimate animation, now with its reason), 1 error (the treemap). On it, predictions 5–8 would read 53/55, 1/3 against 1/42, 36/53, 53/53. It does not replace the scored run.
+
+**Not predicted, measured on the second run: a captured figure is not always the figure the code drew.** The scene equals what the code drew on svglite for heatmap 3/3, patchwork 6/6, ggplot 28/31, grid 2/3, base 1/10. Most base differences are one primitive, the background rect gridGraphics adds. exts-018, a ggbreak `ggcut` drawn by its own print method, was captured as a plain ggplot: another figure, with no error. Prediction 5 counts it as a success.
+
