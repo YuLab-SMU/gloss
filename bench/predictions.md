@@ -20,6 +20,13 @@ Written by Claude on 2026-11-09, before any sampled figure was run (only the run
 7. **At least 30% of captured figures have one or more leaves with a count mismatch.** Reasoning: the M0 faceted plot had 6 of 62 leaves mismatched (gridlines with NA breaks, NaN ribbons), and such gridlines appear in most ggplot themes.
 8. **In at least 95% of captured figures, the only element without a leaf is the device background.**
 
+### Changes made after these predictions, before any sampled figure ran (2026-11-09)
+
+The predictions above are unchanged. Two things they were written against changed afterwards; both are scored with the change reported next to them.
+
+- **Heatmap sample.** 10 of the 15 heatmap draws were ComplexHeatmap help topics whose examples are only `# There is no example` and `NULL`. They are now out of scope and replaced by the next 10 in-scope rows of the same permutation (plan Scope changes). On the original sample those 10 would have been "no code" by construction, so prediction 2's heatmap rate could not have exceeded 5/15 there.
+- **Software environment.** Figure code runs in the pinned Bioconductor 3.21 container, with CRAN pinned to 2026-10-22 (the Gallery commit's date). With that snapshot, 9 of the 77 sampled Gallery posts and 4 of the 30 exts packages need a package absent from CRAN and Bioconductor 3.21 (static count, `bench/R/snapshot-coverage.R`). This was measured after prediction 1 was written.
+
 ### Scoring
 
 To be filled in after Tasks 4 and 6, with the counts from `runs/attempts.csv` and the capture run file.

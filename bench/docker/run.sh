@@ -8,9 +8,11 @@ set -eu
 IMAGE=${GLOSS_BENCH_IMAGE:-$(cat "$(dirname "$0")/image")}
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 CACHE=${GLOSS_BENCH_CACHE:-$HOME/.cache/gloss-bench}
-# CRAN snapshot of the day the image was built (2025-12-09), so packages added
-# to the bench library match those already in the image
-CRAN=${GLOSS_BENCH_CRAN:-https://p3m.dev/cran/__linux__/noble/2025-12-09}
+# CRAN snapshot of the pinned Gallery commit's date (2026-10-22): the posts
+# were written against it. The image's own build date (2025-12-09) lacks
+# hrbrthemes (archived then) and left 86 of 344 Gallery posts needing an
+# absent package; this date leaves 35 (bench/R/snapshot-coverage.R).
+CRAN=${GLOSS_BENCH_CRAN:-https://p3m.dev/cran/__linux__/noble/2026-10-22}
 mkdir -p "$CACHE" "$REPO/bench/figures" "$REPO/bench/runs"
 # Forward the host's HTTP(S) proxy, if any: a direct route from the container
 # failed 2 of 5 requests here (one hung, one timed out), the proxied route 0 of 12 (2026-11-09)

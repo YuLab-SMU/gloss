@@ -99,7 +99,10 @@ ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log")) {
       # serves CRAN binaries under it; Bioconductor packages compile (no arm64
       # container binaries for 3.21)
       first <- if (.Platform$pkgType == "source") "source" else "binary"
-      sink(file(log, open = "a"), type = "output")
+      # errors from install.packages() arrive as messages: log both streams
+      con <- file(log, open = "a")
+      sink(con, type = "output"); sink(con, type = "message")
+      on.exit({ sink(type = "message"); sink(type = "output"); close(con) })
       cat("\n==== ", format(Sys.time()), paste(pkgs, collapse = " "), "\n")
       try(utils::install.packages(pkgs, lib = lib, repos = repos, type = first,
                                   dependencies = c("Depends", "Imports", "LinkingTo"), quiet = TRUE, Ncpus = 4))
@@ -107,7 +110,6 @@ ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log")) {
       if (length(still) && first != "source")
         try(utils::install.packages(still, lib = lib, repos = repos, type = "source",
                                     dependencies = c("Depends", "Imports", "LinkingTo"), quiet = TRUE, Ncpus = 4))
-      sink(type = "output")
       invisible(NULL)
     }, args = list(pkgs = missing, lib = lib_root, bioc = bioc_version, cran = cran_repo, log = log),
     libpath = bench_libpaths(), timeout = 3600, show = FALSE)
