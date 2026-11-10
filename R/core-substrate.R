@@ -20,6 +20,10 @@
 #' ComplexHeatmap heatmaps, base graphics (a `recordedplot` or a function
 #' that draws the plot, through gridGraphics) and any grid grob.
 #'
+#' A figure whose `print()` method is not a standard draw the engines follow
+#' is refused with its reason: it could draw a different figure from the grob
+#' gloss builds.
+#'
 #' Within each leaf the expected number of drawn elements is compared with
 #' the number the device drew. A leaf whose counts differ keeps its
 #' structure but is marked `count_mismatch` and is never bound to data rows.
@@ -89,6 +93,38 @@ find_engine <- function(x, engine = NULL) {
   ))
 }
 
+# A subclass with its own print() method can draw a different figure from the
+# grob the engine builds: ggbreak's print.ggcut draws a cut axis, ggExtra's
+# print.ggExtraPlot draws marginal plots. gloss captured the uncut plot / the
+# gtable alone, with no error (bench 2026-11-10: exts-018, gallery-052).
+# Refuse before capture instead of silently capturing another figure.
+# Only print() is checked: extensions whose ggplot_build() returns something
+# other than a built ggplot are already refused by build_ggplot().
+standard_print_methods <- function() {
+  classes <- c("ggplot2::ggplot", "ggplot", "patchwork", "gtable", "grob",
+               "gList", "recordedplot", "function")
+  out <- lapply(classes, function(cls) {
+    tryCatch(utils::getS3method("print", cls, optional = TRUE), error = function(e) NULL)
+  })
+  out[!vapply(out, is.null, logical(1))]
+}
+
+check_print_dispatch <- function(x) {
+  std <- standard_print_methods()
+  for (cls in class(x)) {
+    m <- tryCatch(utils::getS3method("print", cls, optional = TRUE),
+                  error = function(e) NULL)
+    if (is.null(m)) next
+    if (any(vapply(std, function(f) identical(f, m), logical(1)))) return(invisible(NULL))
+    cli::cli_abort(c(
+      sprintf("%s has a custom print method (print.%s); gloss would capture another figure.",
+              class(x)[1], cls),
+      i = "The engine draws a grob built from the object. Draw the object's own print output as a grid scene instead."
+    ))
+  }
+  invisible(NULL)
+}
+
 #' Capture with a given engine plugin
 #'
 #' The work behind [gloss()], for engine plugins and tests that already hold
@@ -107,6 +143,7 @@ find_engine <- function(x, engine = NULL) {
 gl_capture <- function(x, engine, width = 7, height = 5, dense = 10000,
                        context = TRUE, expr = NULL, call = NULL,
                        env = parent.frame(), size_basis = "argument") {
+  check_print_dispatch(x)
   state <- engine$prepare(x, width, height)
   cap <- capture_scene(function() engine$grob(state), width, height)
   sub <- build_substrate(cap, width, height, dense)

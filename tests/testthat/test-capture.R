@@ -134,6 +134,28 @@ test_that("a ggplot extension that builds into something else is refused, alone 
   expect_equal(gloss(p, context = FALSE)$meta$engine, "ggplot")
 })
 
+test_that("a figure that prints through its own method is refused, not captured as another figure", {
+  # A subclass with its own print() draws something other than the grob the
+  # engine builds. ggbreak's ggcut (exts-018) prints a cut axis, ggExtra's
+  # ggMarginal() (gallery-052) prints marginal plots; gloss captured the
+  # uncut plot / the gtable alone, with no error (bench 2026-11-10).
+  skip_if_no("ggplot2")
+  own_print <- function(x, ...) invisible(NULL)
+  assign("print.gloss_test_print", own_print, envir = globalenv())
+  on.exit(rm("print.gloss_test_print", envir = globalenv()), add = TRUE)
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  custom <- p
+  class(custom) <- c("gloss_test_print", class(p))
+  expect_error(gloss(custom, context = FALSE), "custom print method")
+  # The standard print paths still capture.
+  expect_equal(gloss(p, context = FALSE)$meta$engine, "ggplot")
+  expect_equal(gloss(grid::rectGrob(), context = FALSE)$meta$engine, "grid")
+  if (requireNamespace("ggExtra", quietly = TRUE)) {
+    g <- ggExtra::ggMarginal(p, type = "histogram")
+    expect_error(gloss(g, context = FALSE), "custom print method")
+  }
+})
+
 test_that("fills, clipping paths and gTree alpha are captured unchanged", {
   cases <- list(
     gradient = grid::rectGrob(width = 0.8, height = 0.6,

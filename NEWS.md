@@ -4,6 +4,8 @@
 
 - A ggplot without layers is captured, alone or as a wrapped patchwork element (`wrap_elements()`, `wrap_ggplot_grob()`); it used to fail with "subscript out of bounds".
 - A ggplot extension whose own `ggplot_build()` returns something other than a built ggplot (gganimate's animations) is refused with the reason, instead of failing while drawing.
+- A figure whose `print()` method is not a standard draw path (ggbreak's cut axis, ggExtra's marginal plots) is refused with the reason, instead of being captured as a different figure with no error.
+- Bench capture runs (development only) now record a fidelity verdict per figure, the primitives that differ, known exceptions with their reason, and which leaves carry a count mismatch.
 
 ## M0: the substrate (2026-11-09)
 

@@ -51,6 +51,10 @@ Built-in engines handle ggplot2 plots, patchwork compositions,
 ComplexHeatmap heatmaps, base graphics (a \code{recordedplot} or a function
 that draws the plot, through gridGraphics) and any grid grob.
 
+A figure whose \code{print()} method is not a standard draw the engines follow
+is refused with its reason: it could draw a different figure from the grob
+gloss builds.
+
 Within each leaf the expected number of drawn elements is compared with
 the number the device drew. A leaf whose counts differ keeps its
 structure but is marked \code{count_mismatch} and is never bound to data rows.
