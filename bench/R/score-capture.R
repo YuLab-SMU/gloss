@@ -81,3 +81,31 @@ if ("faithful" %in% names(cap)) {
   uf <- got[got$faithful %in% FALSE, c("id", "engine", "recovered", "prims_ref", "prims_scene", "prims_differ")]
   if (nrow(uf)) { cat("  not faithful:\n"); print(uf, row.names = FALSE) }
 }
+
+# Fidelity verdicts added with the capture-fidelity slice (2026-11-10). Runs
+# before it have no verdict column; their strict fidelity numbers stand.
+if ("verdict" %in% names(cap)) {
+  cat("\nFidelity verdicts (equal / known exception / different)\n")
+  v <- factor(got$verdict, levels = c("equal", "known_exception", "different"))
+  print(addmargins(table(engine = got$engine, verdict = v)))
+
+  cat("\nKnown exceptions, with the reason\n")
+  ke <- got[got$verdict %in% "known_exception", c("id", "engine", "prims_differ", "exception")]
+  if (nrow(ke)) print(ke, row.names = FALSE) else cat("  none\n")
+
+  cat("\nDifferent: first primitives present on only one side\n")
+  df <- got[got$verdict %in% "different",
+            c("id", "engine", "prims_scene", "prims_ref", "prims_differ", "diff_scene", "diff_ref")]
+  if (nrow(df)) {
+    df$diff_scene <- substr(df$diff_scene, 1, 70); df$diff_ref <- substr(df$diff_ref, 1, 70)
+    print(df, row.names = FALSE)
+  } else cat("  none\n")
+
+  ml_ok <- !is.na(got$mismatch_leaves) & nzchar(got$mismatch_leaves)
+  cat("\nWhich leaves mismatch:", pct(sum(ml_ok), nrow(got)), "captured figures\n")
+  if (any(ml_ok)) print(utils::head(got[ml_ok, c("id", "engine", "leaves_mismatch", "mismatch_leaves")], 8L),
+                        row.names = FALSE)
+  dl <- got[!is.na(got$dense_leaves) & got$dense_leaves > 0, c("id", "engine", "dense_leaves")]
+  cat("Rasterized dense leaves:", nrow(dl), "captured figures\n")
+  if (nrow(dl)) print(dl, row.names = FALSE)
+}

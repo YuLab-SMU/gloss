@@ -271,7 +271,7 @@ vendor_data <- function(chunks, dir, gallery = FALSE) {
 
 # Runs inside a fresh R process. Self-contained: callr ships only this function.
 run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, recover, capture, repo,
-                       device = "pdf") {
+                       device = "pdf", fidelity_verdict = NULL) {
   setwd(dir)
   set.seed(seed)
   # The device the code draws on. "svg" (capture runs) is gloss's own device,
@@ -449,7 +449,10 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
           cap$unowned_other <- NA_character_
         }
         # fidelity: the captured scene draws exactly what the code drew on
-        # svglite (tag, attributes and text of every primitive, in order)
+        # svglite (tag, attributes and text of every primitive, in order).
+        # The strict verdict is kept in `faithful`; known exceptions are
+        # classified from the diff itself, with the differing primitives
+        # recorded as evidence. Nothing is silently tolerated.
         if (!is.null(ref_page) && !is.na(ref_page)) {
           sig <- get("scene_signatures", asNamespace("gloss"))
           if (!is.null(closed_page))
@@ -463,6 +466,16 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
             # multiset difference: one inserted element does not shift the rest)
             ta <- table(a); tb <- table(b); common <- intersect(names(ta), names(tb))
             cap$prims_differ <- length(a) + length(b) - 2L * sum(pmin(ta[common], tb[common]))
+            only_a <- setdiff(names(ta), names(tb)); only_b <- setdiff(names(tb), names(ta))
+            cap$diff_scene_n <- length(only_a); cap$diff_ref_n <- length(only_b)
+            cap$diff_scene <- paste(substr(utils::head(only_a, 3L), 1L, 110L), collapse = " | ")
+            cap$diff_ref <- paste(substr(utils::head(only_b, 3L), 1L, 110L), collapse = " | ")
+            cap$dense_leaves <- sum(s$leaves$dense %in% TRUE)
+            bad <- s$leaves[which(s$leaves$status == "count_mismatch"), , drop = FALSE]
+            cap$mismatch_leaves <- if (nrow(bad))
+              paste(utils::head(substr(paste0(bad$id, ":", bad$name), 1L, 40L), 20L), collapse = " ") else ""
+            v <- fidelity_verdict(cap)
+            cap$verdict <- v$verdict; cap$exception <- v$exception
           }
         }
       }
@@ -473,6 +486,30 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
 }
 
 `%||%` <- function(a, b) if (is.null(a)) b else a
+
+# ---- capture fidelity -------------------------------------------------------
+
+# Pure function, shipped into the worker as an argument (callr sends only
+# run_worker itself). Classify a strict primitive difference from the diff,
+# never from the engine. Known exceptions: a leaf rasterized by design (the
+# scene holds an <image>, the reference its primitives) and gridGraphics'
+# one extra "graphics-background" rect when a recorded base plot is echoed on
+# svglite. Everything else stays "different", with the diff recorded.
+fidelity_verdict <- function(cap) {
+  nvl <- function(x, d) if (is.null(x)) d else x
+  if (isTRUE(cap$faithful)) return(list(verdict = "equal", exception = NA_character_))
+  if (nvl(cap$dense_leaves, 0L) > 0L) return(list(
+    verdict = "known_exception",
+    exception = sprintf("%d dense leaf drawn as a raster by design", nvl(cap$dense_leaves, 0L))))
+  one_rect <- isTRUE(cap$prims_differ == 1) &&
+    isTRUE(cap$diff_scene_n == 1) && isTRUE(cap$diff_ref_n == 0) &&
+    nvl(cap$prims_scene, 0) == nvl(cap$prims_ref, 0) + 1 &&
+    startsWith(nvl(cap$diff_scene, ""), "rect ")
+  if (one_rect) return(list(
+    verdict = "known_exception",
+    exception = "gridGraphics background rect: one extra rect, nothing missing"))
+  list(verdict = "different", exception = NA_character_)
+}
 
 offline_env <- c(http_proxy = "http://127.0.0.1:9", https_proxy = "http://127.0.0.1:9",
                  HTTP_PROXY = "http://127.0.0.1:9", HTTPS_PROXY = "http://127.0.0.1:9",
@@ -488,7 +525,8 @@ run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
              args = list(setup = script$setup, chunks = script$chunks, dir = normalizePath(dir),
                          seed = seed, figure_classes = figure_classes, skip_print = outside_classes,
                          recover = recover,
-                         capture = capture, repo = normalizePath("."), device = device),
+                         capture = capture, repo = normalizePath("."), device = device,
+                         fidelity_verdict = fidelity_verdict),
              libpath = bench_libpaths(), env = env, timeout = timeout, show = FALSE,
              package = FALSE),
     error = function(e) e)

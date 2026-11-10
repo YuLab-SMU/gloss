@@ -268,6 +268,54 @@ cat(sprintf("\n== capture in env bioc: recovered %s, capture %s, %s leaves, unow
             if (bioc_ok) "OK" else "FAILED"))
 if (!bioc_ok) ok <- FALSE
 
+# Part 1f: fidelity verdicts. A strict difference is classified from the diff
+# itself. The mutations below matter: two extra primitives, or an extra rect
+# plus a missing primitive, must NOT become a known exception.
+check_fidelity <- function() {
+  good <- TRUE
+  base_cap <- list(faithful = FALSE, dense_leaves = 0L, prims_differ = 1L,
+                   diff_scene_n = 1L, diff_ref_n = 0L, prims_scene = 39L, prims_ref = 38L,
+                   diff_scene = "rect x=0 y=0 width=1 height=1 ")
+  cases <- list(
+    list(name = "equal", cap = list(faithful = TRUE), want = "equal"),
+    list(name = "rasterized leaf", cap = list(faithful = FALSE, dense_leaves = 1L), want = "known_exception"),
+    list(name = "one background rect", cap = base_cap, want = "known_exception"),
+    list(name = "two extra primitives", cap = modifyList(base_cap, list(prims_differ = 2L, diff_scene_n = 2L,
+                                                                        prims_scene = 40L)), want = "different"),
+    list(name = "extra rect and one missing", cap = modifyList(base_cap, list(prims_differ = 2L, diff_ref_n = 1L,
+                                                                             prims_ref = 39L)), want = "different"))
+  for (cs in cases) {
+    got <- tryCatch(fidelity_verdict(cs$cap)$verdict, error = function(e) paste("ERROR", conditionMessage(e)))
+    cat(sprintf("  %-26s -> %s\n", cs$name, got))
+    if (!identical(got, cs$want)) good <- FALSE
+  }
+  # End to end: the three verdicts on real figures, and mismatch leaf ids.
+  figs <- list(
+    list(name = "ggplot", want = "equal",
+         code = c("library(ggplot2)", "d <- data.frame(x=1:20,y=1:20,g=rep(c('a','b'),10))",
+                  "ggplot(d, aes(x,y)) + geom_point() + facet_wrap(~g)")),
+    list(name = "base", want = "known_exception", code = c("plot(1:10, (1:10)^2)")),
+    list(name = "dense", want = "known_exception",
+         code = c("library(ggplot2)", "set.seed(1); d <- data.frame(x=rnorm(12000),y=rnorm(12000))",
+                  "ggplot(d, aes(x,y)) + geom_point(size=0.2)")))
+  for (f in figs) {
+    r <- run_script(list(setup = character(), chunks = list(f$code)),
+                    file.path(tempdir(), "check-runner", "fidelity", f$name),
+                    seed = 1, timeout = 300, offline = TRUE, recover = TRUE, capture = TRUE, device = "svg")
+    cap <- r$capture %||% list()
+    cat(sprintf("  %-8s verdict %-16s (%s)\n", f$name, cap$verdict %||% NA, cap$exception %||% NA))
+    if (!identical(cap$status, "captured") || !identical(cap$verdict, f$want)) good <- FALSE
+    if (identical(f$name, "base") && !isTRUE(cap$prims_differ == 1)) good <- FALSE
+    if (identical(f$name, "dense") && !isTRUE(cap$dense_leaves >= 1)) good <- FALSE
+    # prediction 7 measured count mismatches; the run must now name the leaves
+    if (identical(f$name, "ggplot") && !nzchar(cap$mismatch_leaves %||% "")) good <- FALSE
+  }
+  good
+}
+fid_ok <- tryCatch(check_fidelity(), error = function(e) { cat("!! fidelity checks:", conditionMessage(e), "\n"); FALSE })
+cat("\n== fidelity verdicts and mismatch leaves:", if (fid_ok) "OK" else "FAILED", "\n")
+if (!fid_ok) ok <- FALSE
+
 if (identical(Sys.getenv("GLOSS_BENCH_THIRD_PARTY"), "true")) {
   smp <- read_csv(file.path(bench_root, "sample.csv"))
   # Expected figures, counted from the sources: 13-scatter-plot has four

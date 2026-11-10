@@ -27,6 +27,7 @@ refusal <- function(msg) {
   if (grepl("does not support graphics groups", msg)) return("refused: device without groups")
   if (grepl("integrity check failed", msg)) return("refused: integrity check")
   if (grepl("not a built ggplot", msg)) return("refused: not a static ggplot")
+  if (grepl("custom print method", msg)) return("refused: custom print method")
   NULL  # not a refusal: the caller falls back to "error" (NA here labelled 4 errors NA, run 2026-11-10-1131)
 }
 
@@ -69,7 +70,11 @@ for (k in seq_len(nrow(todo))) {
     unowned = cap$unowned %||% NA, unowned_bg = cap$unowned_bg %||% NA,
     unowned_other = cap$unowned_other %||% NA,
     faithful = cap$faithful %||% NA, prims_scene = cap$prims_scene %||% NA, prims_ref = cap$prims_ref %||% NA,
-    prims_differ = cap$prims_differ %||% NA, seconds = cap$seconds %||% NA,
+    prims_differ = cap$prims_differ %||% NA, verdict = cap$verdict %||% NA,
+    exception = cap$exception %||% NA, dense_leaves = cap$dense_leaves %||% NA,
+    mismatch_leaves = cap$mismatch_leaves %||% NA,
+    diff_scene = substr(cap$diff_scene %||% "", 1, 240), diff_ref = substr(cap$diff_ref %||% "", 1, 240),
+    seconds = cap$seconds %||% NA,
     stringsAsFactors = FALSE)
   write_csv(do.call(rbind, rows), out_file)
   cat(sprintf("[%d/%d] %s %s: %s %s\n", k, nrow(todo), id, todo$engine[k], status, substr(rows[[k]]$message, 1, 70)))
