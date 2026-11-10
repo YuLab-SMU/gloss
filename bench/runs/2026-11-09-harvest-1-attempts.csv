@@ -1,0 +1,187 @@
+"id","stratum","kind","psu","outcome","detail","n_figures","chunk","expr","engine","class","missing_packages","seconds"
+"gallery-001","gallery","gallery","package/viridis.Rmd","retained",NA,4,6,4,"base","base",NA,1.11759757995605
+"gallery-002","gallery","gallery","package/ggbeeswarm.Rmd","retained","",6,7,1,"ggplot","ggplot2::ggplot",NA,1.22991299629211
+"gallery-003","gallery","gallery","310-custom-hierarchical-edge-bundling.Rmd","retained","",11,6,5,"ggplot","ggraph",NA,104.188133716583
+"gallery-004","gallery","gallery","324-map-background-with-the-ggmap-library.Rmd","code error","eval Google now requires an API key; see `ggmap::register_google()`.",0,NA,NA,NA,NA,NA,18.8233370780945
+"gallery-005","gallery","gallery","50-51-52-scatter-plot-with-ggplot2.Rmd","retained","",3,3,1,"ggplot","ggplot2::ggplot",NA,1.08587241172791
+"gallery-006","gallery","gallery","274-map-a-variable-to-ggplot2-scatterplot.Rmd","retained","",8,4,2,"ggplot","ggplot2::ggplot",NA,1.29799723625183
+"gallery-007","gallery","gallery","320-the-basis-of-bubble-plot.Rmd","retained","",4,2,5,"ggplot","ggplot2::ggplot",NA,13.5007889270782
+"gallery-008","gallery","gallery","98-basic-scatterplot-matrix.Rmd","retained","",1,2,2,"base","base",NA,0.326796054840088
+"gallery-009","gallery","gallery","line-chart-dual-Y-axis-ggplot2.Rmd","retained","",5,2,8,"patchwork","patchwork",NA,1.15371417999268
+"gallery-010","gallery","gallery","307-add-space-in-circle-packing.Rmd","retained","",1,2,9,"ggplot","ggplot2::ggplot",NA,18.4161672592163
+"gallery-011","gallery","gallery","273-custom-your-scatterplot-ggplot2.Rmd","retained","",4,4,3,"ggplot","ggplot2::ggplot",NA,0.955966234207153
+"gallery-012","gallery","gallery","web-extended-dumbbell-plot-ggplot2.Rmd","retained","",5,8,2,"ggplot","ggplot2::ggplot",NA,28.8598155975342
+"gallery-013","gallery","gallery","a-smooth-transition-between-chloropleth-and-cartogram.Rmd","code error","eval Cannot open ""/cache/work/harvest/gallery-013/data/TM_WORLD_BORDERS_SIMPL-0.3.shp""; The source could be corrupt or not supported. See `st_drivers()` for a list of supported formats.",0,NA,NA,NA,NA,NA,229.623345851898
+"gallery-014","gallery","gallery","362-scatter-plot-with-trend-line-and-labels.Rmd","retained","",3,5,3,"ggplot","ggplot2::ggplot",NA,14.670467376709
+"gallery-015","gallery","gallery","2d-density-plot-with-ggplot2.Rmd","retained","",12,10,2,"ggplot","ggplot2::ggplot",NA,1.42283201217651
+"gallery-016","gallery","gallery","263-ggplot2-boxplot-parameters.Rmd","retained","",2,3,2,"ggplot","ggplot2::ggplot",NA,0.884613990783691
+"gallery-017","gallery","gallery","264-control-ggplot2-boxplot-colors.Rmd","retained","",10,2,3,"ggplot","ggplot2::ggplot",NA,0.93071985244751
+"gallery-018","gallery","gallery","155-interactive-streamgraph-change-offset.Rmd","missing package","eval there is no package called ‘streamgraph’",0,NA,NA,NA,NA,"streamgraph",7.65384674072266
+"gallery-019","gallery","gallery","373-basic-beeswarm-with-ggbeeswarm.Rmd","retained","",4,8,1,"ggplot","ggplot2::ggplot","",0.95998740196228
+"gallery-020","gallery","gallery","piechart-ggplot2.Rmd","retained","",3,6,3,"ggplot","ggplot2::ggplot","",0.893644094467163
+"gallery-021","gallery","gallery","23-add-colors-to-specific-groups-of-a-boxplot.Rmd","retained","",2,2,6,"base","base","",0.32767391204834
+"gallery-022","gallery","gallery","violin_horizontal_ggplot2.Rmd","retained","",1,2,10,"ggplot","ggplot2::ggplot","",1.82722139358521
+"gallery-023","gallery","gallery","127-r-snail.Rmd","retained","",1,2,3,"base","base","",0.448810577392578
+"gallery-024","gallery","gallery","137-spring-shapes-data-art.Rmd","parse error","parse <text>:9:1: unexpected input
+8: for(i in seq(1:30)){
+9:  
+   ^",0,NA,NA,NA,NA,"",0.134518146514893
+"gallery-025","gallery","gallery","335-custom-ggraph-dendrogram.Rmd","retained","",7,15,1,"ggplot","ggraph","",1.70852112770081
+"gallery-026","gallery","gallery","336-interactive-dendrogram-with-collapsibletree.Rmd","missing data","eval cannot open the connection",0,NA,NA,NA,NA,"",12.9030437469482
+"gallery-027","gallery","gallery","5-correlation-of-discrete-variables.Rmd","retained","",1,2,7,"base","base","",0.303582668304443
+"gallery-028","gallery","gallery","309-intro-to-hierarchical-edge-bundling.Rmd","retained","",6,4,1,"ggplot","ggraph","",1.48391366004944
+"gallery-029","gallery","gallery","density_mirror_ggplot2.Rmd","retained","",2,5,1,"ggplot","ggplot2::ggplot","",1.03050661087036
+"gallery-030","gallery","gallery","159-save-interactive-streamgraph-to-static-image-png.Rmd","missing package","eval there is no package called ‘streamgraph’",0,NA,NA,NA,NA,"streamgraph",11.2078750133514
+"gallery-031","gallery","gallery","line-chart-ggplot2.Rmd","retained","",2,4,6,"ggplot","ggplot2::ggplot","",0.978403568267822
+"gallery-032","gallery","gallery","267-reorder-a-variable-in-ggplot2.Rmd","retained","",8,7,2,"ggplot","ggplot2::ggplot","",1.08398818969727
+"gallery-033","gallery","gallery","272-basic-scatterplot-with-ggplot2.Rmd","retained","",2,2,2,"ggplot","ggplot2::ggplot","",0.880513906478882
+"gallery-034","gallery","gallery","368-plotting-in-cells-with-gtextras.Rmd","missing data","eval cannot open the connection",0,NA,NA,NA,NA,"",25.8167746067047
+"gallery-035","gallery","gallery","364-add-html-content-in-dt-table.Rmd","missing data","eval path[1]=""HtmlWidget"": No such file or directory",0,NA,NA,NA,NA,"",13.6350679397583
+"gallery-036","gallery","gallery","257-input-formats-for-network-charts.Rmd","retained","",2,2,6,"base","base","",0.567965269088745
+"gallery-037","gallery","gallery","package/ggthemes.Rmd","retained","",13,15,1,"ggplot","ggplot2::ggplot","",14.6548919677734
+"gallery-038","gallery","gallery","175-choropleth-map-cartography-pkg.Rmd","retained","",1,2,4,"base","base","rgdal",215.994151353836
+"gallery-039","gallery","gallery","323-sankey-diagram-with-the-networkd3-library.Rmd","missing data","eval cannot open the connection",0,NA,NA,NA,NA,"",13.1819875240326
+"gallery-040","gallery","gallery","249-igraph-network-map-a-color.Rmd","retained","",1,2,9,"base","base","",0.456623554229736
+"gallery-041","gallery","gallery","167-animated-3d-plot-imagemagick.Rmd","parse error","parse <text>:15:1: unexpected input
+14: for (i in seq(0, 350 ,10)){
+15:  
+    ^",0,NA,NA,NA,NA,"",0.129019975662231
+"gallery-042","gallery","gallery","142-basic-radar-chart.Rmd","retained","",2,4,5,"base","base","",12.0306565761566
+"gallery-043","gallery","gallery","283-the-hourly-heatmap.Rmd","missing package","eval there is no package called ‘Interpol.T’",0,NA,NA,NA,NA,"Interpol.T",13.8629276752472
+"gallery-044","gallery","gallery","web-line-chart-small-multiple-all-group-greyed-out.Rmd","offline: needs network","eval Couldn't connect to server [fonts.gstatic.com]:
+Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server NA",1,5,2,"ggplot","ggplot2::ggplot","",20.0918083190918
+"gallery-045","gallery","gallery","190-mirrored-histogram.Rmd","retained","",3,2,7,"base","base","",0.301052093505859
+"gallery-046","gallery","gallery","296-add-labels-to-circular-barplot.Rmd","retained","",1,2,9,"ggplot","ggplot2::ggplot","",1.20400762557983
+"gallery-047","gallery","gallery","package/hrbrthemes.Rmd","retained","",7,5,1,"ggplot","ggplot2::ggplot","",1.17259788513184
+"gallery-048","gallery","gallery","314-custom-circle-packing-with-several-levels.Rmd","retained","",6,2,8,"ggplot","ggraph","",1.50725388526917
+"gallery-049","gallery","gallery","144-droid-bb-8-data-art.Rmd","missing package","parse <text>:12:1: unexpected input
+11: coord_circle <- function(centre = c(0, 0), r = 1, n = 1000) {
+12:  
+    ^",0,NA,NA,NA,NA,"rgeos",7.6606183052063
+"gallery-050","gallery","gallery","354-highlight-specific-elements-in-line-chart.Rmd","retained","",4,4,1,"ggplot","ggplot2::ggplot","",1.00050926208496
+"gallery-051","gallery","gallery","package/esquisse.Rmd","timeout","timeout ! callr timed out",0,NA,NA,NA,NA,"",328.765811681747
+"gallery-052","gallery","gallery","277-marginal-histogram-for-ggplot2.Rmd","retained","",6,4,1,"grid","ggExtraPlot","",2.26412296295166
+"gallery-053","gallery","gallery","package/gganimate.Rmd","retained","",1,2,6,"ggplot","gganim","",4.13448643684387
+"gallery-054","gallery","gallery","package/geomtextpath.Rmd","retained","",7,9,2,"ggplot","ggplot2::ggplot","",0.964083671569824
+"gallery-055","gallery","gallery","37-barplot-with-number-of-observation.Rmd","retained","",1,2,6,"base","base","",0.300939083099365
+"gallery-056","gallery","gallery","235-treemap-with-subgroups.Rmd","retained","",1,2,6,"grid","grid","",13.6435434818268
+"gallery-057","gallery","gallery","package/showtext.Rmd","needs network","eval Timeout was reached [fonts.gstatic.com]:
+SSL connection timeout",0,NA,NA,NA,NA,"",12.0397257804871
+"gallery-058","gallery","gallery","24-boxplot-with-variable-width.Rmd","retained","",2,2,5,"base","base","",0.32611346244812
+"gallery-059","gallery","gallery","package/gghighlight.Rmd","retained","",5,2,6,"ggplot","ggplot2::ggplot","",0.99565601348877
+"gallery-060","gallery","gallery","package/patchwork.Rmd","retained","",6,4,3,"patchwork","patchwork","",0.817290544509888
+"gallery-061","gallery","gallery","342-introduction-to-waffle-plot-with-R.Rmd","missing package","eval there is no package called ‘waffle’",0,NA,NA,NA,NA,"waffle",7.95787262916565
+"gallery-062","gallery","gallery","74-margin-and-oma-cheatsheet.Rmd","parse error","parse <text>:13:60: unexpected input
+12: # Place text in the margins and label the margins, all in forestgreen  
+13: mtext(""Margins"", side=3, line=2, cex=2, col=""forestgreen"")  
+                                                               ^",0,NA,NA,NA,NA,"",0.131493806838989
+"gallery-063","gallery","gallery","chord-diagram-interactive.Rmd","missing package","eval there is no package called ‘chorddiag’",0,NA,NA,NA,NA,"chorddiag",7.68228626251221
+"gallery-064","gallery","gallery","240-custom-layout-background-ggplot2.Rmd","retained","",4,2,3,"ggplot","ggplot2::ggplot","",0.803864717483521
+"gallery-065","gallery","gallery","web-area-chart-with-small-multiple.Rmd","offline: needs network","eval Couldn't connect to server [fonts.gstatic.com]:
+Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server NA",1,4,1,"ggplot","facet_geo","",24.4453060626984
+"gallery-066","gallery","gallery","web-dumbbell-chart-with-a-gap-column.Rmd","retained","",4,9,2,"ggplot","ggplot2::ggplot","",1.31312680244446
+"gallery-067","gallery","gallery","27-levelplot-with-lattice.Rmd","missing data","eval cannot open the connection",0,NA,NA,NA,NA,"",0.229762315750122
+"gallery-068","gallery","gallery","374-grouped-beeswarm-with-ggbeeswarm.Rmd","retained","",3,4,1,"ggplot","ggplot2::ggplot","",0.834751605987549
+"gallery-069","gallery","gallery","311-add-labels-to-hierarchical-edge-bundling.Rmd","retained","",2,7,1,"ggplot","ggraph","",1.53356981277466
+"gallery-070","gallery","gallery","238-custom-layout-axis-ggplot2.Rmd","retained","",8,12,1,"ggplot","ggplot2::ggplot","",0.91735577583313
+"exts-001","exts","examples","gglorenz","retained",NA,2,1,3,"ggplot","ggplot2::ggplot",NA,246.525165319443
+"exts-002","exts","examples","ggdibbler","retained","",4,1,5,"ggplot","ggplot2::ggplot","",18.1854641437531
+"exts-003","exts","examples","ggTimeSeries","missing package","",0,NA,NA,NA,NA,"ggTimeSeries",7.99748134613037
+"exts-004","exts","examples","gginnards","retained","",5,1,5,"ggplot","ggplot2::ggplot","",12.4286911487579
+"exts-005","exts","examples","ggnetwork","retained","",1,1,1,"ggplot","ggplot2::ggplot","",27.3261914253235
+"exts-006","exts","examples","ggperiodic","retained","",3,1,6,"ggplot","ggplot2::ggplot","",21.1163833141327
+"exts-007","exts","examples","ggpattern","retained","",1,1,1,"grid","grid","",18.8671426773071
+"exts-008","exts","examples","ggerror","missing package","",0,NA,NA,NA,NA,"ggerror",214.422284841537
+"exts-009","exts","examples","nflplotR","retained","",3,1,11,"ggplot","ggplot2::ggplot","",39.8012726306915
+"exts-010","exts","examples","ggstance","retained","",3,1,3,"ggplot","ggplot2::ggplot","",12.6024823188782
+"exts-011","exts","examples","ggalign","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",22.0908675193787
+"exts-012","exts","examples","directlabels","retained","",1,1,5,"base","base","",248.645758628845
+"exts-013","exts","examples","geomtextpath","retained","",1,1,3,"ggplot","ggplot2::ggplot","",1.02427268028259
+"exts-014","exts","examples","plotROC","retained","",5,1,5,"ggplot","ggplot2::ggplot","",236.416082859039
+"exts-015","exts","examples","ggsurvfit","missing package","",0,NA,NA,NA,NA,"ggsurvfit",262.597007751465
+"exts-016","exts","examples","ggseas","missing package","",0,NA,NA,NA,NA,"ggseas",7.3069863319397
+"exts-017","exts","examples","tidyterra","retained","",2,1,5,"ggplot","ggplot2::ggplot","",25.9410066604614
+"exts-018","exts","examples","ggbreak","retained","",1,1,6,"ggplot","ggcut","",18.9281103610992
+"exts-019","exts","examples","ggsurveillance","retained","",2,1,4,"ggplot","ggplot2::ggplot","",19.3838107585907
+"exts-020","exts","examples","ggeasy","retained","",2,1,2,"ggplot","ggplot2::ggplot","",13.8294079303741
+"exts-021","exts","examples","gglm","retained","",1,1,3,"ggplot","ggplot2::ggplot","",20.7868733406067
+"exts-022","exts","examples","ggvolcano","retained","",1,1,2,"ggplot","ggplot2::ggplot","",235.9415102005
+"exts-023","exts","examples","ggpol","missing package","",0,NA,NA,NA,NA,"ggpol",7.88388729095459
+"exts-024","exts","examples","ggupset","retained","",2,1,3,"ggplot","ggplot2::ggplot","",14.2981207370758
+"exts-025","exts","examples","ggspectra","retained","",6,1,7,"ggplot","ggplot2::ggplot","",24.8690164089203
+"exts-026","exts","examples","ggheatmap","missing package","",0,NA,NA,NA,NA,"ggheatmap",7.5683925151825
+"exts-027","exts","examples","hrbrthemes","retained","",1,1,2,"ggplot","ggplot2::ggplot","",0.923369646072388
+"exts-028","exts","examples","lemon","retained","",5,1,6,"grid","grid","",17.6568148136139
+"exts-029","exts","examples","ggpage","retained","",7,1,8,"ggplot","ggplot2::ggplot","",21.8255145549774
+"exts-030","exts","examples","ggstatsplot","retained","",3,1,4,"ggplot","ggplot2::ggplot","",112.627720355988
+"bioc-001","bioc","vignette","YAPSA","retained",NA,2,7,1,"grid","grid",NA,417.387584447861
+"bioc-002","bioc","vignette","BrowserViz","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",10.9369699954987
+"bioc-003","bioc","vignette","scTreeViz","retained","",3,10,7,"grid","grid","",721.754073619843
+"bioc-004","bioc","vignette","NOISeq","retained","",23,16,2,"base","base","",28.4139051437378
+"bioc-005","bioc","vignette","Voyager","needs network","eval cannot open URL 'data/tissue_lowres_5a.jpeg'",0,NA,NA,NA,NA,"",133.403077125549
+"bioc-006","bioc","vignette","epivizrServer","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.3034348487854
+"bioc-007","bioc","vignette","chevreulProcess","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",67.2684009075165
+"bioc-008","bioc","vignette","CAGEfightR","missing package","",0,NA,NA,NA,NA,"CAGEfightR",111.721037387848
+"bioc-009","bioc","vignette","Basic4Cseq","retained","",1,21,1,"base","base","",296.600049257278
+"bioc-010","bioc","vignette","RCy3","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",69.0413699150085
+"bioc-011","bioc","vignette","SigFuge","code error","eval subscript out of bounds",0,NA,NA,NA,NA,"",74.7226965427399
+"bioc-012","bioc","vignette","wiggleplotr","code error","eval `select_()` was deprecated in dplyr 0.7.0 and is now defunct.
+ℹ Please use `select()` instead.",0,NA,NA,NA,NA,"",51.9991931915283
+"bioc-013","bioc","vignette","biocGraph","retained","",22,32,2,"base","base","",295.68537068367
+"bioc-014","bioc","vignette","DifferentialRegulation","retained","",10,39,1,"grid","grid","",137.352820634842
+"bioc-015","bioc","vignette","condiments","code error","eval Required packages are missing: randomForest",0,NA,NA,NA,NA,"",97.9631950855255
+"bioc-016","bioc","vignette","ChIPseeker","retained","",20,28,1,"ggplot","ggplot2::ggplot","",377.389548540115
+"bioc-017","bioc","vignette","scPipe","missing package","",0,NA,NA,NA,NA,"scPipe",283.140655755997
+"bioc-018","bioc","vignette","GenomicOZone","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",80.2427008152008
+"bioc-019","bioc","vignette","flowPlots","setup error","! in callr subprocess.
+Caused by error: 
+! Bioconductor version cannot be validated; no internet connection?  See
+  #troubleshooting section in vignette",0,NA,NA,NA,NA,"",NA
+"bioc-020","bioc","vignette","sincell","code error","eval HTTP 405 Method Not Allowed.",0,NA,NA,NA,NA,"",662.523608922958
+"bioc-021","bioc","vignette","MicrobiotaProcess","missing package","",0,NA,NA,NA,NA,"MicrobiotaProcess",35.0516550540924
+"bioc-022","bioc","vignette","psichomics","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",266.770706892014
+"bioc-023","bioc","vignette","ribosomeProfilingQC","retained","",14,27,1,"base","base","BSgenome.Hsapiens.UCSC.hg38 BSgenome.Mmusculus.UCSC.mm10 org.Hg.eg.db",811.503870248795
+"bioc-024","bioc","vignette","visiumStitched","offline: needs network","eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server
+  Consider rerunning with 'localHub=TRUE' NA",4,7,1,"ggplot","ggplot2::ggplot","",178.081664085388
+"bioc-025","bioc","vignette","mariner","code error","eval Cannot find the file(s): ""figures/binningFigure.png""",0,NA,NA,NA,NA,"",91.1648466587067
+"bioc-026","bioc","vignette","rWikiPathways","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",247.362135648727
+"bioc-027","bioc","vignette","schex","offline: needs network","eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server
+  Consider rerunning with 'localHub=TRUE' NA",10,17,3,"ggplot","ggplot2::ggplot","",76.8391909599304
+"bioc-028","bioc","vignette","atSNP","retained","",1,20,2,"grid","grid","",62.9034907817841
+"bioc-029","bioc","vignette","MicrobiomeProfiler","code error","eval Cannot find the file(s): ""./screenshot_1.png""",0,NA,NA,NA,NA,"",23.6261141300201
+"bioc-030","bioc","vignette","EBImage","code error","eval could not find function ""output""",0,NA,NA,NA,NA,"",0.145743846893311
+"patchwork-001","patchwork","topic","patchwork::wrap_elements","retained",NA,4,1,3,"patchwork","patchwork",NA,0.864226818084717
+"patchwork-002","patchwork","gallery","414-map-multiple-charts-in-ggiraph.Rmd","missing data","eval path[1]=""HtmlWidget"": No such file or directory",0,NA,NA,NA,NA,"",2.55259323120117
+"patchwork-004","patchwork","topic","patchwork::wrap_plots","retained","",4,1,9,"patchwork","patchwork","",0.884058713912964
+"patchwork-006","patchwork","topic","patchwork::wrap_ggplot_grob","retained","",2,1,9,"patchwork","patchwork","",0.961940050125122
+"patchwork-007","patchwork","gallery","web-waffle-chart-share.Rmd","missing package","eval there is no package called ‘camcorder’",0,NA,NA,NA,NA,"camcorder waffle",18.2442896366119
+"patchwork-008","patchwork","topic","patchwork::inset_element","retained","",7,1,10,"patchwork","patchwork","",0.920060157775879
+"patchwork-010","patchwork","gallery","web-choropleth-barchart-map.Rmd","retained","",1,10,2,"patchwork","patchwork","",5.90996932983398
+"patchwork-011","patchwork","gallery","package/sf.Rmd","retained","",1,6,10,"patchwork","patchwork","",2.27760076522827
+"patchwork-012","patchwork","topic","patchwork::plot_annotation","retained","",5,1,7,"patchwork","patchwork","",0.852172374725342
+"patchwork-013","patchwork","gallery","web-map-choropleth-quantile.Rmd","retained","",1,9,2,"patchwork","patchwork","",8.58396625518799
+"patchwork-014","patchwork","topic","patchwork::area","retained","",1,1,7,"patchwork","patchwork","",0.97307276725769
+"patchwork-015","patchwork","topic","patchwork::guide_area","retained","",3,1,5,"patchwork","patchwork","",0.842389822006226
+"patchwork-016","patchwork","gallery","web-vertical-line-chart-with-ggplot2.Rmd","missing package","eval there is no package called ‘urbnmapr’",0,NA,NA,NA,NA,"urbnmapr",269.911414146423
+"patchwork-017","patchwork","gallery","package/ggiraph.Rmd","missing data","eval path[1]=""../HtmlWidget"": No such file or directory",0,NA,NA,NA,NA,"",4.37789750099182
+"patchwork-018","patchwork","topic","patchwork::plot_spacer","retained","",2,1,4,"patchwork","patchwork","",0.841850996017456
+"heatmap-005","heatmap","vignette","BloodGen3Module","no figure","ran without error, no figure",0,NA,NA,NA,NA,NA,22.9517450332642
+"heatmap-007","heatmap","topic","ComplexHeatmap::c.ColorMapping","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.738575458526611
+"heatmap-008","heatmap","topic","ComplexHeatmap::decorate_annotation","retained","",1,1,4,"heatmap","HeatmapList","",1.57629942893982
+"heatmap-009","heatmap","topic","ComplexHeatmap::is_abs_unit","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.744902610778809
+"heatmap-012","heatmap","topic","ComplexHeatmap::Extract.Heatmap","retained","",4,1,6,"heatmap","Heatmap","",1.45542597770691
+"heatmap-016","heatmap","vignette","ClustAll","outside population","knitr_kable integer ClustAllObject list sankeyNetwork data.frame numeric sessionInfo",0,NA,NA,NA,NA,"",195.225666761398
+"heatmap-017","heatmap","topic","ComplexHeatmap::anno_barplot","no figure","figures of other engines: grid x2",0,NA,NA,NA,NA,"",0.817060947418213
+"heatmap-019","heatmap","topic","ComplexHeatmap::bar3D","no figure","figures of other engines: grid x1",0,NA,NA,NA,NA,"",0.734106779098511
+"heatmap-021","heatmap","vignette","SPONGE","missing package","eval worker initialization failed: there is no package called ‘GSVA’",0,NA,NA,NA,NA,"",98.6337344646454
+"heatmap-024","heatmap","topic","ComplexHeatmap::cluster_within_group","no figure","figures of other engines: grid x1",0,NA,NA,NA,NA,"",0.795911550521851
+"heatmap-026","heatmap","topic","ComplexHeatmap::anno_summary","retained","",2,1,4,"heatmap","Heatmap","",1.68043160438538
+"heatmap-028","heatmap","vignette","gmoviz","code error","eval Summation of cell padding on y-direction are larger than the height of
+the cells.",0,NA,NA,NA,NA,"",33.6779391765594
+"heatmap-030","heatmap","topic","ComplexHeatmap::set_nameAssign","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.902651786804199
+"heatmap-031","heatmap","topic","ComplexHeatmap::default_axis_param","no figure","ran without error, no figure",0,NA,NA,NA,NA,"",0.872386455535889
+"heatmap-034","heatmap","vignette","barbieQ","retained","",1,12,1,"heatmap","HeatmapList","bartools",247.870284080505

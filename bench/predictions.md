@@ -33,4 +33,20 @@ The predictions above are unchanged. The first full harvest (harness at `4fde108
 
 ### Scoring
 
-To be filled in after Tasks 4 and 6, with the counts from `runs/attempts.csv` and the capture run file.
+#### Predictions 1–4 on the first full harvest (scored 2026-11-09)
+
+Run: `runs/2026-11-09-harvest-1-attempts.csv` (harness at `4fde108`, all 160 sampled PSUs; 155 in the full run, 5 from the pilot, 4 of them on the harness before `cd36aca`, whose only change is on a path they did not reach). "Retained" here means passing the harvest's own eligibility rerun with the dead proxy; the no-network pass (`offline-check.R`) was not run on this run's figures. The harness defects listed above affected these counts in both directions (print-drawn figures missed; a ggplot failing at print could count as retained).
+
+| Stratum | Attempted | Retained | Predicted rate | Observed rate |
+|---|---|---|---|---|
+| gallery | 70 | 50 | ~65% | 71% |
+| exts | 30 | 23 | ~70% | 77% |
+| bioc | 30 | 9 | ~40% | 30% |
+| patchwork | 15 | 11 | ~85% | 73% |
+| heatmap | 15 | 4 | ~85% | 27% |
+| all | 160 | 97 | ~60% (90–100) | 61% |
+
+1. **Right.** 97 of 160 (61%).
+2. **Partly right.** gallery and exts within about 7 points, above the prediction; bioc and patchwork 10–12 points below; heatmap wrong by 58 points: 8 of 15 were "no figure" (ComplexHeatmap help topics for utilities such as `c.ColorMapping` or `is_abs_unit`, which draw nothing; and annotation topics such as `anno_barplot` and `bar3D`, which draw grid scenes, not a Heatmap object).
+3. **Wrong in both strata.** Gallery: no PSU was "outside population"; the largest classes were "missing package" (6) and "missing data" (5), and at least three of the "missing data" were widget or table posts misclassified by the harness (`includeHTML()` defect). Bioconductor: "no figure" (7) and "code error" (7), not network or timeout (3 and 0).
+4. **Wrong.** 97 retained, under the 100 that triggers the plan's second sampling round. Whether the round is needed is decided on the rerun's numbers after the no-network pass.
