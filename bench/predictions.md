@@ -50,3 +50,22 @@ Run: `runs/2026-11-09-harvest-1-attempts.csv` (harness at `4fde108`, all 160 sam
 2. **Partly right.** gallery and exts within about 7 points, above the prediction; bioc and patchwork 10–12 points below; heatmap wrong by 58 points: 8 of 15 were "no figure" (ComplexHeatmap help topics for utilities such as `c.ColorMapping` or `is_abs_unit`, which draw nothing; and annotation topics such as `anno_barplot` and `bar3D`, which draw grid scenes, not a Heatmap object).
 3. **Wrong in both strata.** Gallery: no PSU was "outside population"; the largest classes were "missing package" (6) and "missing data" (5), and at least three of the "missing data" were widget or table posts misclassified by the harness (`includeHTML()` defect). Bioconductor: "no figure" (7) and "code error" (7), not network or timeout (3 and 0).
 4. **Wrong.** 97 retained, under the 100 that triggers the plan's second sampling round. Whether the round is needed is decided on the rerun's numbers after the no-network pass.
+
+#### Predictions 1–4 on the second full harvest (scored 2026-11-10; made after looking)
+
+Run: `runs/attempts.csv` (harness `923713e`, written after run 1's outcomes had been read; heatmap-016 and -021 rerun on `a09d0ff`, which changed only how outcomes are labelled). Eligible = retained by the harvest and rerun in a container with no network (`runs/offline-check.csv`, 103 of 106). This is the set the split will use.
+
+| Stratum | Attempted | Eligible | Predicted rate | Observed rate |
+|---|---|---|---|---|
+| gallery | 70 | 54 | ~65% | 77% |
+| exts | 30 | 26 | ~70% | 87% |
+| bioc | 30 | 8 | ~40% | 27% |
+| patchwork | 15 | 11 | ~85% | 73% |
+| heatmap | 15 | 4 | ~85% | 27% |
+| all | 160 | 103 | ~60% (90–100) | 64% |
+
+1. **Wrong by its stated range:** 103 of 160 (64%), above 90–100; the rate is close to the predicted 60%.
+2. **Partly right.** gallery and exts 12–17 points above the prediction, bioc and patchwork 12–13 below, heatmap 58 below (7 of its 15 PSUs are help topics that never draw a heatmap).
+3. **Wrong in both strata.** Gallery: "missing package" 6, "outside population" 3. Bioconductor: "no figure" 8; network 6 (3 found only with no network), timeout 0.
+4. **Right on this run** (103 ≥ 100, no second round), wrong on run 1 (97). The difference is the harness fixes, made after looking.
+

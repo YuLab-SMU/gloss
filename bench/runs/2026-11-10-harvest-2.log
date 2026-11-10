@@ -1,0 +1,171 @@
+[1/160] gallery-001 package/viridis.Rmd: retained 
+[2/160] gallery-002 package/ggbeeswarm.Rmd: retained 
+[3/160] gallery-003 310-custom-hierarchical-edge-bundling.Rmd: retained 
+[4/160] gallery-004 324-map-background-with-the-ggmap-library.Rmd: code error eval Google now requires an API key; see `ggmap::register_google()`.
+[5/160] gallery-005 50-51-52-scatter-plot-with-ggplot2.Rmd: retained 
+[6/160] gallery-006 274-map-a-variable-to-ggplot2-scatterplot.Rmd: retained 
+[7/160] gallery-007 320-the-basis-of-bubble-plot.Rmd: retained 
+[8/160] gallery-008 98-basic-scatterplot-matrix.Rmd: retained 
+[9/160] gallery-009 line-chart-dual-Y-axis-ggplot2.Rmd: retained 
+[10/160] gallery-010 307-add-space-in-circle-packing.Rmd: retained 
+[11/160] gallery-011 273-custom-your-scatterplot-ggplot2.Rmd: retained 
+[12/160] gallery-012 web-extended-dumbbell-plot-ggplot2.Rmd: retained 
+[13/160] gallery-013 a-smooth-transition-between-chloropleth-and-cartogram.Rmd: retained 
+[14/160] gallery-014 362-scatter-plot-with-trend-line-and-labels.Rmd: retained 
+[15/160] gallery-015 2d-density-plot-with-ggplot2.Rmd: retained 
+[16/160] gallery-016 263-ggplot2-boxplot-parameters.Rmd: retained 
+[17/160] gallery-017 264-control-ggplot2-boxplot-colors.Rmd: retained 
+[18/160] gallery-018 155-interactive-streamgraph-change-offset.Rmd: missing package streamgraph: package ‘streamgraph’ is not available for this version of R | run:
+[19/160] gallery-019 373-basic-beeswarm-with-ggbeeswarm.Rmd: retained 
+[20/160] gallery-020 piechart-ggplot2.Rmd: retained 
+[21/160] gallery-021 23-add-colors-to-specific-groups-of-a-boxplot.Rmd: retained 
+[22/160] gallery-022 violin_horizontal_ggplot2.Rmd: retained 
+[23/160] gallery-023 127-r-snail.Rmd: retained 
+[24/160] gallery-024 137-spring-shapes-data-art.Rmd: retained 
+[25/160] gallery-025 335-custom-ggraph-dendrogram.Rmd: retained 
+[26/160] gallery-026 336-interactive-dendrogram-with-collapsibletree.Rmd: outside population collapsibleTree htmlwidget
+[27/160] gallery-027 5-correlation-of-discrete-variables.Rmd: retained 
+[28/160] gallery-028 309-intro-to-hierarchical-edge-bundling.Rmd: retained 
+[29/160] gallery-029 density_mirror_ggplot2.Rmd: retained 
+[30/160] gallery-030 159-save-interactive-streamgraph-to-static-image-png.Rmd: missing package streamgraph: package ‘streamgraph’ is not available for this version of R | run:
+[31/160] gallery-031 line-chart-ggplot2.Rmd: retained 
+[32/160] gallery-032 267-reorder-a-variable-in-ggplot2.Rmd: retained 
+[33/160] gallery-033 272-basic-scatterplot-with-ggplot2.Rmd: retained 
+[34/160] gallery-034 368-plotting-in-cells-with-gtextras.Rmd: outside population gt_tbl list
+[35/160] gallery-035 364-add-html-content-in-dt-table.Rmd: missing data eval path[1]="HtmlWidget": No such file or directory
+[36/160] gallery-036 257-input-formats-for-network-charts.Rmd: retained 
+[37/160] gallery-037 package/ggthemes.Rmd: retained 
+[38/160] gallery-038 175-choropleth-map-cartography-pkg.Rmd: retained 
+[39/160] gallery-039 323-sankey-diagram-with-the-networkd3-library.Rmd: outside population sankeyNetwork htmlwidget
+[40/160] gallery-040 249-igraph-network-map-a-color.Rmd: retained 
+[41/160] gallery-041 167-animated-3d-plot-imagemagick.Rmd: no figure ran without error, no figure
+[42/160] gallery-042 142-basic-radar-chart.Rmd: retained 
+[43/160] gallery-043 283-the-hourly-heatmap.Rmd: missing package Interpol.T: package ‘Interpol.T’ is not available for this version of R | run: e
+[44/160] gallery-044 web-line-chart-small-multiple-all-group-greyed-out.Rmd: offline: needs network eval Couldn't connect to server [fonts.gstatic.com]:
+Failed to connect to 127.0.
+[45/160] gallery-045 190-mirrored-histogram.Rmd: retained 
+[46/160] gallery-046 296-add-labels-to-circular-barplot.Rmd: retained 
+[47/160] gallery-047 package/hrbrthemes.Rmd: retained 
+[48/160] gallery-048 314-custom-circle-packing-with-several-levels.Rmd: retained 
+[49/160] gallery-049 144-droid-bb-8-data-art.Rmd: missing package rgeos: package ‘rgeos’ is not available for this version of R | run: eval there 
+[50/160] gallery-050 354-highlight-specific-elements-in-line-chart.Rmd: retained 
+[51/160] gallery-051 package/esquisse.Rmd: timeout timeout ! callr timed out
+[52/160] gallery-052 277-marginal-histogram-for-ggplot2.Rmd: retained 
+[53/160] gallery-053 package/gganimate.Rmd: retained 
+[54/160] gallery-054 package/geomtextpath.Rmd: retained 
+[55/160] gallery-055 37-barplot-with-number-of-observation.Rmd: retained 
+[56/160] gallery-056 235-treemap-with-subgroups.Rmd: retained 
+[57/160] gallery-057 package/showtext.Rmd: offline: needs network eval Couldn't connect to server [fonts.gstatic.com]:
+Failed to connect to 127.0.
+[58/160] gallery-058 24-boxplot-with-variable-width.Rmd: retained 
+[59/160] gallery-059 package/gghighlight.Rmd: retained 
+[60/160] gallery-060 package/patchwork.Rmd: retained 
+[61/160] gallery-061 342-introduction-to-waffle-plot-with-R.Rmd: missing package waffle: package ‘waffle’ is not available for this version of R | run: eval ther
+[62/160] gallery-062 74-margin-and-oma-cheatsheet.Rmd: retained 
+[63/160] gallery-063 chord-diagram-interactive.Rmd: missing package chorddiag: package ‘chorddiag’ is not available for this version of R | run: eva
+[64/160] gallery-064 240-custom-layout-background-ggplot2.Rmd: retained 
+[65/160] gallery-065 web-area-chart-with-small-multiple.Rmd: offline: needs network eval Couldn't connect to server [fonts.gstatic.com]:
+Failed to connect to 127.0.
+[66/160] gallery-066 web-dumbbell-chart-with-a-gap-column.Rmd: retained 
+[67/160] gallery-067 27-levelplot-with-lattice.Rmd: retained 
+[68/160] gallery-068 374-grouped-beeswarm-with-ggbeeswarm.Rmd: retained 
+[69/160] gallery-069 311-add-labels-to-hierarchical-edge-bundling.Rmd: retained 
+[70/160] gallery-070 238-custom-layout-axis-ggplot2.Rmd: retained 
+[71/160] exts-001 gglorenz: retained 
+[72/160] exts-002 ggdibbler: retained 
+[73/160] exts-003 ggTimeSeries: missing package ggTimeSeries: package ‘ggTimeSeries’ is not available for this version of R
+[74/160] exts-004 gginnards: retained 
+[75/160] exts-005 ggnetwork: retained 
+[76/160] exts-006 ggperiodic: retained 
+[77/160] exts-007 ggpattern: retained 
+[78/160] exts-008 ggerror: retained 
+[79/160] exts-009 nflplotR: retained 
+[80/160] exts-010 ggstance: retained 
+[81/160] exts-011 ggalign: retained 
+[82/160] exts-012 directlabels: retained 
+[83/160] exts-013 geomtextpath: retained 
+[84/160] exts-014 plotROC: retained 
+[85/160] exts-015 ggsurvfit: retained 
+[86/160] exts-016 ggseas: missing package ggseas: package ‘ggseas’ is not available for this version of R
+[87/160] exts-017 tidyterra: retained 
+[88/160] exts-018 ggbreak: retained 
+[89/160] exts-019 ggsurveillance: retained 
+[90/160] exts-020 ggeasy: retained 
+[91/160] exts-021 gglm: retained 
+[92/160] exts-022 ggvolcano: retained 
+[93/160] exts-023 ggpol: missing package ggpol: package ‘ggpol’ is not available for this version of R
+[94/160] exts-024 ggupset: retained 
+[95/160] exts-025 ggspectra: retained 
+[96/160] exts-026 ggheatmap: missing package ggheatmap: package ‘ggheatmap’ is not available for this version of R
+[97/160] exts-027 hrbrthemes: retained 
+[98/160] exts-028 lemon: retained 
+[99/160] exts-029 ggpage: retained 
+[100/160] exts-030 ggstatsplot: retained 
+[101/160] bioc-001 YAPSA: retained 
+[102/160] bioc-002 BrowserViz: no figure ran without error, no figure
+[103/160] bioc-003 scTreeViz: retained 
+[104/160] bioc-004 NOISeq: retained 
+[105/160] bioc-005 Voyager: retained 
+[106/160] bioc-006 epivizrServer: no figure ran without error, no figure
+[107/160] bioc-007 chevreulProcess: no figure ran without error, no figure
+[108/160] bioc-008 CAGEfightR: missing package CAGEfightR: installation of package ‘CAGEfightR’ had non-zero exit status; depen
+[109/160] bioc-009 Basic4Cseq: retained 
+[110/160] bioc-010 RCy3: no figure ran without error, no figure
+[111/160] bioc-011 SigFuge: code error eval argument is of length zero
+[112/160] bioc-012 wiggleplotr: code error eval `select_()` was deprecated in dplyr 0.7.0 and is now defunct.
+ℹ Please use 
+[113/160] bioc-013 biocGraph: retained 
+[114/160] bioc-014 DifferentialRegulation: retained 
+[115/160] bioc-015 condiments: outside population knitr_kable
+[116/160] bioc-016 ChIPseeker: retained 
+[117/160] bioc-017 scPipe: missing package scPipe: installation of package ‘scPipe’ had non-zero exit status
+[118/160] bioc-018 GenomicOZone: no figure ran without error, no figure
+[119/160] bioc-019 flowPlots: retained 
+[120/160] bioc-020 sincell: code error eval argument is of length zero
+[121/160] bioc-021 MicrobiotaProcess: missing package MicrobiotaProcess: installation of 2 packages failed:  ‘ggtreeExtra’, ‘Microbiot
+[122/160] bioc-022 psichomics: no figure ran without error, no figure
+[123/160] bioc-023 ribosomeProfilingQC: retained 
+[124/160] bioc-024 visiumStitched: offline: needs network eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+
+[125/160] bioc-025 mariner: offline: needs network eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+
+[126/160] bioc-026 rWikiPathways: no figure ran without error, no figure
+[127/160] bioc-027 schex: offline: needs network eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+
+[128/160] bioc-028 atSNP: retained 
+[129/160] bioc-029 MicrobiomeProfiler: no figure ran without error, no figure
+[130/160] bioc-030 EBImage: code error eval could not find function "output"
+[131/160] patchwork-001 patchwork::wrap_elements: retained 
+[132/160] patchwork-002 414-map-multiple-charts-in-ggiraph.Rmd: missing data eval path[1]="HtmlWidget": No such file or directory
+[133/160] patchwork-004 patchwork::wrap_plots: retained 
+[134/160] patchwork-006 patchwork::wrap_ggplot_grob: retained 
+[135/160] patchwork-007 web-waffle-chart-share.Rmd: missing package camcorder: installation of 2 packages failed:  ‘gifski’, ‘camcorder’; waffle: pa
+[136/160] patchwork-008 patchwork::inset_element: retained 
+[137/160] patchwork-010 web-choropleth-barchart-map.Rmd: retained 
+[138/160] patchwork-011 package/sf.Rmd: retained 
+[139/160] patchwork-012 patchwork::plot_annotation: retained 
+[140/160] patchwork-013 web-map-choropleth-quantile.Rmd: retained 
+[141/160] patchwork-014 patchwork::area: retained 
+[142/160] patchwork-015 patchwork::guide_area: retained 
+[143/160] patchwork-016 web-vertical-line-chart-with-ggplot2.Rmd: missing package urbnmapr: package ‘urbnmapr’ is not available for this version of R | run: eval 
+[144/160] patchwork-017 package/ggiraph.Rmd: missing data eval path[1]="../HtmlWidget": No such file or directory
+[145/160] patchwork-018 patchwork::plot_spacer: retained 
+[146/160] heatmap-005 BloodGen3Module: no figure ran without error, no figure
+[147/160] heatmap-007 ComplexHeatmap::c.ColorMapping: no figure ran without error, no figure
+[148/160] heatmap-008 ComplexHeatmap::decorate_annotation: retained 
+[149/160] heatmap-009 ComplexHeatmap::is_abs_unit: no figure ran without error, no figure
+[150/160] heatmap-012 ComplexHeatmap::Extract.Heatmap: retained 
+[151/160] heatmap-016 ClustAll: outside population knitr_kable, sankeyNetwork htmlwidget
+[152/160] heatmap-017 ComplexHeatmap::anno_barplot: no figure figures of other engines: grid x2
+[153/160] heatmap-019 ComplexHeatmap::bar3D: no figure figures of other engines: grid x1
+[154/160] heatmap-021 SPONGE: outside population knitr_kable; then stopped: eval object 'trained.model' not found
+[155/160] heatmap-024 ComplexHeatmap::cluster_within_group: no figure figures of other engines: grid x1
+[156/160] heatmap-026 ComplexHeatmap::anno_summary: retained 
+[157/160] heatmap-028 gmoviz: code error eval Summation of cell padding on y-direction are larger than the height of
+the 
+[158/160] heatmap-030 ComplexHeatmap::set_nameAssign: no figure ran without error, no figure
+[159/160] heatmap-031 ComplexHeatmap::default_axis_param: no figure ran without error, no figure
+[160/160] heatmap-034 barbieQ: retained 
