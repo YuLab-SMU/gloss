@@ -67,3 +67,17 @@ cat("\nCapture size and time (captured figures)\n")
 print(do.call(rbind, lapply(split(got, got$engine), function(x) data.frame(
   engine = x$engine[1], n = nrow(x), median_elements = stats::median(x$elements), median_leaves = stats::median(x$leaves),
   median_seconds = round(stats::median(x$seconds), 2), max_seconds = round(max(x$seconds), 2)))), row.names = FALSE)
+
+# Not a prediction (added 2026-11-10, after the first run): does the captured
+# scene draw exactly what the code drew? Runs from 087476c on record it.
+if ("faithful" %in% names(cap)) {
+  cat("\nFidelity (captured scene = what the code drew on svglite; not predicted)\n")
+  for (en in sort(unique(got$engine))) {
+    x <- got[got$engine == en, ]
+    cat(sprintf("  %-9s faithful %s | not compared %d | median primitives differing among the rest %s\n", en,
+                pct(sum(x$faithful %in% TRUE), sum(!is.na(x$faithful))), sum(is.na(x$faithful)),
+                if (any(x$faithful %in% FALSE)) stats::median(x$prims_differ[x$faithful %in% FALSE]) else "-"))
+  }
+  uf <- got[got$faithful %in% FALSE, c("id", "engine", "recovered", "prims_ref", "prims_scene", "prims_differ")]
+  if (nrow(uf)) { cat("  not faithful:\n"); print(uf, row.names = FALSE) }
+}

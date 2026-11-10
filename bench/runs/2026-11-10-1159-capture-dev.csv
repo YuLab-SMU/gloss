@@ -1,0 +1,59 @@
+"id","stratum","engine","recovered","status","message","elements","leaves","panels","leaves_ok","leaves_mismatch","leaf_status","unowned","unowned_bg","unowned_other","faithful","prims_scene","prims_ref","prims_differ","seconds"
+"gallery-001","gallery","ggplot","object","captured","",591,15,1,13,2,"count_mismatch=2 ok=13",1,1,"",TRUE,591,591,0,0.281748056411743
+"gallery-002","gallery","ggplot","object","captured","",631,16,1,16,0,"ok=16",1,1,"",TRUE,631,631,0,0.242034673690796
+"gallery-005","gallery","ggplot","object","captured","",122,10,1,8,2,"count_mismatch=2 ok=8",1,1,"",TRUE,122,122,0,0.179395914077759
+"gallery-006","gallery","ggplot","object","captured","",191,18,1,17,1,"count_mismatch=1 ok=17",1,1,"",TRUE,191,191,0,0.232810974121094
+"gallery-008","gallery","base","base","captured","",769,131,21,77,54,"count_mismatch=54 ok=77",1,1,"",FALSE,769,758,17,0.817245721817017
+"gallery-011","gallery","ggplot","object","captured","",183,10,1,9,1,"count_mismatch=1 ok=9",1,1,"",TRUE,183,183,0,0.195465087890625
+"gallery-013","gallery","base","base","captured","",131,130,1,130,0,"ok=130",1,1,"",FALSE,131,130,3,0.421396970748901
+"gallery-015","gallery","ggplot","object","captured","",35,13,1,11,2,"count_mismatch=2 ok=11",1,1,"",TRUE,35,35,0,0.445394992828369
+"gallery-020","gallery","ggplot","object","captured","",23,14,1,14,0,"ok=14",1,1,"",TRUE,23,23,0,0.218769550323486
+"gallery-021","gallery","base","base","captured","",75,48,1,42,6,"count_mismatch=6 ok=42",1,1,"",FALSE,75,74,1,0.257166862487793
+"gallery-023","gallery","base","base","captured","",1298,1297,1,1297,0,"ok=1297",1,1,"",FALSE,1298,1297,1,2.93563294410706
+"gallery-024","gallery","ggplot","object","captured","",62,61,1,61,0,"ok=61",1,1,"",TRUE,62,62,0,0.275985717773438
+"gallery-029","gallery","ggplot","object","captured","",4091,4011,1,4010,1,"count_mismatch=1 ok=4010",1,1,"",TRUE,4091,4091,0,9.9633777141571
+"gallery-032","gallery","ggplot","object","captured","",64,14,1,13,1,"count_mismatch=1 ok=13",1,1,"",TRUE,64,64,0,0.220770835876465
+"gallery-038","gallery","base","base","captured","",379,378,1,378,0,"ok=378",1,1,"",FALSE,379,378,3,0.98431134223938
+"gallery-040","gallery","base","base","captured","",40,41,1,26,15,"count_mismatch=15 ok=26",1,1,"",FALSE,40,39,1,0.209991216659546
+"gallery-047","gallery","ggplot","object","captured","",66,11,1,10,1,"count_mismatch=1 ok=10",1,1,"",TRUE,66,66,0,0.188001394271851
+"gallery-048","gallery","ggplot","object","captured","",254,2,1,2,0,"ok=2",1,1,"",TRUE,254,254,0,0.945945262908936
+"gallery-050","gallery","ggplot","object","captured","",58,24,1,22,2,"count_mismatch=2 ok=22",1,1,"",TRUE,58,58,0,0.259300470352173
+"gallery-052","gallery","grid","object","captured","",83,19,0,18,1,"count_mismatch=1 ok=18",1,1,"",FALSE,83,219,136,0.139488458633423
+"gallery-053","gallery","ggplot","object","refused: not a static ggplot","<gganim> builds into <gganim_built>, not a built ggplot.
+ℹ Its own `ggplot_build()` method changes what is drawn (an animation, for
+  example); gloss captures one static ggplot.",NA,NA,NA,0,0,"",NA,NA,NA,NA,NA,NA,NA,0.180698156356812
+"gallery-054","gallery","ggplot","object","captured","",100,30,1,29,1,"count_mismatch=1 ok=29",1,1,"",TRUE,100,100,0,0.432652950286865
+"gallery-056","gallery","grid","grid","error","no such index at level 1
+",NA,NA,NA,0,0,"",NA,NA,NA,NA,NA,NA,NA,0.0177891254425049
+"gallery-058","gallery","base","base","captured","",53,34,1,30,4,"count_mismatch=4 ok=30",1,1,"",FALSE,53,52,1,0.186805963516235
+"gallery-059","gallery","ggplot","object","captured","",55,17,1,16,1,"count_mismatch=1 ok=16",1,1,"",FALSE,55,54,5,0.222906112670898
+"gallery-068","gallery","ggplot","object","captured","",180,12,1,11,1,"count_mismatch=1 ok=11",1,1,"",TRUE,180,180,0,0.197056770324707
+"gallery-070","gallery","ggplot","object","captured","",77,13,1,12,1,"count_mismatch=1 ok=12",1,1,"",TRUE,77,77,0,0.190874814987183
+"exts-001","exts","ggplot","object","captured","",34,11,1,11,0,"ok=11",1,1,"",TRUE,34,34,0,0.191042423248291
+"exts-007","exts","grid","grid","captured","",713,57,0,57,0,"ok=57",1,1,"",TRUE,713,713,0,0.294976472854614
+"exts-008","exts","ggplot","object","captured","",35,12,1,10,2,"count_mismatch=2 ok=10",1,1,"",TRUE,35,35,0,0.196072340011597
+"exts-013","exts","ggplot","object","captured","",122,14,1,13,1,"count_mismatch=1 ok=13",1,1,"",TRUE,122,122,0,0.193037271499634
+"exts-014","exts","ggplot","object","captured","",119,34,1,32,2,"count_mismatch=2 ok=32",1,1,"",TRUE,119,119,0,0.38257884979248
+"exts-017","exts","ggplot","object","captured","",66,21,1,19,2,"count_mismatch=2 ok=19",1,1,"",TRUE,66,66,0,2.05884552001953
+"exts-018","exts","ggplot","object","captured","",163,29,0,28,1,"count_mismatch=1 ok=28",1,1,"",FALSE,163,163,322,0.403167963027954
+"exts-019","exts","ggplot","object","captured","",359,16,1,14,2,"count_mismatch=2 ok=14",1,1,"",TRUE,359,359,0,0.262422561645508
+"exts-021","exts","ggplot","object","captured","",78,15,1,14,1,"count_mismatch=1 ok=14",1,1,"",TRUE,78,78,0,0.193506956100464
+"exts-022","exts","ggplot","object","captured","",12347,29,1,23,6,"count_mismatch=6 ok=23",1,1,"",FALSE,94,12347,12255,2.25453925132751
+"exts-024","exts","ggplot","object","captured","",401,20,1,20,0,"ok=20",1,1,"",TRUE,401,401,0,0.32874870300293
+"exts-027","exts","ggplot","object","captured","",5682,19,1,17,2,"count_mismatch=2 ok=17",1,1,"",TRUE,5682,5682,0,0.486135482788086
+"exts-030","exts","ggplot","object","captured","",57,15,1,13,2,"count_mismatch=2 ok=13",1,1,"",TRUE,57,57,0,0.216967821121216
+"bioc-001","bioc","grid","grid","captured","",226,151,0,151,0,"ok=151",1,1,"",TRUE,226,226,0,0.421219348907471
+"bioc-004","bioc","base","base","captured","",103,40,3,34,6,"count_mismatch=6 ok=34",1,1,"",FALSE,103,101,34,0.292654514312744
+"bioc-009","bioc","base","base","captured","",39,12,1,12,0,"ok=12",1,1,"",FALSE,39,38,1,0.282636642456055
+"bioc-013","bioc","base","base","captured","",66,65,1,65,0,"ok=65",1,1,"",TRUE,66,66,0,0.291427135467529
+"bioc-016","bioc","ggplot","object","captured","",67,43,1,42,1,"count_mismatch=1 ok=42",1,1,"",TRUE,67,67,0,0.561988592147827
+"bioc-017","bioc","ggplot","object","captured","",40,11,1,9,2,"count_mismatch=2 ok=9",1,1,"",TRUE,40,40,0,0.440038442611694
+"patchwork-001","patchwork","patchwork","object","captured","",7,6,0,6,0,"ok=6",1,1,"",TRUE,7,7,0,0.261713743209839
+"patchwork-006","patchwork","patchwork","object","captured","",139,38,0,36,2,"count_mismatch=2 ok=36",1,1,"",TRUE,139,139,0,0.29310941696167
+"patchwork-008","patchwork","patchwork","object","captured","",137,36,0,34,2,"count_mismatch=2 ok=34",1,1,"",TRUE,137,137,0,0.329060316085815
+"patchwork-010","patchwork","patchwork","object","captured","",1654,15,0,13,2,"count_mismatch=2 ok=13",1,1,"",TRUE,1654,1654,0,1.41269016265869
+"patchwork-011","patchwork","patchwork","object","captured","",115,34,0,28,6,"count_mismatch=6 ok=28",1,1,"",TRUE,115,115,0,0.489042282104492
+"patchwork-012","patchwork","patchwork","object","captured","",243,73,0,68,5,"count_mismatch=5 ok=68",1,1,"",TRUE,243,243,0,0.489186763763428
+"heatmap-008","heatmap","heatmap","object","captured","",328,28,2,28,0,"ok=28",1,1,"",TRUE,328,328,0,0.94227933883667
+"heatmap-026","heatmap","heatmap","object","captured","",72,15,2,15,0,"ok=15",1,1,"",TRUE,72,72,0,0.917842864990234
+"heatmap-036","heatmap","heatmap","object","captured","",257,12,1,12,0,"ok=12",1,1,"",TRUE,257,257,0,0.161911487579346
