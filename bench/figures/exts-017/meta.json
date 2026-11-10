@@ -1,0 +1,40 @@
+{
+  "id": "exts-017",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "tidyterra",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "tidyterra",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "terra",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "sf",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:50:34 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 5,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 112253057
+}

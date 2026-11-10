@@ -1,0 +1,40 @@
+{
+  "id": "gallery-054",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "package/geomtextpath.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "geomtextpath",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "hrbrthemes",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:43:59 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 9,
+    "expr": 2,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 11375792
+}

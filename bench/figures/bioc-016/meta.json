@@ -1,0 +1,85 @@
+{
+  "id": "bioc-016",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "ChIPseeker",
+  "vignette": "ChIPseeker.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "ChIPseeker",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "yulab.utils",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "GenomicFeatures",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "GenomicRanges",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "TxDb.Hsapiens.UCSC.hg19.knownGene",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "org.Hs.eg.db",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "clusterProfiler",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "ReactomePA",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "ChIPseeker",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "EnsDb.Hsapiens.v75",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 09:14:45 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 28,
+    "expr": 1,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 106280935
+}

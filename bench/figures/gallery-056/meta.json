@@ -1,0 +1,30 @@
+{
+  "id": "gallery-056",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "235-treemap-with-subgroups.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "treemap",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:44:04 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 2,
+    "expr": 6,
+    "kind": "grid",
+    "class": "grid",
+    "engine": "grid"
+  },
+  "seed": 138796323
+}

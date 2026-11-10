@@ -1,0 +1,30 @@
+{
+  "id": "gallery-033",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "272-basic-scatterplot-with-ggplot2.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:37:21 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 2,
+    "expr": 2,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 82341327
+}

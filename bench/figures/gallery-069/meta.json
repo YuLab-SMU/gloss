@@ -1,0 +1,45 @@
+{
+  "id": "gallery-069",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "311-add-labels-to-hierarchical-edge-bundling.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "igraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidyverse",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "RColorBrewer",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:48:51 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 7,
+    "expr": 1,
+    "kind": "object",
+    "class": "ggraph",
+    "engine": "ggplot"
+  },
+  "seed": 263383030
+}

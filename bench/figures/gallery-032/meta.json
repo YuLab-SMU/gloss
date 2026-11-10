@@ -1,0 +1,40 @@
+{
+  "id": "gallery-032",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "267-reorder-a-variable-in-ggplot2.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "forcats",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:37:19 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 7,
+    "expr": 2,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 240129828
+}

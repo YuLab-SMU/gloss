@@ -1,0 +1,42 @@
+{
+  "id": "gallery-038",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "175-choropleth-map-cartography-pkg.Rmd",
+  "vignette": null,
+  "rewrites": [
+    {
+      "literal": "http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip",
+      "url": "http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip",
+      "file": null,
+      "ok": false
+    }
+  ],
+  "packages": [
+    {
+      "package": "cartography",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "rgdal",
+      "status": "failed",
+      "reason": "package ‘rgdal’ is not available for this version of R"
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:37:36 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 2,
+    "expr": 4,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 221905633
+}

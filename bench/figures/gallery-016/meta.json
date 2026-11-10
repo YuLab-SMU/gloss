@@ -1,0 +1,30 @@
+{
+  "id": "gallery-016",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "263-ggplot2-boxplot-parameters.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:36:33 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 3,
+    "expr": 2,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 225336772
+}

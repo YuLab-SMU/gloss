@@ -1,0 +1,80 @@
+{
+  "id": "bioc-012",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "wiggleplotr",
+  "vignette": "wiggleplotr.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "wiggleplotr",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "wiggleplotr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "GenomicRanges",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "biomaRt",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "GenomicFeatures",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ensembldb",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "EnsDb.Hsapiens.v86",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "org.Hs.eg.db",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "TxDb.Hsapiens.UCSC.hg38.knownGene",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 08:58:54 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 10,
+    "expr": 2,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 168714718
+}

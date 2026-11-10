@@ -1,0 +1,25 @@
+{
+  "id": "gallery-027",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "5-correlation-of-discrete-variables.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:36:54 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 2,
+    "expr": 7,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 107653536
+}

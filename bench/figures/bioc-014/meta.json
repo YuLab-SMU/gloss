@@ -1,0 +1,45 @@
+{
+  "id": "bioc-014",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "DifferentialRegulation",
+  "vignette": "DifferentialRegulation.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "DifferentialRegulation",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "DifferentialRegulation",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 09:01:27 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 39,
+    "expr": 1,
+    "kind": "grid",
+    "class": "grid",
+    "engine": "grid"
+  },
+  "seed": 55847997
+}

@@ -1,0 +1,35 @@
+{
+  "id": "exts-019",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "ggsurveillance",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggsurveillance",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:50:38 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 4,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 162142629
+}

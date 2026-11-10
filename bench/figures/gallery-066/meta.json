@@ -1,0 +1,50 @@
+{
+  "id": "gallery-066",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "web-dumbbell-chart-with-a-gap-column.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "tidyverse",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "patchwork",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "scales",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "forcats",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "htmltools",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:48:47 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 9,
+    "expr": 2,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 183270413
+}

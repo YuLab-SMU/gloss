@@ -1,0 +1,55 @@
+{
+  "id": "bioc-001",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "YAPSA",
+  "vignette": "vignette_confidenceIntervals.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "YAPSA",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "BiocStyle",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "YAPSA",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "Biostrings",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "BSgenome.Hsapiens.UCSC.hg19",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 08:27:09 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 7,
+    "expr": 1,
+    "kind": "grid",
+    "class": "grid",
+    "engine": "grid"
+  },
+  "seed": 208571818
+}

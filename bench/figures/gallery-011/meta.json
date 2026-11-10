@@ -1,0 +1,35 @@
+{
+  "id": "gallery-011",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "273-custom-your-scatterplot-ggplot2.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "hrbrthemes",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:35:38 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 4,
+    "expr": 3,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 42317074
+}

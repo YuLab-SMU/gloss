@@ -1,0 +1,50 @@
+{
+  "id": "gallery-007",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "320-the-basis-of-bubble-plot.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "gapminder",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "hrbrthemes",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "viridis",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:35:34 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 2,
+    "expr": 5,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 243189255
+}

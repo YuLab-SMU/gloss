@@ -1,0 +1,30 @@
+{
+  "id": "gallery-036",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "257-input-formats-for-network-charts.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "igraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:37:23 UTC",
+  "nbsp_replaced": 9,
+  "figure": {
+    "chunk": 6,
+    "expr": 3,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 172639105
+}

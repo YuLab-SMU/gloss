@@ -1,0 +1,100 @@
+{
+  "id": "bioc-005",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "Voyager",
+  "vignette": "overview.Rmd",
+  "rewrites": [
+    {
+      "literal": "https://raw.githubusercontent.com/pachterlab/voyager/main/vignettes/tissue_lowres_5a.jpeg",
+      "url": "https://raw.githubusercontent.com/pachterlab/voyager/main/vignettes/tissue_lowres_5a.jpeg",
+      "file": "data/tissue_lowres_5a.jpeg",
+      "ok": true,
+      "bytes": 311853,
+      "md5": "0313f6258baddc85a88ec1e777edcba9",
+      "companions": []
+    }
+  ],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "Voyager",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "SFEData",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "SpatialFeatureExperiment",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "SpatialExperiment",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "Voyager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "scater",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "scran",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "pheatmap",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "remotes",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "scales",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 08:42:32 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 18,
+    "expr": 1,
+    "kind": "object",
+    "class": "patchwork",
+    "engine": "patchwork"
+  },
+  "seed": 131282532
+}

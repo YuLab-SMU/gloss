@@ -1,0 +1,75 @@
+{
+  "id": "bioc-003",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "scTreeViz",
+  "vignette": "ExploreTreeViz.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "scTreeViz",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "scTreeViz",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "Seurat",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "SC3",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "scran",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "scater",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "clustree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "igraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "scRNAseq",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 08:35:19 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 10,
+    "expr": 7,
+    "kind": "grid",
+    "class": "grid",
+    "engine": "grid"
+  },
+  "seed": 110742671
+}

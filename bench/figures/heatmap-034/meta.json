@@ -1,0 +1,120 @@
+{
+  "id": "heatmap-034",
+  "stratum": "heatmap",
+  "kind": "vignette",
+  "psu": "barbieQ",
+  "vignette": "barbieQ.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "barbieQ",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "barbieQ",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "magrittr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "circlize",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "logistf",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "igraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "data.table",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ComplexHeatmap",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "limma",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "SummarizedExperiment",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "S4Vectors",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "devtools",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "bartools",
+      "status": "failed",
+      "reason": "package ‘bartools’ is not available for this version of R"
+    },
+    {
+      "package": "speckle",
+      "status": "installed",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 10:03:02 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 12,
+    "expr": 1,
+    "kind": "object",
+    "class": "HeatmapList",
+    "engine": "heatmap"
+  },
+  "seed": 119405492
+}

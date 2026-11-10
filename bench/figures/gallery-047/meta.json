@@ -1,0 +1,35 @@
+{
+  "id": "gallery-047",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "package/hrbrthemes.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "hrbrthemes",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:37:59 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 5,
+    "expr": 1,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 42584389
+}

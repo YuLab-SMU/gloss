@@ -1,0 +1,35 @@
+{
+  "id": "patchwork-008",
+  "stratum": "patchwork",
+  "kind": "topic",
+  "psu": "patchwork::inset_element",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "patchwork",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "png",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 05:14:03 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 10,
+    "kind": "object",
+    "class": "patchwork",
+    "engine": "patchwork"
+  },
+  "seed": 98715928
+}

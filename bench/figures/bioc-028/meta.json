@@ -1,0 +1,83 @@
+{
+  "id": "bioc-028",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "atSNP",
+  "vignette": "atsnp-vignette.rmd",
+  "rewrites": [
+    {
+      "literal": "http://pages.stat.wisc.edu/~keles/atSNP-Data/sample-dna-motif.meme-io.txt",
+      "url": "http://pages.stat.wisc.edu/~keles/atSNP-Data/sample-dna-motif.meme-io.txt",
+      "file": "data/sample-dna-motif.meme-io.txt",
+      "ok": true,
+      "bytes": 1786,
+      "md5": "9bed12e20af7736e7a18f02870ce96e3",
+      "companions": []
+    },
+    {
+      "literal": "http://pages.stat.wisc.edu/~keles/atSNP-Data/motifs.txt",
+      "url": "http://pages.stat.wisc.edu/~keles/atSNP-Data/motifs.txt",
+      "file": null,
+      "ok": false
+    },
+    {
+      "literal": "http://pages.stat.wisc.edu/~keles/atSNP-Data/JASPAR_motifs_H_sapiens.txt",
+      "url": "http://pages.stat.wisc.edu/~keles/atSNP-Data/JASPAR_motifs_H_sapiens.txt",
+      "file": "data/JASPAR_motifs_H_sapiens.txt",
+      "ok": true,
+      "bytes": 283251,
+      "md5": "edcf2c89da8df039d48c5e546d91e4db",
+      "companions": []
+    },
+    {
+      "literal": "http://pages.stat.wisc.edu/~keles/atSNP-Data/matrix.txt",
+      "url": "http://pages.stat.wisc.edu/~keles/atSNP-Data/matrix.txt",
+      "file": "data/matrix.txt",
+      "ok": true,
+      "bytes": 258909,
+      "md5": "db416251b02ecf51bf725e5a18f6eece",
+      "companions": []
+    },
+    {
+      "literal": "http://pages.stat.wisc.edu/~keles/atSNP-Data/pfm_vertebrates.txt",
+      "url": "http://pages.stat.wisc.edu/~keles/atSNP-Data/pfm_vertebrates.txt",
+      "file": "data/pfm_vertebrates.txt",
+      "ok": true,
+      "bytes": 35152,
+      "md5": "378529a644ccceb87d72f3204dda1d59",
+      "companions": []
+    }
+  ],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "atSNP",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "atSNP",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "qvalue",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 09:53:00 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 20,
+    "expr": 2,
+    "kind": "grid",
+    "class": "grid",
+    "engine": "grid"
+  },
+  "seed": 128554820
+}

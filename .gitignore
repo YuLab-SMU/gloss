@@ -48,3 +48,7 @@ dev_docs/*_files/
 *.rds
 *.rda
 *.sqlite
+
+# Bench: data vendored into frozen figures stays out of git (owner, 2026-11-10;
+# several sources state no license). Checksums: bench/MANIFEST.md5; URLs: meta.json.
+bench/figures/*/data/

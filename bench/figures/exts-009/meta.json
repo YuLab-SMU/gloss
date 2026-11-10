@@ -1,0 +1,55 @@
+{
+  "id": "exts-009",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "nflplotR",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "nflplotR",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "gt",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "nflplotR",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "data.table",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "nflreadr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "rstudioapi",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:49:27 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 11,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 11188072
+}

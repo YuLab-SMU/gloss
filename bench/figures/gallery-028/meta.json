@@ -1,0 +1,35 @@
+{
+  "id": "gallery-028",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "309-intro-to-hierarchical-edge-bundling.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "igraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:36:55 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 3,
+    "expr": 4,
+    "kind": "object",
+    "class": "ggraph",
+    "engine": "ggplot"
+  },
+  "seed": 31317790
+}

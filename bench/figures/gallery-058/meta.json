@@ -1,0 +1,25 @@
+{
+  "id": "gallery-058",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "24-boxplot-with-variable-width.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:44:15 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 2,
+    "expr": 5,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 48460635
+}

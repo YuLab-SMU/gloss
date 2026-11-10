@@ -1,0 +1,40 @@
+{
+  "id": "gallery-025",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "335-custom-ggraph-dendrogram.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "igraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidyverse",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:36:52 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 15,
+    "expr": 1,
+    "kind": "object",
+    "class": "ggraph",
+    "engine": "ggplot"
+  },
+  "seed": 158633532
+}

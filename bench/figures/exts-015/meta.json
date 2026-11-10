@@ -1,0 +1,40 @@
+{
+  "id": "exts-015",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "ggsurvfit",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggsurvfit",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "tidycmprsk",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "survival",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "broom",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:50:19 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 1,
+    "kind": "object",
+    "class": "ggsurvfit",
+    "engine": "ggplot"
+  },
+  "seed": 188495091
+}

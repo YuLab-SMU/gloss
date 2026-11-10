@@ -1,0 +1,30 @@
+{
+  "id": "heatmap-026",
+  "stratum": "heatmap",
+  "kind": "topic",
+  "psu": "ComplexHeatmap::anno_summary",
+  "vignette": null,
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "ComplexHeatmap",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 10:00:13 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 4,
+    "kind": "object",
+    "class": "Heatmap",
+    "engine": "heatmap"
+  },
+  "seed": 120264563
+}

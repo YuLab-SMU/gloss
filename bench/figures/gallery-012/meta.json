@@ -1,0 +1,60 @@
+{
+  "id": "gallery-012",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "web-extended-dumbbell-plot-ggplot2.Rmd",
+  "vignette": null,
+  "rewrites": [
+    {
+      "literal": "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-02-02/hbcu_all.csv",
+      "url": "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-02-02/hbcu_all.csv",
+      "file": "data/hbcu_all.csv",
+      "ok": true,
+      "bytes": 2556,
+      "md5": "1f4421e7a0ee2759c927db128139b4af",
+      "companions": []
+    }
+  ],
+  "packages": [
+    {
+      "package": "tidyverse",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtext",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "extrafont",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "readr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "htmltools",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:35:42 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 8,
+    "expr": 2,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 228224808
+}
