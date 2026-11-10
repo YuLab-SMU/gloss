@@ -26,10 +26,16 @@ check <- function(name, script, expect_engines) {
     c1 <- r$candidates[k, ]
     frozen <- list(setup = script$setup, chunks = truncate_script(script, c1$chunk, c1$expr))
     r2 <- run_script(frozen, dir, seed = 1, timeout = 300, offline = TRUE, recover = TRUE, capture = TRUE)
-    cat(sprintf("  figure %d: recovered %s/%s, capture %s, %s elements, %s leaves%s\n", k,
+    cat(sprintf("  figure %d: recovered %s/%s, capture %s, %s elements, %s leaves, unowned %s (background %s)%s\n", k,
                 r2$recovered$kind, r2$recovered$engine, r2$capture$status, r2$capture$elements %||% NA,
-                r2$capture$leaves %||% NA, if (is.null(r2$capture$message)) "" else paste(":", r2$capture$message)))
+                r2$capture$leaves %||% NA, r2$capture$unowned %||% NA, r2$capture$unowned_bg %||% NA,
+                if (is.null(r2$capture$message)) "" else paste(":", r2$capture$message)))
     if (!identical(r2$recovered$engine, c1$engine) || !identical(r2$capture$status, "captured")) ok <- FALSE
+    # the background test must give an answer: 0 or 1, never NA; a ggplot draws one
+    bg <- r2$capture$unowned_bg %||% NA
+    if (is.na(bg) || !bg %in% 0:1 || (identical(c1$engine, "ggplot") && bg != 1L)) {
+      cat("!! background test gave", bg, "\n"); ok <- FALSE
+    }
   }
   ok
 }
@@ -230,6 +236,24 @@ check_install_log <- function() {
 inst_ok <- tryCatch(check_install_log(), error = function(e) { cat("!! install log check:", conditionMessage(e), "\n"); FALSE })
 cat("\n== install log keeps build output:", if (inst_ok) "OK" else "FAILED", "\n")
 if (!inst_ok) ok <- FALSE
+
+# Part 1e: capture in the bioc environment. The synthetic figures above run in
+# cran; the bioc and heatmap strata capture with gloss loaded against the bioc
+# library, which nothing else checks before the capture run (plan Task 6).
+use_env(bench_envs$bioc)
+hm <- list(setup = character(), chunks = list(c("m <- matrix(seq_len(20) / 3, 4)", "ComplexHeatmap::Heatmap(m)")))
+r_bioc <- run_script(hm, file.path(tempdir(), "check-runner", "bioc-capture"), seed = 1, timeout = 300,
+                     offline = TRUE, recover = TRUE, capture = TRUE)
+use_env(bench_envs$cran)
+bioc_ok <- is.null(r_bioc$error) && identical(r_bioc$recovered$engine, "heatmap") &&
+  identical(r_bioc$capture$status, "captured") && !is.na(r_bioc$capture$unowned_bg %||% NA)
+cat(sprintf("\n== capture in env bioc: recovered %s, capture %s, %s leaves, unowned %s (background %s)%s: %s\n",
+            r_bioc$recovered$engine %||% NA, r_bioc$capture$status %||% NA, r_bioc$capture$leaves %||% NA,
+            r_bioc$capture$unowned %||% NA, r_bioc$capture$unowned_bg %||% NA,
+            if (!is.null(r_bioc$error)) paste(":", r_bioc$error$stage, r_bioc$error$message)
+            else if (!is.null(r_bioc$capture$message)) paste(":", r_bioc$capture$message) else "",
+            if (bioc_ok) "OK" else "FAILED"))
+if (!bioc_ok) ok <- FALSE
 
 if (identical(Sys.getenv("GLOSS_BENCH_THIRD_PARTY"), "true")) {
   smp <- read_csv(file.path(bench_root, "sample.csv"))

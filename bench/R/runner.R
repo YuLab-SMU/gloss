@@ -400,6 +400,22 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
         cap$panels <- nrow(s$panels)
         cap$leaf_status <- as.list(table(s$leaves$status))
         cap$unowned <- sum(is.na(s$elements$leaf))
+        # which unowned elements are the device background: the first element,
+        # a rect covering the whole viewBox (prediction 8); tags of the others
+        un <- s$elements[is.na(s$elements$leaf), , drop = FALSE]
+        vb <- regmatches(s$scene, regexpr("viewBox=['\"][-0-9. ]+['\"]", s$scene))
+        # no viewBox: the test answers NA, it must never fail the capture record
+        vb <- if (length(vb)) suppressWarnings(as.numeric(strsplit(trimws(gsub("[^-0-9. ]", "", vb[1])), " +")[[1]])) else numeric()
+        if (length(vb) == 4L && !anyNA(vb)) {
+          bg <- un$id == "e1" & un$tag == "rect" & un$x0 <= vb[1] + 0.5 & un$y0 <= vb[2] + 0.5 &
+            un$x1 >= vb[1] + vb[3] - 0.5 & un$y1 >= vb[2] + vb[4] - 0.5
+          bg[is.na(bg)] <- FALSE
+          cap$unowned_bg <- sum(bg)
+          cap$unowned_other <- paste(utils::head(un$tag[!bg], 20), collapse = " ")
+        } else {
+          cap$unowned_bg <- NA_integer_
+          cap$unowned_other <- NA_character_
+        }
       }
       result$capture <- cap
     }
