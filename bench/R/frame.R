@@ -80,15 +80,24 @@ rd_topics <- function(pkg) {
   sort(sub("\\.Rd$", "", names(db)[has_ex]))
 }
 
+# A topic whose examples have no executable line is kept in the frame (so the
+# sample's permutations do not move) but marked out of scope; sample.R skips it.
+topic_rows <- function(pkg) {
+  db <- tools::Rd_db(pkg)
+  t <- rd_topics(pkg)
+  in_scope <- vapply(t, function(x) has_example_code(rd_example_code(db[[paste0(x, ".Rd")]])), TRUE, USE.NAMES = FALSE)
+  data.frame(psu = paste0(pkg, "::", t), kind = "topic", in_scope = in_scope, stringsAsFactors = FALSE)
+}
+
 # --- engine strata
 patchwork <- rbind(
-  data.frame(psu = gallery$psu[gallery$loads_patchwork], kind = "gallery", stringsAsFactors = FALSE),
-  data.frame(psu = paste0("patchwork::", rd_topics("patchwork")), kind = "topic", stringsAsFactors = FALSE)
+  data.frame(psu = gallery$psu[gallery$loads_patchwork], kind = "gallery", in_scope = TRUE, stringsAsFactors = FALSE),
+  topic_rows("patchwork")
 )
 ch_users <- views$Package[views$imports_complexheatmap & views$has_vignette]
 heatmap <- rbind(
-  data.frame(psu = paste0("ComplexHeatmap::", rd_topics("ComplexHeatmap")), kind = "topic", stringsAsFactors = FALSE),
-  data.frame(psu = sort(ch_users), kind = "bioc", stringsAsFactors = FALSE)
+  topic_rows("ComplexHeatmap"),
+  data.frame(psu = sort(ch_users), kind = "bioc", in_scope = TRUE, stringsAsFactors = FALSE)
 )
 heatmap <- heatmap[heatmap$psu != "ComplexHeatmap", ]
 
@@ -109,6 +118,8 @@ info <- list(
                 patchwork = as.character(utils::packageVersion("patchwork"))),
   strata = list(gallery = nrow(gallery), exts = nrow(exts), bioc = nrow(bioc),
                 patchwork = nrow(patchwork), heatmap = nrow(heatmap)),
+  out_of_scope = list(rule = "help topic whose examples have no executable line (blank, comment or bare NULL only)",
+                      patchwork = sum(!patchwork$in_scope), heatmap = sum(!heatmap$in_scope)),
   tidytuesday = "not in the v0 frame: the official repository holds data, readmes and images but no figure code"
 )
 jsonlite::write_json(info, file.path(out_dir, "sources.json"), auto_unbox = TRUE, pretty = TRUE)

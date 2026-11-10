@@ -29,6 +29,24 @@ sources <- list(
   )
 )
 
+# Example code of a help topic as the runner runs it: \dontrun commented out,
+# \donttest kept.
+rd_example_code <- function(rd) {
+  tmp <- tempfile(fileext = ".R")
+  on.exit(unlink(tmp))
+  tools::Rd2ex(rd, out = tmp, commentDontrun = TRUE, commentDonttest = FALSE)
+  if (!file.exists(tmp)) return(character())
+  readLines(tmp, warn = FALSE)
+}
+
+# A help topic is a figure source only if its examples have an executable
+# line: not blank, not a comment, not a bare NULL. ComplexHeatmap 2.24-2.26
+# documents 153 of its 253 topics with "# There is no example" and NULL.
+has_example_code <- function(code) {
+  x <- trimws(code)
+  any(nzchar(x) & !startsWith(x, "#") & x != "NULL")
+}
+
 fetch <- function(url, dest) {
   if (!file.exists(dest)) {
     dir.create(dirname(dest), recursive = TRUE, showWarnings = FALSE)

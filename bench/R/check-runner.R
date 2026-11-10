@@ -70,15 +70,23 @@ for (k in seq_len(nrow(r$candidates))) {
 
 if (identical(Sys.getenv("GLOSS_BENCH_THIRD_PARTY"), "true")) {
   smp <- read_csv(file.path(bench_root, "sample.csv"))
-  stopifnot(!c("13-scatter-plot.Rmd", "164-area-chart-ggplot2.Rmd", "ComplexHeatmap::Heatmap") %in% smp$psu)
+  # Each script must yield at least one figure, all of the engine its source
+  # is about. (ComplexHeatmap::Heatmap was used here first: its examples are
+  # only "# There is no example" and NULL, so it tested nothing.)
+  stopifnot(!c("13-scatter-plot.Rmd", "164-area-chart-ggplot2.Rmd", "ComplexHeatmap::densityHeatmap") %in% smp$psu)
   third <- list(
-    list("gallery-base", gallery_script("13-scatter-plot.Rmd")),
-    list("gallery-ggplot", gallery_script("164-area-chart-ggplot2.Rmd")),
-    list("heatmap-topic", topic_script("ComplexHeatmap", "Heatmap"))
+    list("gallery-base", gallery_script("13-scatter-plot.Rmd"), "base"),
+    list("gallery-ggplot", gallery_script("164-area-chart-ggplot2.Rmd"), "ggplot"),
+    list("heatmap-topic", topic_script("ComplexHeatmap", "densityHeatmap"), "heatmap")
   )
   for (t in third) {
     r <- run_script(t[[2]], file.path(tempdir(), "check-runner", t[[1]]), seed = 1, timeout = 300)
-    cat("\n==", t[[1]], ":", nrow(r$candidates), "figures\n"); print(r$candidates)
+    cat("\n==", t[[1]], ":", nrow(r$candidates), "figures,", r$n_expr, "expressions,",
+        if (!is.null(r$error)) paste("stopped:", r$error$stage, r$error$message), "\n")
+    print(r$candidates)
+    if (!nrow(r$candidates) || !all(r$candidates$engine == t[[3]])) {
+      cat("!! expected at least one", t[[3]], "figure and no other engine\n"); ok <- FALSE
+    }
   }
 } else {
   cat("\n(part 2 skipped: set GLOSS_BENCH_THIRD_PARTY=true to run third-party code)\n")

@@ -2,8 +2,9 @@
 #   Rscript bench/R/sample.R
 # Each stratum gets its own seed (seed + stratum number) and a full random
 # permutation of its frame; the sample is the first n of that permutation,
-# skipping PSUs already drawn in an earlier stratum. A later round continues
-# down the same permutations, so earlier draws never change.
+# skipping PSUs already drawn in an earlier stratum and PSUs the frame marks
+# out of scope. A later round continues down the same permutations, so
+# earlier draws never change.
 
 source("bench/R/common.R")
 RNGkind("Mersenne-Twister", "Inversion", "Rejection")
@@ -28,11 +29,14 @@ rows <- list()
 for (h in seq_along(allocation)) {
   stratum <- names(allocation)[h]
   f <- frames[[stratum]]
+  if (is.null(f$in_scope)) f$in_scope <- TRUE
   f <- f[order(f$psu), , drop = FALSE]
   set.seed(seed + h)
   perm <- f[sample.int(nrow(f)), , drop = FALSE]
   perm$rank <- seq_len(nrow(perm))
-  perm <- perm[!key(perm) %in% drawn, , drop = FALSE]
+  # out-of-scope rows stay in the permutation (ranks do not move) but are skipped
+  perm <- perm[perm$in_scope & !key(perm) %in% drawn, , drop = FALSE]
+  n_in <- sum(f$in_scope)
   take <- perm[seq_len(min(allocation[[stratum]], nrow(perm))), , drop = FALSE]
   drawn <- c(drawn, key(take))
   rows[[stratum]] <- data.frame(
@@ -41,10 +45,11 @@ for (h in seq_along(allocation)) {
     rank = take$rank,
     kind = take$kind,
     psu = take$psu,
-    frame_size = nrow(f),
+    frame_size = n_in,
+    out_of_scope = nrow(f) - n_in,
     n_stratum = allocation[[stratum]],
     stratum_seed = seed + h,
-    weight = nrow(f) / allocation[[stratum]],
+    weight = n_in / allocation[[stratum]],
     stringsAsFactors = FALSE
   )
 }

@@ -29,5 +29,10 @@
     "patchwork": 30,
     "heatmap": 347
   },
+  "out_of_scope": {
+    "rule": "help topic whose examples have no executable line (blank, comment or bare NULL only)",
+    "patchwork": 0,
+    "heatmap": 153
+  },
   "tidytuesday": "not in the v0 frame: the official repository holds data, readmes and images but no figure code"
 }

@@ -35,10 +35,7 @@ topic_code <- function(pkg, topic, lib = c(lib_root, .libPaths())) {
   db <- tools::Rd_db(pkg, lib.loc = lib)
   rd <- db[[paste0(topic, ".Rd")]]
   if (is.null(rd)) stop("no help topic ", pkg, "::", topic)
-  tmp <- tempfile(fileext = ".R")
-  tools::Rd2ex(rd, out = tmp, commentDontrun = TRUE, commentDonttest = FALSE)
-  if (!file.exists(tmp)) return(character())
-  strip_installs(readLines(tmp, warn = FALSE))
+  strip_installs(rd_example_code(rd))
 }
 
 topic_script <- function(pkg, topic) {
@@ -49,7 +46,9 @@ topic_script <- function(pkg, topic) {
 package_topics <- function(pkg, lib = c(lib_root, .libPaths())) {
   db <- tools::Rd_db(pkg, lib.loc = lib)
   has_ex <- vapply(db, function(rd) any(vapply(rd, function(s) identical(attr(s, "Rd_tag"), "\\examples"), TRUE)), TRUE)
-  sort(sub("\\.Rd$", "", names(db)[has_ex]))
+  db <- db[has_ex]
+  has_code <- vapply(db, function(rd) has_example_code(rd_example_code(rd)), TRUE)
+  sort(sub("\\.Rd$", "", names(db)[has_code]))
 }
 
 vignette_files <- function(pkg, lib = c(lib_root, .libPaths())) {
