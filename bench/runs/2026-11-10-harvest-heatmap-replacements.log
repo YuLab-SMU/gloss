@@ -1,0 +1,7 @@
+[1/7] heatmap-036 ComplexHeatmap::anno_block: retained 
+[2/7] heatmap-037 RiboCrypt: missing package RiboCrypt: installation of 2 packages failed:  ‘ORFik’, ‘RiboCrypt’; dependency 
+[3/7] heatmap-039 MAPFX: missing package MAPFX: installation of package ‘MAPFX’ failed
+[4/7] heatmap-040 ASURAT: timeout timeout ! callr timed out
+[5/7] heatmap-041 ComplexHeatmap::attach_annotation-Heatmap-method: retained 
+[6/7] heatmap-042 GeDi: missing package GeDi: installation of 2 packages failed:  ‘GeneTonic’, ‘GeDi’
+[7/7] heatmap-048 MPAC: no figure figures of other engines: ggplot x2, grid x3

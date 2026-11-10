@@ -166,3 +166,10 @@ Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server
 "heatmap-028","heatmap","vignette","gmoviz","code error","eval Summation of cell padding on y-direction are larger than the height of
 the cells.",0,NA,NA,NA,NA,"",7.49138641357422
 "heatmap-034","heatmap","vignette","barbieQ","retained","",1,12,1,"heatmap","HeatmapList","bartools",192.483590364456
+"heatmap-036","heatmap","topic","ComplexHeatmap::anno_block","retained","",5,1,8,"heatmap","HeatmapList","",4.36343669891357
+"heatmap-037","heatmap","vignette","RiboCrypt","missing package","RiboCrypt: installation of 2 packages failed:  ‘ORFik’, ‘RiboCrypt’; dependency ‘qs’ is not available",0,NA,NA,NA,NA,"RiboCrypt",30.9868996143341
+"heatmap-039","heatmap","vignette","MAPFX","missing package","MAPFX: installation of package ‘MAPFX’ failed",0,NA,NA,NA,NA,"MAPFX",270.900113582611
+"heatmap-040","heatmap","vignette","ASURAT","timeout","timeout ! callr timed out",0,NA,NA,NA,NA,"",958.878343582153
+"heatmap-041","heatmap","topic","ComplexHeatmap::attach_annotation-Heatmap-method","retained","",2,1,8,"heatmap","Heatmap","",3.98188972473145
+"heatmap-042","heatmap","vignette","GeDi","missing package","GeDi: installation of 2 packages failed:  ‘GeneTonic’, ‘GeDi’",0,NA,NA,NA,NA,"GeDi",76.9986853599548
+"heatmap-048","heatmap","vignette","MPAC","no figure","figures of other engines: ggplot x2, grid x3",0,NA,NA,NA,NA,"",34.1890687942505
