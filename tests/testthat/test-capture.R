@@ -6,6 +6,7 @@ test_that("the six input classes draw exactly what plain svglite draws", {
     fig <- suppressWarnings(gloss(inp$x, width = 7, height = 5, dense = Inf, context = FALSE))
     plain <- suppressWarnings(plain_svg(inp$draw, 7, 5))
     expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain), label = nm)
+    expect_identical(clip_regions(fig$substrate$scene), clip_regions(plain), label = paste(nm, "clip regions"))
     el <- fig$substrate$elements
     unowned <- el[is.na(el$leaf), ]
     expect_equal(nrow(unowned), 1L, label = paste(nm, "unowned elements"))
@@ -174,7 +175,42 @@ test_that("fills, clipping paths and gTree alpha are captured unchanged", {
     fig <- gloss(g, width = 3, height = 3, context = FALSE)
     plain <- plain_svg(function() grid::grid.draw(g), 3, 3)
     expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain), label = nm)
+    expect_identical(clip_regions(fig$substrate$scene), clip_regions(plain), label = paste(nm, "clip regions"))
     expect_true(all(fig$substrate$leaves$status == "ok"), label = nm)
+  }
+})
+
+test_that("a clipping grob keeps clipping the leaves drawn after it", {
+  # A clipGrob draws nothing and sets the clip for what follows. Wrapped in a
+  # graphics group like any leaf, its clip ended with the group and the next
+  # leaf was drawn unclipped, with every primitive unchanged, so the signature
+  # comparison could not see it (dev log 2026-11-10-page-capture-spike).
+  g <- grid::gTree(children = grid::gList(
+    grid::clipGrob(width = 0.4, height = 0.4, name = "window"),
+    grid::circleGrob(r = 0.45, gp = grid::gpar(fill = "blue"), name = "disc")
+  ))
+  fig <- gloss(g, width = 3, height = 3, context = FALSE)
+  plain <- plain_svg(function() grid::grid.draw(g), 3, 3)
+  expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain))
+  expect_true(any(nzchar(clip_regions(plain)) & grepl("rect", clip_regions(plain))))
+  expect_identical(clip_regions(fig$substrate$scene), clip_regions(plain))
+  expect_equal(fig$substrate$leaves$name, "disc")
+  # two clips in a row, and a clip inside a viewport followed by a sibling outside it
+  two <- grid::gTree(children = grid::gList(
+    grid::clipGrob(width = 0.9, height = 0.9), grid::rectGrob(gp = grid::gpar(fill = "grey")),
+    grid::clipGrob(width = 0.3, height = 0.3), grid::circleGrob(r = 0.4)
+  ))
+  nested <- grid::gTree(children = grid::gList(
+    grid::gTree(children = grid::gList(grid::clipGrob(width = 0.5, height = 0.5),
+                                       grid::rectGrob(gp = grid::gpar(fill = "red"))),
+                vp = grid::viewport(width = 0.8, height = 0.8)),
+    grid::circleGrob(r = 0.5, gp = grid::gpar(fill = "green"))
+  ))
+  for (g in list(two, nested)) {
+    fig <- gloss(g, width = 3, height = 3, context = FALSE)
+    plain <- plain_svg(function() grid::grid.draw(g), 3, 3)
+    expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain))
+    expect_identical(clip_regions(fig$substrate$scene), clip_regions(plain))
   }
 })
 

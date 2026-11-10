@@ -244,6 +244,10 @@ wrap_leaves <- function(x, parent, acc) {
     return(x)
   }
   if (inherits(x, c("zeroGrob", "null"))) return(x)
+  # A clipGrob draws nothing and sets the clip for what is drawn after it.
+  # Inside a graphics group the clip would end with the group, and the next
+  # leaves would be drawn unclipped: leave it in place, as a non-leaf.
+  if (inherits(x, "clip")) return(x)
   acc$k <- acc$k + 1L
   id <- sprintf("L%03d", acc$k)
   acc$leaves[[id]] <- list(

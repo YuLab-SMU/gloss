@@ -46,6 +46,30 @@ six_inputs <- function() {
   )
 }
 
+# The clip regions in force for each drawn primitive: the geometry of every
+# clipPath referenced by an ancestor group, outermost first. The clip is an
+# attribute of an ancestor, so scene_signatures() alone cannot see a primitive
+# that lost its clip.
+clip_regions <- function(svg) {
+  doc <- xml2::read_xml(svg)
+  ns <- svg_ns(doc)
+  defs <- xml2::xml_find_all(doc, "//d1:clipPath", ns)
+  geom <- vapply(defs, function(d) {
+    paste(vapply(xml2::xml_children(d), function(k) {
+      a <- xml2::xml_attrs(k)
+      paste(xml2::xml_name(k), paste(names(a), a, sep = "=", collapse = " "))
+    }, ""), collapse = ";")
+  }, "")
+  names(geom) <- xml2::xml_attr(defs, "id")
+  nodes <- xml2::xml_find_all(doc, prim_xpath(), ns)
+  anc <- xml2::xml_find_all(nodes, "ancestor::d1:g[@clip-path]", ns, flatten = FALSE)
+  vapply(anc, function(a) {
+    if (!length(a)) return("")
+    ids <- sub("^url\\(#(.*)\\)$", "\\1", xml2::xml_attr(a, "clip-path"))
+    paste(geom[ids], collapse = " > ")
+  }, "")
+}
+
 # source() a script the way a user would, so that sniffers see the file.
 sys.source_like <- function(path, env) {
   source(path, local = env, keep.source = TRUE)
