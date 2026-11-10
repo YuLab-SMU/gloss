@@ -16,21 +16,79 @@ work_root <- file.path(cache_root, "work")
 stratum_engine <- c(patchwork = "patchwork", heatmap = "heatmap")
 max_topics <- 8L
 
+missing_package_re <- paste(
+  "there is no package called|is not available|could not find function \"(library|require)",
+  "Required packages? (is|are) missing", "[Pp]ackages? [‘'\"][^’'\"]+[’'\"] (is|are) (required|needed)",
+  sep = "|")
+
 classify_failure <- function(err, install_failed = character()) {
   if (length(install_failed)) return("missing package")
   if (is.null(err)) return("no figure")
   msg <- err$message
   if (identical(err$stage, "timeout")) return("timeout")
   if (identical(err$stage, "parse")) return("parse error")
-  if (grepl("there is no package called|is not available|could not find function \"(library|require)", msg)) return("missing package")
+  if (grepl(missing_package_re, msg)) return("missing package")
+  # a relative path handed to url() or download.file() is missing data, not network
+  if (grepl("cannot open URL '(?!(https?|ftp)://)", msg, perl = TRUE)) return("missing data")
   if (grepl("resolve host|Failed to connect|Couldn't connect|cannot open URL|proxy|SSL|HTTP error|Timeout was reached|internet|curl_fetch|download.*fail", msg, ignore.case = TRUE)) return("needs network")
-  if (grepl("cannot open (file|the connection)|No such file|does not exist|not found in.*path", msg, ignore.case = TRUE)) return("missing data")
+  if (grepl("cannot open (file|the connection|\")|No such file|does not exist|not found in.*path", msg, ignore.case = TRUE)) return("missing data")
   "code error"
 }
 
-outside_population <- function(out_classes) {
-  any(grepl("htmlwidget|gt_tbl|knitr_kable|kableExtra|flextable|datatables|rgl|plotly|leaflet|girafe|reactable|gtsummary|tbl_summary",
-            out_classes))
+outside_population <- function(out_classes) any(grepl(outside_classes, out_classes))
+
+# Packages an error message says are needed but absent (base R, caret, rlang).
+packages_in_error <- function(msg) {
+  if (is.null(msg) || !length(msg) || is.na(msg)) return(character())
+  name <- "([A-Za-z][A-Za-z0-9.]*[A-Za-z0-9])"
+  pats <- c(paste0("there is no package called [‘'\"]", name, "[’'\"]"),
+            paste0("[Pp]ackages? [‘'\"]", name, "[’'\"] (?:is|are) (?:required|needed)"))
+  out <- unlist(lapply(pats, function(p) {
+    m <- regmatches(msg, gregexpr(p, msg, perl = TRUE))[[1]]
+    sub(p, "\\1", m, perl = TRUE)
+  }))
+  caret <- regmatches(msg, regexpr("Required packages? (?:is|are) missing: [A-Za-z0-9., ]+", msg, perl = TRUE))
+  if (length(caret)) out <- c(out, trimws(strsplit(sub("^.*missing: ", "", caret), ",")[[1]]))
+  unique(out[nzchar(out)])
+}
+
+# Outcome of a PSU that gave no figure of its stratum, from its last run (NULL
+# if nothing ran), the packages that failed to install and their reasons.
+# Output outside the population (a widget, a table) with no figure counts as
+# outside the population even if the run then stopped; the detail says so.
+psu_outcome <- function(last, failed, note = "", install_detail = "") {
+  if (is.null(last)) {
+    return(list(outcome = if (length(failed)) "missing package" else "no code",
+                detail = if (length(failed)) install_detail else note))
+  }
+  err <- last$error
+  stopped <- if (!is.null(err)) paste(err$stage, err$message) else ""
+  if (!length(failed) && outside_population(last$out_classes)) {
+    detail <- paste(unique(grep(outside_classes, last$out_classes, value = TRUE)), collapse = ", ")
+    if (nzchar(stopped)) detail <- paste0(detail, "; then stopped: ", stopped)
+    return(list(outcome = "outside population", detail = detail))
+  }
+  detail <- if (nzchar(stopped)) stopped else if (nrow(last$candidates)) {
+    # ran cleanly, but its figures are not of the stratum's engine
+    n <- table(last$candidates$engine)
+    paste("figures of other engines:", paste(names(n), n, sep = " x", collapse = ", "))
+  } else "ran without error, no figure"
+  if (length(failed)) detail <- paste0(install_detail, " | run: ", detail)
+  list(outcome = classify_failure(err, failed), detail = detail)
+}
+
+# Run a script; if it stops because a package is absent that the static scan
+# did not see (a Suggests of a package it uses), install that and run again.
+run_installing <- function(s, work_dir, seed, timeout, pkgs, rounds = 3L) {
+  for (k in seq_len(rounds)) {
+    r <- run_script(s, work_dir, seed = seed, timeout = timeout)
+    need <- setdiff(packages_in_error(r$error$message), pkgs$package)
+    if (!length(need)) break
+    st <- ensure_packages(need)
+    pkgs <- rbind(pkgs, st)
+    if (!any(st$status == "installed")) break
+  }
+  list(run = r, pkgs = pkgs)
 }
 
 # Write code.R, data/ and meta.json for one chosen figure.
@@ -40,18 +98,22 @@ freeze_figure <- function(id, script, cand, work_dir, meta) {
   dir.create(dir, recursive = TRUE)
   chunks <- truncate_script(script, cand$chunk, cand$expr)
   body <- unlist(Map(function(code, i) c(sprintf("# ---- chunk %d ----", i), code), chunks, seq_along(chunks)))
+  nbsp_n <- script$nbsp %||% 0L
   header <- c(sprintf("# gloss bench figure %s", id),
               sprintf("# source: %s (%s)", meta$psu, meta$kind),
               "# Frozen by bench/R/harvest.R: code up to the chosen figure; see meta.json.",
+              if (nbsp_n > 0) sprintf("# %d no-break space(s) (U+00A0) in the source replaced by spaces.", nbsp_n),
               if (length(script$setup)) c("# ---- setup ----", script$setup))
   writeLines(c(header, body), file.path(dir, "code.R"), useBytes = TRUE)
   used <- Filter(function(r) isTRUE(r$ok), meta$rewrites)
   for (r in used) {
     if (any(grepl(r$file, unlist(chunks), fixed = TRUE))) {
       dir.create(file.path(dir, "data"), showWarnings = FALSE)
-      file.copy(file.path(work_dir, r$file), file.path(dir, r$file), overwrite = TRUE)
+      for (f in c(r$file, vapply(r$companions %||% list(), `[[`, "", "file")))
+        file.copy(file.path(work_dir, f), file.path(dir, f), overwrite = TRUE)
     }
   }
+  meta$nbsp_replaced <- nbsp_n
   meta$figure <- as.list(cand)
   meta$seed <- seed_for(id)
   jsonlite::write_json(meta, file.path(dir, "meta.json"), auto_unbox = TRUE, pretty = TRUE, null = "null")
@@ -78,7 +140,7 @@ check_eligibility <- function(dir, engine, timeout = 300, capture = FALSE) {
 }
 
 build_script <- function(row, work_dir) {
-  pkgs_status <- data.frame(package = character(), status = character())
+  pkgs_status <- data.frame(package = character(), status = character(), reason = character())
   rewrites <- list()
   if (row$kind == "gallery") {
     script <- gallery_script(row$psu)
@@ -130,12 +192,12 @@ harvest_psu <- function(row) {
                     stringsAsFactors = FALSE)
   b <- tryCatch(build_script(row, work_dir), error = function(e) list(error = conditionMessage(e)))
   if (!is.null(b$error)) { out$outcome <- "setup error"; out$detail <- b$error; return(out) }
-  failed <- b$pkgs$package[b$pkgs$status == "failed"]
-  out$missing_packages <- paste(failed, collapse = " ")
   timeout <- if (row$kind == "vignette") 900 else 300
   chosen <- NULL; last <- NULL; script <- NULL; n_fig <- 0L
   for (s in b$scripts) {
-    r <- run_script(s, work_dir, seed = seed_for(row$id), timeout = timeout)
+    ri <- run_installing(s, work_dir, seed = seed_for(row$id), timeout = timeout, pkgs = b$pkgs)
+    r <- ri$run
+    b$pkgs <- ri$pkgs
     last <- r
     cand <- r$candidates
     if (!is.na(stratum_engine[row$stratum])) cand <- cand[cand$engine == stratum_engine[row$stratum], , drop = FALSE]
@@ -148,22 +210,14 @@ harvest_psu <- function(row) {
     }
   }
   out$n_figures <- n_fig
+  fail <- b$pkgs[b$pkgs$status == "failed", , drop = FALSE]
+  failed <- unique(fail$package)
+  out$missing_packages <- paste(failed, collapse = " ")
   if (is.null(chosen)) {
-    if (is.null(last)) { out$outcome <- if (length(failed)) "missing package" else "no code"; out$detail <- b$note %||% "" }
-    else if (is.null(last$error) && outside_population(last$out_classes)) {
-      out$outcome <- "outside population"; out$detail <- paste(last$out_classes, collapse = " ")
-    } else {
-      out$outcome <- classify_failure(last$error, failed)
-      out$detail <- if (!is.null(last$error)) {
-        substr(paste(last$error$stage, last$error$message), 1, 300)
-      } else if (nrow(last$candidates)) {
-        # ran cleanly, but its figures are not of the stratum's engine
-        n <- table(last$candidates$engine)
-        paste("figures of other engines:", paste(names(n), n, sep = " x", collapse = ", "))
-      } else {
-        "ran without error, no figure"
-      }
-    }
+    o <- psu_outcome(last, failed, note = b$note %||% "",
+                     install_detail = paste(fail$package, fail$reason, sep = ": ", collapse = "; "))
+    out$outcome <- o$outcome
+    out$detail <- substr(o$detail, 1, 300)
     out$seconds <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
     return(out)
   }

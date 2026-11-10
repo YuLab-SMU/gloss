@@ -7,7 +7,8 @@
 #     visibly or through print()/plot()/draw()/grid.draw();
 #   - base / grid: the device's display list changed. Such a figure is complete
 #     at the end of its chunk, or just before a new page starts.
-# Execution stops at the first error, as knitr would.
+# Visible values are printed, as at the top level and in knitr (lattice and
+# others draw only then). Execution stops at the first error, as knitr would.
 #
 # The same worker reruns a frozen figure (code truncated after the chosen
 # figure) and recovers the figure object from its last expression; with
@@ -17,6 +18,10 @@ source("bench/R/common.R")
 
 figure_classes <- c("ggplot", "patchwork", "Heatmap", "HeatmapList", "grob", "gList", "gtable")
 
+# Visible values outside the population (widgets, tables, 3D scenes, apps).
+# Matched against all of a value's classes; the worker does not print them.
+outside_classes <- "htmlwidget|gt_tbl|knitr_kable|kableExtra|flextable|datatables|rgl|plotly|leaflet|girafe|reactable|gtsummary|tbl_summary|shiny\\.appobj"
+
 # ---- scripts ---------------------------------------------------------------
 
 strip_installs <- function(code) {
@@ -25,22 +30,45 @@ strip_installs <- function(code) {
   code
 }
 
-gallery_script <- function(psu) {
-  chunks <- rmd_chunks(file.path(src_root, "gallery", psu))
-  list(setup = character(), chunks = lapply(chunks, function(k) strip_installs(k$code)),
-       chunk_labels = vapply(chunks, `[[`, "", "header"))
+nbsp <- " "
+count_nbsp <- function(code) sum(lengths(regmatches(code, gregexpr(nbsp, code, fixed = TRUE))))
+
+# Mechanical edits applied to every script and recorded with each frozen
+# figure: install calls are commented out; no-break spaces (U+00A0, pasted from
+# web pages) become spaces, because R 4.5's parser rejects them outside strings.
+clean_code <- function(code) {
+  code <- tryCatch(gsub(nbsp, " ", code, fixed = TRUE), error = function(e) code)
+  strip_installs(code)
+}
+
+# The Gallery's closing chunk includes HTML from the website, which is not in
+# the repository; it draws nothing and would end every post on an error.
+site_scaffolding <- function(code) {
+  x <- trimws(code)
+  x <- x[nzchar(x)]
+  length(x) > 0 && all(grepl("^(htmltools::)?includeHTML\\(", x))
+}
+
+gallery_script <- function(psu, root = file.path(src_root, "gallery")) {
+  chunks <- rmd_chunks(file.path(root, psu))
+  chunks <- Filter(function(k) !site_scaffolding(k$code), chunks)
+  code <- lapply(chunks, `[[`, "code")
+  list(setup = character(), chunks = lapply(code, clean_code),
+       chunk_labels = vapply(chunks, `[[`, "", "header"), nbsp = count_nbsp(unlist(code)))
 }
 
 topic_code <- function(pkg, topic, lib = c(lib_root, .libPaths())) {
   db <- tools::Rd_db(pkg, lib.loc = lib)
   rd <- db[[paste0(topic, ".Rd")]]
   if (is.null(rd)) stop("no help topic ", pkg, "::", topic)
-  strip_installs(rd_example_code(rd))
+  code <- rd_example_code(rd)
+  structure(clean_code(code), nbsp = count_nbsp(code))
 }
 
 topic_script <- function(pkg, topic) {
-  list(setup = sprintf("library(%s)", pkg), chunks = list(topic_code(pkg, topic)),
-       chunk_labels = paste0(pkg, "::", topic))
+  code <- topic_code(pkg, topic)
+  list(setup = sprintf("library(%s)", pkg), chunks = list(as.vector(code)),
+       chunk_labels = paste0(pkg, "::", topic), nbsp = attr(code, "nbsp"))
 }
 
 package_topics <- function(pkg, lib = c(lib_root, .libPaths())) {
@@ -69,11 +97,12 @@ vignette_script <- function(pkg, vig) {
       knitr::purl(src, output = rfile, quiet = TRUE, documentation = 1)
     }
   }
-  x <- strip_installs(readLines(rfile, warn = FALSE))
+  raw <- readLines(rfile, warn = FALSE)
+  x <- clean_code(raw)
   starts <- sort(unique(c(1L, grep("^## ----|^### code chunk number", x))))
   ends <- c(starts[-1] - 1L, length(x))
   chunks <- Map(function(a, b) x[a:b], starts, ends)
-  list(setup = character(), chunks = chunks, chunk_labels = x[starts])
+  list(setup = character(), chunks = chunks, chunk_labels = x[starts], nbsp = count_nbsp(raw))
 }
 
 # ---- packages ----------------------------------------------------------------
@@ -85,44 +114,90 @@ installed_anywhere <- function(pkgs) {
   pkgs %in% have
 }
 
+# Why a package failed to install, from the warnings install.packages() gave:
+# the ones naming it, and any unavailable dependency.
+install_reason <- function(pkg, notes) {
+  notes <- sub("\n.*$", "", notes)
+  own <- grep(paste0("[^A-Za-z0-9.]", gsub(".", "\\.", pkg, fixed = TRUE), "[^A-Za-z0-9.]"), notes, value = TRUE)
+  deps <- grep("^dependenc(y|ies) .* (is|are) not available", notes, value = TRUE)
+  x <- unique(c(own, deps))
+  if (length(x)) paste(x, collapse = "; ") else "install failed (see install.log)"
+}
+
 # Install missing packages into the bench library (CRAN and Bioconductor 3.21).
-# Returns one row per requested package: present, installed or failed.
-ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log")) {
+# Returns one row per requested package: present, installed or failed, with
+# the reason for a failure. A download through the proxy fails now and then
+# (SSL connect error), so failed downloads are retried.
+ensure_packages <- function(pkgs, log = file.path(cache_root, "install.log"), tries = 3L) {
   pkgs <- unique(pkgs[nzchar(pkgs)])
-  if (!length(pkgs)) return(data.frame(package = character(), status = character()))
+  if (!length(pkgs)) return(data.frame(package = character(), status = character(), reason = character()))
   missing <- pkgs[!installed_anywhere(pkgs)]
+  notes <- character()
   if (length(missing)) {
-    callr::r(function(pkgs, lib, bioc, cran, log) {
+    notes <- callr::r(function(pkgs, lib, bioc, cran, log, tries) {
       repos <- BiocManager::repositories(version = bioc)
       repos[["CRAN"]] <- cran  # always the pinned CRAN, never the session's option
       # Linux (the container) installs type "source": Posit Package Manager
       # serves CRAN binaries under it; Bioconductor packages compile (no arm64
       # container binaries for 3.21)
       first <- if (.Platform$pkgType == "source") "source" else "binary"
-      # errors from install.packages() arrive as messages: log both streams
+      # errors from install.packages() arrive as messages, most failures as
+      # warnings: log all three and keep the warnings
       con <- file(log, open = "a")
       sink(con, type = "output"); sink(con, type = "message")
       on.exit({ sink(type = "message"); sink(type = "output"); close(con) })
       cat("\n==== ", format(Sys.time()), paste(pkgs, collapse = " "), "\n")
-      try(utils::install.packages(pkgs, lib = lib, repos = repos, type = first,
-                                  dependencies = c("Depends", "Imports", "LinkingTo"), quiet = TRUE, Ncpus = 4))
-      still <- pkgs[!pkgs %in% rownames(utils::installed.packages(lib.loc = .libPaths()))]
-      if (length(still) && first != "source")
-        try(utils::install.packages(still, lib = lib, repos = repos, type = "source",
-                                    dependencies = c("Depends", "Imports", "LinkingTo"), quiet = TRUE, Ncpus = 4))
-      invisible(NULL)
-    }, args = list(pkgs = missing, lib = lib_root, bioc = bioc_version, cran = cran_repo, log = log),
+      acc <- new.env()
+      acc$notes <- character()
+      install <- function(p, type) withCallingHandlers(
+        try(utils::install.packages(p, lib = lib, repos = repos, type = type,
+                                    dependencies = c("Depends", "Imports", "LinkingTo"), quiet = TRUE, Ncpus = 4)),
+        warning = function(w) {
+          acc$notes <- c(acc$notes, conditionMessage(w))
+          cat("Warning:", conditionMessage(w), "\n")
+          invokeRestart("muffleWarning")
+        })
+      still <- function() pkgs[!pkgs %in% rownames(utils::installed.packages(lib.loc = .libPaths()))]
+      install(pkgs, first)
+      if (length(still()) && first != "source") install(still(), "source")
+      k <- 1L
+      while (length(still()) && k < tries && any(grepl("download of package .* failed", acc$notes))) {
+        Sys.sleep(10 * k)
+        cat("---- retry", k, ":", paste(still(), collapse = " "), "\n")
+        acc$notes <- character()
+        install(still(), "source")
+        k <- k + 1L
+      }
+      acc$notes
+    }, args = list(pkgs = missing, lib = lib_root, bioc = bioc_version, cran = cran_repo, log = log, tries = tries),
     libpath = bench_libpaths(), timeout = 3600, show = FALSE)
   }
   ok <- installed_anywhere(pkgs)
-  data.frame(package = pkgs,
-             status = ifelse(!pkgs %in% missing, "present", ifelse(ok, "installed", "failed")),
-             stringsAsFactors = FALSE)
+  status <- ifelse(!pkgs %in% missing, "present", ifelse(ok, "installed", "failed"))
+  data.frame(package = pkgs, status = status,
+             reason = ifelse(status == "failed", vapply(pkgs, install_reason, "", notes = notes), ""),
+             stringsAsFactors = FALSE, row.names = NULL)
 }
 
 # ---- data vendoring ----------------------------------------------------------
 
 data_ext <- "\\.(csv|txt|tsv|dat|json|geojson|xlsx?|rds|rda|RData|zip|gz|shp|dbf|shx|prj|xml|sav|dta)$"
+
+# Replace a quoted literal by the vendored file's relative path. On a line that
+# calls download.file() the literal must stay a URL, so it becomes file://<rel>
+# (download.file() opens relative file:// URLs; a bare path it cannot fetch).
+rewrite_literal <- function(chunks, lit, rel) {
+  q <- substr(lit, 1, 1)
+  lapply(chunks, function(x) {
+    dl <- grepl("download\\.file\\(", x)
+    x[dl] <- gsub(lit, paste0(q, "file://", rel, q), x[dl], fixed = TRUE)
+    x[!dl] <- gsub(lit, paste0(q, rel, q), x[!dl], fixed = TRUE)
+    x
+  })
+}
+
+# A shapefile is read together with its sidecar files of the same name.
+shp_sidecars <- c("shx", "dbf", "prj", "cpg")
 
 # Download URL literals (and, for Gallery posts, relative data paths that exist
 # in the Gallery repository) into dir/data/ and rewrite the literals.
@@ -153,9 +228,22 @@ vendor_data <- function(chunks, dir, gallery = FALSE) {
       next
     }
     rel <- file.path("data", basename(dest))
+    companions <- list()
+    if (grepl("\\.shp$", dest, ignore.case = TRUE)) {
+      for (ext in shp_sidecars) {
+        u2 <- sub("\\.shp([?#].*)?$", paste0(".", ext, "\\1"), url, ignore.case = TRUE)
+        d2 <- sub("\\.shp$", paste0(".", ext), dest, ignore.case = TRUE)
+        s2 <- system2("curl", c("-sS", "-L", "--fail", "--max-time", "300", "-o", shQuote(d2), shQuote(u2)),
+                      stdout = FALSE, stderr = FALSE)
+        if (s2 == 0 && file.exists(d2)) {
+          companions[[length(companions) + 1]] <- list(url = u2, file = file.path("data", basename(d2)),
+                                                       bytes = file.size(d2), md5 = md5(d2))
+        } else unlink(d2)
+      }
+    }
     rewrites[[length(rewrites) + 1]] <- list(literal = target, url = url, file = rel, ok = TRUE,
-                                             bytes = file.size(dest), md5 = md5(dest))
-    chunks <- lapply(chunks, function(x) gsub(lit, paste0(substr(lit, 1, 1), rel, substr(lit, 1, 1)), x, fixed = TRUE))
+                                             bytes = file.size(dest), md5 = md5(dest), companions = companions)
+    chunks <- rewrite_literal(chunks, lit, rel)
   }
   list(chunks = chunks, rewrites = rewrites)
 }
@@ -163,7 +251,7 @@ vendor_data <- function(chunks, dir, gallery = FALSE) {
 # ---- the worker ----------------------------------------------------------------
 
 # Runs inside a fresh R process. Self-contained: callr ships only this function.
-run_worker <- function(setup, chunks, dir, seed, figure_classes, recover, capture, repo) {
+run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, recover, capture, repo) {
   setwd(dir)
   set.seed(seed)
   options(warn = 0, device = function(...) grDevices::pdf(NULL, width = 7, height = 5))
@@ -219,14 +307,27 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, recover, captur
         err <- list(chunk = i, expr = j, stage = "eval", message = conditionMessage(res))
         break
       }
+      v <- res$value
+      cls <- paste(class(v), collapse = " ")
+      # print a visible value, as the top level and knitr do: lattice and
+      # others draw only then, and a ggplot's own errors surface only then
+      if (res$visible && !is.null(v) && !grepl(skip_print, cls)) {
+        pr <- tryCatch({
+          if (isS4(v)) methods::show(v) else print(v)
+          NULL
+        }, error = function(e) e)
+        if (inherits(pr, "error")) {
+          err <- list(chunk = i, expr = j, stage = "print", message = conditionMessage(pr))
+          break
+        }
+      }
       if (grDevices::dev.cur() == 1L) open_dev()
       e <- exprs[[j]]
       fn <- if (is.call(e)) paste(deparse(e[[1]]), collapse = "") else ""
       fn <- sub("^.*::", "", fn)
-      v <- res$value
       last_obj <- inherits(v, figure_classes) && (res$visible || fn %in% printer)
       last_value <- if (last_obj) v else NULL
-      if (res$visible && !last_obj && !is.null(v)) out_classes <- c(out_classes, class(v)[1])
+      if (res$visible && !last_obj && !is.null(v)) out_classes <- c(out_classes, cls)
       now <- dl()
       if (!identical(now$raw, prev$raw)) {
         new_page <- changed && !extends(now, prev)
@@ -297,7 +398,8 @@ run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
   res <- tryCatch(
     callr::r(run_worker,
              args = list(setup = script$setup, chunks = script$chunks, dir = normalizePath(dir),
-                         seed = seed, figure_classes = figure_classes, recover = recover,
+                         seed = seed, figure_classes = figure_classes, skip_print = outside_classes,
+                         recover = recover,
                          capture = capture, repo = normalizePath(".")),
              libpath = bench_libpaths(), env = env, timeout = timeout, show = FALSE,
              package = FALSE),
