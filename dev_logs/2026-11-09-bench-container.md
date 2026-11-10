@@ -44,6 +44,8 @@ The owner decided that third-party figure code runs in a container (plan Scope c
 - Not run: any sampled PSU. The harvest pilot (`bench/docker/run.sh Rscript bench/R/harvest.R gallery-001 exts-001 bioc-001 patchwork-001 heatmap-005`) was refused by the session's auto-mode permission check. A first attempt passed the ids as one zsh word and matched nothing, so it ran nothing. `offline-check.R` and the `split.R` change have not run (no retained figures yet); only the `--network none` mode of `run.sh` was tested.
 - Suite at the end: unchanged, 7 files, 45 tests, 268 expectations, 0 failed, 0 skipped (no package code changed this session).
 
+- Later the same session: the owner allowed `bench/docker/run.sh` (local settings, not committed). Pilot, `bench/docker/run.sh Rscript bench/R/harvest.R gallery-001 exts-001 bioc-001 patchwork-001 heatmap-005`: 4 retained (gallery-001 base, 4 figures, 1 s; exts-001 gglorenz ggplot, 2 figures, 247 s; bioc-001 YAPSA grid, 2 figures, 417 s; patchwork-001 `wrap_elements` patchwork, 4 figures, 1 s); heatmap-005 "harness error", after the fix "no figure" (23 s). Then the full harvest started (155 PSUs left).
+
 ## Surprises
 
 - **60% of ComplexHeatmap's help topics have no example code**, and 10 of 15 heatmap draws were among them. Found only because the self-check's heatmap topic, `ComplexHeatmap::Heatmap`, is one of them and returned 0 figures; the check printed that but did not fail, because its third-party part had no expectations. → plan scope change (topics without example code out of scope, 10 draws replaced); predictions.md dated note; check-runner now asserts exact counts.
@@ -56,7 +58,11 @@ The owner decided that third-party figure code runs in a container (plan Scope c
 
 - **The permission check let the self-check's third-party code run in the container but refused the harvest pilot.** → plan Task 4 status `[!]`; the owner runs the harvest or allows it.
 
+- **A clean run with no figure of the stratum's engine crashed the attempt record** (`paste(NULL, NULL)` is `character(0)`), turning it into "harness error". The pilot's heatmap-005 hit it. → fixed in `harvest.R` (`cd36aca`), heatmap-005 rerun.
+- **Some vignettes draw only into files.** BloodGen3Module's `gridplot(..., filename = tempfile())` and `fingerprintplot()` open their own file device; the runner, which watches the session's device, sees no figure. Counted as "no figure", which is what a reader of the session sees. → nowhere yet; the harvest's count of such cases will say whether it matters.
+- **Vignette code comes from knitr's purled `doc/*.R`, which comments out `eval = FALSE` chunks**, while Gallery posts run all chunks. In BloodGen3Module only the installation chunk was affected. → nowhere yet; check how many sampled vignettes lose plotting code this way after the harvest.
+
 ## What's next
 
-- The owner runs the harvest, or allows it: pilot first (`bench/docker/run.sh Rscript bench/R/harvest.R gallery-001 exts-001 bioc-001 patchwork-001 heatmap-005`), then all PSUs (`bench/docker/run.sh Rscript bench/R/harvest.R`, resumable), then `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/offline-check.R`; then score predictions 1–4.
+- Finish the harvest (`bench/docker/run.sh Rscript bench/R/harvest.R`, resumable), then `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/offline-check.R`; then score predictions 1–4.
 - Then the split and freeze (Task 5), capture on the development set (Task 6).
