@@ -80,11 +80,11 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 9 files, 88 tests, 544 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `b02ea8c`).
-- Key numbers: stratum development half, 28 of 29 captured; 40.1% of layer elements checked (83.3% without tree-014's leaf of points); every layer element checked in 15 of 27 ggplot figures (run `2118`).
+- Suite: 9 files, 90 tests, 557 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `c8a6e85`; the container the same); was 88 / 544 at `b02ea8c`.
+- Key numbers: stratum development half, 29 of 29 captured (run `2221`); 40.0% of 25037 layer elements checked; every layer element checked in 15 of 28 ggplot figures (run `2224`). Was 28 captured, 40.1% of 24915, 15 of 27 (runs `2110`, `2118`).
 
 **Overall progress**
-- [~] Task 1: A page over the parser's limit (tree-041)
+- [x] Task 1: A page over the parser's limit (tree-041)
 - [ ] Task 2: Labels in their own frame: justification and rotation (tree-011, -060, -083, -072; tree-045)
 - [ ] Task 3: Polar coordinates through the coord's transform (tree-025, -038, -057)
 - [ ] Task 4: Text drawn as glyph outlines (the book figures)
@@ -99,7 +99,7 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 
 ### Task 1: A page over the parser's limit (tree-041)
 
-**Status:** `[~]` (fix and tests landed; the stratum's runs pending)
+**Status:** `[x]` (2026-11-11)
 
 **Tests assumption:** 5.
 
@@ -116,11 +116,18 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 - [x] Parse gloss's own pages with `HUGE`; the bench's comparator too (a bench change, recorded as such). — `read_page()` in `R/core-substrate.R`, used at every parse of a page gloss drew (capture's three pages, the base scene, the scene's geometry for binding, the regression signature, the engine contract's page check); the base route's "not well-formed" refusal now carries the parser's message. `compare_pages()` in `bench/R/runner.R` reads with `HUGE`; `check-runner.R` gains a page with the same raster: the comparator before the change gives no verdict (`AttValue length too long`), after it `faithful TRUE`.
 - [x] A plain SVG over the limit from outside: refused with a reason naming the limit (a test). — `read_outside_svg()` in `R/core-bundle.R`; `test-bundle.R`: an 11 MB attribute, `gl_read()` refuses with "the XML parser refused it" and says such a node is read only from pages gloss drew (2 expectations).
 - [x] Suite on the host; container suite (code that reads what the device wrote). — Host: 9 files / 90 tests / 557 expectations / 0 failed / 0 skipped (was 88 / 544). Container (`bench/R/suite.R`): 9 / 90 / 557 / 0 failed / 0 errors / 0 skipped / 0 warnings. `Rscript bench/R/check-runner.R` on the host: OK, exit 0.
-- [ ] Predictions (63-), then `capture.R dev tree` and `bind.R dev tree` in the container; scored.
+- [x] Predictions (63-), then `capture.R dev tree` and `bind.R dev tree` in the container; scored. — Predictions 63-66 at `4391fdb`; runs `2221` (capture) and `2224` (binding) at that commit: 3 right, 1 wrong (`bench/predictions.md`).
 
 **Verification**
 - `NOT_CRAN=true Rscript -e "devtools::test()"` on the host and `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/suite.R`.
 - `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev tree`: tree-041 captured or refused with a reason; the other 28 as in run `2110`.
+
+**Result** (2026-11-11; the stratum's 29 development figures, container, no network)
+- Capture, `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev tree` at `4391fdb` (run `2026-11-11-2221`): 29 of 29 captured; tree-041 `equal` by the bench and by gloss (125 primitives each side), 6.6 s, background the only unowned element. The other 28: no cell differs from run `2110` in 37 columns besides the seconds (the 38th, `message`, is empty in both).
+- Binding, `... bench/R/bind.R dev tree` at `4391fdb` (run `2026-11-11-2224`): no bind error. `Rscript bench/R/compare-bind.R bench/runs/2026-11-11-2118-bind-dev-tree.csv bench/runs/2026-11-11-2224-bind-dev-tree.csv`: 561 of 561 leaves of the 28 figures unchanged, 0 regressions. tree-041's 122 layer elements: verified 24 (its 22 branches among them), failed 10, unbound 17 (images: no comparison for `<image>`), count mismatch 71 (the labels' glyph outlines).
+- Stratum totals: 25037 layer elements, 40.0% checked, failed 222, unbound 325, count mismatch 14482; per figure, of 28 ggplot figures, all checked in 15, at least 80% in 18, none in 3.
+- `Rscript bench/R/check-runner.R`: OK on the host (exit 0); in the container OK with 1 skipped (install check, no network), exit 0.
+- Predictions 63-65 right; 66 wrong: tree-041's 10 failed elements are two classes this plan did not list (Scope change below).
 
 ---
 
@@ -213,6 +220,8 @@ One leaf of 8100 points in eight shapes draws 12690 elements: some shapes are se
 
 **Status:** `[ ]` _(stub)_
 
+Also, from Task 1: ggtree's segments moved by their draw-time `nudge_x` (tree-041, 6); `<image>` elements with no comparison (tree-041, 17).
+
 ### Task 7: The stratum's held-out half, one run
 
 **Status:** `[ ]` _(stub; decision 1)_
@@ -228,6 +237,8 @@ One leaf of 8100 points in eight shapes draws 12690 elements: some shapes are se
 ## Scope changes
 
 _(append-only; never edit completed tasks above)_
+
+- 2026-11-11 — **Two classes found on tree-041 once it was captured; tree-045 explained in part.** **Evidence:** run `2224` and prediction 66 (`bench/predictions.md`). (1) Six dotted lines of `geom_tiplab(align = 2, offset = 2)` fail by up to 128 pt: `GeomSegmentGGtree$draw_panel()` adds its geom parameter `nudge_x` to x while drawing, and the built rows do not hold it. (2) Four of six label boxes fail by 0.67-0.74 pt; plain `geom_label(hjust = .5)` on the host, without `showtext`, gives the same deviations for the same strings, so the binder's comparison (a polygon's vertex mean at the row) does not fit a label's box. tree-045's 3 failed label boxes are this class. **Effect:** Task 2 also covers label boxes (they are placed from their text, so the same frame applies), with a fixture of plain `geom_label()`; its verification adds tree-041's 4 and tree-045's 3 boxes. Task 6 gains the draw-time `nudge_x` of ggtree's segments (6 elements) and `<image>` elements, which have no comparison (17 in tree-041). The starting table's classes stand; tree-041 adds 122 layer elements to the stratum's totals.
 
 ## Closing notes
 

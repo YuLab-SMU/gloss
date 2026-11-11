@@ -481,3 +481,20 @@ Written 2026-11-11, after gloss and the bench's comparator were changed to parse
 66. **tree-041 has no failed element:** its branch segments (and the dotted lines `align` draws) are all verified or ambiguous; its image leaves are unbound with the reason that no comparison exists for `<image>` elements; its tip labels' text is in count-mismatch leaves (glyph outlines, as in every book figure). So under 80% of its layer elements are checked.
 
 Not scored: the label boxes of tree-041 are verified or ambiguous (`hjust = .5`, so a box is centred on its row).
+
+### Predictions 63-66 on the stratum's development figures (scored 2026-11-11)
+
+Runs `runs/2026-11-11-2221-capture-dev-tree.*` and `runs/2026-11-11-2224-bind-dev-tree.*`, both at `4391fdb` (clean tree; the predictions committed in it), in the container with no network.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 63. 29 of 29 captured; tree-041 `equal` by the bench and by gloss; the other 28 equal to run `2110` in every column but the seconds | 29 of 29; tree-041 `equal` by both (125 primitives on each side). On the other 28, 0 cells differ in 37 columns; the 38th, `message`, is empty for every figure in both runs (with no figure in error the column is all empty, and `read.csv` reads it as NA) | right |
+| 64. tree-041 under 60 s; its only unowned element the background | 6.6 s (the slowest of the run; median 0.32 s); 1 unowned element, the background | right |
+| 65. No bind error; the 28 figures of run `2118` bind exactly as there | 29 bound, no error. `compare-bind.R` against `2118`: 561 of 561 leaves with status, counts and reason unchanged; 0 regressions | right |
+| 66. tree-041: no failed element; branches and `align`'s dotted lines checked; images unbound for no `<image>` comparison; label text in count-mismatch leaves | 122 layer elements: 24 verified, 10 **failed**, 17 unbound (images, the reason as predicted), 71 in count-mismatch leaves (the six labels' glyph outlines, as predicted). Branches: 22 of 22 verified. The failed: the 6 dotted lines of `align` (up to 128 pt off) and 4 of the 6 label boxes (0.67 to 0.74 pt off) | **wrong** |
+
+- 3 right of 4. Not scored and wrong as well: 2 of tree-041's 6 label boxes are verified, not all.
+- **Why the dotted lines fail:** ggtree draws them with `GeomSegmentGGtree`, whose `draw_panel()` adds a geom parameter, `nudge_x`, to x at draw time; `geom_tiplab()` passes its `offset` there (2 here, about 128 pt). The built rows do not carry it. A geom that moves its rows while drawing is what design §绑定假设 calls a per-geom adapter; nothing in the binder knows it. The pairing is right; the check rightly fails.
+- **Why the label boxes fail is not the book's fonts:** the same six labels drawn with plain `geom_label(hjust = .5)` on the host, without `showtext`, give the same deviations (0.72, 0.74, 0.67, 0.74; 0.50 and 0.37 pass). The binder compares a polygon's vertex mean with the row; a label's box is not centred on its row to 0.5 pt. tree-045's 3 failed label boxes, "not explained" in run `2118`, are the same class. v0's 2000 label boxes (gallery-029) passed as ambiguous.
+- The 11 copies of the frog image are `geom_image(x = .8, y = 5.5)` with x and y set as parameters: one image per row of the tree's 11 nodes, all at one place.
+- Stratum, after Task 1 (ggplot figures, 28): every layer element checked in 15, at least 80% in 18, none in 3; 25037 layer elements, 40.0% checked, failed 222, unbound 325, count mismatch 14482.
