@@ -55,7 +55,7 @@
 **Current state** _(update as results come in)_
 - Suite: 7 files, 65 tests, 420 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, after Task 5).
 - Key numbers: development run `2026-11-11-0627` (page route for grid pages, base still through gridGraphics): 54 captured, 1 refused; grid pages 42 equal, 2 not deterministic, 0 different; base 1 equal, 5 known exceptions, 4 different; gloss's verdict and the bench's agree on 44 of 44 grid pages under the Task 4 reading.
-- Base route (Task 5, fixtures only): 26 of 26 hand-built base pages equal to the code's own page (gridGraphics: 14 of 26); the development set is Task 6.
+- Development run `2026-11-11-0705` (page route, base by entry): 52 equal, 2 not deterministic, 1 refused, 0 different, 0 errors; base 10 of 10 equal; gloss and the bench agree on 54 of 54 captured figures (Task 4 reading). `R CMD check --as-cran`: 2 NOTEs, both from the setting.
 
 **Overall progress**
 - [x] Task 1: Grid pages in the core: draw, wrap in place, self-check
@@ -63,7 +63,7 @@
 - [x] Task 3: Dense leaves, size and time
 - [x] Task 4: Bench on the page route; development run of the grid step
 - [x] Task 5: Base pages by display-list entry
-- [~] Task 6: Base on the development set; names and classification re-measured; gridGraphics out; `R CMD check`
+- [x] Task 6: Base on the development set; names and classification re-measured; gridGraphics out; `R CMD check`
 - [ ] Task 7: Records: design §元素归属 rewritten, NEWS, dev logs _(stub)_
 - [ ] Task 8: Held-out predictions and run _(stub; needs the owner's go-ahead)_
 
@@ -249,7 +249,7 @@
 
 ### Task 6: Base on the development set
 
-**Status:** `[~]`
+**Status:** `[x]`
 
 **Tests:** the last two lines of *Done when* (as read after the scope change of 2026-11-11, Task 6, below).
 
@@ -264,11 +264,11 @@
 - [x] Bench judges base pages like grid pages: the gridGraphics background-rect exception removed from `fidelity_verdict()`; `check-runner.R` asserts base fidelity (it reported it) and that leaf names are recorded; the score judges agreement on every captured page under the Task 4 reading and tallies base leaf names
 - [x] Linux: the bench container is the first Linux run of the base route (see Result)
 - [x] Predictions below committed before the run
-- [ ] Development run (`GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev`), archived with its log and score
-- [ ] Base leaf names on the development base figures, from the run; the base figure of design §分类 classified again with rules for call names (the design text is Task 7)
-- [ ] gridGraphics out of `DESCRIPTION` and the tests; the bench container keeps it (Task 8 runs the tag's engine route there)
-- [ ] `R CMD build --no-build-vignettes .` and `R CMD check --as-cran`; known hygiene items to look at: `Rplots.pdf` not in `.Rbuildignore`, non-ASCII comments in 4 files of `R/`, `<<-` in M0 code (closures writing their own function's locals)
-- [ ] Recorded-plot structure: R 4.5.2 is the only version on the host and in the bench image; other versions are not run (installing them is the owner's call)
+- [x] Development run (`GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev`), archived with its log and score
+- [x] Base leaf names on the development base figures, from the run; the base figure of design §分类 classified again with rules for call names (the design text is Task 7)
+- [x] gridGraphics out of `DESCRIPTION` and the tests; the bench container keeps it (Task 8 runs the tag's engine route there)
+- [x] `R CMD build --no-build-vignettes .` and `R CMD check --as-cran`; known hygiene items to look at: `Rplots.pdf` not in `.Rbuildignore`, non-ASCII comments in 4 files of `R/`, `<<-` in M0 code (closures writing their own function's locals)
+- [-] Recorded-plot structure: R 4.5.2 is the only version on the host and in the bench image; other versions are not run (installing them is the owner's call)
 
 **Predictions for the development run** (written 2026-11-11 after looking at run `2026-11-11-0627` and the fixtures of Task 5, so they are not blind; development set only)
 - 55 figures: 54 captured, 1 refused (gallery-053, "not a static ggplot"), 0 errors, 0 timeouts.
@@ -278,9 +278,18 @@
 - Base leaves with a count mismatch: 0 (fixtures: 0 of 169 counted leaves); lower confidence than the lines above, since development figures may draw text or points the expected counts do not foresee.
 - Would change the plan: a base page the bench finds different (the replay by entry does not reproduce the code's page); any figure the bench finds different while gloss says equal (failed invariant, blocks the plan).
 
-**Result** _(filled in when done)_
+**Result** (2026-11-11)
 - Bench harness: `Rscript bench/R/check-runner.R` FAILED before the change (the one-rect case still `known_exception`; leaf names not recorded) and OK after, on the host and, with the read fix below, in the container. On the old run, the new score prints the Task 4 numbers again (`2026-11-11-0627`: agreement 44 of 44 grid pages, identical verdicts 43 of 44).
 - Linux (`254bd73`): the first container check stopped every base capture on the integrity check ("the base page split by entry is not well-formed SVG"). A file connection kept open and seeked again returned bytes from before svglite rewrote its closing tags (2 of 8 entries of `plot(1:10, (1:10)^2)`; 0 on macOS); each read now opens its own connection. Container suite before: `test-capture.R` 5 errors (4 base pages, 1 `Rplots.pdf` in the read-only repository, fixed in `03abb95`); after: 7 files / 65 tests / 420 expectations / 0 failed / 0 errors / 0 skipped, as on the host.
+- Development run `2026-11-11-0705` (`GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev`, commit `9984549`, which holds the predictions; while it ran the working tree differed only in comments, roxygen text and the `DESCRIPTION` Suggests line; archived with log and score in `bench/runs/`, `692c6cc`). Every prediction held:
+  - 55 figures: 52 equal, 2 not deterministic (gallery-059: 5 primitives; heatmap-008: 236), 1 refused (gallery-053, "not a static ggplot"), 0 different, 0 errors, 0 timeouts.
+  - Base pages 10 of 10 equal, gloss's verdict `equal` on all 10 (`0627`, through gridGraphics: 1 equal, 5 one background rect, 4 different). Count mismatches on base pages: 0 of 10 figures; 1469 leaves with an expected count, all `ok` (`0627`: 85 mismatched leaves on 5 figures). Median time 0.15 s per base figure (`0627`: 0.36 s); gallery-023, 1297 elements, 0.90 s (4.92 s).
+  - gloss's verdict and the bench's agree on 54 of 54 captured figures under the Task 4 reading; identical on 53 of 54 (heatmap-008: bench `not_deterministic`, gloss `equal`); 0 failed invariants. The refused figure carries its reason.
+  - Unchanged from `0627`: objects drawn alone equal the page the code left in 39 of 41; withheld 1 (exts-018); 54 of 54 with only the device background unowned.
+- Base leaf names on the 10 development base figures (from the run's `leaf_names`; name: figures, leaves, elements): `plotXY` 7, 1362, 2018; `path` 2, 483, 483; `axis` 5, 19, 204; `text` 6, 61, 64; `segments` 3, 37, 57; `box` 5, 29, 29; `polygon` 3, 21, 21; `symbols` 2, 8, 17; `rect` 4, 14, 14; `title` 5, 7, 14; `mtext` 1, 2, 2. The base figure of design §分类 (`p6-base-classify.out`): `classify.R`'s rules on call names give 57 of 60 elements right, 2 wrong, 1 unclassified, as through gridGraphics, in 9 leaves instead of 15; `legend()` is not on the display list, only the calls it makes.
+- gridGraphics: out of `DESCRIPTION` and the `gloss()` documentation (`c20e98b`); no test or code path used it after Task 5 (only comments named it). The bench container keeps it for Task 8.
+- `R CMD build --no-build-vignettes` and `R CMD check --as-cran --no-manual` on a clean export of the commit (R 4.5.2, macOS; `_R_CHECK_CRAN_INCOMING_REMOTE_=false`, because CRAN did not answer from here within 60 s): first 1 WARNING (ggExtra used by the tests, not declared), 2 NOTEs; after declaring ggExtra (`84abf35`) 2 NOTEs, both from the setting (development version number; "unable to verify current time"). "R code for possible problems", non-ASCII, left-over files: OK. Assumption 6 holds on this platform: reading the recorded plot and calling its entries draws no check finding. Not run: the check on Linux (the container suite passes, 65 / 420 / 0), Windows, R-devel.
+- Recorded-plot structure on other R versions: not run (`[-]`). R 4.5.2 is the only version on the host and in the bench image, and installing others is the owner's call. What a changed structure would do: an entry that is not a function and its arguments stops with "Replaying display-list entry k ... failed", and a page replayed differently fails the self-check; neither degrades silently. `replayPlot()` itself warns on a plot recorded by another R version.
 
 ### Task 7: Records _(stub)_
 
