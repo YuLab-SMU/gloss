@@ -26,6 +26,9 @@
 #                  polygon with       centre of its box at (x, y) moved by
 #                  hjust and vjust    (0.5 - hjust) x width, (0.5 - vjust)
 #                                     x height, in the row's angle
+#                  polyline, path     first vertex at (x, y), last at
+#                  with xend, yend    (xend, yend): a segment munched along
+#                                     a coord that is not linear, a curve
 #                  polygon, polyline,
 #                  path               centre (vertex mean) at (x, y)
 #   one per group  polyline, path     vertices at the group's (x, y), in order
@@ -37,7 +40,9 @@
 # leaf does, `ambiguous` when another row passes too (positions that tie),
 # `failed` when its own row does not pass. A leaf that cannot be paired gets
 # `unbound` with the reason; a leaf whose counts do not match its grob's
-# keeps `count_mismatch` (design §计数对不上就拒绝绑定).
+# keeps `count_mismatch` (design §计数对不上就拒绝绑定). Under a coord that is
+# not linear, a path one per group is munched along the coord and is
+# unbound with that reason; so is a claim the engine states a reason for.
 #
 # Nothing here is stored in the figure: where roles and bindings live is
 # plan Task 6 (ADR-0007).
@@ -147,6 +152,9 @@ check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
     return(done("count_mismatch", sprintf("the leaf drew %d elements, its grob %d", leaf$n_drawn, leaf$n_expected)))
   }
   if (!n_el) return(done("unbound", "the leaf drew no elements"))
+  # what the engine pairs but knows no comparison for (rectangles under a
+  # coord that is not linear: polygons munched along it)
+  if (!is.null(cl$reason)) return(done("unbound", cl$reason))
   if (isTRUE(leaf$dense) && any(!g$tag %in% c("circle", "rect"))) {
     return(done("unbound", "a dense leaf keeps only the boxes of its elements, and its tags need more"))
   }
@@ -154,6 +162,12 @@ check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
   if (is.na(mode)) {
     return(done("unbound", sprintf("%d element%s for %d row%s in %d group%s: neither one per row nor one per group",
                                    n_el, plural(n_el), n_rows, plural(n_rows), n_groups, plural(n_groups))))
+  }
+  if (mode == "group" && isFALSE(cl$linear)) {
+    # a line through its group's rows is drawn along the coord's arcs, so its
+    # vertices are not the rows' points (plan 2026-11-11-tree-binding, Task 3)
+    return(done("unbound", sprintf("a path through its group's rows is drawn munched along the coord (%s); no comparison for it",
+                                   cl$coord %||% "not linear"), mode))
   }
   res <- if (mode == "row") check_rows(g, pred, all_pred, tol) else check_groups(g, pred, groups, all_pred, all_groups, tol)
   if (!is.null(res$reason)) return(done("unbound", res$reason, mode))
@@ -295,6 +309,27 @@ row_family <- function(tag, pred) {
   }
   if (tag == "rect") {
     return(list(need = c("x", "y"), cols = c("x", "y"), element = centre, row = at_xy, dev = point_dev, count = point_count))
+  }
+  if (tag %in% c("polyline", "path") && has(c("xend", "yend"))) {
+    # A segment drawn as a path: munched along a coord that is not linear
+    # (coord_polar(): bench tree-025, -038, -057), or a curve (geom_curve()).
+    # Its first vertex is the row's start, its last the row's end.
+    ends <- function(e) {
+      v <- e$vertices
+      if (any(vapply(v, is.null, logical(1)))) return(NULL)
+      data.frame(x = vapply(v, function(m) m[1, 1], 1), y = vapply(v, function(m) m[1, 2], 1),
+                 xend = vapply(v, function(m) m[nrow(m), 1], 1), yend = vapply(v, function(m) m[nrow(m), 2], 1))
+    }
+    return(list(need = c("x", "y", "xend", "yend"), cols = c("x", "y", "xend", "yend"),
+                element = ends,
+                row = function(p) data.frame(x = p$x, y = p$y, xend = p$xend, yend = p$yend),
+                dev = function(e, r) pmax(abs(e$x - r$x), abs(e$y - r$y), abs(e$xend - r$xend), abs(e$yend - r$yend)),
+                count = function(e, r, tol) {
+                  pr <- pairs_within(e$x, e$y, r$x, r$y, tol)
+                  ok <- abs(e$xend[pr$p] - r$xend[pr$q]) <= tol & abs(e$yend[pr$p] - r$yend[pr$q]) <= tol
+                  ok[is.na(ok)] <- FALSE
+                  tabulate(pr$p[ok], nbins = nrow(e))
+                }))
   }
   if (tag %in% c("polygon", "polyline", "path")) {
     # A point symbol drawn as a polygon (a triangle) is centred on its vertex

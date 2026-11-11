@@ -455,3 +455,66 @@ test_that("label boxes are placed from their row by their justification, not by 
     expect_true(all(boxes$status == "verified"), label = paste("hjust", hj, "boxes"))
   }
 })
+
+# Polar coordinates (plan 2026-11-11-tree-binding, Task 3). Circular and fan
+# tree layouts bound nothing (bench tree-025, -038, -057: 241 elements
+# unbound, "the panel's scales cannot be mapped (CoordPolar)"). Rows go to
+# the device through the coord's own transform; a segment under a
+# non-linear coord is a path munched along it, its ends at the row's ends.
+
+polar_plot <- function(layer, ...) {
+  d <- data.frame(x = c(1, 2, 3, 4, 5), y = c(1, 3, 2, 5, 4), xend = c(2, 3, 4, 5, 1),
+                  yend = c(2, 2, 4, 3, 5), lab = c("aa", "bbb", "c", "dddd", "ee"), ang = c(0, 30, 60, 90, 120))
+  ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y)) + layer + ggplot2::coord_polar(...)
+}
+
+test_that("points, segments and rotated text under coord_polar() verify, and permuted rows fail", {
+  skip_if_not_installed("ggplot2")
+  layers <- list(
+    points = ggplot2::geom_point(),
+    segments = ggplot2::geom_segment(ggplot2::aes(xend = .data$xend, yend = .data$yend)),
+    text = ggplot2::geom_text(ggplot2::aes(label = .data$lab, angle = .data$ang), hjust = -0.1),
+    theta_y = ggplot2::geom_point()
+  )
+  for (nm in names(layers)) {
+    p <- if (nm == "theta_y") polar_plot(layers[[nm]], theta = "y", start = 1, direction = -1) else polar_plot(layers[[nm]])
+    b <- suppressWarnings(bind_capture(p))
+    lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+    expect_equal(nrow(lv), 1L, label = nm)
+    expect_true(lv$status %in% c("verified", "ambiguous"), label = paste(nm, lv$status, lv$reason))
+    expect_equal(lv$verified + lv$ambiguous, 5L, label = nm)
+    j <- justified_claim(p)
+    cl <- j$claims[[1]]
+    bad <- cl
+    bad$pred <- cl$pred[c(2, 3, 4, 5, 1), ]
+    r <- check_claim(bad, j$leaves[j$leaves$id == cl$leaf, ], j$geo)
+    expect_equal(r$elements$status, rep("failed", 5L), label = paste(nm, "permuted"))
+  }
+})
+
+test_that("under coord_polar(), what the coord munches into paths without row ends is unbound with the reason", {
+  skip_if_not_installed("ggplot2")
+  # a line through its group's rows and a bar are drawn along the coord's
+  # arcs: their vertices are not the rows' points, so they are not compared
+  b <- suppressWarnings(bind_capture(polar_plot(ggplot2::geom_line())))
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_equal(lv$status, "unbound")
+  expect_match(lv$reason, "munched along the coord \\(CoordPolar\\)")
+  bars <- ggplot2::ggplot(data.frame(g = c("a", "b", "c"), n = c(3, 5, 2)), ggplot2::aes(x = "", y = .data$n, fill = .data$g)) +
+    ggplot2::geom_col() + ggplot2::coord_polar(theta = "y")
+  b <- suppressWarnings(bind_capture(bars))
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_true(all(lv$status == "unbound"))
+  expect_match(lv$reason[1], "rectangles .*\\(CoordPolar\\)")
+  expect_equal(sum(lv$failed), 0L)
+})
+
+test_that("a path paired one per row whose row has ends verifies by its ends (geom_curve)", {
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(x = c(1, 2, 3), y = c(1, 3, 2), xend = c(2, 3, 1), yend = c(3, 1, 3))
+  p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, xend = .data$xend, yend = .data$yend)) + ggplot2::geom_curve()
+  b <- suppressWarnings(bind_capture(p))
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_equal(lv$status, "verified")
+  expect_equal(lv$verified, 3L)
+})

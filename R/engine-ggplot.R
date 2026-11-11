@@ -258,9 +258,15 @@ ggplot_describe <- function(plot) {
 # (geom_label: bench gallery-029) has each leaf paired with that row only.
 # Otherwise the leaf is paired with all the layer's rows in the panel.
 #
-# Rows are put on the device through the panel's scales (identify.R's
-# mapping); infinite positions go to the panel's edges, as ggplot2 squishes
-# them. Under coord_flip() the horizontal scale is the data's y.
+# Rows are put on the device through the coord's own transform with the
+# panel's params, as ggplot2 draws them, then the panel's box; infinite
+# positions go to the panel's edges, as ggplot2 squishes them. Under a coord
+# that is not linear (coord_polar(): circular and fan trees, bench tree-025,
+# -038, -057) points go through the transform one by one; a segment's ends
+# do too, and the path the coord munches between them is compared by its
+# ends (core-bind.R). What the coord munches without ends (a line through
+# its group, a rectangle) is not compared, and says so (plan
+# 2026-11-11-tree-binding, Task 3).
 ggplot_bind <- function(built, gtable, sub, prefix = "") {
   leaves <- sub$leaves
   unbound <- function(ids, reason) data.frame(leaf = ids, reason = rep(reason, length(ids)), stringsAsFactors = FALSE)
@@ -296,7 +302,6 @@ ggplot_bind <- function(built, gtable, sub, prefix = "") {
     }
   }
   coord <- class(built$layout$coord)[1]
-  flip <- identical(coord, "CoordFlip")
   claims <- list()
   ub <- unbound(character(), character())
   outside <- character()
@@ -324,14 +329,17 @@ ggplot_bind <- function(built, gtable, sub, prefix = "") {
       ub <- rbind(ub, unbound(lf$id, "the leaf lies in no panel with scales"))
       next
     }
-    if (!all(c(prow$x_type, prow$y_type) %in% c("continuous", "discrete"))) {
-      ub <- rbind(ub, unbound(lf$id, sprintf("the panel's scales cannot be mapped (%s)", coord)))
-      next
-    }
     d <- built$data[[i]]
     d$row <- seq_len(nrow(d))
-    d <- d[as.character(d$PANEL) == sub(paste0("^", prefix, "panel"), "", pid), , drop = FALSE]
-    pred <- ggplot_rows_on_device(d, prow, flip)
+    panel_k <- sub(paste0("^", prefix, "panel"), "", pid)
+    d <- d[as.character(d$PANEL) == panel_k, , drop = FALSE]
+    pp <- built$layout$panel_params[[as.integer(panel_k)]]
+    pred <- tryCatch(ggplot_rows_on_device(d, prow, built$layout$coord, pp),
+                     error = function(e) sprintf("the coord's transform failed (%s): %s", coord, conditionMessage(e)))
+    if (is.character(pred)) {
+      ub <- rbind(ub, unbound(lf$id, pred))
+      next
+    }
     if (is.null(pred)) {
       ub <- rbind(ub, unbound(lf$id, "the layer's rows carry neither x and y nor xmin, xmax, ymin and ymax"))
       next
@@ -349,8 +357,14 @@ ggplot_bind <- function(built, gtable, sub, prefix = "") {
         rows <- pred$row[ceiling(j / (nk %/% nrow(pred)))]
       }
     }
+    linear <- !isFALSE(attr(pred, "linear"))
+    reason <- if (!linear && all(c("xmin", "xmax", "ymin", "ymax") %in% names(d)) &&
+                  !all(is.na(d[c("xmin", "xmax", "ymin", "ymax")]))) {
+      sprintf("rectangles are drawn as polygons munched along the coord (%s); no comparison for them", coord)
+    }
     claims[[length(claims) + 1L]] <- list(leaf = lf$id, table = sprintf("%sbuilt_layer%d", prefix, i),
-                                          pred = pred, groups = groups, rows = rows)
+                                          pred = pred, groups = groups, rows = rows,
+                                          linear = linear, coord = coord, reason = reason)
   }
   list(claims = claims, unbound = ub, outside = outside)
 }
@@ -381,45 +395,47 @@ ggplot_default_draw_panel <- function(geom) {
 
 # Built rows of one panel on the device: x, y and, where the layer has them,
 # xmin, xmax, ymin, ymax, xend, yend; rows missing their required positions
-# are dropped, as the geom drops them before drawing.
-ggplot_rows_on_device <- function(d, prow, flip) {
+# are dropped, as the geom drops them before drawing. Positions go through
+# the coord's transform with the panel's params (npc of the panel), then the
+# panel's box. A linear coord transforms every position aesthetic at once
+# (coord_flip() swaps them); one that is not linear transforms points, so x,
+# y and the ends xend, yend are each transformed as a point, and the result
+# says so in its attribute `linear`.
+ggplot_rows_on_device <- function(d, prow, coord, pp) {
   pos <- c("x", "y", "xmin", "xmax", "ymin", "ymax", "xend", "yend")
-  if (flip) {
-    swap <- c(x = "y", y = "x", xmin = "ymin", xmax = "ymax", ymin = "xmin", ymax = "xmax", xend = "yend", yend = "xend")
-    hit <- names(d) %in% names(swap)
-    names(d)[hit] <- swap[names(d)[hit]]
-  }
   has <- function(cols) all(cols %in% names(d)) && !all(is.na(d[cols]))
   req <- if (has(c("x", "y"))) c("x", "y") else if (has(c("xmin", "xmax", "ymin", "ymax"))) c("xmin", "xmax", "ymin", "ymax") else NULL
   if (is.null(req)) return(NULL)
   num <- function(v) suppressWarnings(as.double(v))
   keep <- stats::complete.cases(as.data.frame(lapply(d[req], num)))
   d <- d[keep, , drop = FALSE]
-  to_x <- function(v) {
-    v <- num(v)
-    out <- prow$x0 + (v - prow$x_min) / (prow$x_max - prow$x_min) * (prow$x1 - prow$x0)
-    out[!is.na(v) & v == -Inf] <- prow$x0
-    out[!is.na(v) & v == Inf] <- prow$x1
-    out
-  }
-  to_y <- function(v) {
-    v <- num(v)
-    out <- prow$y1 - (v - prow$y_min) / (prow$y_max - prow$y_min) * (prow$y1 - prow$y0)
-    out[!is.na(v) & v == -Inf] <- prow$y1
-    out[!is.na(v) & v == Inf] <- prow$y0
+  linear <- isTRUE(tryCatch(coord$is_linear(), error = function(e) FALSE))
+  have <- intersect(pos, names(d))
+  npc <- if (linear) {
+    t <- coord$transform(as.data.frame(lapply(d[have], num)), pp)
+    t[intersect(pos, names(t))]
+  } else {
+    point <- function(cx, cy) {
+      z <- coord$transform(data.frame(x = num(d[[cx]]), y = num(d[[cy]])), pp)
+      stats::setNames(data.frame(z$x, z$y), c(cx, cy))
+    }
+    out <- point("x", "y")
+    if (all(c("xend", "yend") %in% have)) out <- cbind(out, point("xend", "yend"))
     out
   }
   out <- data.frame(row = d$row, group = if ("group" %in% names(d)) d$group else rep(1L, nrow(d)))
   # stat_align()'s padding rows close an area's polygon; its outline leaves
   # them out (GeomRibbon$draw_group)
   if ("align_padding" %in% names(d)) out$pad <- d$align_padding %in% TRUE
-  for (col in intersect(pos, names(d))) {
-    out[[col]] <- if (startsWith(col, "x")) to_x(d[[col]]) else to_y(d[[col]])
+  for (col in intersect(pos, names(npc))) {
+    v <- npc[[col]]
+    out[[col]] <- if (startsWith(col, "x")) prow$x0 + v * (prow$x1 - prow$x0) else prow$y1 - v * (prow$y1 - prow$y0)
   }
   # Text and labels are placed from their row by their justification and
   # angle; core-bind.R compares them in the label's own frame.
   for (col in intersect(c("hjust", "vjust"), names(d))) out[[col]] <- just_value(d[[col]])
   if ("angle" %in% names(d)) out$angle <- num(d$angle)
+  attr(out, "linear") <- linear
   out
 }
 

@@ -86,7 +86,7 @@
 **Overall progress**
 - [x] Task 1: A page over the parser's limit (tree-041)
 - [x] Task 2: Labels in their own frame: justification and rotation (tree-011, -060, -083, -072; tree-045)
-- [ ] Task 3: Polar coordinates through the coord's transform (tree-025, -038, -057)
+- [~] Task 3: Polar coordinates through the coord's transform (tree-025, -038, -057)
 - [ ] Task 4: Text drawn as glyph outlines (the book figures)
 - [ ] Task 5: Points in several shapes (tree-014) _(stub)_
 - [ ] Task 6: What remains: repelled labels (tree-054), tree-003's text leaf _(stub)_
@@ -165,7 +165,7 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 
 ### Task 3: Polar coordinates through the coord's transform
 
-**Status:** `[ ]`
+**Status:** `[~]` (mapping and tests landed; the runs pending)
 
 **Tests assumption:** 2 and 3.
 
@@ -178,10 +178,10 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 - Under a non-linear coord, `GeomSegment` draws each segment as a path munched along the coord: one path per row, its ends at the row's transformed ends.
 
 **Checklist**
-- [ ] Tests that fail first: `coord_polar()` with points, segments and text (rotated by `angle`); permuted rows fail.
-- [ ] Rows through `Coord$transform()`; a coord whose transform fails leaves its leaves unbound with the coord's name and the error.
-- [ ] Path one per row with ends: first and last vertices at the row's ends.
-- [ ] Suite on the host.
+- [x] Tests that fail first: `coord_polar()` with points, segments and text (rotated by `angle`); permuted rows fail. — `test-bind.R`: points, segments, text rotated by `angle` with `hjust = -0.1`, and points under `theta = "y", start = 1, direction = -1`: each leaf's 5 elements verified or ambiguous, and all 5 fail when the rows are permuted. Before the change no leaf was claimed (the engine stopped at the panel's scales).
+- [x] Rows through `Coord$transform()`; a coord whose transform fails leaves its leaves unbound with the coord's name and the error. — `ggplot_rows_on_device()` maps every coord through its own transform and the panel's params, then the panel's box; a linear coord transforms all position aesthetics at once (`coord_flip()` swaps them, so the engine no longer swaps names itself); one that is not linear transforms (x, y) and (xend, yend) as points. Under a coord that is not linear, rows that are rectangles are claimed with the reason that they are drawn as polygons munched along the coord, and a path one per group is unbound with the reason that it is munched (a test: `geom_line()` and a pie under `coord_polar()`, unbound, 0 failed).
+- [x] Path one per row with ends: first and last vertices at the row's ends. — `R/core-bind.R`, for `polyline` and `path` elements whose rows have `xend` and `yend`; a test with `geom_curve()` on Cartesian axes (3 verified; before, failed on the vertex mean).
+- [x] Suite on the host. — 9 files / 95 tests / 610 expectations / 0 failed / 0 skipped; container the same.
 - [ ] Predictions, then `bind.R dev tree` and `bind.R dev` (v0); v0 compared with run `1353`.
 
 **Verification**
