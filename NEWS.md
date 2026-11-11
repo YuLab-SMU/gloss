@@ -1,5 +1,9 @@
 # gloss 0.0.0.9000
 
+## Fixes found by the first binding run (2026-11-11)
+
+- `gloss()` no longer changes a recorded plot it is given. Capturing a recorded grid page wrapped the leaves of grid's display list in place, and that list is the one inside the recording, so a second `gloss()` of the same object stopped with "Capture integrity check failed: 0 probes drew". gloss now replays a deep copy. Captures are otherwise unchanged: on the 55 development figures every column of the capture run equals the previous run's, apart from the times.
+
 ## Page capture (2026-11-11, ADR-0006)
 
 - `gloss()` lets the figure draw itself on its svglite device and captures that page: an object is printed (`show()` for S4), a grob drawn with `grid.draw()`, a function called, a recorded plot replayed. Engines no longer build the grob gloss draws. An object with its own `print()` method is captured as what that method draws (ggbreak's cut axis, ggExtra's marginal plots); the refusal by class is gone.

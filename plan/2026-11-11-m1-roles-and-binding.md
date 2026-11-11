@@ -67,12 +67,13 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 8 files, 67 tests, 438 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `6041c60`).
-- Key numbers: none yet; see the starting state.
+- Suite: 9 files, 78 tests, 496 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `c79312c`); was 8 / 67 / 438 at `6041c60`.
+- Key numbers: development binding, rerun `2026-11-11-1231` (made after looking; scored run `1205`): ggplot layer elements checked 98.4% (verified 9050, ambiguous 15328 of 24783), failed 8, unbound 370; heatmap body cells 250 of 250 verified; patchwork, grid and base not bound yet.
 
 **Overall progress**
 - [ ] Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels _(decision 1(a): Claude labels, the owner labels the pilot)_
-- [~] Task 2: Order binding for grid-page engines, verified by back-substitution
+- [x] Task 2: Order binding for grid-page engines, verified by back-substitution (ggplot, heatmap)
+- [ ] Task 2b: Patchwork: panels of each composed plot, then its bindings _(stub; split from Task 2, see Scope changes)_
 - [ ] Task 3: Rules as plugins; coverage on the development set
 - [ ] Task 4: Accuracy against the labels; consistency checks; silent errors
 - [ ] Task 5: Base figures: bindings through arguments and `usr`; legend entries
@@ -114,7 +115,7 @@ Tasks 1 and 2 can run side by side: Task 1 is labelling time, Task 2 needs no la
 
 ### Task 2: Order binding for grid-page engines, verified by back-substitution
 
-**Status:** `[~]` — package side in `d78417e` (ggplot and heatmap; patchwork states no bindings yet, its panels are not mapped); harness `bench/R/bind.R`, `score-bind.R`, runner Part 1g; predictions 21–27 committed before the development run.
+**Status:** `[x]` (2026-11-11) for ggplot and heatmap; patchwork moved to Task 2b (Scope changes).
 
 **Tests assumption:** 1.
 
@@ -127,18 +128,33 @@ Tasks 1 and 2 can run side by side: Task 1 is labelling time, Task 2 needs no la
 - Data-mark leaves are selected here by the layer that drew them (ggplot: position among the panel's children; heatmap: body and annotation viewports), not by the rules of Task 3, so this task does not wait for them.
 
 **Checklist**
-- [ ] Predictions 21 onward in `bench/predictions.md`, committed before the first development run: share of ggplot data-mark elements verified; which geometry families fail; patchwork and heatmap.
-- [ ] Leaf ↔ (layer, panel) for ggplot and patchwork from the panel gTree's children and `ggplot_build()`'s layers, including `annotate()` layers; test on a hand-built figure with two layers per panel and an annotation.
-- [ ] Families: points (circle centre), rects (corners), segments (ends), paths (vertices per group), polygons (vertices per group), text (anchor, with justification). Tolerance 0.5 px (design §绑定假设). Statuses: `verified`, `ambiguous` (more than one row within tolerance), `failed` (the element is not where its row puts it), `unbound` (reason: no family, no scale, withheld table), `count_mismatch` (from the leaf).
-- [ ] Mutation tests: permuting rows inside a leaf fails every changed leaf except tied elements; moving one element by 1 px fails it.
-- [ ] Heatmap: body cells ↔ matrix cells through row and column orders and the body viewport's native scale.
-- [ ] Development run in the container, archived; scored by engine, family and geom.
+- [x] Predictions 21–27 in `bench/predictions.md`, committed in `77c21ff` before the first development run.
+- [x] Leaf ↔ (layer, panel) for ggplot from the panel grob's children in the drawn gtable, including `annotate()` layers (test: facetted plot, two layers and an annotation). Patchwork: not done, Task 2b.
+- [x] Comparisons by tag, one per row or one per group decided by the counts; tolerance 0.5 pt (SVG user units, 1/72 in; the design's 0.5 px). Statuses `verified`, `ambiguous`, `failed`, `unbound` (with reason), `count_mismatch`, and `outside` for leaves no layer drew.
+- [x] Mutation tests: permuted rows fail every moved element and only those; one point moved by 1 pt fails alone; with the tolerance set to 10^6 the tests fail 15 times.
+- [x] Heatmap: body cells through row and column orders, checked by place and by the colour their value maps to (a wrong row order fails on colour).
+- [x] Development run in the container, archived and scored (run `1205`); binder defects it found fixed with tests and the run repeated (`1231`, made after looking).
 
 **Verification**
 - `NOT_CRAN=true Rscript -e "devtools::test()"` with the new tests; `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/bind.R dev`; `Rscript bench/R/score-bind.R bench/runs/<run>.csv`.
 - Expected: most point, rect and text leaves verified; paths and polygons by group. A family that fails on more than a few figures, or `failed` elements in a family that verifies elsewhere, is a scope change under assumption 1.
 
-**Result** _(filled in when done)_
+**Result** (2026-11-11)
+- Package: `d78417e` (core `R/core-bind.R`; ggplot and heatmap `bind` steps; `capture_figure()`), `c79312c` (three binder fixes). Suite 8 / 67 / 438 → 9 files / 78 tests / 496 expectations / 0 failed / 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`); at `d78417e` also in the bench container, 9 / 74 / 479, 0 errors. Binding time at 10^3 / 10^4 / 10^5 points: 0.02 / 0.16 / 0.42 s; capture 0.26 / 0.77 / 5.2 s.
+- **Scored run** `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/bind.R dev` at `77c21ff`, `runs/2026-11-11-1205-bind-dev.*`, scored by `score-bind.R`: ggplot layer elements 24800, checked (verified or ambiguous) 8094 = 32.6%, failed 2038, unbound 14641, count mismatch 27; per figure median 99.6%, 17 of 31 figures at 80% or more. No element of a point layer failed. Heatmap body cells 250 of 250 verified, colour included. 3 bind errors. Predictions 21–27: 3 right (25, 26, the second half of 22), 4 wrong (21, 23, 24, 27); `bench/predictions.md`.
+- What the run found, each fixed with a test that fails before: the second capture of a recorded grid page failed because the first had changed the caller's recording (`98ad505`, a capture defect; development capture rerun `1220` equal to `0858` in every column but the seconds); a layer drawing `NULL` in a panel left the panel one child short and unpaired (exts-022, 12275 elements); `geom_label()`'s per-row children paired per group, so 2000 boxes failed (gallery-029); area outlines compared with `y` instead of `ymax` (gallery-024, 30).
+- **Rerun, made after looking**, at `c79312c`, `runs/2026-11-11-1231-bind-dev.*`: 54 bound, 0 bind errors; ggplot layer elements 24783, checked 24378 = 98.4% (verified 9050, ambiguous 15328), failed 8, unbound 370, count mismatch 27; per figure median 100%, 20 of 31 at 80% or more, 8 at 0% (print method of its own, polar, `sf` and upset coordinates, rows without positions, k elements per row). The 8 failed are labels drawn away from their rows by design (ggrepel in gallery-059, offset labels in exts-014). Heatmap unchanged. exts 98.2%, gallery 98.9%.
+- **Assumption 1 holds on the development set:** where a leaf is paired by construction, its elements are where their rows put them; no point, rect, tile, hex, bar, line or segment element failed in either run. Wrong pairings by the binder came out `failed`, never `verified`.
+- **Not foreseen: most checked elements are ambiguous** (15328 of 24378): within 0.5 pt of another row of the same layer, so position cannot say which row is theirs. 11173 are one volcano plot's overplotted points (exts-022), 4000 one figure that draws the same label 1000 times per layer (gallery-029, rows identical but for their row number). See Scope changes.
+- Patchwork (6 figures, 2289 elements), grid (4) and base (10) state no bindings in this task.
+
+---
+
+### Task 2b: Patchwork: panels of each composed plot, then its bindings
+
+**Status:** `[ ]` _(stub)_
+
+Split from Task 2 (Scope changes). The patchwork engine maps no panels (M0 scope change of 2026-11-09), and a composition's ggplot panels sit at different depths (a plot's panel at the top level, a facetted plot's inside its own gtable), so leaves cannot yet be tied to a plot's build. Map panels per composed plot from patchwork's own assembly, then reuse `ggplot_bind()` per plot; development run, archived.
 
 ---
 
@@ -254,6 +270,9 @@ ADR-0007 from open decision 2, with the numbers of Tasks 2–5 (time, size in th
 ## Scope changes
 
 _(append-only; never edit completed tasks above)_
+
+- 2026-11-11 — **Patchwork binding split out as Task 2b.** **Evidence:** the patchwork engine maps no panels (M0 scope change of 2026-11-09); in a hand-built composition (`wrap_plots()` of a scatter and a facetted bar chart, probed on the host and recorded in [the session log](../dev_logs/2026-11-11-m1-plan.md)) one plot's panel grob is a direct child of patchwork's gtable while the facetted plot's panels sit inside a nested gtable, so leaves cannot be tied to a plot's build without first mapping panels per plot. **Effect:** Task 2 is closed for ggplot and heatmap; Task 2b holds patchwork; the header's *Done when* for bindings covers patchwork once Task 2b lands.
+- 2026-11-11 — **Most bindings the development set can check are ambiguous, not verified.** **Evidence:** rerun `2026-11-11-1231` (made after looking): of 24378 checked ggplot layer elements, 15328 lie within 0.5 pt of another row of the same layer (11173 in exts-022's volcano plot, 4000 in gallery-029's repeated label). Position alone cannot confirm which row such an element drew; the pairing then rests on order. **Effect:** Task 4's check "a `data` leaf is bound" counts ambiguous as bound by order, not as verified, and reports the two apart; design §绑定假设 gets a dated note (a passing back-substitution is Direct only when no other row passes). Whether the rows' colours, fills and sizes, which the elements also show, can tell overlapping rows apart (as the colour does for heatmap cells) is open: a candidate for the next slice, measured on these two figures first, not a task of this plan yet.
 
 - 2026-11-11 — **Owner's decisions: all three as recommended.** (1) Claude labels the 54 development figures from the rendered page and the leaf sheet, committed before any rule runs on the development set; the owner labels the 5 pilot figures independently. (2) Rule roles and engine bindings are derived tables of the substrate, recomputed when it is rebuilt and versioned by the plugin that made them; corrections, agent fills and human notes are records laid over them. ADR-0007 records this in Task 6 with the numbers of Tasks 2–5; nothing is exported before it. (3) `gl_reclassify()` moves to the plan that builds the record core. **Evidence:** the plan's header (who writes rules and labels; Appendix A's `structure` layer needs M2's record core). **Effect:** the plan is active; Task 1 has its annotators; design §实施计划 gets a dated note for (2) and (3). The owner also asked to close the M0 and bench v0 plans first and then start Task 2.
 
