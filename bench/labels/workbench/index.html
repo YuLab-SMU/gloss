@@ -11,6 +11,16 @@
   keys, and the server writes the label files. Roles, kinds, questions and
   cases come from bench/labels/vocabulary.json. Text from figures is written
   with textContent only.
+
+  With several annotators (serve.py --team) the page first asks for a
+  nickname. The others' labels of a figure are asked for, and shown, only
+  after the annotator's own labels of it are frozen; the server decides.
+
+  Aids to see what a leaf is (they change the view only, never the figure or
+  a label): fill and stroke as the browser computes them, with "none" told
+  apart from white; painting the leaf; the leaf alone on a checkerboard;
+  hiding it; hiding what was drawn after it; dragging it aside; its place in
+  the drawing order; the guideline's worked examples of the same class.
 -->
 <style>
   :root {
@@ -19,6 +29,7 @@
     --data: #2563eb; --guide: #0a8f66; --reference: #7c3aed; --annotation: #c76a00; --decoration: #5f6672;
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { height: 100%; }
   body { margin: 0; background: var(--bg); color: var(--ink);
          font: 14px/1.45 -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif; }
@@ -88,6 +99,46 @@
   .btn { border: 1px solid var(--ink); background: var(--ink); color: #fff; border-radius: 8px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; }
   #cases ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink); font-size: 12px; }
   #cases li { margin: 3px 0; }
+  #loupe.iso svg { background: repeating-conic-gradient(#b9b9b9 0% 25%, #e4e4e4 0% 50%) 50% / 14px 14px; }
+  .wb-iso [data-gloss-leaf]:not(.wb-cur), .wb-iso .wb-loose { visibility: hidden; }
+  .wb-above, .wb-hidecur .wb-cur { visibility: hidden; }
+  #page svg.movable .wb-cur { cursor: grab; }
+  .sw.none { background: repeating-conic-gradient(#a9a9a9 0% 25%, #e4e4e4 0% 50%) 50% / 6px 6px; }
+  .chip.warn { border-color: var(--hl); color: var(--hl); background: #fff; }
+  .layer { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .layer b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .hint2 { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+  .refs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .refcard { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; font-size: 11.5px; }
+  .refcard svg { display: block; width: 100%; aspect-ratio: 16 / 9; background: #fff; }
+  .refcard div { padding: 3px 6px; }
+  .btn.ghost { background: var(--panel); color: var(--ink); margin: 3px; }
+  .link { background: none; border: 0; padding: 0; color: var(--data); cursor: pointer; font: inherit; text-align: left; }
+  .overlay { position: fixed; inset: 0; background: rgba(28, 28, 30, .45); z-index: 20; display: none; align-items: flex-start;
+             justify-content: center; padding: 5vh 16px; overflow: auto; }
+  .overlay.on { display: flex; }
+  .sheet { background: var(--panel); border-radius: 12px; border: 1px solid var(--line); padding: 18px 20px; width: min(780px, 100%); }
+  .sheet h2 { margin: 0 0 6px; font-size: 18px; }
+  .sheet h3 { margin: 18px 0 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .sheet p { margin: 6px 0; color: var(--muted); }
+  .sheet p.strong { color: var(--ink); }
+  .sheet table { border-collapse: collapse; width: 100%; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .sheet th, .sheet td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .sheet th { color: var(--muted); font-weight: 600; }
+  .sheet ul { margin: 0; padding-left: 18px; font-size: 12.5px; }
+  .sheet li { margin: 4px 0; }
+  .field { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; font-size: 12px; color: var(--muted); }
+  .field input, .sheet input.own { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 15px; color: var(--ink); width: 100%; }
+  .sheet input.own { font-size: 12px; }
+  .err { color: #b00020; min-height: 1.4em; font-size: 12.5px; }
+  .bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #dddbd3; min-width: 80px; }
+  .bar span { display: block; height: 100%; }
+  .peers { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; }
+  .peers h3 { margin: 0; font-size: 12px; font-weight: 600; color: var(--muted); display: flex; justify-content: space-between; }
+  .ans { display: grid; grid-template-columns: 96px 1fr; gap: 8px; }
+  .ans .name { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ans.me .name { color: var(--ink); font-weight: 600; }
+  .dot.disp { box-shadow: 0 0 0 2px var(--hl); }
   #toast { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); background: #b00020; color: #fff; padding: 8px 14px;
            border-radius: 8px; font-size: 13px; display: none; z-index: 9; }
 </style>
@@ -97,6 +148,7 @@
   <span class="brand">gloss 标注工作台</span>
   <span class="who" id="who"></span>
   <div id="tabs"></div>
+  <button class="tab" id="team" hidden></button>
   <span id="total"></span>
 </header>
 <main>
@@ -111,6 +163,8 @@
     <details id="cases"><summary>判例：这些情况已经定好怎么标</summary><ul></ul></details>
   </aside>
 </main>
+<div class="overlay" id="join"><div class="sheet" id="joinBody"></div></div>
+<div class="overlay" id="over"><div class="sheet" id="overBody"></div></div>
 <div id="toast"></div>
 <script>
 "use strict";
@@ -128,13 +182,36 @@ function h(tag, attrs, ...kids) {
   for (const c of kids.flat()) if (c != null && c !== false) n.append(c.nodeType ? c : document.createTextNode(String(c)));
   return n;
 }
-const getJSON = async u => (await fetch(u)).json();
+// Team mode: the annotator's token is kept in this browser and sent in a header.
+let TOKEN = null, TEAM = false, REVEAL = null;
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private window: the token lasts for this tab */ } },
+};
+function headers(json) {
+  const hd = {};
+  if (TOKEN) hd["X-Workbench-Token"] = TOKEN;
+  if (json) hd["Content-Type"] = "application/json";
+  return hd;
+}
+async function api(path, body) {
+  const opt = { headers: headers(body !== undefined) };
+  if (body !== undefined) { opt.method = "POST"; opt.body = JSON.stringify(body); }
+  const r = await fetch(path, opt);
+  let p = null;
+  try { p = await r.json(); } catch (e) { /* not JSON */ }
+  if (!r.ok) { const e = new Error((p && p.error) || ("HTTP " + r.status)); e.status = r.status; throw e; }
+  return p;
+}
 
 let CFG = null, VOC = null, FIG = null, S = null;
 let items = [], cur = 0, stage = "role", role = null, last = null;
 let dim = true, finished = false, draft = { note: "", unsure: false };
-let dirty = false, saveTimer = null, lastInput = Date.now(), unsavedSeconds = 0;
+let dirty = false, saving = false, saveTimer = null, lastInput = Date.now(), unsavedSeconds = 0;
 let roots = [];
+// aids: what is shown of the current leaf (the view only)
+let paint = false, iso = false, hideCur = false, peel = false, refOpen = false, moved = null;
+let painted = [], movedNodes = [], curPaint = null, REF = [];
 
 // ---- state ---------------------------------------------------------------
 function buildItems() {
@@ -174,21 +251,19 @@ function markDirty() {
 async function flush() {
   clearTimeout(saveTimer);
   if (!dirty || !FIG) return;
-  dirty = false; unsavedSeconds = 0;
+  dirty = false; unsavedSeconds = 0; saving = true;
   const id = FIG.id;
   try {
-    const r = await fetch("/api/state/" + id, { method: "POST", headers: { "Content-Type": "application/json" },
-                                                 body: JSON.stringify({ labels: S.labels, seconds: S.seconds, cursor: cur }) });
-    const p = await r.json();
-    if (!r.ok) throw new Error(p.error || r.status);
+    const p = await api("/api/state/" + id, { labels: S.labels, seconds: S.seconds, cursor: cur });
     const f = CFG.figures.find(x => x.id === id);
     Object.assign(f, p);
+    saving = false;
     if (FIG.id === id) FIG.file = p.file;
     renderHeader();
     if (finished && FIG.id === id) renderBody();
   } catch (e) {
-    dirty = true;
-    toast("没有保存成功：" + e.message + "（serve.py 还在运行吗？）");
+    dirty = true; saving = false;
+    toast("没有保存成功：" + e.message + (TEAM ? "（网络断了吗？恢复后再按任意一个键会重新保存）" : "（serve.py 还在运行吗？）"));
   }
 }
 function toast(msg) {
@@ -204,50 +279,161 @@ function cleanSvg(text) {
   svg.removeAttribute("width"); svg.removeAttribute("height");
   return svg;
 }
+const SHAPES = "rect, circle, ellipse, line, polyline, polygon, path, text, image, use";
 function mountSvg(text) {
   const src = cleanSvg(text);
   const main = document.importNode(src, true), loupe = document.importNode(src, true);
   FIG.viewBox = (src.getAttribute("viewBox") || "0 0 504 360").split(/\s+/).map(Number);
+  // what the device drew outside every leaf (the page's own background)
+  for (const root of [main, loupe]) root.querySelectorAll(SHAPES).forEach(n => { if (!n.closest("[data-gloss-leaf], defs, clipPath")) n.classList.add("wb-loose"); });
   $("#page").replaceChildren(main);
   $("#loupe").replaceChildren(loupe);
   roots = [main, loupe];
+  // the drawing order: the order of the leaves in the page
+  FIG.groups = [...main.querySelectorAll("[data-gloss-leaf]")].map(g => [g.getAttribute("data-gloss-leaf"), g]);
+  FIG.z = Object.fromEntries(FIG.groups.map(([leaf], i) => [leaf, i]));
+  painted = []; movedNodes = []; moved = null;
+  main.classList.add("movable");
+  dragSetup(main);
 }
 function boxOf(it) {
   const b = it.el ? ((FIG.el[it.k] || [])[it.el - 1] || {}).box : FIG.byK[it.k].box;
   return b && b.every(v => v != null) ? b : null;
 }
-function highlight() {
-  const it = items[cur], lf = FIG.byK[it.k], box = finished ? null : boxOf(it);
-  for (const root of roots) {
-    root.querySelectorAll(".wb-cur").forEach(n => n.classList.remove("wb-cur"));
-    root.querySelectorAll('[data-gloss-leaf="' + lf.leaf + '"]').forEach(n => n.classList.add("wb-cur"));
-    root.classList.toggle("wb-dim", dim && !finished && root === roots[0]);
-    let g = root.querySelector(":scope > .wb-hl");
-    if (!g) { g = document.createElementNS(NS, "g"); g.setAttribute("class", "wb-hl"); root.append(g); }
-    g.replaceChildren();
-    if (box) for (const cls of ["under", "over"]) {
-      const r = document.createElementNS(NS, "rect"), pad = 2.2;
-      r.setAttribute("class", cls);
-      r.setAttribute("x", box[0] - pad); r.setAttribute("y", box[1] - pad);
-      r.setAttribute("width", Math.max(box[2] - box[0], 0.1) + 2 * pad); r.setAttribute("height", Math.max(box[3] - box[1], 0.1) + 2 * pad);
-      r.setAttribute("rx", 1.5);
-      g.append(r);
-    }
+function leafGroup(root, lf) { return root.querySelector('[data-gloss-leaf="' + lf.leaf + '"]'); }
+// The page nodes of an item: a leaf's elements are the children of its group, in order.
+function nodesOf(root, it) {
+  const lf = FIG.byK[it.k], g = leafGroup(root, lf);
+  if (!g) return [];
+  const kids = [...g.children];
+  return it.el && kids.length === lf.n ? [kids[it.el - 1]] : kids;
+}
+function drawBox(root, box) {
+  let g = root.querySelector(":scope > .wb-hl");
+  if (!g) { g = document.createElementNS(NS, "g"); g.setAttribute("class", "wb-hl"); root.append(g); }
+  g.replaceChildren();
+  if (box) for (const cls of ["under", "over"]) {
+    const r = document.createElementNS(NS, "rect"), pad = 2.2;
+    r.setAttribute("class", cls);
+    r.setAttribute("x", box[0] - pad); r.setAttribute("y", box[1] - pad);
+    r.setAttribute("width", Math.max(box[2] - box[0], 0.1) + 2 * pad); r.setAttribute("height", Math.max(box[3] - box[1], 0.1) + 2 * pad);
+    r.setAttribute("rx", 1.5);
+    g.append(r);
   }
-  const vb = FIG.viewBox;
+}
+function zoom(svg, vb, box, R) {
   let view = vb;
   if (box) {
-    const R = 16 / 7, bw = box[2] - box[0], bh = box[3] - box[1];
+    const bw = box[2] - box[0], bh = box[3] - box[1];
     const w = Math.max(bw * 1.5 + 16, (bh * 1.5 + 16) * R, 80);
     if (w < vb[2]) view = [(box[0] + box[2]) / 2 - w / 2, (box[1] + box[3]) / 2 - w / R / 2, w, w / R];
   }
-  roots[1].setAttribute("viewBox", view.join(" "));
+  svg.setAttribute("viewBox", view.join(" "));
+}
+// Fill and stroke as the browser computes them, before any painting: "none" is not white.
+const numOr = (v, d) => { const x = parseFloat(v); return isNaN(x) ? d : x; };
+function colourOf(c, opacity) {
+  const m = /^rgba?\(([^)]+)\)/.exec(c || "");
+  if (!m) return "none";
+  const p = m[1].split(/[,\s\/]+/).filter(Boolean).map(Number);
+  const a = Math.round(100 * (p.length > 3 ? p[3] : 1) * opacity);
+  return a <= 0 ? "none" : [p[0], p[1], p[2], a].join(",");
+}
+function paintInfo(nodes) {
+  const info = { fill: new Set(), stroke: new Set(), text: nodes.length > 0, image: false };
+  for (const n of nodes) {
+    const tag = n.tagName.toLowerCase(), cs = getComputedStyle(n), op = numOr(cs.opacity, 1);
+    if (tag === "image") { info.image = true; info.text = false; continue; }
+    const isText = tag === "text" || tag === "g";
+    info.text = info.text && isText;
+    if (tag !== "line") info.fill.add(colourOf(cs.fill, numOr(cs.fillOpacity, 1) * op));
+    if (!isText) info.stroke.add(numOr(cs.strokeWidth, 1) > 0 ? colourOf(cs.stroke, numOr(cs.strokeOpacity, 1) * op) : "none");
+  }
+  const seen = s => [...s].some(v => v !== "none");
+  info.invisible = nodes.length > 0 && !info.image && !seen(info.fill) && !seen(info.stroke);
+  return info;
+}
+function unpaint() {
+  for (const [n, style] of painted) { if (style == null) n.removeAttribute("style"); else n.setAttribute("style", style); }
+  painted = [];
+}
+// Painting: solid where the element has a fill, a full line where it has a stroke, a dashed line where it has none.
+function doPaint(it) {
+  for (const root of roots) for (const n of nodesOf(root, it)) {
+    const tag = n.tagName.toLowerCase(), cs = getComputedStyle(n), isText = tag === "text" || tag === "g";
+    const filled = cs.fill !== "none" && colourOf(cs.fill, numOr(cs.fillOpacity, 1)) !== "none";
+    const stroked = cs.stroke !== "none" && numOr(cs.strokeWidth, 1) > 0 && colourOf(cs.stroke, numOr(cs.strokeOpacity, 1)) !== "none";
+    painted.push([n, n.getAttribute("style")]);
+    const set = (k, v) => n.style.setProperty(k, v, "important");
+    set("opacity", "1");
+    if (filled && tag !== "line") { set("fill", "#e6007e"); set("fill-opacity", isText ? "1" : ".5"); }
+    if (!isText) {
+      set("stroke", "#e6007e"); set("stroke-opacity", "1"); set("stroke-width", "1.6px"); set("vector-effect", "non-scaling-stroke");
+      set("stroke-dasharray", stroked ? "none" : "3 2.5");
+    }
+  }
+}
+function applyMove() {
+  for (const [g, clip] of movedNodes) { g.removeAttribute("transform"); if (clip) clip.style.clipPath = ""; }
+  movedNodes = [];
+  const it = items[cur];
+  if (!moved || finished || !it || moved.k !== it.k) { moved = null; return; }
+  const g = leafGroup(roots[0], FIG.byK[it.k]);
+  if (!g) return;
+  g.setAttribute("transform", "translate(" + moved.dx + " " + moved.dy + ")");
+  const clip = g.parentNode && g.parentNode.closest ? g.parentNode.closest("[clip-path]") : null;
+  if (clip) clip.style.clipPath = "none";      // a leaf dragged out of its panel stays visible
+  movedNodes.push([g, clip]);
+}
+// Drag the outlined leaf aside to see what is under it; it goes back with M or on leaving the leaf.
+function dragSetup(svg) {
+  let start = null;
+  const at = e => new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse());
+  svg.addEventListener("pointerdown", e => {
+    if (finished || e.button !== 0 || !items[cur]) return;
+    const it = items[cur], b = FIG.byK[it.k].box, p = at(e), base = moved && moved.k === it.k ? moved : { dx: 0, dy: 0 }, pad = 6;
+    if (!b || b.some(v => v == null)) return;
+    if (p.x < b[0] + base.dx - pad || p.x > b[2] + base.dx + pad || p.y < b[1] + base.dy - pad || p.y > b[3] + base.dy + pad) return;
+    start = { x: p.x, y: p.y, dx: base.dx, dy: base.dy, k: it.k };
+    try { svg.setPointerCapture(e.pointerId); } catch (err) { /* no such pointer: the drag still follows moves over the page */ }
+    e.preventDefault();
+  });
+  svg.addEventListener("pointermove", e => {
+    if (!start) return;
+    const p = at(e), r1 = v => Math.round(v * 10) / 10;
+    moved = { k: start.k, dx: r1(start.dx + p.x - start.x), dy: r1(start.dy + p.y - start.y) };
+    applyMove();
+  });
+  const end = () => { if (start) { start = null; renderBody(); } };
+  svg.addEventListener("pointerup", end);
+  svg.addEventListener("pointercancel", end);
+}
+function highlight() {
+  const it = items[cur], lf = FIG.byK[it.k], box = finished ? null : boxOf(it), on = !finished;
+  unpaint();
+  for (const root of roots) {
+    root.querySelectorAll(".wb-cur").forEach(n => n.classList.remove("wb-cur"));
+    root.querySelectorAll('[data-gloss-leaf="' + lf.leaf + '"]').forEach(n => n.classList.add("wb-cur"));
+    root.classList.toggle("wb-dim", dim && on && root === roots[0]);
+    drawBox(root, box);
+  }
+  curPaint = on ? paintInfo(nodesOf(roots[0], it)) : null;
+  roots[1].classList.toggle("wb-iso", iso && on);
+  $("#loupe").classList.toggle("iso", iso && on);
+  roots[0].classList.toggle("wb-hidecur", hideCur && on);
+  const z = FIG.z[lf.leaf];
+  for (const [leaf, g] of FIG.groups) g.classList.toggle("wb-above", peel && on && z != null && FIG.z[leaf] > z);
+  if (paint && on) doPaint(it);
+  applyMove();
+  zoom(roots[1], FIG.viewBox, box, 16 / 7);
 }
 
 // ---- rendering -------------------------------------------------------------
 const fmtTime = s => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
 function renderHeader() {
-  $("#who").textContent = "标注者 " + CFG.annotator + " · 细则第 " + VOC.guideline + " 版 · 写入 " + CFG.out + "/";
+  $("#who").textContent = "标注者 " + CFG.annotator + " · 细则第 " + VOC.guideline + " 版" + (TEAM ? "" : " · 写入 " + CFG.out + "/");
+  $("#team").hidden = !TEAM;
+  $("#team").textContent = "大家的进度和统计（O）";
   $("#tabs").replaceChildren(...CFG.figures.map(f =>
     h("button", { class: "tab" + (FIG && f.id === FIG.id ? " on" : "") + (f.done ? " done" : ""),
                   onclick: () => openFigure(f.id), title: f.labelled + " / " + f.leaves },
@@ -256,7 +442,73 @@ function renderHeader() {
   const all = CFG.figures.reduce((a, f) => a + f.leaves, 0), got = CFG.figures.reduce((a, f) => a + f.labelled, 0);
   $("#total").replaceChildren("已标 ", h("b", {}, got), " / " + all + " 个叶子 · 本图用时 ", h("b", {}, fmtTime(S ? S.seconds : 0)));
 }
-function swatch(c) { return c && c !== "none" ? h("span", { class: "sw", style: "background:" + c }) : null; }
+function swatch(v) {
+  if (v === "none") return h("span", { class: "sw none" });
+  const [r, g, b, a] = v.split(",").map(Number), c = "rgba(" + [r, g, b, a / 100].join(",") + ")";
+  return h("span", { class: "sw", style: "background: linear-gradient(" + c + "," + c + "), repeating-conic-gradient(#a9a9a9 0% 25%, #e4e4e4 0% 50%) 50% / 6px 6px" });
+}
+function colourName(v) {
+  const [r, g, b, a] = v.split(",").map(Number);
+  const hex = "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, "0")).join("").toUpperCase();
+  return hex + (hex === "#FFFFFF" ? " 白色" : "") + (a < 100 ? " · " + a + "% 不透明" : "");
+}
+function paintChip(name, set) {
+  const vals = [...set];
+  if (!vals.length) return null;
+  if (vals.length === 1) return h("span", { class: "chip" }, swatch(vals[0]), name + "：" + (vals[0] === "none" ? "无（透明）" : colourName(vals[0])));
+  return h("span", { class: "chip" }, vals.slice(0, 5).map(swatch), name + "：" + vals.length + " 种" + (vals.includes("none") ? "，有的没有" : ""));
+}
+function paintChips(p) {
+  if (p.invisible) return [h("span", { class: "chip warn", title: "细则：看不见的元素按画它的东西来标，备注写 invisible" }, h("span", { class: "sw none" }),
+                             "看不见：没有填充，也没有描边")];
+  return [p.image ? h("span", { class: "chip" }, "图片") : null, paintChip(p.text ? "文字颜色" : "填充", p.fill), paintChip("描边", p.stroke)];
+}
+function jumpK(k) { const i = items.findIndex(x => x.k === k); if (i >= 0) go(i); }
+// Where the leaf is in the drawing order, and which leaves its outline overlaps.
+function layerInfo(it) {
+  const lf = FIG.byK[it.k], b = lf.box, z = FIG.z[lf.leaf];
+  if (z == null) return null;
+  const over = [], under = [];
+  if (b && b.every(v => v != null)) for (const o of FIG.leaves) {
+    if (o.k === lf.k || o.n === 0 || FIG.z[o.leaf] == null || !o.box || o.box.some(v => v == null)) continue;
+    if (o.box[0] <= b[2] && o.box[2] >= b[0] && o.box[1] <= b[3] && o.box[3] >= b[1]) (FIG.z[o.leaf] > z ? over : under).push(o);
+  }
+  over.sort((p, q) => FIG.z[p.leaf] - FIG.z[q.leaf]);
+  under.sort((p, q) => FIG.z[q.leaf] - FIG.z[p.leaf]);
+  const name = o => o.class + (o.text ? " “" + o.text.slice(0, 10) + "”" : "");
+  const list = arr => arr.length ? [...arr.slice(0, 3).flatMap((o, i) => [i ? "、" : "", h("button", { class: "link", onclick: () => jumpK(o.k) }, name(o))]),
+                                    arr.length > 3 ? " 等 " + arr.length + " 个" : ""] : ["没有"];
+  return h("div", { class: "layer", title: "绘制顺序就是叠放顺序：后画的盖在先画的上面。“盖在上面 / 被盖住”按外框是否重叠来算。" },
+    "第 ", h("b", {}, (z + 1) + " / " + FIG.groups.length), " 层（1 在最底下）· 盖在它上面：", ...list(over), " · 被它盖住：", ...list(under));
+}
+// The guideline's worked examples of leaves of the same class: one per distinct label.
+function refBlock(lf) {
+  if (!refOpen || !REF.length) return null;
+  const groups = new Map();
+  let total = 0;
+  for (const ex of REF) for (const o of ex.leaves) {
+    if (o.class !== lf.class) continue;
+    total++;
+    const labs = [...new Map(o.labels.map(l => [l.role + " / " + l.kind, l])).values()], key = labs.map(l => l.role + " / " + l.kind).join(" + ");
+    if (!groups.has(key)) groups.set(key, { ex, o, labs, count: 0 });
+    groups.get(key).count++;
+  }
+  const cards = [...groups.values()].sort((a, b) => b.count - a.count).slice(0, 6).map(g => {
+    const svg = document.importNode(g.ex.dom, true);
+    svg.classList.add("wb-dim");
+    const node = svg.querySelector('[data-gloss-leaf="' + g.o.leaf + '"]');
+    if (node) node.classList.add("wb-cur");
+    const box = g.o.box.every(v => v != null) ? g.o.box : null;
+    drawBox(svg, box);
+    zoom(svg, g.ex.vb, box, 16 / 9);
+    return h("div", { class: "refcard", title: g.ex.id + (g.o.text ? " “" + g.o.text + "”" : "") }, svg,
+             h("div", {}, g.labs.flatMap((l, i) => [i ? " + " : "", roleSpan(l.role, l.kind)]), " ×" + g.count));
+  });
+  return h("div", { class: "peers" },
+    h("h3", {}, h("span", {}, "细则示例里的 " + lf.class + " · " + total + " 个"), h("span", {}, h("kbd", {}, "R"), " 收起")),
+    cards.length ? h("div", { class: "refs" }, cards) : h("div", {}, "细则的示例图里没有这种图形。"),
+    h("div", { class: "hint2" }, "这是示例，不是答案：同一种图形在不同的位置可以是不同的角色。看它在这张图里起什么作用。"));
+}
 function roleSpan(r, k) { return h("b", { style: "color: var(--" + r + ")" }, r + (k ? " / " + k : "")); }
 function option(key, name, hint, title, fn, color, extra) {
   return h("button", { class: "opt" + (extra || ""), onclick: fn, title: title },
@@ -270,9 +522,9 @@ function renderBody() {
     const next = CFG.figures.find(x => !x.done && x.id !== FIG.id);
     body.replaceChildren(h("div", { class: "done-card" },
       h("div", { class: "big" }, allDone ? "全部标完了" : "这张标完了 ✓"),
-      h("p", {}, f.file ? "已写入 " + f.file : "正在保存…", " · 用时 " + fmtTime(S.seconds)),
-      allDone ? h("p", {}, CFG.figures.length + " 张图都已保存。回到终端，告诉 Claude“标完了”即可。")
-              : (next ? h("button", { class: "btn", onclick: () => openFigure(next.id) }, "下一张：" + next.id + "（Enter）") : null),
+      h("p", {}, TEAM ? (dirty || saving ? "正在保存…" : "已保存") : (f.file ? "已写入 " + f.file : "正在保存…"), " · 用时 " + fmtTime(S.seconds)),
+      next ? h("button", { class: "btn", onclick: () => openFigure(next.id) }, "下一张：" + next.id + "（Enter）") : null,
+      TEAM ? teamCard() : (allDone ? h("p", {}, CFG.figures.length + " 张图都已保存。回到终端，告诉 Claude“标完了”即可。") : null),
       h("p", {}, "想改某一个：按 ← 回去，或点下面的小方块。")));
     return;
   }
@@ -283,10 +535,12 @@ function renderBody() {
     h("span", { class: "chip mono" }, lf.class),
     el ? h("span", { class: "chip mono" }, "<" + el.tag + ">") : h("span", { class: "chip" }, lf.n + " 个元素 · " + lf.tags),
     (el ? el.text : lf.text) ? h("span", { class: "chip text", title: el ? el.text : lf.text }, "“" + (el ? el.text : lf.text) + "”" + (!el && lf.n > 1 ? " …" : "")) : null,
-    (() => { const s = el || lf; return (s.fill && s.fill !== "none") || (s.stroke && s.stroke !== "none")
-      ? h("span", { class: "chip" }, swatch(s.fill), swatch(s.stroke), "颜色") : null; })());
+    curPaint ? paintChips(curPaint) : null);
+  const layer = layerInfo(it);
   const path = h("div", { class: "path mono", title: "路径只用来找到这个叶子，不决定它的角色" }, lf.path);
-  const now = lab ? h("div", { class: "now" }, "已标为 ", roleSpan(lab.role, lab.kind), lab.unsure ? " · 拿不准" : "", lab.note ? " · " + lab.note : "", "（重新选即可修改）") : null;
+  const now = lab ? h("div", { class: "now" }, "已标为 ", roleSpan(lab.role, lab.kind), lab.unsure ? " · 拿不准" : "", lab.note ? " · " + lab.note : "",
+                      S.independent ? "（独立标注已定稿；现在再改，会另外记为“看过之后的修改”）" : "（重新选即可修改）") : null;
+  const peers = peerBlock(it.k);
   let choices;
   if (stage === "role") {
     choices = h("div", { class: "choices" },
@@ -308,13 +562,25 @@ function renderBody() {
     h("button", { class: "tool" + (draft.unsure ? " on" : ""), onclick: toggleUnsure }, h("kbd", {}, "U"), "拿不准"),
     h("button", { class: "tool" + (dim ? " on" : ""), onclick: toggleDim }, h("kbd", {}, "D"), "淡化其他"),
     h("span", { class: "tool" }, h("kbd", {}, "←"), h("kbd", {}, "→"), "上一个 / 下一个"),
+    FIG.peerBy ? h("button", { class: "tool", onclick: nextDisputed }, h("kbd", {}, "X"), "下一个有分歧的") : null,
     note);
-  body.replaceChildren(meta, path, now || "", rep || "", choices, tools);
+  const aids = h("div", { class: "tools" },
+    h("button", { class: "tool" + (paint ? " on" : ""), onclick: togglePaint, title: "把它涂成洋红色，看清它到底占了哪一块" }, h("kbd", {}, "F"), "涂色"),
+    h("button", { class: "tool" + (iso ? " on" : ""), onclick: toggleIso, title: "放大镜里只画它一个，底是棋盘格" }, h("kbd", {}, "I"), "单独看"),
+    h("button", { class: "tool" + (hideCur ? " on" : ""), onclick: toggleHide, title: "把它从图上拿掉，看少了什么" }, h("kbd", {}, "H"), "藏起它"),
+    h("button", { class: "tool" + (peel ? " on" : ""), onclick: togglePeel, title: "不画在它之后画的东西" }, h("kbd", {}, "T"), "掀掉上面的"),
+    moved ? h("button", { class: "tool on", onclick: resetMove }, h("kbd", {}, "M"), "放回原处")
+          : h("span", { class: "tool", title: "在图上按住框出来的这一块，拖到旁边" }, "按住可拖开"),
+    REF.length ? h("button", { class: "tool" + (refOpen ? " on" : ""), onclick: toggleRef, title: "细则的示例图里，同一种图形是怎么标的" }, h("kbd", {}, "R"), "参考示例") : null);
+  const hint = paint || iso ? h("div", { class: "hint2" },
+    paint ? "涂色：实心 = 有填充；实线 = 有描边；虚线 = 原本没有描边。" : "",
+    iso ? "单独看：棋盘格是灰的，所以白色看得出是白色；透明的地方会透出棋盘格。" : "") : null;
+  body.replaceChildren(meta, path, layer || "", now || "", peers || "", rep || "", choices, tools, aids, hint || "", refBlock(lf) || "");
 }
 function renderDots() {
   $("#dots").replaceChildren(...items.map((it, i) => {
     const l = getLabel(it);
-    return h("button", { class: "dot" + (it.el ? " el" : "") + (i === cur && !finished ? " cur" : ""),
+    return h("button", { class: "dot" + (it.el ? " el" : "") + (i === cur && !finished ? " cur" : "") + (disputed(it.k) ? " disp" : ""),
                          style: l ? "background: var(--" + l.role + ")" : null,
                          title: "叶子 " + (FIG.order.indexOf(it.k) + 1) + (it.el ? " 元素 " + it.el : "") + (l ? "：" + l.role + " / " + l.kind : ""),
                          onclick: () => go(i) });
@@ -322,10 +588,153 @@ function renderDots() {
 }
 function render() { renderHeader(); highlight(); renderBody(); renderDots(); }
 
+// ---- the others' labels (team mode; only what the server gives) -------------
+const pct = v => v == null ? "–" : Math.round(100 * v) + "%";
+function indexPeers() { FIG.peerBy = FIG.peers ? Object.fromEntries(FIG.peers.leaves.map(l => [l.k, l])) : null; }
+function disputed(k) { const p = FIG.peerBy && FIG.peerBy[k]; return !!p && p.n > 1 && p.share != null && p.share < 1; }
+function roleBar(roles, n) {
+  return h("div", { class: "bar" }, Object.entries(roles).sort((a, b) => b[1] - a[1]).map(([r, v]) =>
+    h("span", { style: "width:" + (100 * v / Math.max(n, 1)) + "%; background: var(--" + r + ")", title: r + " " + (Math.round(v * 10) / 10) })));
+}
+function peerBlock(k) {
+  const p = FIG.peerBy && FIG.peerBy[k];
+  if (!p) return null;
+  return h("div", { class: "peers" },
+    h("h3", {}, h("span", {}, "大家怎么标的 · " + p.n + " 人"), h("span", {}, p.n < 2 ? "只有你" : (p.share === 1 ? "角色一致" : "多数 " + pct(p.share)))),
+    roleBar(p.roles, p.n),
+    p.answers.map(a => h("div", { class: "ans" + (a.me ? " me" : "") },
+      h("span", { class: "name", title: a.who }, a.who + (a.me ? "（我）" : "")),
+      h("span", {}, a.parts.flatMap((x, i) => [i ? "；" : "", x.elements !== "all" ? "[" + x.elements + "] " : "", roleSpan(x.role, x.kind), x.note ? "（" + x.note + "）" : ""])))));
+}
+function canOpen() {
+  return TEAM && !S.independent && (REVEAL === "figure" ? CFG.figures.find(f => f.id === FIG.id).done : CFG.figures.every(f => f.done));
+}
+function teamCard() {
+  if (S.independent) {
+    const ls = FIG.peers ? FIG.peers.leaves : [], n = FIG.peers ? FIG.peers.annotators.length : 1, disp = ls.filter(l => disputed(l.k)).length;
+    return [h("p", {}, "这张图你的独立标注已定稿。" + (n < 2 ? "目前只有你标完了这张图。" : n + " 人标完了这张图，" + (ls.length - disp) + " / " + ls.length + " 个叶子大家给的角色完全一致。")),
+            disp ? h("button", { class: "btn ghost", onclick: nextDisputed }, "看有分歧的叶子（X）") : null,
+            h("button", { class: "btn ghost", onclick: showOverview }, "大家的进度和统计（O）")];
+  }
+  if (canOpen()) return [h("button", { class: "btn", onclick: openPeers }, "看看大家怎么标的"),
+                         h("p", {}, "打开之后，你" + (REVEAL === "figure" ? "这张图" : "") + "的标注就定稿了：之后还能改，但改动会另外记录，不算进一致性统计。")];
+  const left = CFG.figures.filter(x => !x.done).length;
+  return [h("p", {}, REVEAL === "figure" ? "标完这张图就能看到大家怎么标的。"
+                                          : "全部标完后就能看到大家怎么标的（还差 " + left + " 张）。先各标各的，一致性统计才有意义。")];
+}
+async function openPeers() {
+  await flush();
+  try {
+    const r = await api("/api/open/" + FIG.id, {});
+    CFG = await api("/api/config");
+    FIG.peers = r.peers; S.independent = r.state.independent; indexPeers(); render();
+  } catch (e) { toast(e.message); }
+}
+function nextDisputed() {
+  if (!FIG.peerBy) return;
+  const start = finished ? -1 : cur;
+  for (let s = 1; s <= items.length; s++) {
+    const i = (start + s) % items.length;
+    if (disputed(items[i].k)) return go(i);
+  }
+}
+function table(head, rows) {
+  return h("table", {}, h("tr", {}, head.map(x => h("th", {}, x))), rows.map(r => h("tr", {}, r.map(c => h("td", {}, c)))));
+}
+function hideOverview() { $("#over").classList.remove("on"); }
+async function showOverview() {
+  if (!TEAM) return;
+  await flush();
+  let o;
+  try {
+    o = await api("/api/overview");
+    if (FIG && S.independent) { FIG.peers = (await api("/api/peers/" + FIG.id)).peers; indexPeers(); render(); }
+  } catch (e) { return toast(e.message); }
+  const k2 = v => v == null ? "–" : v.toFixed(2);
+  const kids = [h("button", { class: "link", style: "float: right", onclick: hideOverview }, "关闭（Esc）"), h("h2", {}, "大家的进度和统计"),
+    h("h3", {}, "谁在标 · " + o.people.length + " 人"),
+    table(["昵称", "进度", "叶子", "标完的图"], o.people.map(p => [
+      p.who + (p.me ? "（我）" : "") + (p.readonly ? "（事先标好的）" : ""),
+      h("div", { class: "bar" }, h("span", { style: "width:" + (100 * p.labelled / Math.max(p.leaves, 1)) + "%; background: var(--ok)" })),
+      p.labelled + " / " + p.leaves, p.figures_done + " / " + p.figures]))];
+  if (!o.figures.length) {
+    kids.push(h("p", { class: "strong" }, "别人的标注和一致性统计，在你" + (o.reveal === "figure" ? "标完一张图" : "标完全部的图") +
+                "、并点“看看大家怎么标的”之后显示。先各标各的，统计出来的一致性才有意义。"));
+  } else {
+    kids.push(h("h3", {}, "每张图（只算标完了这张图的人）"),
+      table(["图", "人数", "叶子", "角色完全一致的叶子", "两两一致率的平均"], o.figures.map(f => [
+        h("button", { class: "link", onclick: () => { hideOverview(); openFigure(f.id); } }, f.id),
+        f.annotators, f.leaves, f.unanimous + " / " + f.leaves, pct(f.agreement)])));
+    kids.push(h("h3", {}, "两两一致性（角色，按叶子加权）"),
+      o.pairs.length ? table(["标注者", "标注者", "共同的图", "κ", "一致率", "κ（角色 + 种类）"],
+                             o.pairs.map(p => [p.a, p.b, p.figures, h("b", {}, k2(p.kappa)), pct(p.agreement), k2(p.kappa_kind)]))
+                     : h("p", {}, "还没有第二个人标完。"),
+      h("p", {}, "κ（Cohen's kappa）是扣掉“碰巧一致”之后的一致程度，1 是完全一致；这个项目的标准是 κ ≥ 0.8。算法与 bench/R/score-labels.R 相同，正式数字以那个脚本为准。"));
+    kids.push(h("h3", {}, "分歧最大的叶子" + (o.disputed.length ? "（点一下去看）" : "")),
+      o.disputed.length ? h("ul", {}, o.disputed.map(d => h("li", {},
+        h("button", { class: "link", onclick: () => jump(d.fig, d.k) },
+          d.fig + " · " + d.class + (d.text ? " “" + d.text.slice(0, 24) + "”" : "") + " · " + d.n + " 人，多数 " + pct(d.share) + " · " +
+          Object.entries(d.roles).sort((a, b) => b[1] - a[1]).map(([r, v]) => r + " " + (Math.round(v * 10) / 10)).join("，")))))
+                        : h("p", {}, "没有。"));
+  }
+  const own = h("input", { class: "own mono", readonly: "", hidden: "", value: location.origin + "/#t=" + TOKEN });
+  own.addEventListener("focus", () => own.select());
+  const show = h("button", { class: "link", onclick: () => { own.hidden = false; show.hidden = true; own.focus(); } }, "显示我的专属链接");
+  kids.push(h("h3", {}, "换一台设备或浏览器接着标"), show, own,
+            h("p", {}, "在另一个浏览器打开这个链接，就还是你（" + CFG.annotator + "）。它相当于你的密码，不要发给别人，也不要截图。"));
+  $("#overBody").replaceChildren(...kids);
+  $("#over").classList.add("on");
+}
+async function jump(fig, k) {
+  hideOverview();
+  if (!FIG || FIG.id !== fig) await openFigure(fig);
+  jumpK(k);
+}
+function join(hello) {
+  return new Promise(resolve => {
+    const nick = h("input", { maxlength: "16", autocomplete: "off", placeholder: "2–16 个字：汉字、字母、数字都行" });
+    const inv = h("input", { autocomplete: "off", value: new URLSearchParams(location.search).get("invite") || "" });
+    const err = h("div", { class: "err" });
+    let busy = false;
+    const submit = async () => {
+      if (busy) return;
+      busy = true; err.textContent = "";
+      try {
+        const r = await api("/api/join", { nickname: nick.value, invite: inv.value });
+        TOKEN = r.token; store.set("wb-token", r.token);
+        $("#join").classList.remove("on");
+        resolve();
+      } catch (e) { err.textContent = e.message; }
+      busy = false;
+    };
+    for (const el of [nick, inv]) el.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) submit(); });
+    $("#joinBody").replaceChildren(
+      h("h2", {}, "gloss 标注：加入"),
+      h("p", {}, "一共 " + hello.figures + " 张图。每张图里画出来的每一块东西（一个“叶子”）会被依次框出来，你回答“它是什么”：按数字键选五类之一，再选种类。一张图几分钟。"),
+      h("p", { class: "strong" }, "请独立完成：标完之前不要和别人商量，也不要看别人的屏幕。" +
+        (hello.reveal === "figure" ? "每标完一张图" : "全部标完后") + "，这里会显示大家各自怎么标的，以及每个叶子和整体的统计。谁标了多少，随时能看。"),
+      h("label", { class: "field" }, "给自己起一个昵称（别人没用过的）", nick),
+      hello.invite ? h("label", { class: "field" }, "邀请码", inv) : null,
+      err,
+      h("button", { class: "btn", onclick: submit }, "开始"));
+    $("#join").classList.add("on");
+    nick.focus();
+  });
+}
+
 // ---- actions ---------------------------------------------------------------
 function pickRole(i) { role = VOC.roles[i].role; stage = "kind"; renderBody(); }
+function resetView() { hideCur = false; peel = false; moved = null; }
+function togglePaint() { paint = !paint; highlight(); renderBody(); }
+function toggleIso() { iso = !iso; highlight(); renderBody(); }
+function toggleHide() { hideCur = !hideCur; highlight(); renderBody(); }
+function togglePeel() { peel = !peel; highlight(); renderBody(); }
+function resetMove() { moved = null; applyMove(); renderBody(); }
+function toggleRef() { refOpen = !refOpen; renderBody(); }
 function commit(r, k) {
-  setLabel(items[cur], { role: r, kind: k, note: draft.note, unsure: draft.unsure });
+  // `ref`: the reference examples were open when this label was given
+  setLabel(items[cur], Object.assign({ role: r, kind: k, note: draft.note, unsure: draft.unsure }, refOpen ? { ref: true } : {}));
+  resetView();
   last = { role: r, kind: k };
   const f = CFG.figures.find(x => x.id === FIG.id);
   f.labelled = FIG.order.filter(key => leafDone(key)).length;
@@ -341,6 +750,7 @@ function leafDone(k) {
 }
 function go(i) {
   if (i < 0 || i >= items.length) return;
+  resetView();
   cur = i; finished = false; stage = "role"; role = null; loadDraft(); render();
 }
 function toggleSplit() {
@@ -351,6 +761,7 @@ function toggleSplit() {
     const a = l.split[0], same = l.split.every(x => x && a && x.role === a.role && x.kind === a.kind);
     if (same) S.labels[it.k] = a; else delete S.labels[it.k];
   } else S.labels[it.k] = { split: Array(lf.n).fill(null) };
+  resetView();
   buildItems();
   cur = items.findIndex(x => x.k === it.k);
   finished = false; stage = "role"; markDirty(); loadDraft(); render();
@@ -364,13 +775,15 @@ function toggleDim() { dim = !dim; highlight(); renderBody(); }
 
 async function openFigure(id) {
   await flush();
-  FIG = await getJSON("/api/figure/" + id);
+  FIG = await api("/api/figure/" + id);
+  indexPeers();
   S = FIG.state; S.labels = S.labels || {}; S.seconds = S.seconds || 0;
   FIG.byK = Object.fromEntries(FIG.leaves.map(l => [l.k, l]));
   FIG.order = FIG.leaves.filter(l => l.n > 0).map(l => l.k);
   FIG.el = {};
   for (const e of FIG.elements) (FIG.el[e.k] = FIG.el[e.k] || [])[e.index - 1] = e;
   FIG.file = (CFG.figures.find(f => f.id === id) || {}).file;
+  resetView();
   mountSvg(FIG.svg);
   $("#code pre").textContent = FIG.code || "（没有找到代码）";
   buildItems();
@@ -381,10 +794,17 @@ async function openFigure(id) {
 
 function onKey(e) {
   lastInput = Date.now();
-  const typing = e.target && e.target.id === "note";
+  const typing = e.target && e.target.tagName === "INPUT";
   if (typing) { if (e.key === "Enter" || e.key === "Escape") { e.target.blur(); e.preventDefault(); } return; }
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const code = e.code || "";
+  if ($("#join").classList.contains("on")) return;
+  if ($("#over").classList.contains("on")) {
+    if (code === "Escape" || code === "KeyO") { hideOverview(); if (e.preventDefault) e.preventDefault(); }
+    return;
+  }
+  if (TEAM && code === "KeyO") { showOverview(); if (e.preventDefault) e.preventDefault(); return; }
+  if (TEAM && code === "KeyX") { nextDisputed(); if (e.preventDefault) e.preventDefault(); return; }
   const digit = /^(Digit|Numpad)(\d)$/.exec(code);
   let used = true;
   if (finished) {
@@ -403,32 +823,63 @@ function onKey(e) {
   else if (code === "KeyU") toggleUnsure();
   else if (code === "KeyD") toggleDim();
   else if (code === "KeyC") { const d = $("#code"); d.open = !d.open; }
+  else if (code === "KeyF") togglePaint();
+  else if (code === "KeyI") toggleIso();
+  else if (code === "KeyH") toggleHide();
+  else if (code === "KeyT") togglePeel();
+  else if (code === "KeyM") resetMove();
+  else if (code === "KeyR") toggleRef();
   else if (code === "KeyN") { const n = $("#note"); if (n) n.focus(); }
   else used = false;
   if (used && e.preventDefault) e.preventDefault();
 }
 
 async function boot() {
-  CFG = await getJSON("/api/config");
+  let hello = { team: false };
+  try { hello = await api("/api/hello"); } catch (e) { if (e.status !== 404) throw e; }   // 404: a server for one annotator
+  TEAM = !!hello.team; REVEAL = hello.reveal;
+  if (TEAM) {
+    // a personal link (#t=<token>) carries an annotator to another browser
+    const m = /^#t=([0-9a-f]{32})$/.exec(location.hash);
+    if (m) { store.set("wb-token", m[1]); history.replaceState(null, "", location.pathname + location.search); }
+    TOKEN = m ? m[1] : store.get("wb-token");
+    if (TOKEN) try { CFG = await api("/api/config"); } catch (e) { if (e.status !== 401) throw e; TOKEN = null; }
+    if (!CFG) { await join(hello); CFG = await api("/api/config"); }
+  } else CFG = await api("/api/config");
   VOC = CFG.vocabulary;
+  try {
+    REF = (await api("/api/reference")).figures.map(f => {
+      const dom = cleanSvg(f.svg);
+      return Object.assign(f, { dom, vb: (dom.getAttribute("viewBox") || "0 0 504 360").split(/\s+/).map(Number) });
+    });
+  } catch (e) { REF = []; }          // a server without the examples: no reference
+  $("#team").addEventListener("click", showOverview);
   $("#cases ul").replaceChildren(...VOC.cases.map(c => h("li", { title: c.en }, c.zh)));
   document.addEventListener("keydown", onKey);
   document.addEventListener("pointerdown", () => { lastInput = Date.now(); });
   setInterval(() => {
-    if (!FIG || finished || document.hidden || Date.now() - lastInput > 60000) return;
+    if (!FIG || finished || S.independent || document.hidden || Date.now() - lastInput > 60000) return;
     S.seconds++; unsavedSeconds++;
     if (unsavedSeconds >= 15) markDirty();
     renderHeader();
   }, 1000);
   window.addEventListener("pagehide", () => {
-    if (FIG && (dirty || unsavedSeconds)) navigator.sendBeacon("/api/state/" + FIG.id,
-      new Blob([JSON.stringify({ labels: S.labels, seconds: S.seconds, cursor: cur })], { type: "application/json" }));
+    if (FIG && (dirty || unsavedSeconds)) fetch("/api/state/" + FIG.id, { method: "POST", keepalive: true, headers: headers(true),
+      body: JSON.stringify({ labels: S.labels, seconds: S.seconds, cursor: cur }) });
   });
   const first = CFG.figures.find(f => !f.done) || CFG.figures[0];
   await openFigure(first.id);
   // Debugging aid: ?keys=Digit1,Digit1,Space replays key codes after loading.
   const replay = new URLSearchParams(location.search).get("keys");
-  if (replay) for (const code of replay.split(",")) { onKey({ code, key: code }); await new Promise(r => setTimeout(r, 30)); }
+  if (replay) for (const code of replay.split(",")) {
+    if (code === "Drag") {          // drags the current leaf 90 px right and 60 px up, with pointer events
+      const b = FIG.byK[items[cur].k].box, svg = roots[0];
+      const c = new DOMPoint((b[0] + b[2]) / 2, (b[1] + b[3]) / 2).matrixTransform(svg.getScreenCTM());
+      const ev = (type, dx, dy) => svg.dispatchEvent(new PointerEvent(type, { clientX: c.x + dx, clientY: c.y + dy, button: 0, pointerId: 7, bubbles: true }));
+      ev("pointerdown", 0, 0); ev("pointermove", 90, -60); ev("pointerup", 90, -60);
+    } else onKey({ code, key: code });
+    await new Promise(r => setTimeout(r, 30));
+  }
 }
 boot().catch(e => toast("启动失败：" + e.message));
 </script>
