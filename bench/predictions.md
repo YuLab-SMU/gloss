@@ -297,3 +297,13 @@ Written 2026-11-11, before any capture run with the new expected counts (`base_e
 37. **The base leaves of the development set left without an expected count are the guide calls only:** `axis` 19, `box` 29, `title` 7 and `mtext` 2, 57 leaves (574 before); no data-mark call is left without one.
 38. **None of the newly counted base leaves is `count_mismatch`.**
 39. **Every other column of the capture run equals run `1220`, figure by figure, apart from the seconds**, patchwork figures included: the patchwork engine's drawing step prints the composition as before, so its pages are the same.
+
+### Predictions 37–39 on the development set (scored 2026-11-11)
+
+Run `runs/2026-11-11-1339-capture-dev.*` at `c9f10b4` (clean tree; predictions committed in it), compared with run `2026-11-11-1220` column by column (38 columns besides the seconds, 55 rows).
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 37. Base leaves without an expected count: the guide calls only, 57 (574 before) | 57 (574 before); 57 is `axis` 19 + `box` 29 + `title` 7 + `mtext` 2, which have no rule, so no data-mark leaf is left without a count | right |
+| 38. No newly counted base leaf is `count_mismatch` | 0 of 2043 base leaves `count_mismatch`; `ok` 1469 → 1986 | right |
+| 39. Every other column equals run `1220`, apart from the seconds | the columns that describe the page (verdicts, primitives, clip regions, faithful, deterministic, every count of leaves and elements) are equal on all 55 figures; three patchwork columns changed: `panels` (0 → 1, 1, 1, 2, 5 on five figures), `drawn_by` (`print()` → `the engine`, six figures) and `withheld` (`panels` on patchwork-008 and -010, the insets) | **wrong** as written: these columns record what `8f99857` set out to change, and the prediction did not except them; what it was for, that the pages stay the same, holds |

@@ -73,10 +73,10 @@
 **Overall progress**
 - [~] Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels _(decision 1(a): Claude labels, the owner labels the pilot)_
 - [x] Task 2: Order binding for grid-page engines, verified by back-substitution (ggplot, heatmap)
-- [ ] Task 2b: Patchwork: panels of each composed plot, then its bindings _(stub; split from Task 2, see Scope changes)_
+- [~] Task 2b: Patchwork: panels of each composed plot, then its bindings _(split from Task 2, see Scope changes)_
 - [ ] Task 3: Rules as plugins; coverage on the development set
 - [ ] Task 4: Accuracy against the labels; consistency checks; silent errors
-- [ ] Task 5: Base figures: bindings through arguments and `usr`; legend entries
+- [~] Task 5: Base figures: bindings through arguments and `usr`; legend entries
 - [ ] Task 6: Where roles and bindings live (ADR-0007); public API _(stub; written out after Tasks 2–5)_
 - [ ] Task 7: Structure tree, data tree and their mapping _(stub)_
 - [ ] Task 8: Records: design notes, NEWS, dev log, closing notes
@@ -152,9 +152,16 @@ Tasks 1 and 2 can run side by side: Task 1 is labelling time, Task 2 needs no la
 
 ### Task 2b: Patchwork: panels of each composed plot, then its bindings
 
-**Status:** `[ ]` _(stub)_
+**Status:** `[~]` (built and run once; rerun after looking pending)
 
 Split from Task 2 (Scope changes). The patchwork engine maps no panels (M0 scope change of 2026-11-09), and a composition's ggplot panels sit at different depths (a plot's panel at the top level, a facetted plot's inside its own gtable), so leaves cannot yet be tied to a plot's build. Map panels per composed plot from patchwork's own assembly, then reuse `ggplot_bind()` per plot; development run, archived.
+
+**Checklist**
+- [x] The engine prints the composition as before and keeps the gtable `print()` drew; each plot's panel grobs are found by the patch index patchwork appends to its cell names, matched against `get_patches()` order; panels per plot through `ggplot_panels(prefix = "plot<i>_")`, bindings through `ggplot_bind()` (`8f99857`). Tests, failing before: a three-plot composition binds (70 elements); swapping two plots' builds fails all 64 points (the mapping is checked, not trusted); a nested composition after a spacer; a random plot withheld alone, with the other plots' panels kept (core change: panels and a withheld note together).
+- [x] Predictions 32–36 before the development run (`b2d971b`).
+- [x] Development run `2026-11-11-1319`, archived and scored: 2 right, 2 wrong, 1 not scorable (`bench/predictions.md`).
+- [x] Defects the run found, fixed with tests that fail before (`4cc2680`, made after looking): a boxplot's rows carry no `y` and stopped patchwork-012's binding with an error (a core defect any ggplot boxplot would hit); an unowned panel's grid counted as layer leaves. Found by the container suite on the way: binding drew text geoms on R's default device (`Rplots.pdf`, or a silent fallback where none opens); the bind step now runs on a null device.
+- [ ] Rerun after looking, archived.
 
 ---
 
@@ -226,10 +233,10 @@ Split from Task 2 (Scope changes). The patchwork engine maps no panels (M0 scope
 
 **Checklist**
 - [ ] Predictions committed before the development run: legend entries found; base data-mark elements verified; leaves still without a count.
-- [ ] Expected counts for `polygon`, `path`, `symbols`, `arrows`, `abline`, each with a hand-built test that fails before the change. Device-reading code: the container suite too.
+- [x] Expected counts for `polygon`, `path`, `symbols`, `arrows`, `abline`, each with a hand-built test that fails before the change. Device-reading code: the container suite too. — `da0282a`: rules measured first on hand-built pages, also for `plotXY` types `b`, `o`, `h`, `s`, `S`, `c`, `n`; thermometers, stars and boxplot symbols stay unknown. Test fails before (5 failures). Suite 9 / 85 / 532 with `4cc2680`, host and container, 0 failed, 0 errors, 0 skipped, 0 warnings; at `da0282a` alone 9 / 82 / 521 on the host.
 - [ ] Arguments table per data-mark entry (x, y and what the call gives per element), bound by order and verified through the panel's `usr`.
 - [ ] Legend entries from the code (calls matched by order, then checked against the page: the entries' boxes must sit inside the legend's `rect`) and from the page alone; both measured against the labels of the 10 figures. An entry neither cue settles is residue.
-- [ ] Measure, do not build: in how many base figures the code names the data frame columns passed to the plotting calls.
+- [x] Measure, do not build: in how many base figures the code names the data frame columns passed to the plotting calls. — Read from the 10 development figures' code (nothing run): 2 name columns in the drawing call (`boxplot(data$value ~ data$names)`: gallery-021, -058); 1 passes a whole data frame (`plot(data)`, gallery-008); 1 passes a data frame and a column name to a package function (`choroLayer(df = , var = "pop2008")`, gallery-038); 6 name none (sf geometry, computed vectors, igraph, Rgraphviz, two Bioconductor plotting functions).
 
 **Verification**
 - Suite on the host and `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/suite.R`; development runs of `bind.R` and `classify.R` for base, archived.
