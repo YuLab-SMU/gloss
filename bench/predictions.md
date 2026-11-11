@@ -570,3 +570,10 @@ The fix (rectangles' reason only where polygons or paths are drawn) is a change 
 
 76. **v0 against `2303`: one leaf changes, gallery-020's labels (L003), from unbound to verified (5 elements); every other leaf of the 7114 is unchanged.**
 77. **Stratum against `2300`: no leaf changes.** No figure of the stratum stacks labels under a coord that is not linear.
+
+Scored 2026-11-11. v0: `runs/2026-11-11-2315-bind-dev.*` at `9f448a1` (clean tree). Stratum: `runs/2026-11-11-2327-bind-dev-tree.*` at `9f448a1` (clean tree). A first stratum run at the same commit (`2323`) was discarded unscored: R/ was edited in the working tree while it ran, and each bench worker loads gloss from the working tree when its figure starts, so the run could not be shown to have used one version of the code. (Compared afterwards, it equals run `2327` on all 595 leaves; that does not make it a clean run.)
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 76. v0 against `2303`: only gallery-020's labels change, unbound → verified (5) | 7113 of 7114 leaves unchanged; gallery-020 L003 verified 5; 0 regressions | right |
+| 77. Stratum against `2300`: no leaf changes | 595 of 595 unchanged | right |

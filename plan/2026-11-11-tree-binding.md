@@ -80,13 +80,13 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 9 files, 92 tests, 587 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `934af71`; the container the same); was 88 / 544 at `b02ea8c`.
-- Key numbers: stratum development half, 29 of 29 captured (run `2221`); 40.6% of 25037 layer elements checked, failed 104, unbound 291; every layer element checked in 19 of 28 ggplot figures (run `2241`). Was 28 captured, 40.1% of 24915, failed 212, unbound 308, 15 of 27 (runs `2110`, `2118`). v0 development binding unchanged against run `1353` (run `2244`).
+- Suite: 9 files, 95 tests, 613 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `84b60fb`; the container the same); was 88 / 544 at `b02ea8c`.
+- Key numbers: stratum development half, 29 of 29 captured (run `2221`); 41.5% of 25037 layer elements checked, failed 104, unbound 50; every layer element checked in 22 of 28 ggplot figures, none at 0 (run `2327`). Was 28 captured, 40.1% of 24915, failed 212, unbound 308, 15 of 27 (runs `2110`, `2118`). v0 development binding: 0 regressions against run `1353`; gallery-020's 5 labels gained (run `2315`).
 
 **Overall progress**
 - [x] Task 1: A page over the parser's limit (tree-041)
 - [x] Task 2: Labels in their own frame: justification and rotation (tree-011, -060, -083, -072; tree-045)
-- [~] Task 3: Polar coordinates through the coord's transform (tree-025, -038, -057)
+- [x] Task 3: Polar coordinates through the coord's transform (tree-025, -038, -057)
 - [ ] Task 4: Text drawn as glyph outlines (the book figures)
 - [ ] Task 5: Points in several shapes (tree-014) _(stub)_
 - [ ] Task 6: What remains: repelled labels (tree-054), tree-003's text leaf _(stub)_
@@ -165,7 +165,7 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 
 ### Task 3: Polar coordinates through the coord's transform
 
-**Status:** `[~]` (mapping and tests landed; the runs pending)
+**Status:** `[x]` (2026-11-11)
 
 **Tests assumption:** 2 and 3.
 
@@ -182,10 +182,15 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 - [x] Rows through `Coord$transform()`; a coord whose transform fails leaves its leaves unbound with the coord's name and the error. — `ggplot_rows_on_device()` maps every coord through its own transform and the panel's params, then the panel's box; a linear coord transforms all position aesthetics at once (`coord_flip()` swaps them, so the engine no longer swaps names itself); one that is not linear transforms (x, y) and (xend, yend) as points. Under a coord that is not linear, rows that are rectangles are claimed with the reason that they are drawn as polygons munched along the coord, and a path one per group is unbound with the reason that it is munched (a test: `geom_line()` and a pie under `coord_polar()`, unbound, 0 failed).
 - [x] Path one per row with ends: first and last vertices at the row's ends. — `R/core-bind.R`, for `polyline` and `path` elements whose rows have `xend` and `yend`; a test with `geom_curve()` on Cartesian axes (3 verified; before, failed on the vertex mean).
 - [x] Suite on the host. — 9 files / 95 tests / 610 expectations / 0 failed / 0 skipped; container the same.
-- [ ] Predictions, then `bind.R dev tree` and `bind.R dev` (v0); v0 compared with run `1353`.
+- [x] Predictions, then `bind.R dev tree` and `bind.R dev` (v0); v0 compared with run `1353`. — Predictions 73-75 at `c19c6f5` (runs `2300`, `2303`): 2 of 3 right; 75 wrong, which found a defect (Scope change). The fix at `84b60fb`; predictions 76-77 at `9f448a1` (runs `2315`, `2327`, made after looking): 2 of 2.
 
 **Verification**
 - No leaf of tree-025, -038, -057 unbound for "the panel's scales cannot be mapped". v0 unchanged, or every move explained.
+
+**Result** (2026-11-11, container, no network)
+- Stratum, `bind.R dev tree` at `9f448a1` (run `2026-11-11-2327`; the same as run `2300` at `c19c6f5` on all 595 leaves): tree-025, -038, -057: 241 of 241 layer elements checked (192 branch polylines by their ends, 134 verified and 58 ambiguous; 49 rotated tip labels verified), 0 failed, 0 unbound. Stratum: 41.5% of 25037 layer elements checked, failed 104, unbound 50, count mismatch 14482; per figure, every layer element checked in 22 of 28 ggplot figures, at least 80% in 24, none at 0 (was 19, 21, 3 in run `2241`). `compare-bind.R` against `2241`: 10 leaves changed, all in the three figures; 0 regressions.
+- v0, `bind.R dev` at `9f448a1` (run `2026-11-11-2315`) against `2244`: 8 of 7114 leaves changed, 0 regressions, failed 8 as before. gallery-020: 5 labels verified, 5 slices unbound (rectangles munched along `CoordPolar`); exts-024: 20 bars unbound for the same reason (`CoordCombMatrix`); exts-017: its raster unbound (no comparison for `<image>`); patchwork-010 and -011: three `geom_sf()` leaves (1626 elements) from unbound to count mismatch, the counts capture always reported. Cartesian panels, now mapped by the coord's transform, give the same statuses and counts on every other leaf.
+- Suite: host 9 files / 95 tests / 613 expectations / 0 failed / 0 skipped; container the same.
 
 ---
 
@@ -245,6 +250,8 @@ _(append-only; never edit completed tasks above)_
 
 - 2026-11-11 — **Two classes found on tree-041 once it was captured; tree-045 explained in part.** **Evidence:** run `2224` and prediction 66 (`bench/predictions.md`). (1) Six dotted lines of `geom_tiplab(align = 2, offset = 2)` fail by up to 128 pt: `GeomSegmentGGtree$draw_panel()` adds its geom parameter `nudge_x` to x while drawing, and the built rows do not hold it. (2) Four of six label boxes fail by 0.67-0.74 pt; plain `geom_label(hjust = .5)` on the host, without `showtext`, gives the same deviations for the same strings, so the binder's comparison (a polygon's vertex mean at the row) does not fit a label's box. tree-045's 3 failed label boxes are this class. **Effect:** Task 2 also covers label boxes (they are placed from their text, so the same frame applies), with a fixture of plain `geom_label()`; its verification adds tree-041's 4 and tree-045's 3 boxes. Task 6 gains the draw-time `nudge_x` of ggtree's segments (6 elements) and `<image>` elements, which have no comparison (17 in tree-041). The starting table's classes stand; tree-041 adds 122 layer elements to the stratum's totals.
 - 2026-11-11 — **tree-072's criterion is restated: the label verified, its halo copies checked or failed by no more than the halo's offset.** **Evidence:** shadowtext 0.1.6's `shadowtextGrob()` (read in the container before the run): each label is drawn 17 times, 16 copies moved by 0.1 × the string height of "X" in 16 directions of the device, then the label. Prediction 70, committed before run `2241`, said 10 of the 16 copies would fail; they did, by 0.57-0.81 pt, the label itself verified. The copies are drawn away from their row on purpose and are rightly paired; the exact along-baseline check fails them, as it should, and widening it to pass them would make every label's check weaker. **Effect:** the *Done when* line on rotated labels holds for tree-072's label leaf, and its 20 halo elements are a class for Task 6 (copies of a layer's leaf drawn at a fixed offset), with the offset reported. Nothing else in the criteria changes.
+- 2026-11-11 — **Rectangles under a coord that is not linear are told by what is drawn, not by the rows' columns.** **Evidence:** run `2303`, prediction 75: gallery-020's 5 labels, stacked on a pie's slices with `position_stack()`, keep the stack's `xmin`..`ymax` and were given the rectangles' reason. **Effect:** fixed in `84b60fb` with a test that failed first; runs `2315` and `2327` made after looking (predictions 76-77). No task or criterion changes.
+- 2026-11-11 — **A bench run loads gloss from the working tree, figure by figure.** **Evidence:** a stratum run at `9f448a1` (`2323`) was going while R/ was edited for Task 4; `run_worker()` calls `pkgload::load_all()` on the repository when each figure starts. The run was discarded unscored and made again on a clean tree (`2327`). **Effect:** before Task 4's runs, the bench copies gloss's source once when a run starts and every worker loads the copy; the copy's digest goes into the run's record.
 
 ## Closing notes
 
