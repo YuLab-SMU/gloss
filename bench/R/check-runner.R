@@ -341,7 +341,18 @@ check_fidelity <- function() {
     # alone; the page the code left is reported beside it, and differs
     list(name = "two on a page", want = "equal",
          code = c("library(ggplot2)", "p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) + geom_point()",
-                  "print(p)", "print(p + theme_bw(), vp = grid::viewport(width = 0.5, height = 0.5))")))
+                  "print(p)", "print(p + theme_bw(), vp = grid::viewport(width = 0.5, height = 0.5))")),
+    # the figure's code puts functions that stop in front of base's, as the
+    # conflicted package does (the ggtree book's setup; bench run
+    # 2026-11-11-2052: no verdict on five figures, "[conflicted] setdiff found
+    # in 3 packages" inside compare_pages). The bench's own code must not look
+    # its names up where the figure's code can put others.
+    list(name = "masked", want = "equal",
+         code = c("library(ggplot2)",
+                  paste0("attach(list(", paste(sprintf("%s = function(...) stop('masked %s')", c("setdiff", "intersect", "table", "paste", "unique", "order", "match", "sum"),
+                                                      c("setdiff", "intersect", "table", "paste", "unique", "order", "match", "sum")), collapse = ", "),
+                         "), name = 'masks', warn.conflicts = FALSE)"),
+                  "ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) + geom_point()")))
   for (f in figs) {
     r <- run_script(list(setup = character(), chunks = list(f$code)),
                     file.path(tempdir(), "check-runner", "fidelity", f$name),
@@ -453,4 +464,12 @@ if (identical(Sys.getenv("GLOSS_BENCH_THIRD_PARTY"), "true")) {
 } else {
   cat("\n(part 2 skipped: set GLOSS_BENCH_THIRD_PARTY=true to run third-party code)\n")
 }
+# The worker and what is shipped with it are closed over base (launch_worker):
+# every bare name they use must be base's.
+own <- unlist(lapply(list(run_worker, compare_pages, fidelity_verdict), function(f) codetools::findGlobals(f, merge = TRUE)))
+not_base <- setdiff(unique(own), ls(baseenv(), all.names = TRUE))
+cat("\n== the worker's bare names are all base's:", if (length(not_base)) paste("FAILED:", paste(not_base, collapse = " ")) else "OK", "\n")
+if (length(not_base)) ok <- FALSE
+
 cat(if (ok) "\nrunner check: OK\n" else "\nrunner check: FAILED\n")
+if (!ok) quit(status = 1)

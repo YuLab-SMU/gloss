@@ -306,6 +306,21 @@ vendor_data <- function(chunks, dir, gallery = FALSE, base = if (gallery) source
 
 # ---- the worker ----------------------------------------------------------------
 
+# callr gives a shipped function the global environment, so its bare names
+# would be looked up along the search path, where the figure's code attaches
+# packages: the ggtree book's setup loads `conflicted`, whose `setdiff` stops
+# ("found in 3 packages"), and the comparator returned no verdict on five
+# figures (run 2026-11-11-2052). The worker and the functions shipped with it
+# are closed over base instead; everything they use from another package is
+# written with `::` (bench/R/check-runner.R checks both). The figure's code
+# is evaluated in the global environment as before.
+launch_worker <- function(worker, args) {
+  home <- new.env(parent = baseenv())
+  environment(worker) <- home
+  for (a in names(args)) if (is.function(args[[a]])) environment(args[[a]]) <- home
+  do.call(worker, args)
+}
+
 # Runs inside a fresh R process. Self-contained: callr ships only this function.
 run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, recover, capture, repo,
                        device = "pdf", fidelity_verdict = NULL, compare_pages = NULL, bind = FALSE,
@@ -693,13 +708,14 @@ run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
   env <- c(callr::rcmd_safe_env(), R_LIBS_USER = paste(bench_libpaths(), collapse = .Platform$path.sep))
   if (offline) env <- c(env, offline_env)
   res <- tryCatch(
-    callr::r(run_worker,
-             args = list(setup = script$setup, chunks = script$chunks, dir = normalizePath(dir),
-                         seed = seed, figure_classes = figure_classes, skip_print = outside_classes,
-                         recover = recover,
-                         capture = capture, repo = normalizePath("."), device = device,
-                         fidelity_verdict = fidelity_verdict, compare_pages = compare_pages,
-                         bind = bind, keep = keep),
+    callr::r(launch_worker,
+             args = list(worker = run_worker,
+                         args = list(setup = script$setup, chunks = script$chunks, dir = normalizePath(dir),
+                                     seed = seed, figure_classes = figure_classes, skip_print = outside_classes,
+                                     recover = recover,
+                                     capture = capture, repo = normalizePath("."), device = device,
+                                     fidelity_verdict = fidelity_verdict, compare_pages = compare_pages,
+                                     bind = bind, keep = keep)),
              libpath = bench_libpaths(), env = env, timeout = timeout, show = FALSE,
              package = FALSE),
     error = function(e) e)
