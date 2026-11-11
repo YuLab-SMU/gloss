@@ -27,3 +27,4 @@ See [`_template.md`](_template.md).
 | [0004](0004-engine-dispatch-through-the-registry.md) | `gloss()` dispatches to engine plugins through the registry | Accepted | 2026-11-09 |
 | [0005](0005-bundle-format-v0.md) | Bundle format v0 | Accepted | 2026-11-09 |
 | [0006](0006-capture-the-page-the-figure-draws.md) | Capture the page the figure draws, not a grob built from the object | Accepted | 2026-11-11 |
+| [0008](0008-held-out-role-labels-by-one-labeller-and-an-independent-sample.md) | Held-out role labels: annotator A labels every figure, people label a seeded sample independently (0007 is kept for the M1 plan's Task 6) | Accepted | 2026-11-11 |

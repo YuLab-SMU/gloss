@@ -1,0 +1,23 @@
+{
+  "built": "2026-11-11",
+  "bioc": {
+    "url": "https://bioconductor.org/packages/3.21/bioc/VIEWS",
+    "md5": "c31abce89dca2b411d127a6b270a59a0",
+    "packages": 2341,
+    "users_with_vignettes": 27
+  },
+  "topics": {
+    "ggtree": "3.16.3",
+    "ggtreeExtra": "1.18.1"
+  },
+  "frame": {
+    "topics": 42,
+    "vignettes": 27,
+    "rows": 69
+  },
+  "out_of_scope": {
+    "rule": "help topic whose examples have no executable line (blank, comment or bare NULL only)",
+    "tree": 1
+  },
+  "not_in_frame": "the ggtree book (treedata-book): a bookdown source outside Bioconductor, not pinned by v0; CRAN packages that import ggtree"
+}
