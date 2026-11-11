@@ -358,13 +358,16 @@ ggplot_bind <- function(built, gtable, sub, prefix = "") {
       }
     }
     linear <- !isFALSE(attr(pred, "linear"))
-    reason <- if (!linear && all(c("xmin", "xmax", "ymin", "ymax") %in% names(d)) &&
-                  !all(is.na(d[c("xmin", "xmax", "ymin", "ymax")]))) {
+    # rows with bounds (bars, tiles) are drawn under a coord that is not
+    # linear as polygons munched along it; the rows of a label stacked on
+    # them carry the stack's bounds too, so the core decides by the tag
+    rect_reason <- if (!linear && all(c("xmin", "xmax", "ymin", "ymax") %in% names(d)) &&
+                       !all(is.na(d[c("xmin", "xmax", "ymin", "ymax")]))) {
       sprintf("rectangles are drawn as polygons munched along the coord (%s); no comparison for them", coord)
     }
     claims[[length(claims) + 1L]] <- list(leaf = lf$id, table = sprintf("%sbuilt_layer%d", prefix, i),
                                           pred = pred, groups = groups, rows = rows,
-                                          linear = linear, coord = coord, reason = reason)
+                                          linear = linear, coord = coord, rect_reason = rect_reason)
   }
   list(claims = claims, unbound = ub, outside = outside)
 }

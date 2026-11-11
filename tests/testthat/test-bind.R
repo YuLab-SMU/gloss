@@ -507,6 +507,15 @@ test_that("under coord_polar(), what the coord munches into paths without row en
   expect_true(all(lv$status == "unbound"))
   expect_match(lv$reason[1], "rectangles .*\\(CoordPolar\\)")
   expect_equal(sum(lv$failed), 0L)
+  # labels stacked on the slices keep the stack's xmin..ymax in their rows;
+  # they are text at (x, y), not rectangles (bench gallery-020, run
+  # 2026-11-11-2303: its 5 labels were given the rectangles' reason)
+  b <- suppressWarnings(bind_capture(bars + ggplot2::geom_text(ggplot2::aes(label = .data$g),
+                                                               position = ggplot2::position_stack(vjust = 0.5))))
+  lab <- b$leaves[b$leaves$table %in% "built_layer2", ]
+  expect_equal(lab$status, "verified")
+  expect_equal(lab$verified, 3L)
+  expect_true(all(b$leaves$status[b$leaves$table %in% "built_layer1"] == "unbound"))
 })
 
 test_that("a path paired one per row whose row has ends verifies by its ends (geom_curve)", {

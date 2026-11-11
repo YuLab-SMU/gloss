@@ -42,7 +42,8 @@
 # `unbound` with the reason; a leaf whose counts do not match its grob's
 # keeps `count_mismatch` (design §计数对不上就拒绝绑定). Under a coord that is
 # not linear, a path one per group is munched along the coord and is
-# unbound with that reason; so is a claim the engine states a reason for.
+# unbound with that reason; so are polygons and paths whose rows have
+# bounds (rectangles munched along it).
 #
 # Nothing here is stored in the figure: where roles and bindings live is
 # plan Task 6 (ADR-0007).
@@ -152,9 +153,11 @@ check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
     return(done("count_mismatch", sprintf("the leaf drew %d elements, its grob %d", leaf$n_drawn, leaf$n_expected)))
   }
   if (!n_el) return(done("unbound", "the leaf drew no elements"))
-  # what the engine pairs but knows no comparison for (rectangles under a
-  # coord that is not linear: polygons munched along it)
-  if (!is.null(cl$reason)) return(done("unbound", cl$reason))
+  # rows with bounds drawn as polygons or paths under a coord that is not
+  # linear: rectangles munched along it, which no comparison here knows
+  if (!is.null(cl$rect_reason) && all(g$tag %in% c("polygon", "polyline", "path"))) {
+    return(done("unbound", cl$rect_reason))
+  }
   if (isTRUE(leaf$dense) && any(!g$tag %in% c("circle", "rect"))) {
     return(done("unbound", "a dense leaf keeps only the boxes of its elements, and its tags need more"))
   }
