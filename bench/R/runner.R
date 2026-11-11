@@ -271,7 +271,7 @@ vendor_data <- function(chunks, dir, gallery = FALSE) {
 
 # Runs inside a fresh R process. Self-contained: callr ships only this function.
 run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, recover, capture, repo,
-                       device = "pdf", fidelity_verdict = NULL) {
+                       device = "pdf", fidelity_verdict = NULL, compare_pages = NULL) {
   setwd(dir)
   set.seed(seed)
   # The device the code draws on. "svg" (capture runs) is gloss's own device,
@@ -403,9 +403,11 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
     fig <- NULL; kind <- NA_character_
     if (last_obj) { fig <- last_value; kind <- "object" }
     else {
+      # A page the code drew, base or grid, is handed over as the recorded
+      # page; gloss replays it on its own device (page-capture plan Task 4).
+      # grid.grab() returned trees grid could not index (gallery-056).
       k <- dl_kind(dl()$ops)
-      if (identical(k, "base")) { fig <- grDevices::recordPlot(); kind <- "base" }
-      else if (identical(k, "grid")) { fig <- grid::grid.grab(); kind <- "grid" }
+      if (!is.na(k)) { fig <- grDevices::recordPlot(); kind <- k }
     }
     result$recovered <- list(kind = kind, class = if (is.null(fig)) NA else class(fig)[1],
                              engine = if (is.null(fig)) NA else if (kind == "object") engine_of(fig) else kind)
@@ -416,11 +418,36 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
       closed_page <- if (untouched && length(pg)) pg[length(pg)] else NULL
       result$reference <- list(pages = length(pg), untouched = untouched, same_as_closed = NA)
     }
+    # The figure drawn alone on a fresh svglite page, the way R displays it.
+    # For an object this page is the reference (the page the code left is
+    # reported beside it: it can hold more than the object); for a recorded
+    # page, the page the code drew is. Drawn twice: two pages that differ are
+    # the bench's own proof that the figure is not deterministic.
+    draw_alone <- function(v) {
+      s <- svglite::svgstring(width = 7, height = 5, standalone = TRUE)
+      d <- grDevices::dev.cur()
+      ok <- tryCatch({
+        if (inherits(v, "recordedplot")) grDevices::replayPlot(v)
+        else if (isS4(v)) methods::show(v)
+        else if (inherits(v, c("grob", "gList"))) { grid::grid.newpage(); grid::grid.draw(v) }
+        else print(v)
+        TRUE
+      }, error = function(e) FALSE, finally = if (d %in% grDevices::dev.list()) grDevices::dev.off(d))
+      p <- as.character(s())
+      if (ok && length(p)) p[length(p)] else NA_character_
+    }
     if (capture && !is.null(fig)) {
+      alone <- c(draw_alone(fig), draw_alone(fig))
+      ref <- if (identical(kind, "object")) alone[1] else ref_page
       suppressMessages(pkgload::load_all(repo, quiet = TRUE, export_all = FALSE, helpers = FALSE))
       t1 <- Sys.time()
-      g <- tryCatch(gloss::gloss(fig), error = function(e) e)
-      cap <- list(seconds = as.numeric(difftime(Sys.time(), t1, units = "secs")))
+      warns <- character()
+      g <- tryCatch(withCallingHandlers(gloss::gloss(fig), warning = function(w) {
+        warns <<- c(warns, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      }), error = function(e) e)
+      cap <- list(seconds = as.numeric(difftime(Sys.time(), t1, units = "secs")),
+                  warnings = paste(substr(warns, 1, 120), collapse = " | "))
       if (inherits(g, "error")) {
         cap$status <- "error"; cap$message <- conditionMessage(g)
       } else {
@@ -432,6 +459,16 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
         cap$panels <- nrow(s$panels)
         cap$leaf_status <- as.list(table(s$leaves$status))
         cap$unowned <- sum(is.na(s$elements$leaf))
+        # gloss's own account of the page: its self-check verdict, the kind of
+        # page, who drew it, how many pages, and what it withheld
+        pgm <- g$meta$page %||% list()
+        cap$gloss_verdict <- pgm$verdict %||% NA
+        cap$gloss_differ <- pgm$differ %||% NA
+        cap$page_kind <- pgm$kind %||% NA
+        cap$drawn_by <- pgm$drawn_by %||% NA
+        cap$pages <- pgm$pages %||% NA
+        w <- g$status$withheld
+        cap$withheld <- if (is.data.frame(w) && nrow(w)) paste(w$what, collapse = " ") else ""
         # which unowned elements are the device background: the first element,
         # a rect covering the whole viewBox (prediction 8); tags of the others
         un <- s$elements[is.na(s$elements$leaf), , drop = FALSE]
@@ -448,35 +485,38 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
           cap$unowned_bg <- NA_integer_
           cap$unowned_other <- NA_character_
         }
-        # fidelity: the captured scene draws exactly what the code drew on
-        # svglite (tag, attributes and text of every primitive, in order).
-        # The strict verdict is kept in `faithful`; known exceptions are
-        # classified from the diff itself, with the differing primitives
-        # recorded as evidence. Nothing is silently tolerated.
-        if (!is.null(ref_page) && !is.na(ref_page)) {
-          sig <- get("scene_signatures", asNamespace("gloss"))
-          if (!is.null(closed_page))
-            result$reference$same_as_closed <- isTRUE(tryCatch(identical(sig(ref_page), sig(closed_page)), error = function(e) FALSE))
-          a <- tryCatch(sig(s$scene), error = function(e) NULL)
-          b <- tryCatch(sig(ref_page), error = function(e) NULL)
-          if (!is.null(a) && !is.null(b)) {
-            cap$faithful <- identical(a, b)
-            cap$prims_scene <- length(a); cap$prims_ref <- length(b)
-            # primitives without a match in the other scene, either way (a
-            # multiset difference: one inserted element does not shift the rest)
-            ta <- table(a); tb <- table(b); common <- intersect(names(ta), names(tb))
-            cap$prims_differ <- length(a) + length(b) - 2L * sum(pmin(ta[common], tb[common]))
-            only_a <- setdiff(names(ta), names(tb)); only_b <- setdiff(names(tb), names(ta))
-            cap$diff_scene_n <- length(only_a); cap$diff_ref_n <- length(only_b)
-            cap$diff_scene <- paste(substr(utils::head(only_a, 3L), 1L, 110L), collapse = " | ")
-            cap$diff_ref <- paste(substr(utils::head(only_b, 3L), 1L, 110L), collapse = " | ")
-            cap$dense_leaves <- sum(s$leaves$dense %in% TRUE)
-            bad <- s$leaves[which(s$leaves$status == "count_mismatch"), , drop = FALSE]
-            cap$mismatch_leaves <- if (nrow(bad))
-              paste(utils::head(substr(paste0(bad$id, ":", bad$name), 1L, 40L), 20L), collapse = " ") else ""
-            v <- fidelity_verdict(cap)
-            cap$verdict <- v$verdict; cap$exception <- v$exception
-          }
+        cap$dense_leaves <- sum(s$leaves$dense %in% TRUE)
+        bad <- s$leaves[which(s$leaves$status == "count_mismatch"), , drop = FALSE]
+        cap$mismatch_leaves <- if (nrow(bad))
+          paste(utils::head(substr(paste0(bad$id, ":", bad$name), 1L, 40L), 20L), collapse = " ") else ""
+        # Fidelity, judged by the bench's own comparator (primitives and the
+        # clip region of each), never by gloss's. A dense leaf is a raster in
+        # the capture by design: the comparison uses the vector page, from a
+        # second capture with dense = Inf.
+        scene <- s$scene
+        if (cap$dense_leaves > 0L) {
+          gv <- tryCatch(suppressWarnings(gloss::gloss(fig, dense = Inf)), error = function(e) NULL)
+          scene <- if (is.null(gv)) NA_character_ else gv$substrate$scene
+          cap$vector_recapture <- !is.null(gv)
+        }
+        safe_cmp <- function(a, b) {
+          if (is.null(a) || is.null(b) || is.na(a) || is.na(b)) return(NULL)
+          tryCatch(compare_pages(a, b), error = function(e) NULL)
+        }
+        if (!is.null(closed_page)) result$reference$same_as_closed <- isTRUE(safe_cmp(ref_page, closed_page)$faithful)
+        self <- safe_cmp(alone[2], alone[1])
+        cap$deterministic <- if (is.null(self)) NA else self$faithful
+        cap$self_differ <- if (is.null(self)) NA else self$prims_differ
+        if (identical(kind, "object")) {
+          code <- safe_cmp(alone[1], ref_page)
+          cap$code_faithful <- if (is.null(code)) NA else code$faithful
+          cap$code_differ <- if (is.null(code)) NA else code$prims_differ
+        }
+        cmp <- safe_cmp(scene, ref)
+        if (!is.null(cmp)) {
+          cap[names(cmp)] <- cmp
+          v <- fidelity_verdict(cap)
+          cap$verdict <- v$verdict; cap$exception <- v$exception
         }
       }
       result$capture <- cap
@@ -489,18 +529,68 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
 
 # ---- capture fidelity -------------------------------------------------------
 
+# Compare a captured scene with a reference page, primitive for primitive in
+# order: tag, attributes (without gloss's data-gloss-*) and text, and the clip
+# regions in force for it, the geometry of every clipPath referenced by an
+# ancestor group, outermost first (ids differ between drawings, geometry does
+# not; s7-clip-blind-spot showed a primitive can lose its clip with its own
+# attributes unchanged). The bench's own code, not gloss's: the proof of a
+# verdict stays independent of gloss's self-check (page-capture plan Task 4).
+# Pure function, shipped into the worker as an argument.
+compare_pages <- function(scene, ref) {
+  sig <- function(svg) {
+    doc <- xml2::read_xml(svg)
+    ns <- c(d1 = "http://www.w3.org/2000/svg")
+    describe <- function(n) {
+      a <- xml2::xml_attrs(n)
+      a <- a[!startsWith(names(a), "data-gloss-")]
+      paste(xml2::xml_name(n), paste(sprintf("%s=%s", names(a), a), collapse = " "))
+    }
+    defs <- xml2::xml_find_all(doc, "//d1:clipPath", ns)
+    geom <- vapply(defs, function(d) paste(vapply(xml2::xml_children(d), describe, ""), collapse = ";"), "")
+    names(geom) <- xml2::xml_attr(defs, "id")
+    tags <- c("circle", "rect", "line", "polyline", "polygon", "path", "text", "image")
+    xp <- sprintf(paste("//*[(%s) and not(ancestor::d1:defs) and not(ancestor::d1:clipPath)",
+                        "and not(ancestor::d1:mask) and not(ancestor::d1:pattern)]"),
+                  paste0("self::d1:", tags, collapse = " or "))
+    nodes <- xml2::xml_find_all(doc, xp, ns)
+    if (!length(nodes)) return(character())
+    prim <- vapply(nodes, function(n) paste(describe(n), xml2::xml_text(n)), "")
+    anc <- xml2::xml_find_all(nodes, "ancestor::d1:g[@clip-path]", ns, flatten = FALSE)
+    clip <- vapply(anc, function(a) {
+      if (!length(a)) return("")
+      paste(geom[sub("^url\\(#(.*)\\)$", "\\1", xml2::xml_attr(a, "clip-path"))], collapse = " > ")
+    }, "")
+    paste(prim, "|clip:", clip)
+  }
+  a <- sig(scene)
+  b <- sig(ref)
+  ta <- table(a); tb <- table(b); common <- intersect(names(ta), names(tb))
+  only_a <- setdiff(names(ta), names(tb)); only_b <- setdiff(names(tb), names(ta))
+  list(faithful = identical(a, b), prims_scene = length(a), prims_ref = length(b),
+       prims_differ = length(a) + length(b) - 2L * sum(pmin(ta[common], tb[common])),
+       diff_scene_n = length(only_a), diff_ref_n = length(only_b),
+       diff_scene = paste(substr(utils::head(only_a, 3L), 1L, 110L), collapse = " | "),
+       diff_ref = paste(substr(utils::head(only_b, 3L), 1L, 110L), collapse = " | "))
+}
+
 # Pure function, shipped into the worker as an argument (callr sends only
-# run_worker itself). Classify a strict primitive difference from the diff,
-# never from the engine. Known exceptions: a leaf rasterized by design (the
-# scene holds an <image>, the reference its primitives) and gridGraphics'
-# one extra "graphics-background" rect when a recorded base plot is echoed on
-# svglite. Everything else stays "different", with the diff recorded.
+# run_worker itself). Classify a strict difference from the bench's own
+# evidence, never from the engine or from gloss's verdict:
+# - equal: the captured page is the reference, primitives and clip regions;
+# - not_deterministic: two plain drawings of the figure differ, so no capture
+#   can equal the reference (page-capture plan Task 4);
+# - known exception: gridGraphics' one extra "graphics-background" rect when a
+#   recorded base plot is echoed on svglite (base pages, until plan Task 5);
+# - different: everything else, with the diff recorded.
+# Dense leaves are no longer an exception: their fidelity is judged on a
+# vector capture of the same figure.
 fidelity_verdict <- function(cap) {
   nvl <- function(x, d) if (is.null(x)) d else x
   if (isTRUE(cap$faithful)) return(list(verdict = "equal", exception = NA_character_))
-  if (nvl(cap$dense_leaves, 0L) > 0L) return(list(
-    verdict = "known_exception",
-    exception = sprintf("%d dense leaf drawn as a raster by design", nvl(cap$dense_leaves, 0L))))
+  if (isFALSE(cap$deterministic)) return(list(
+    verdict = "not_deterministic",
+    exception = sprintf("two plain drawings differ in %s primitives", nvl(cap$self_differ, NA))))
   one_rect <- isTRUE(cap$prims_differ == 1) &&
     isTRUE(cap$diff_scene_n == 1) && isTRUE(cap$diff_ref_n == 0) &&
     nvl(cap$prims_scene, 0) == nvl(cap$prims_ref, 0) + 1 &&
@@ -526,7 +616,7 @@ run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
                          seed = seed, figure_classes = figure_classes, skip_print = outside_classes,
                          recover = recover,
                          capture = capture, repo = normalizePath("."), device = device,
-                         fidelity_verdict = fidelity_verdict),
+                         fidelity_verdict = fidelity_verdict, compare_pages = compare_pages),
              libpath = bench_libpaths(), env = env, timeout = timeout, show = FALSE,
              package = FALSE),
     error = function(e) e)

@@ -109,3 +109,48 @@ if ("verdict" %in% names(cap)) {
   cat("Rasterized dense leaves:", nrow(dl), "captured figures\n")
   if (nrow(dl)) print(dl, row.names = FALSE)
 }
+
+# Page route (page-capture plan Task 4, 2026-11-11). Runs from then on record
+# the bench's proof of determinism, the page the code left against the object
+# alone, and gloss's own verdict. Base figures are still drawn by
+# gridGraphics (the base engine's drawing step) until plan Task 5.
+if ("gloss_verdict" %in% names(cap)) {
+  cap$page <- ifelse(cap$engine == "base", "base", ifelse(is.na(cap$page_kind), "-", cap$page_kind))
+  cat("\nPage route: outcome by page (base = base engine, through gridGraphics)\n")
+  cap$result <- ifelse(cap$outcome == "captured", cap$verdict, cap$status)
+  print(addmargins(table(page = cap$page, result = cap$result)))
+
+  cat("\nThe bench's verdict against gloss's own (captured figures)\n")
+  print(addmargins(table(bench = got$verdict, gloss = got$gloss_verdict, useNA = "ifany")))
+  grid_got <- got[got$engine != "base", ]
+  agree <- grid_got$verdict == grid_got$gloss_verdict
+  cat("  agreement on grid pages:", pct(sum(agree, na.rm = TRUE), nrow(grid_got)), "\n")
+  broken <- got[got$verdict %in% "different" & got$gloss_verdict %in% "equal" & got$engine != "base", ]
+  cat("  different for the bench while gloss says equal (failed invariant), grid pages:", nrow(broken), "\n")
+  if (nrow(broken)) print(broken[, c("id", "engine", "prims_differ", "diff_scene", "diff_ref")], row.names = FALSE)
+  if (any(!agree, na.rm = TRUE)) {
+    cat("  disagreements:\n")
+    print(grid_got[which(!agree), c("id", "engine", "verdict", "gloss_verdict", "self_differ", "gloss_differ")], row.names = FALSE)
+  }
+  b <- got[got$engine == "base", ]
+  cat("  base pages: gloss compares with gridGraphics' page, the bench with the code's:",
+      sum(b$gloss_verdict %in% "equal"), "equal for gloss,", sum(b$verdict %in% "equal"), "equal for the bench, of", nrow(b), "\n")
+
+  cat("\nNot deterministic (two plain drawings differ, the bench's proof)\n")
+  nd <- got[got$deterministic %in% FALSE, c("id", "engine", "self_differ", "verdict", "gloss_verdict")]
+  if (nrow(nd)) print(nd, row.names = FALSE) else cat("  none\n")
+
+  obj <- got[got$recovered %in% "object", ]
+  cat("\nObjects: the object drawn alone against the page the code left:",
+      pct(sum(obj$code_faithful %in% TRUE), nrow(obj)), "equal\n")
+  oc <- obj[obj$code_faithful %in% FALSE, c("id", "engine", "code_differ", "verdict")]
+  if (nrow(oc)) print(oc, row.names = FALSE)
+
+  cat("\nWithheld tables or panels:", pct(sum(nzchar(got$withheld %||% "") & !is.na(got$withheld)), nrow(got)), "captured figures\n")
+  wh <- got[!is.na(got$withheld) & nzchar(got$withheld), c("id", "engine", "withheld")]
+  if (nrow(wh)) print(wh, row.names = FALSE)
+
+  cat("\nDrawn pages per figure (gloss): more than one in",
+      sum(got$pages > 1, na.rm = TRUE), "of", nrow(got), "captured figures\n")
+  cat("Dense figures compared on a vector recapture:", sum(got$vector_recapture %in% TRUE), "\n")
+}

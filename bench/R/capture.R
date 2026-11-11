@@ -27,7 +27,12 @@ refusal <- function(msg) {
   if (grepl("does not support graphics groups", msg)) return("refused: device without groups")
   if (grepl("integrity check failed", msg)) return("refused: integrity check")
   if (grepl("not a built ggplot", msg)) return("refused: not a static ggplot")
-  if (grepl("custom print method", msg)) return("refused: custom print method")
+  if (grepl("custom print method", msg)) return("refused: custom print method")  # engine route only
+  if (grepl("drew nothing", msg)) return("refused: empty page")
+  if (grepl("mixes base graphics and grid", msg)) return("refused: mixed page")
+  if (grepl("cannot capture", msg) && grepl("base graphics page", msg)) return("refused: base page")
+  # not a refusal: gloss's self-check found that capture changed the figure
+  if (grepl("Capture changed the figure", msg)) return("aborted: capture changed the figure")
   NULL  # not a refusal: the caller falls back to "error" (NA here labelled 4 errors NA, run 2026-11-10-1131)
 }
 
@@ -74,6 +79,15 @@ for (k in seq_len(nrow(todo))) {
     exception = cap$exception %||% NA, dense_leaves = cap$dense_leaves %||% NA,
     mismatch_leaves = cap$mismatch_leaves %||% NA,
     diff_scene = substr(cap$diff_scene %||% "", 1, 240), diff_ref = substr(cap$diff_ref %||% "", 1, 240),
+    # page route (page-capture plan Task 4): the bench's own proof of
+    # determinism, the page the code left against the object alone, and
+    # gloss's own account of the page
+    deterministic = cap$deterministic %||% NA, self_differ = cap$self_differ %||% NA,
+    code_faithful = cap$code_faithful %||% NA, code_differ = cap$code_differ %||% NA,
+    gloss_verdict = cap$gloss_verdict %||% NA, gloss_differ = cap$gloss_differ %||% NA,
+    page_kind = cap$page_kind %||% NA, drawn_by = cap$drawn_by %||% NA, pages = cap$pages %||% NA,
+    withheld = cap$withheld %||% NA, vector_recapture = cap$vector_recapture %||% NA,
+    warnings = substr(cap$warnings %||% "", 1, 240),
     seconds = cap$seconds %||% NA,
     stringsAsFactors = FALSE)
   write_csv(do.call(rbind, rows), out_file)

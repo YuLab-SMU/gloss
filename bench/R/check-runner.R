@@ -44,6 +44,10 @@ check <- function(name, script, expect_engines) {
       cat("!! fidelity check: faithful", fa, ", open page = closed page", r2$reference$same_as_closed %||% NA, "\n"); ok <- FALSE
     }
     if (!identical(r2$recovered$engine, c1$engine) || !identical(r2$capture$status, "captured")) ok <- FALSE
+    # a page the code drew is handed over as the recorded page, never a grid.grab() tree (page-capture plan Task 4)
+    if (!identical(r2$recovered$kind, "object") && !identical(r2$recovered$class, "recordedplot")) {
+      cat("!! a drawn page was recovered as", r2$recovered$class, "not a recordedplot\n"); ok <- FALSE
+    }
     # the background test must give an answer: 0 or 1, never NA; a ggplot draws one
     bg <- r2$capture$unowned_bg %||% NA
     if (is.na(bg) || !bg %in% 0:1 || (identical(c1$engine, "ggplot") && bg != 1L)) {
@@ -278,7 +282,11 @@ check_fidelity <- function() {
                    diff_scene = "rect x=0 y=0 width=1 height=1 ")
   cases <- list(
     list(name = "equal", cap = list(faithful = TRUE), want = "equal"),
-    list(name = "rasterized leaf", cap = list(faithful = FALSE, dense_leaves = 1L), want = "known_exception"),
+    # a figure the bench drew twice with two different pages: its own proof
+    list(name = "not deterministic", cap = list(faithful = FALSE, deterministic = FALSE, prims_differ = 5L),
+         want = "not_deterministic"),
+    list(name = "deterministic, different", cap = list(faithful = FALSE, deterministic = TRUE, prims_differ = 5L),
+         want = "different"),
     list(name = "one background rect", cap = base_cap, want = "known_exception"),
     list(name = "two extra primitives", cap = modifyList(base_cap, list(prims_differ = 2L, diff_scene_n = 2L,
                                                                         prims_scene = 40L)), want = "different"),
@@ -289,15 +297,51 @@ check_fidelity <- function() {
     cat(sprintf("  %-26s -> %s\n", cs$name, got))
     if (!identical(got, cs$want)) good <- FALSE
   }
+  # The comparator sees clipping: the same primitives without their clip
+  # region are a different page (s7-clip-blind-spot: signatures alone could not).
+  # svglite and xml2 come from the bench library, as in the workers.
+  old_paths <- .libPaths()
+  .libPaths(c(bench_libpaths(), old_paths))
+  on.exit(.libPaths(old_paths), add = TRUE)
+  clip_ref <- local({
+    s <- svglite::svgstring(width = 3, height = 3, standalone = TRUE)
+    d <- grDevices::dev.cur()
+    grid::grid.draw(grid::gTree(children = grid::gList(grid::clipGrob(width = 0.4, height = 0.4),
+                                                       grid::circleGrob(r = 0.45))))
+    grDevices::dev.off(d)
+    pg <- as.character(s())
+    pg[length(pg)]
+  })
+  doc <- xml2::read_xml(clip_ref)
+  for (g in xml2::xml_find_all(doc, "//d1:g[@clip-path]", c(d1 = "http://www.w3.org/2000/svg"))) {
+    xml2::xml_set_attr(g, "clip-path", NULL)
+  }
+  unclipped <- as.character(doc)
+  cmp_same <- tryCatch(compare_pages(clip_ref, clip_ref), error = function(e) list(faithful = NA))
+  cmp_lost <- tryCatch(compare_pages(unclipped, clip_ref), error = function(e) list(faithful = NA))
+  cat(sprintf("  %-26s -> faithful %s (same page: %s)\n", "clip lost, prims unchanged", cmp_lost$faithful, cmp_same$faithful))
+  if (!isTRUE(cmp_same$faithful) || !isFALSE(cmp_lost$faithful)) good <- FALSE
   # End to end: the three verdicts on real figures, and mismatch leaf ids.
   figs <- list(
     list(name = "ggplot", want = "equal",
          code = c("library(ggplot2)", "d <- data.frame(x=1:20,y=1:20,g=rep(c('a','b'),10))",
                   "ggplot(d, aes(x,y)) + geom_point() + facet_wrap(~g)")),
     list(name = "base", want = "known_exception", code = c("plot(1:10, (1:10)^2)")),
-    list(name = "dense", want = "known_exception",
+    # a dense leaf is a raster in the capture; fidelity is judged on the
+    # vector page (a second capture with dense = Inf), so it is equal
+    list(name = "dense", want = "equal",
          code = c("library(ggplot2)", "set.seed(1); d <- data.frame(x=rnorm(12000),y=rnorm(12000))",
-                  "ggplot(d, aes(x,y)) + geom_point(size=0.2)")))
+                  "ggplot(d, aes(x,y)) + geom_point(size=0.2)")),
+    # every drawing differs: the bench's two plain drawings prove it, and
+    # gloss's own self-check says the same
+    list(name = "random", want = "not_deterministic",
+         code = c("registerS3method('makeContent', 'bench_rnd', function(x) grid::setChildren(x, grid::gList(grid::pointsGrob(stats::runif(5), stats::runif(5), pch = 19))), envir = asNamespace('grid'))",
+                  "grid::grid.newpage()", "grid::grid.draw(grid::gTree(cl = 'bench_rnd', name = 'rnd'))")),
+    # two figures on one page: the object's reference is the page it draws
+    # alone; the page the code left is reported beside it, and differs
+    list(name = "two on a page", want = "equal",
+         code = c("library(ggplot2)", "p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) + geom_point()",
+                  "print(p)", "print(p + theme_bw(), vp = grid::viewport(width = 0.5, height = 0.5))")))
   for (f in figs) {
     r <- run_script(list(setup = character(), chunks = list(f$code)),
                     file.path(tempdir(), "check-runner", "fidelity", f$name),
@@ -307,6 +351,12 @@ check_fidelity <- function() {
     if (!identical(cap$status, "captured") || !identical(cap$verdict, f$want)) good <- FALSE
     if (identical(f$name, "base") && !isTRUE(cap$prims_differ == 1)) good <- FALSE
     if (identical(f$name, "dense") && !isTRUE(cap$dense_leaves >= 1)) good <- FALSE
+    if (f$name %in% c("ggplot", "dense", "random", "two on a page") && !identical(cap$gloss_verdict, f$want)) {
+      cat("!! gloss's own verdict", cap$gloss_verdict %||% NA, "against the bench's", f$want, "\n"); good <- FALSE
+    }
+    if (identical(f$name, "two on a page") && !isFALSE(cap$code_faithful)) {
+      cat("!! the page the code left should differ from the object alone\n"); good <- FALSE
+    }
     # prediction 7 measured count mismatches; the run must now name the leaves
     if (identical(f$name, "ggplot") && !nzchar(cap$mismatch_leaves %||% "")) good <- FALSE
   }
