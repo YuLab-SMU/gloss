@@ -1,0 +1,14 @@
+input        | engine    | page | leaves | with leaf | unowned | verdict | = svglite   | seconds
+ggplot_facet | ggplot    | grid |     62 |       133 |       1 | equal   | TRUE        | 0.37
+patchwork    | patchwork | grid |     84 |       185 |       1 | equal   | TRUE        | 0.43
+base         | base      | base |      9 |        59 |       1 | equal   | TRUE        | 0.03
+heatmap      | heatmap   | grid |     16 |       292 |       1 | equal   | TRUE        | 0.98
+ggrepel      | ggplot    | grid |     51 |       114 |       1 | equal   | TRUE        | 0.31
+points_1e4   | ggplot    | grid |     13 |     10039 |       1 | equal   | TRUE        | 0.59
+Warning messages:
+1: In qt((1 - level)/2, df) : NaNs produced
+2: In max(ids, na.rm = TRUE) :
+  no non-missing arguments to max; returning -Inf
+3: In qt((1 - level)/2, df) : NaNs produced
+4: In max(ids, na.rm = TRUE) :
+  no non-missing arguments to max; returning -Inf
