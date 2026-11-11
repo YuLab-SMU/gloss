@@ -175,7 +175,13 @@ test_that("an object whose print method draws another figure is captured as what
   expect_equal(nrow(plain_fig$substrate$panels), 1L)
   expect_null(plain_fig$status$withheld)
   if (requireNamespace("ggExtra", quietly = TRUE)) {
-    g <- ggExtra::ggMarginal(p, type = "histogram")
+    # ggMarginal() builds grobs, which needs a device: a null one, not
+    # Rplots.pdf in the working directory (read-only in the bench container)
+    g <- local({
+      grDevices::pdf(NULL)
+      on.exit(grDevices::dev.off())
+      ggExtra::ggMarginal(p, type = "histogram")
+    })
     fig <- gloss(g, width = 5, height = 4, context = FALSE)
     plain <- plain_svg(function() print(g), 5, 4)
     expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain), label = "ggExtra")
