@@ -1,0 +1,30 @@
+[1/29] tree-003 ggplot: bound | verified 28 ambiguous 0 failed 0 
+[2/29] tree-008 ggplot: bound | verified 73 ambiguous 0 failed 0 
+[3/29] tree-010 ggplot: bound | verified 38 ambiguous 0 failed 0 
+[4/29] tree-011 ggplot: bound | verified 377 ambiguous 0 failed 76 
+[5/29] tree-012 ggplot: bound | verified 39 ambiguous 0 failed 0 
+[6/29] tree-014 ggplot: bound | verified 463 ambiguous 8 failed 11 
+[7/29] tree-017 ggplot: bound | verified 73 ambiguous 0 failed 0 
+[8/29] tree-021 ggplot: bound | verified 38 ambiguous 0 failed 0 
+[9/29] tree-025 ggplot: bound | verified 0 ambiguous 0 failed 0 
+[10/29] tree-032 ggplot: bound | verified 14 ambiguous 0 failed 0 
+[11/29] tree-037 ggplot: bound | verified 240 ambiguous 0 failed 0 
+[12/29] tree-038 ggplot: bound | verified 0 ambiguous 0 failed 0 
+[13/29] tree-041 ggplot: not captured | verified NA ambiguous NA failed NA internal error: Huge input lookup [1]
+[14/29] tree-045 ggplot: bound | verified 16 ambiguous 0 failed 6 
+[15/29] tree-046 patchwork: bound | verified 100 ambiguous 0 failed 26 
+[16/29] tree-050 ggplot: bound | verified 38 ambiguous 0 failed 0 
+[17/29] tree-054 ggplot: bound | verified 252 ambiguous 0 failed 41 
+[18/29] tree-057 ggplot: bound | verified 0 ambiguous 0 failed 0 
+[19/29] tree-060 ggplot: bound | verified 73 ambiguous 0 failed 14 
+[20/29] tree-061 ggplot: bound | verified 4869 ambiguous 294 failed 0 
+[21/29] tree-062 ggplot: bound | verified 59 ambiguous 0 failed 0 
+[22/29] tree-066 ggplot: bound | verified 145 ambiguous 0 failed 0 
+[23/29] tree-068 ggplot: bound | verified 178 ambiguous 0 failed 0 
+[24/29] tree-069 ggplot: bound | verified 60 ambiguous 0 failed 0 
+[25/29] tree-072 ggplot: bound | verified 120 ambiguous 0 failed 0 
+[26/29] tree-074 ggplot: bound | verified 148 ambiguous 0 failed 0 
+[27/29] tree-077 ggplot: bound | verified 54 ambiguous 0 failed 0 
+[28/29] tree-079 ggplot: bound | verified 2129 ambiguous 20 failed 0 
+[29/29] tree-083 ggplot: bound | verified 38 ambiguous 0 failed 38 
+exit 0

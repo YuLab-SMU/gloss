@@ -46,7 +46,7 @@ TidyTuesday, listed in the design, is not in v0: its official repository has dat
 
 ## A stratum added after v0: tree figures (v1, 2026-11-11)
 
-v0 is the five strata above, frozen at `e985d82`: 160 PSUs, 109 figures, 55 development and 54 held-out. Every number reported before 2026-11-11 is v0's and stays so. On 2026-11-11 the owner added a sixth stratum, figures drawn with the ggtree family ([plan](../plan/2026-11-11-bench-tree-stratum.md)). It is not part of the population v0 sampled by design: it was chosen because the owner's lab draws such figures, after v0's held-out capture run had been looked at. Its numbers are reported apart, as this stratum's, and are never folded into a number of v0.
+v0 is the five strata above, frozen at `e985d82`: 160 PSUs, 109 figures, 55 development and 54 held-out. Every number reported before 2026-11-11 is v0's and stays so. On 2026-11-11 the owner added a sixth stratum, figures drawn with the ggtree family ([plan](../plan/done/2026-11-11-bench-tree-stratum.md)). It is not part of the population v0 sampled by design: it was chosen because the owner's lab draws such figures, after v0's held-out capture run had been looked at. Its numbers are reported apart, as this stratum's, and are never folded into a number of v0.
 
 | Stratum | Frame | Pinned at |
 |---|---|---|

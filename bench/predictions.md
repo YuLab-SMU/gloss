@@ -441,3 +441,23 @@ Written 2026-11-11, after the stratum's capture runs and before gloss's bind ste
 62. **The plain trees bind whole.** Of tree-008, -010, -012, -017, -021, -032, -046, -050, -068, -069 and -074 (a tree, with tip labels justified inside 0..1, tip or root points, a root edge, strips or one facet panel of points), at least 9 of the 11 have every layer element verified or ambiguous: none failed, unbound or in a count-mismatch leaf.
 
 A point guess that is not scored, because three figures hold most of the elements (tree-014 14830, tree-061 5281, tree-079 2185) and I cannot tell how their layers bind: verified or ambiguous on about 80% of the layer elements of the Cartesian figures.
+
+### Predictions 58-62 on the stratum's development figures (scored 2026-11-11)
+
+Run `runs/2026-11-11-2118-bind-dev-tree.*` at `0cc6e72` (clean tree; the predictions committed in it; no file edited during the run), scored by `bench/R/score-bind.R`. 28 figures bound, tree-041 not captured as before.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 58. No bind error | 0 on 28 captured figures | right |
+| 59. The three polar figures bind nothing, with the reason naming `CoordPolar` | 10 layer leaves, 241 elements, all unbound with "the panel's scales cannot be mapped (CoordPolar)"; none verified, ambiguous or failed | right |
+| 60. Branches on Cartesian figures: at least 95% of `line` elements of segment geoms verified or ambiguous, none failed | 5216 of 5216 (verified 5196, ambiguous 20), failed 0, in 69 leaves of 25 figures | right |
+| 61. At least 90% of the failed elements are in tree-011, -060, -062, -083 and -054 | 169 of 212 (80%). tree-011 76, tree-060 14 and tree-083 38, all in the text leaves named; tree-054 41, its label boxes; tree-062 none. Outside the five: tree-046 26, tree-014 11, tree-045 6 | **wrong** |
+| 62. At least 9 of the 11 plain trees bind whole | 10 of 11: every layer element verified or ambiguous in all but tree-046 | right |
+
+- 4 right of 5. The point guess that was not scored, 80% of the Cartesian figures' layer elements verified or ambiguous, was far off: 9984 of 24674, 40.5%. One leaf holds half of them: tree-014's 12690 points in eight shapes, a count mismatch (the leaf drew 12690 elements, its grob holds 8100; shapes drawn with more than one primitive are a known limit). Without that leaf it is 83.3%.
+- **What I did not know when I wrote 61 and 62: in every figure from a book chapter the text is not text.** The book's setup attaches `emojifont`, which turns `showtext` on, and `showtext` draws each glyph as a path. Checked in the container after the run: two labels of five letters come out as 2 `<text>` before `library(emojifont)` and as 5 `<path>` after. A text leaf then draws one element per glyph, so it is a count mismatch (1721 elements in 49 leaves of tree-014, -054 and -062), except where every label is one glyph: tree-046's tip labels A to M and 11 labels of tree-014 pass the count and fail on position, which is the 37 failed elements I did not predict there. tree-062's labels, which I expected to fail, were never compared for the same reason.
+- tree-045's 6 failed elements (3 label boxes, 3 tip labels; `plot_tree(orient = "v")` of cardelino) are not explained yet.
+- The text rule fails rightly paired labels, as predicted, in three figures: 128 elements. I predicted the outcome from the rule; that justification is the cause is the reading that predicted it, not something a test has shown.
+- Per figure, of the 27 ggplot figures: every layer element checked in 15, at least 80% in 18, none in 3 (the polar ones). v0's ggplot figures: 98.4% of elements checked. Other unbound elements: 34 of rotated clade labels (tree-072), 28 connector lines of repelled labels (tree-054), 5 of a text leaf with 5 elements for 11 rows (tree-003).
+- Binding adds little time: median 0.40 s for capture and bind, 4.7 s at most.
+
