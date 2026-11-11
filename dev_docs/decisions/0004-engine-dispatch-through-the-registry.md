@@ -1,6 +1,6 @@
 # ADR-0004: `gloss()` dispatches to engine plugins through the registry
 
-- **Status:** Accepted
+- **Status:** Accepted; engine contract amended by [ADR-0006](0006-capture-the-page-the-figure-draws.md) (`grob(state)` removed)
 - **Date:** 2026-11-09
 - **Deciders:** Yonghe Xia
 - **Related:** [ADR-0003](0003-plugin-based-core.md), [plan/2026-11-09-m0-substrate.md](../../plan/2026-11-09-m0-substrate.md), [dev log](../../dev_logs/2026-11-09-m0-substrate.md)
