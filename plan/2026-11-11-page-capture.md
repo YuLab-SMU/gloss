@@ -53,13 +53,13 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 7 files, 59 tests, 363 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, after Task 2).
+- Suite: 7 files, 60 tests, 374 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, after Task 3).
 - Key numbers: development set on the engine route 40 equal / 6 known exceptions / 5 different of 51 captured; grid pages captured by the page route in `R/` (Task 1), not yet run on the development set; six fixtures identical to the engine route.
 
 **Overall progress**
 - [x] Task 1: Grid pages in the core: draw, wrap in place, self-check
 - [x] Task 2: Engines on the page: tables and panels that describe what was drawn
-- [ ] Task 3: Dense leaves, size and time
+- [x] Task 3: Dense leaves, size and time
 - [ ] Task 4: Bench on the page route; development run of the grid step
 - [ ] Task 5: Base pages by display-list entry _(stub; written out after Task 4)_
 - [ ] Task 6: Base on the development set; names and classification re-measured; gridGraphics out; `R CMD check` _(stub)_
@@ -144,7 +144,7 @@
 
 ### Task 3: Dense leaves, size and time
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** 2 (second half) and 3.
 
@@ -153,16 +153,22 @@
 - Test: `tests/testthat/test-capture.R` (dense), `test-bundle.R` (size)
 
 **Checklist**
-- [ ] Redraw one leaf alone from the display list on the PNG device; compare its raster with today's on `points_1e4` (pixel for pixel) and its index (same points)
-- [ ] The 10^5-point slow test: bundle under 3 MB, as today
-- [ ] Time at 10^3, 10^4, 10^5 points, capture and self-check apart, five runs each, median and range, against `aef42f2`
-- [ ] If the check exceeds the limit of assumption 3, apply the scope change described there
+- [x] Redraw one leaf alone from the display list on the PNG device; compare its raster with today's on `points_1e4` (pixel for pixel) and its index (same points)
+- [x] The 10^5-point slow test: bundle under 3 MB, as today
+- [x] Time at 10^3, 10^4, 10^5 points, capture and self-check apart, five runs each, median and range, against `aef42f2`
+- [x] If the check exceeds the limit of assumption 3, apply the scope change described there
 
 **Verification**
 - `NOT_CRAN=true Rscript -e "devtools::test()"` with the slow test; a timing script kept under `dev_docs/research/capture-fidelity/` with its output.
 - Would change the plan: a raster that differs from today's; a bundle over 3 MB.
 
-**Result** _(filled in when done)_
+**Result** (2026-11-11)
+- `Rscript dev_docs/research/capture-fidelity/p3-time.R /tmp/gloss-engine-route` (host; the tag `engine-route-final` in a worktree, each route in its own R process), output in `p3-time.out`:
+  - points_1e4, default `dense`: the dense leaf redrawn alone from the wrapped display list gives a raster identical to the engine route's, byte for byte and pixel for pixel (1008 x 720 px, 0 pixels differ); its index, 10000 elements, identical apart from the leaf id.
+  - 10^5 points, HTML bundle: 2.65 MB on both routes (limit 3 MB). The slow test passes in the full suite with `NOT_CRAN=true`.
+  - Time of `gloss()`, five runs, median [min, max]: 10^3 points 0.08 [0.08, 0.09] s against 0.12 [0.11, 0.14] s (1.52x); 10^4 0.29 [0.28, 0.53] against 0.47 [0.46, 0.62] (1.62x); 10^5 3.11 [3.05, 3.32] against 4.08 [4.05, 4.50] (1.31x). Self-check alone: 0.01, 0.05, 0.55 s. Within the limit of assumption 3 (2x at 10^4 and 10^5); the check runs on every capture, no scope change.
+- To get there, `page_signature()` reads each top-level child of svglite's page once and its primitives with one regular expression; children with a nested clip group, defs, a pattern or a mask are read node by node through XPath, as before. Per-node reading cost 2.5 s per page at 10^5 points (0.40 s of the 0.96 s at 10^4 after Task 1). A test checks that both reads agree on six kinds of page (clip window, clipping path, pattern fill, escaped text, faceted ggplot) and that a lost clip changes the signature; on the six fixtures both reads agree on the page drawn and the page captured.
+- Suite: 7 files, 60 tests, 374 expectations, 0 failed, 0 skipped.
 
 ---
 

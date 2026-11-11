@@ -575,29 +575,73 @@ signature_diff <- function(a, b) {
   as.integer(d)
 }
 
-# Tag, attributes and text of every drawn primitive in document order, with
-# the clip regions in force for it: the geometry of every clipPath referenced
-# by an ancestor group, outermost first (ids differ between drawings, geometry
-# does not). Attributes added by gloss (data-gloss-*) are ignored.
+# Every drawn primitive in document order, as libxml2 serialises it, with the
+# clip regions in force for it: the geometry of every clipPath referenced by
+# an ancestor group, outermost first (ids differ between drawings, geometry
+# does not). Primitives under defs, clipPath, mask or pattern are not drawn
+# and not listed, as in prim_xpath().
+#
+# svglite writes clip groups as siblings under its root group, so most
+# primitives lie under one top-level child with at most one clip. Each such
+# child is serialised once and its primitives read with one regular
+# expression: per-node calls cost 2.5 s per page at 10^5 points, this about
+# a tenth (dev_docs/research/capture-fidelity/p3-time.out). A child holding
+# anything else (a nested clip group, defs, a pattern or mask) is read node by
+# node through XPath instead.
 page_signature <- function(doc) {
   ns <- svg_ns(doc)
-  nodes <- xml2::xml_find_all(doc, prim_xpath(), ns)
-  if (!length(nodes)) return(character())
   defs <- xml2::xml_find_all(doc, "//d1:clipPath", ns)
-  geom <- vapply(defs, function(d) {
-    paste(vapply(xml2::xml_children(d), function(k) {
-      a <- xml2::xml_attrs(k)
-      paste(xml2::xml_name(k), paste(names(a), a, sep = "=", collapse = " "))
-    }, ""), collapse = ";")
-  }, "")
+  geom <- vapply(defs, function(d) paste(as.character(xml2::xml_children(d)), collapse = ";"), "")
   names(geom) <- xml2::xml_attr(defs, "id")
+  root <- xml2::xml_find_first(doc, "/d1:svg/d1:g[@class='svglite']", ns)
+  if (inherits(root, "xml_missing")) return(signature_nodes(doc, geom))
+  kids <- xml2::xml_children(root)
+  tags <- xml2::xml_name(kids)
+  out <- vector("list", length(kids))
+  for (k in seq_along(kids)) {
+    tag <- tags[k]
+    if (tag %in% c("defs", "style")) next
+    if (tag %in% prim_tags) {
+      out[[k]] <- paste(as.character(kids[[k]]), "|clip:", "")
+      next
+    }
+    txt <- as.character(kids[[k]])
+    own <- xml2::xml_attr(kids[[k]], "clip-path")
+    n_clip <- lengths(regmatches(txt, gregexpr("<g [^>]*clip-path=", txt)))
+    plain <- identical(tag, "g") && n_clip <= 1L && (n_clip == 0L || !is.na(own)) &&
+      !grepl("<(defs|clipPath|mask|pattern)[ >/]", txt)
+    if (!plain) {
+      out[[k]] <- signature_nodes(kids[[k]], geom, self = TRUE)
+      next
+    }
+    prims <- regmatches(txt, gregexpr(prim_regex, txt, perl = TRUE))[[1]]
+    if (!length(prims)) next
+    clip <- if (is.na(own)) "" else unname(geom[sub("^url\\(#(.*)\\)$", "\\1", own)])
+    out[[k]] <- paste(prims, "|clip:", clip)
+  }
+  unlist(out, use.names = FALSE) %||% character()
+}
+
+prim_regex <- paste0(
+  "<(?:circle|rect|line|polyline|polygon|path|image)\\b[^>]*/>",
+  "|<(circle|rect|line|polyline|polygon|path|image)\\b[^>]*>.*?</\\1>",
+  "|<text\\b[^>]*/>|<text\\b[^>]*>[^<]*</text>"
+)
+
+# The same signature read node by node, under `x` (and `x` itself when it is
+# a primitive and `self` is TRUE).
+signature_nodes <- function(x, geom, self = FALSE) {
+  ns <- c(d1 = "http://www.w3.org/2000/svg")
+  xp <- prim_xpath(if (self) "descendant-or-self::" else "//")
+  nodes <- xml2::xml_find_all(x, xp, ns)
+  if (!length(nodes)) return(character())
   anc <- xml2::xml_find_all(nodes, "ancestor::d1:g[@clip-path]", ns, flatten = FALSE)
   chain <- vapply(anc, function(a) {
     if (!length(a)) return("")
     ids <- sub("^url\\(#(.*)\\)$", "\\1", xml2::xml_attr(a, "clip-path"))
     paste(geom[ids], collapse = " > ")
   }, "")
-  paste(node_signatures(nodes), "|clip:", chain)
+  paste(as.character(nodes), "|clip:", chain)
 }
 
 node_signatures <- function(nodes) {

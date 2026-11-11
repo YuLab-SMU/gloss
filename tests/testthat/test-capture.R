@@ -370,3 +370,35 @@ test_that("a masked figure is refused, because groups drop the mask", {
                    vp = grid::viewport(mask = grid::circleGrob(r = 0.3, gp = grid::gpar(fill = "black"))))
   expect_error(gloss(g, width = 3, height = 3, context = FALSE), "mask")
 })
+
+test_that("the page signature reads every primitive with its clip regions, as a node-by-node read does", {
+  # page_signature() reads each top-level child of svglite's page once; the
+  # node-by-node read through XPath is the reference it must agree with.
+  by_nodes <- function(doc) {
+    defs <- xml2::xml_find_all(doc, "//d1:clipPath", svg_ns(doc))
+    geom <- vapply(defs, function(d) paste(as.character(xml2::xml_children(d)), collapse = ";"), "")
+    names(geom) <- xml2::xml_attr(defs, "id")
+    signature_nodes(doc, geom)
+  }
+  pages <- list(
+    clip_window = function() grid::grid.draw(grid::gTree(children = grid::gList(
+      grid::clipGrob(width = 0.4, height = 0.4), grid::circleGrob(r = 0.45)))),
+    clip_path = function() grid::grid.draw(grid::gTree(
+      children = grid::gList(grid::rectGrob(gp = grid::gpar(fill = "grey")), grid::pointsGrob(c(0.2, 0.8), c(0.5, 0.5))),
+      vp = grid::viewport(clip = grid::circleGrob(r = 0.3)))),
+    pattern = function() grid::grid.draw(grid::rectGrob(gp = grid::gpar(fill = grid::pattern(
+      grid::circleGrob(r = 0.1, gp = grid::gpar(fill = "black")), width = 0.2, height = 0.2, extend = "repeat")))),
+    text = function() grid::grid.text(c("a < b & c", "two"), y = c(0.3, 0.7))
+  )
+  if (requireNamespace("ggplot2", quietly = TRUE)) pages$ggplot <- function() print(p_facet())
+  for (nm in names(pages)) {
+    doc <- xml2::read_xml(suppressWarnings(plain_svg(pages[[nm]], 3, 3)))
+    expect_identical(page_signature(doc), by_nodes(doc), label = nm)
+    expect_equal(length(page_signature(doc)), length(scene_signatures(as.character(doc))), label = nm)
+  }
+  # A primitive that loses its clip changes the signature.
+  doc <- xml2::read_xml(plain_svg(pages$clip_window, 3, 3))
+  before <- page_signature(doc)
+  for (g in xml2::xml_find_all(doc, "//d1:g[@clip-path]", svg_ns(doc))) xml2::xml_set_attr(g, "clip-path", NULL)
+  expect_false(identical(page_signature(doc), before))
+})
