@@ -65,7 +65,7 @@
 - [x] Task 2: The draw
 - [x] Task 3: Harvest with the stratum's class test; outcomes
 - [x] Task 4: Offline check, split of the stratum, attribution, manifest
-- [ ] Task 5: Predictions, then the first capture run on the stratum's development half _(stub; written out after Task 4)_
+- [~] Task 5: Predictions, then the first capture run and the first binding run on the stratum's development half
 - [~] Task 6: Records: bench README (v1), design §评测设计 note, dev log, closing notes _(all but the closing notes, which wait for Task 5)_
 
 ---
@@ -171,7 +171,24 @@
 
 ### Task 5: Predictions, then the first capture run on the stratum's development half
 
-**Status:** `[ ]` _(stub)_
+**Status:** `[~]` (2026-11-11: written out; predictions 53-57 committed)
+
+_Written out on 2026-11-11, after Task 4 and the Scope change on run scope. Until then a stub._
+
+**Tests assumptions:** none of the plan's; it is the first measurement of gloss on the stratum, and decides what the next plan on it should be about.
+
+**Files**
+- Modify: `bench/predictions.md` (predictions 53-57, then their scores; predictions for the binding run, then their scores).
+- Create: `bench/runs/<stamp>-capture-dev-tree.*`, `bench/runs/<stamp>-bind-dev-tree.*`.
+
+**Checklist**
+- [x] Predictions for the capture run, committed before it (53-57).
+- [ ] `capture.R dev tree` in the container with no network, at the commit of the predictions, clean tree; scored.
+- [ ] Predictions for the binding run, written after the capture run and committed before the binding run. The capture run does not show bindings.
+- [ ] `bind.R dev tree`; scored with `score-bind.R`.
+- [ ] Nothing in gloss is changed between the two runs. What the runs show goes to the next plan, not into this one.
+
+**Verification:** the two runs' files in `bench/runs/`, each with its score file; `Rscript bench/R/check-scope.R` still 11 of 11; the held-out half of the stratum not run.
 
 ---
 

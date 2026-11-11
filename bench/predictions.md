@@ -384,3 +384,22 @@ Run `runs/2026-11-11-1353-bind-dev.*` at `6af0ad5` (clean tree; no file was edit
 - These bindings are to the calls' arguments, not to a data frame: the arguments are vectors the call received.
 
 **Patchwork, rerun after looking at run `1319`** (same run, not predicted): no bind error; 1783 layer elements, verified 98, ambiguous 6, failed 0, unbound 1679: `CoordSf` 1626, layers of panels no plot owns 41 (patchwork-006's gtable, the insets of -008 and -010), patchwork-012's boxplot 12 (whiskers: two segments per box; medians: no comparison for one line per row; boxes: rows without `y`). Every point and bar of the composed ggplots is verified or ambiguous.
+
+## The tree stratum: capture on its development figures (tree plan Task 5)
+
+Written 2026-11-11, before gloss has captured any figure of the stratum. What was known when they were written: the code of the 29 development figures (28 `ggtree` objects, 1 patchwork), that all 29 rerun with no network, and v0's development run `2026-11-11-1339`. Nothing of the stratum's 28 held-out figures was read beyond what the harvest table holds.
+
+### How the run is made and scored (fixed before the run)
+
+- `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev tree`, at the commit that holds these predictions, with a clean tree. It writes `runs/<stamp>-capture-dev-tree.*`; the 29 figures are those of `set_figures(split, "dev", "tree")`.
+- `Rscript bench/R/score-capture.R` on that file prints the numbers. Its lines "Prediction 5" to "Prediction 8" were made for v0 and are numbers here. Predictions 53-57 are read from its tables by the rules below.
+- The numbers are the stratum's. They are not added to a number of v0.
+
+### Predictions
+
+53. **At least 27 of the 29 figures are captured, and none is refused for lack of an engine.** Each is a ggplot or a patchwork, which gloss captures from the page; v0: 37 of 38 ggplot and patchwork development figures. Read from "Outcomes by engine". If one fails I expect it to be tree-041, whose tips are images drawn by ggimage.
+54. **At most 9 of the captured figures have a leaf with a count mismatch, and at most 3 have one in a panel grid line.** v0: 30 of 37 ggplot and patchwork figures have a mismatch leaf; in 19 every such leaf is a panel grid line, and 11 (30%) have one elsewhere (text, points of several shapes, paths). `theme_tree()` draws no grid, so the stratum should sit near the 30%, not the 81%. Read from the run's `leaves_mismatch` and `mismatch_leaves` columns (a leaf named `panel.grid.*`).
+55. **Every captured figure's verdict is `equal`, except tree-054, which is `not_deterministic`; no figure is `different`, and gloss's own verdict is the same on every figure.** tree-054 places labels with `geom_label_repel()` and no seed, as v0's one `not_deterministic` ggplot (gallery-059) does. Read from "Fidelity verdicts" and "The bench's verdict against gloss's own".
+56. **In every captured figure the only unowned element is the device background.** v0: 54 of 54. Read from the line "Prediction 8".
+57. **No figure times out; the median capture takes under 1 second and the slowest under 60.** v0's ggplot and patchwork figures: median 0.36 s, maximum 27 s on 12347 elements. Read from the `seconds` column and the status table.
+
