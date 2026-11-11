@@ -518,11 +518,26 @@ scene_for_projection <- function(fig) {
 
 # ---- plain SVG --------------------------------------------------------------
 
+# An SVG from outside gloss is parsed with libxml2's limits kept (a node over
+# 10^7 bytes is refused; read_page() lifts them for pages gloss drew). What
+# the parser refuses is refused with its reason.
+read_outside_svg <- function(txt) {
+  tryCatch(xml2::read_xml(txt), error = function(e) {
+    cli::cli_abort(c(
+      "The SVG could not be read: the XML parser refused it.",
+      x = conditionMessage(e),
+      i = if (nchar(txt, type = "bytes") > 1e7) {
+        "A node over 10^7 bytes (an embedded image?) is read only from pages gloss drew itself; read the figure's bundle instead."
+      }
+    ), call = NULL)
+  })
+}
+
 figure_from_plain_svg <- function(txt) {
-  doc <- xml2::read_xml(txt)
+  doc <- read_outside_svg(txt)
   ns <- svg_ns(doc)
   if (!length(xml2::xml_ns(doc))) {
-    doc <- xml2::read_xml(sub("<svg", "<svg xmlns=\"http://www.w3.org/2000/svg\"", txt, fixed = TRUE))
+    doc <- read_outside_svg(sub("<svg", "<svg xmlns=\"http://www.w3.org/2000/svg\"", txt, fixed = TRUE))
   }
   elements <- elements_table(doc, ns)
   root <- xml2::xml_root(doc)

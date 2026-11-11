@@ -646,3 +646,41 @@ test_that("gloss() leaves a recorded plot unchanged, so it can be captured again
     expect_identical(second$substrate$leaves, first$substrate$leaves, label = nm)
   }
 })
+
+test_that("a page with an image over the XML parser's limit is captured and bound, on both routes", {
+  # Bench tree-041 (plan 2026-11-11-tree-binding, Task 1): a page whose
+  # embedded images exceed libxml2's limit for one node (10^7 bytes). gloss
+  # stopped with the parser's error ("Huge input lookup" in the container,
+  # "AttValue length too long" on the host), neither capturing the page nor
+  # refusing it with a reason; on the base route the same page was called
+  # "not well-formed".
+  skip_on_cran()
+  set.seed(1)
+  n <- 1900
+  img <- matrix(grDevices::rgb(stats::runif(n * n), stats::runif(n * n), stats::runif(n * n)), n, n)
+  pages <- list(
+    grid = function() {
+      grid::grid.newpage()
+      grid::grid.raster(img, width = 0.5, height = 0.5, name = "photo")
+      grid::grid.points(grid::unit(c(0.1, 0.9), "npc"), grid::unit(c(0.1, 0.9), "npc"), pch = 19)
+    },
+    base = function() {
+      graphics::plot.new()
+      graphics::rasterImage(img, 0.25, 0.25, 0.75, 0.75)
+      graphics::points(c(0.1, 0.9), c(0.1, 0.9), pch = 19)
+    }
+  )
+  for (nm in names(pages)) {
+    b <- bind_capture(pages[[nm]], width = 4, height = 4)
+    fig <- b$fig
+    expect_gt(nchar(fig$substrate$scene), 1e7, label = nm)
+    expect_equal(fig$meta$page$verdict, "equal", label = nm)
+    el <- fig$substrate$elements
+    expect_equal(sum(el$tag == "image" & !is.na(el$leaf)), 1L, label = paste(nm, "images"))
+    expect_equal(sum(el$tag == "circle" & !is.na(el$leaf)), 2L, label = paste(nm, "points"))
+    expect_equal(nrow(b$leaves), nrow(fig$substrate$leaves), label = paste(nm, "bound leaves"))
+  }
+  # base binds its points through their arguments, on the page with the image
+  pts <- b$leaves[b$leaves$verified > 0, ]
+  expect_equal(sum(pts$verified), 2L)
+})

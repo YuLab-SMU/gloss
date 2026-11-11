@@ -642,7 +642,9 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
 # Pure function, shipped into the worker as an argument.
 compare_pages <- function(scene, ref) {
   sig <- function(svg) {
-    doc <- xml2::read_xml(svg)
+    # HUGE: a page with an embedded image can hold a node over libxml2's
+    # 10^7-byte limit (tree-041; tree binding plan, Task 1)
+    doc <- xml2::read_xml(svg, options = c("NOBLANKS", "HUGE"))
     ns <- c(d1 = "http://www.w3.org/2000/svg")
     describe <- function(n) {
       a <- xml2::xml_attrs(n)

@@ -162,9 +162,9 @@ capture_figure <- function(x, engine, width = 7, height = 5, dense = 10000,
   state <- cap$state
   doc <- if (identical(cap$route, "base")) base_scene_doc(cap) else inline_groups(cap)
   check <- page_verdict(
-    drawn = page_signature(xml2::read_xml(cap$drawn)),
+    drawn = page_signature(read_page(cap$drawn)),
     captured = page_signature(doc),
-    redraw = function() page_signature(xml2::read_xml(cap$redraw()))
+    redraw = function() page_signature(read_page(cap$redraw()))
   )
   if (cap$pages > 1L) {
     cli::cli_warn(c(
@@ -792,10 +792,11 @@ clip_tracker <- function(head) {
 
 # The scene of a base page, with its leaf groups.
 base_scene_doc <- function(cap) {
-  doc <- tryCatch(xml2::read_xml(cap$svg), error = function(e) NULL)
-  if (is.null(doc)) {
+  doc <- tryCatch(read_page(cap$svg), error = function(e) conditionMessage(e))
+  if (is.character(doc)) {
     cli::cli_abort(c(
       "Capture integrity check failed: the base page split by entry is not well-formed SVG.",
+      x = "The XML parser says: {doc}",
       i = "Please report the figure."
     ))
   }
@@ -990,6 +991,14 @@ node_signatures <- function(nodes) {
 
 # ---- parsing ---------------------------------------------------------------
 
+# Parse a page gloss drew itself (svglite's output, or gloss's scene made
+# from it). libxml2 refuses a node over 10^7 bytes unless HUGE is set, and an
+# embedded image is one attribute: bench tree-041's page stopped gloss with
+# the parser's error (plan 2026-11-11-tree-binding, Task 1). The limit guards
+# against hostile documents; these pages are not, so it is lifted here and
+# only here. A document from outside (figure_from_plain_svg()) keeps it.
+read_page <- function(svg) xml2::read_xml(svg, options = c("NOBLANKS", "HUGE"))
+
 svg_ns <- function(doc) c(d1 = "http://www.w3.org/2000/svg")
 
 prim_tags <- c("circle", "rect", "line", "polyline", "polygon", "path", "text", "image")
@@ -1005,7 +1014,7 @@ build_substrate <- function(cap, width, height, dense = Inf) {
 
 # Parse the captured page and put each leaf's group in place of its <use>.
 inline_groups <- function(cap) {
-  doc <- xml2::read_xml(cap$svg)
+  doc <- read_page(cap$svg)
   ns <- svg_ns(doc)
   n_probe <- length(cap$order)
   groups <- xml2::xml_find_all(doc, "//d1:defs/d1:g[starts-with(@id, 'group-')]", ns)
@@ -1405,7 +1414,7 @@ print.gloss_figure <- function(x, ...) {
 # to check that a captured scene draws exactly what plain svglite draws.
 # Attributes added by gloss (data-gloss-*) are ignored.
 scene_signatures <- function(svg) {
-  doc <- xml2::read_xml(svg)
+  doc <- read_page(svg)
   node_signatures(xml2::xml_find_all(doc, prim_xpath(), svg_ns(doc)))
 }
 

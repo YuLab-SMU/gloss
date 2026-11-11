@@ -361,8 +361,8 @@ contract_engine <- function(plugin) {
       if (is.null(plugin$draw)) "skipped: no drawing step; gloss draws the input itself"
       else {
         ex <- plugin$example()
-        own <- page_signature(xml2::read_xml(plain_svg(function() draw_input(ex), 7, 5)))
-        by_engine <- page_signature(xml2::read_xml(plain_svg(function() {
+        own <- page_signature(read_page(plain_svg(function() draw_input(ex), 7, 5)))
+        by_engine <- page_signature(read_page(plain_svg(function() {
           plugin$draw(plugin$prepare(ex, 7, 5))
         }, 7, 5)))
         if (!identical(own, by_engine)) {

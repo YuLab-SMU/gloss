@@ -453,7 +453,7 @@ scene_geometry <- function(sub) {
                     fill = el$fill, stringsAsFactors = FALSE)
   out$vertices <- vector("list", n)
   if (!n) return(out)
-  doc <- xml2::read_xml(sub$scene)
+  doc <- read_page(sub$scene)
   ns <- svg_ns(doc)
   nodes <- xml2::xml_find_all(doc, prim_xpath(), ns)
   owner <- xml2::xml_attr(xml2::xml_find_first(nodes, "ancestor::d1:g[@data-gloss-leaf][1]", ns), "data-gloss-leaf")

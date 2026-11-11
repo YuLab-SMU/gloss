@@ -84,7 +84,7 @@
 - Key numbers: stratum development half, 28 of 29 captured; 40.1% of layer elements checked (83.3% without tree-014's leaf of points); every layer element checked in 15 of 27 ggplot figures (run `2118`).
 
 **Overall progress**
-- [ ] Task 1: A page over the parser's limit (tree-041)
+- [~] Task 1: A page over the parser's limit (tree-041)
 - [ ] Task 2: Labels in their own frame: justification and rotation (tree-011, -060, -083, -072; tree-045)
 - [ ] Task 3: Polar coordinates through the coord's transform (tree-025, -038, -057)
 - [ ] Task 4: Text drawn as glyph outlines (the book figures)
@@ -99,7 +99,7 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 
 ### Task 1: A page over the parser's limit (tree-041)
 
-**Status:** `[ ]`
+**Status:** `[~]` (fix and tests landed; the stratum's runs pending)
 
 **Tests assumption:** 5.
 
@@ -112,10 +112,10 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 - Pages gloss drew itself are trusted input; the limit guards against hostile documents, which gloss does not parse on this path. A plain SVG handed to gloss from outside (`figure_from_plain_svg()`) keeps the limit, and a document over it is refused with the reason.
 
 **Checklist**
-- [ ] A test that fails first: a ggplot or grid page with a raster large enough that its base64 exceeds 10^7 bytes is captured, its elements counted, and its binding step runs.
-- [ ] Parse gloss's own pages with `HUGE`; the bench's comparator too (a bench change, recorded as such).
-- [ ] A plain SVG over the limit from outside: refused with a reason naming the limit (a test).
-- [ ] Suite on the host; container suite (code that reads what the device wrote).
+- [x] A test that fails first: a ggplot or grid page with a raster large enough that its base64 exceeds 10^7 bytes is captured, its elements counted, and its binding step runs. — `test-capture.R`, a grid page and a base page with a 1900 × 1900 raster (16.6 MB of SVG) and two points, each through `bind_capture()`. Before the fix, on the host: `AttValue length too long [40]` from `inline_groups()` (libxml2 words the same limit differently from the container's `Huge input lookup`). After: 11 expectations pass in 8.5 s: verdict `equal`, the image and both points owned by leaves, every leaf bound, base's two points verified. `skip_on_cran()` (slow).
+- [x] Parse gloss's own pages with `HUGE`; the bench's comparator too (a bench change, recorded as such). — `read_page()` in `R/core-substrate.R`, used at every parse of a page gloss drew (capture's three pages, the base scene, the scene's geometry for binding, the regression signature, the engine contract's page check); the base route's "not well-formed" refusal now carries the parser's message. `compare_pages()` in `bench/R/runner.R` reads with `HUGE`; `check-runner.R` gains a page with the same raster: the comparator before the change gives no verdict (`AttValue length too long`), after it `faithful TRUE`.
+- [x] A plain SVG over the limit from outside: refused with a reason naming the limit (a test). — `read_outside_svg()` in `R/core-bundle.R`; `test-bundle.R`: an 11 MB attribute, `gl_read()` refuses with "the XML parser refused it" and says such a node is read only from pages gloss drew (2 expectations).
+- [x] Suite on the host; container suite (code that reads what the device wrote). — Host: 9 files / 90 tests / 557 expectations / 0 failed / 0 skipped (was 88 / 544). Container (`bench/R/suite.R`): 9 / 90 / 557 / 0 failed / 0 errors / 0 skipped / 0 warnings. `Rscript bench/R/check-runner.R` on the host: OK, exit 0.
 - [ ] Predictions (63-), then `capture.R dev tree` and `bind.R dev tree` in the container; scored.
 
 **Verification**

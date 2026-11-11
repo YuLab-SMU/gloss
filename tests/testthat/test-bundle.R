@@ -129,6 +129,18 @@ test_that("an SVG without an embedded bundle restores geometry only", {
   expect_equal(fig$meta$width, 4)
 })
 
+test_that("an SVG from outside with a node over the parser's limit is refused with the reason", {
+  # gloss's own pages are parsed without libxml2's 10^7-byte limit (plan
+  # 2026-11-11-tree-binding, Task 1); a document from outside keeps it, and
+  # what the parser refuses is refused with its reason, not its bare error.
+  f <- withr::local_tempfile(fileext = ".svg")
+  writeLines(paste0('<svg xmlns="http://www.w3.org/2000/svg" width="72pt" height="72pt">',
+                    '<image width="72" height="72" href="data:image/png;base64,',
+                    strrep("A", 1.1e7), '"/></svg>'), f)
+  expect_error(gl_read(f), "XML parser refused")
+  expect_error(gl_read(f), "read only from pages gloss drew")
+})
+
 test_that("tampered files are reported by the integrity check", {
   fig <- gloss(grid::rectGrob(), width = 2, height = 2, context = FALSE)
   d <- file.path(withr::local_tempdir(), "t.gloss")

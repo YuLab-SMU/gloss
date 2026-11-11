@@ -334,6 +334,23 @@ check_fidelity <- function() {
   cmp_lost <- tryCatch(compare_pages(unclipped, clip_ref), error = function(e) list(faithful = NA))
   cat(sprintf("  %-26s -> faithful %s (same page: %s)\n", "clip lost, prims unchanged", cmp_lost$faithful, cmp_same$faithful))
   if (!isTRUE(cmp_same$faithful) || !isFALSE(cmp_lost$faithful)) good <- FALSE
+  # The comparator reads a page with a node over libxml2's 10^7-byte limit
+  # (tree-041's embedded images; tree binding plan, Task 1). Before, it
+  # stopped with the parser's error and the figure had no verdict.
+  huge <- local({
+    set.seed(1)
+    n <- 1900
+    img <- matrix(grDevices::rgb(stats::runif(n * n), stats::runif(n * n), stats::runif(n * n)), n, n)
+    s <- svglite::svgstring(width = 3, height = 3, standalone = TRUE)
+    d <- grDevices::dev.cur()
+    grid::grid.raster(img)
+    grDevices::dev.off(d)
+    pg <- as.character(s())
+    pg[length(pg)]
+  })
+  cmp_huge <- tryCatch(compare_pages(huge, huge), error = function(e) list(faithful = NA))
+  cat(sprintf("  %-26s -> faithful %s (%.1f MB page)\n", "image over parser limit", cmp_huge$faithful, nchar(huge) / 1e6))
+  if (!isTRUE(cmp_huge$faithful)) good <- FALSE
   # End to end: the three verdicts on real figures, and mismatch leaf ids.
   figs <- list(
     list(name = "ggplot", want = "equal",
