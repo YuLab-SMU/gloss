@@ -581,13 +581,20 @@ capture_base_page <- function(rp, width, height) {
   svglite::svglite(f, width = width, height = height, standalone = TRUE, always_valid = TRUE)
   dev <- grDevices::dev.cur()
   rd <- new_env()
-  rd$con <- NULL
   rd$pos <- 0
   on.exit({
-    if (!is.null(rd$con)) close(rd$con)
     if (dev %in% grDevices::dev.list()) grDevices::dev.off(dev)
     unlink(f)
   }, add = TRUE)
+  # n bytes from offset `from`, through a connection opened for this read: on
+  # Linux a connection kept open and seeked again returned bytes from before
+  # svglite rewrote the file's closing tags (dev log 2026-11-11).
+  read_bytes <- function(from, n) {
+    con <- file(f, "rb")
+    on.exit(close(con))
+    seek(con, from)
+    readBin(con, "raw", n)
+  }
   # The bytes added since the last read, without the closing tags that keep
   # the file valid (the next write overwrites them).
   read_new <- function() {
@@ -596,9 +603,7 @@ capture_base_page <- function(rp, width, height) {
       cli::cli_abort("Replaying the base page started a new page; gloss cannot split it by entry.")
     }
     if (size == rd$pos) return("")
-    if (is.null(rd$con)) rd$con <- file(f, "rb")
-    seek(rd$con, rd$pos)
-    bytes <- readBin(rd$con, "raw", size - rd$pos)
+    bytes <- read_bytes(rd$pos, size - rd$pos)
     txt <- utf8_text(bytes)
     closing <- regmatches(txt, regexpr("(\\s*</g>)*\\s*</svg>\\s*$", txt))
     # offsets are bytes: a label may hold multibyte characters (plotmath writes alpha as U+03B1)
@@ -628,9 +633,7 @@ capture_base_page <- function(rp, width, height) {
     boxes[k, ] <- plot_region(width, height)
   }
   grDevices::dev.off(dev)
-  if (is.null(rd$con)) rd$con <- file(f, "rb")
-  seek(rd$con, rd$pos)
-  tail <- utf8_text(readBin(rd$con, "raw", file.size(f) - rd$pos))
+  tail <- utf8_text(read_bytes(rd$pos, file.size(f) - rd$pos))
   entries <- base_entries(dl, ops, chunks, boxes, head, width, height)
   list(route = "base", svg = paste0(head, paste(entries$text, collapse = ""), tail),
        leaves_df = entries$leaves, entry_counts = entries$counts, renamed = 0L,
