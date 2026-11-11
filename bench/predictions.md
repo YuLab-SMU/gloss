@@ -198,3 +198,27 @@ Runs, one per route, the first and only ones: page route `runs/2026-11-11-0837-c
 - `21988ee`: gloss reads the kind of page from the device's display list (base operations and grid's drawing operations), not from the grobs on grid's own display list. The test is a hand-built page (a grid page, then a base page), which failed before with "7 base operations, 2 grid grobs". This is the refusal of bioc-019 and probably of bioc-023 (prediction 12).
 - Development set after the fix, run `runs/2026-11-11-0858-capture-dev.*` (`21988ee`): every column of every row equals run `2026-11-11-0705` except the seconds; 52 equal, 2 not deterministic, 1 refused.
 - The held-out set has not been run again. What the fix does on bioc-019 and bioc-023 is not measured. A later held-out capture run would be reported as made after looking, beside the run scored above, never in its place.
+
+## Binding on the development set (M1 plan 2026-11-11-m1-roles-and-binding, Task 2; 2026-11-11)
+
+Written by Claude on 2026-11-11, before binding has run on any benchmark figure. What is known when this is written: the development capture runs (`2026-11-11-0858`: 54 captured; elements by engine ggplot 26352, patchwork 2295, heatmap 657, grid 1060, base 2933), the leaf names they list (`bench/R/leaf-names.R`: the largest ggplot name stems by elements are `geom_point.points` 13648, `geom_rect.rect` 6174, `box` 2000, `GRID.text` 616, `geom_hex.polygon` 551), and binding on hand-built figures only (`tests/testthat/test-bind.R`: points, regression lines and ribbons, bars under `coord_flip()`, a line on a log scale, `annotate()` text, heatmap cells by place and colour). No development figure's code was read for this.
+
+What is bound, by construction and not predicted: ggplot leaves under a layer and heatmap body cells. Patchwork, grid and base engines state no bindings, so all their leaves are unbound with that reason; ggplot figures drawn by a print method of their own have their tables withheld and are unbound with that reason.
+
+### How the run is made and scored (fixed before the run)
+
+- **Run.** `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/bind.R dev`, in the pinned container with no network, at the commit that holds these predictions, clean tree. The first complete run is scored; the development set is for tuning, so later runs after changes are allowed and are labelled as made after looking.
+- **Scorer.** `Rscript bench/R/score-bind.R bench/runs/<stamp>-bind-dev.csv`, at the same commit. *Layer elements* are the elements of every leaf except `outside` (axes, legends, strips, titles, panel backgrounds, grid lines) and except leaves of engines that state no bindings; *checked* is verified plus ambiguous over layer elements.
+- Tolerance 0.5 pt (design §绑定假设), not changed after the run.
+
+### Predictions
+
+21. **ggplot: at least 80% of layer elements are checked** (verified or ambiguous); point guess 90%. Reasoning: point and rect leaves carry most ggplot elements and verified on every fixture; the rest go unbound (boxplot parts, ribbon outlines, error bars, rotated text, extension grobs), which lowers the share without failing anything.
+22. **ggplot: at most 1% of layer elements fail, and no element of a point layer (`GeomPoint`, circles) fails.** A failure means the order of the built rows, or the panel's scales, is not what was drawn; point layers are where that assumption is simplest.
+23. **The exts stratum is checked at least 10 points less than the gallery stratum** (share of checked layer elements in ggplot figures). Reasoning: extension geoms draw their own grobs, often several per row or with their own viewports.
+24. **The largest unbound class among ggplot layer leaves is "neither one per row nor one per group"** (by leaves).
+25. **Heatmap: no body cell fails, and at least 90% of the elements of body leaves are verified** (colour included).
+26. **Fewer than 5% of the checked ggplot elements outside dense leaves are ambiguous.**
+27. **No captured figure ends in a bind error** (the engine's bind step and the core's checks never stop with an error).
+
+**What would change the plan:** 22 wrong for point layers (assumption 1 of the plan: order binding); 21 far below 80% with the unbound share spread over many classes (the geometry families are too few). Anything else wrong is reported as wrong and goes to the dev log.

@@ -370,6 +370,41 @@ fid_ok <- tryCatch(check_fidelity(), error = function(e) { cat("!! fidelity chec
 cat("\n== fidelity verdicts and mismatch leaves:", if (fid_ok) "OK" else "FAILED", "\n")
 if (!fid_ok) ok <- FALSE
 
+# Part 1g: binding through the worker (M1 plan Task 2). A ggplot's points
+# come back as one verified leaf of 20 elements; a base figure, whose engine
+# states no bindings, comes back with every leaf unbound and the reason.
+check_bind <- function() {
+  good <- TRUE
+  figs <- list(
+    list(name = "ggplot", code = c("library(ggplot2)", "d <- data.frame(x=1:20,y=(1:20)^2)",
+                                   "ggplot(d, aes(x,y)) + geom_point()")),
+    list(name = "base", code = c("plot(1:10, (1:10)^2)")))
+  for (f in figs) {
+    r <- run_script(list(setup = character(), chunks = list(f$code)),
+                    file.path(tempdir(), "check-runner", "bind", f$name),
+                    seed = 1, timeout = 300, offline = TRUE, recover = TRUE, capture = TRUE, device = "svg",
+                    bind = TRUE)
+    lv <- r$capture$bind_leaves
+    if (is.null(lv)) {
+      cat(sprintf("  %-8s no bind leaves (%s)\n", f$name, r$capture$bind_error %||% r$capture$message %||% "?"))
+      good <- FALSE
+      next
+    }
+    cat(sprintf("  %-8s leaves %d: %s\n", f$name, nrow(lv), paste(names(table(lv$status)), table(lv$status), collapse = " ")))
+    if (identical(f$name, "ggplot")) {
+      pts <- lv[lv$table %in% "built_layer1", ]
+      if (!identical(pts$status, "verified") || !identical(pts$verified, 20L) || !identical(pts$geom, "GeomPoint")) good <- FALSE
+      if (any(is.na(lv$path)) || any(is.na(lv$tag[lv$n_elements > 0]))) good <- FALSE
+    } else {
+      if (!all(lv$status == "unbound") || !all(grepl("states no bindings", lv$reason))) good <- FALSE
+    }
+  }
+  good
+}
+bind_ok <- tryCatch(check_bind(), error = function(e) { cat("!! bind checks:", conditionMessage(e), "\n"); FALSE })
+cat("\n== binding through the worker:", if (bind_ok) "OK" else "FAILED", "\n")
+if (!bind_ok) ok <- FALSE
+
 if (identical(Sys.getenv("GLOSS_BENCH_THIRD_PARTY"), "true")) {
   smp <- read_csv(file.path(bench_root, "sample.csv"))
   # Expected figures, counted from the sources: 13-scatter-plot has four

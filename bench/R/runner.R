@@ -271,7 +271,7 @@ vendor_data <- function(chunks, dir, gallery = FALSE) {
 
 # Runs inside a fresh R process. Self-contained: callr ships only this function.
 run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, recover, capture, repo,
-                       device = "pdf", fidelity_verdict = NULL, compare_pages = NULL) {
+                       device = "pdf", fidelity_verdict = NULL, compare_pages = NULL, bind = FALSE) {
   setwd(dir)
   set.seed(seed)
   # The device the code draws on. "svg" (capture runs) is gloss's own device,
@@ -526,6 +526,32 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
           v <- fidelity_verdict(cap)
           cap$verdict <- v$verdict; cap$exception <- v$exception
         }
+        # Binding (M1 plan Task 2): gloss's internal bind step, on its own
+        # capture of the figure. One row per leaf, with the leaf's name,
+        # path, class and tags, and the geom of the layer it is paired with.
+        if (isTRUE(bind)) {
+          t2 <- Sys.time()
+          b <- tryCatch(suppressWarnings(gloss:::bind_capture(fig)), error = function(e) e)
+          cap$bind_seconds <- as.numeric(difftime(Sys.time(), t2, units = "secs"))
+          if (inherits(b, "error")) {
+            cap$bind_error <- conditionMessage(b)
+          } else {
+            lv <- b$leaves
+            sl <- b$fig$substrate$leaves
+            el <- b$fig$substrate$elements
+            i <- match(lv$leaf, sl$id)
+            lv$name <- sl$name[i]
+            lv$path <- substr(sl$path[i], 1L, 240L)
+            lv$class <- sl$class[i]
+            lv$dense <- sl$dense[i]
+            tags <- tapply(el$tag, el$leaf, function(t) paste(sort(unique(t)), collapse = "+"))
+            lv$tag <- unname(tags[lv$leaf])
+            desc <- vapply(b$fig$tables, function(t) t$description %||% NA_character_, "")
+            d <- unname(desc[lv$table])
+            lv$geom <- ifelse(is.na(d), NA_character_, sub("^built data of layer [0-9]+ \\(([^,]+),.*$", "\\1", d))
+            cap$bind_leaves <- lv
+          }
+        }
       }
       result$capture <- cap
     }
@@ -608,7 +634,7 @@ offline_env <- c(http_proxy = "http://127.0.0.1:9", https_proxy = "http://127.0.
                  ALL_PROXY = "http://127.0.0.1:9", no_proxy = "", NO_PROXY = "")
 
 run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
-                       recover = FALSE, capture = FALSE, device = "pdf") {
+                       recover = FALSE, capture = FALSE, device = "pdf", bind = FALSE) {
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   env <- c(callr::rcmd_safe_env(), R_LIBS_USER = paste(bench_libpaths(), collapse = .Platform$path.sep))
   if (offline) env <- c(env, offline_env)
@@ -618,7 +644,8 @@ run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
                          seed = seed, figure_classes = figure_classes, skip_print = outside_classes,
                          recover = recover,
                          capture = capture, repo = normalizePath("."), device = device,
-                         fidelity_verdict = fidelity_verdict, compare_pages = compare_pages),
+                         fidelity_verdict = fidelity_verdict, compare_pages = compare_pages,
+                         bind = bind),
              libpath = bench_libpaths(), env = env, timeout = timeout, show = FALSE,
              package = FALSE),
     error = function(e) e)

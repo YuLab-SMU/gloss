@@ -72,7 +72,7 @@
 
 **Overall progress**
 - [ ] Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels _(decision 1(a): Claude labels, the owner labels the pilot)_
-- [ ] Task 2: Order binding for grid-page engines, verified by back-substitution
+- [~] Task 2: Order binding for grid-page engines, verified by back-substitution
 - [ ] Task 3: Rules as plugins; coverage on the development set
 - [ ] Task 4: Accuracy against the labels; consistency checks; silent errors
 - [ ] Task 5: Base figures: bindings through arguments and `usr`; legend entries
@@ -114,7 +114,7 @@ Tasks 1 and 2 can run side by side: Task 1 is labelling time, Task 2 needs no la
 
 ### Task 2: Order binding for grid-page engines, verified by back-substitution
 
-**Status:** `[ ]`
+**Status:** `[~]` — package side in `d78417e` (ggplot and heatmap; patchwork states no bindings yet, its panels are not mapped); harness `bench/R/bind.R`, `score-bind.R`, runner Part 1g; predictions 21–27 committed before the development run.
 
 **Tests assumption:** 1.
 
