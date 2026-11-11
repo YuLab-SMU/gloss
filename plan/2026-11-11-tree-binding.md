@@ -1,0 +1,234 @@
+# gloss on the tree stratum: every page captured, what ggtree users add bound
+
+> Status: active (opened 2026-11-11 on the owner's word, "按你的建议开树图计划", after the tree stratum's first runs).
+> Date opened: 2026-11-11. Owner: Yonghe Xia.
+
+**Goal:** On the 29 development figures of the tree stratum, gloss captures every page or refuses it with a reason, and the layer elements it does not check today because a comparison does not fit what was drawn (labels moved off their node by justification or rotation, circular and fan layouts, text drawn as glyph outlines) are either checked against their rows or left unchecked with a reason that names what they are.
+
+**Why now:** The tree plan's first runs ([closing notes](done/2026-11-11-bench-tree-stratum.md#closing-notes), [dev log](../dev_logs/2026-11-11-m1-plan.md), last two sections) found gloss captures tree figures as well as v0's but binds 40.1% of their layer elements against 98.4% on v0's ggplot figures, and stops with an internal error on one page, against the invariant. Branches bind (5216 of 5216); what fails is what ggtree users add around the tree. These are the figures the owner's lab draws. The dev log's *What's next* proposed this plan, ordered by the figures each class affects; the owner accepted it on 2026-11-11.
+
+**Starting state (measured):**
+
+- Suite at `b02ea8c`: 9 files, 88 tests, 544 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, host).
+- Stratum, development half (29 figures), container with no network:
+  - capture run `2026-11-11-2110` at `a578985`: 28 captured, 27 `equal`, 1 `not_deterministic` (tree-054), tree-041 stops with `internal error: Huge input lookup [1]`;
+  - binding run `2026-11-11-2118` at `0cc6e72` (`Rscript bench/R/score-bind.R bench/runs/2026-11-11-2118-bind-dev-tree.csv`): 24915 layer elements, verified 9662, ambiguous 322 (40.1%), failed 212, unbound 308, count mismatch 14411; 83.3% without tree-014's leaf of 12690 points; per figure, of 27 ggplot figures, every layer element checked in 15, at least 80% in 18, none in 3.
+- Every element not checked in run `2118`, by class (from the run's leaves and predictions 58-62's scoring):
+
+  | Class | Figures | Elements | Today |
+  |---|---|---|---|
+  | A page the parser refuses (embedded images) | tree-041 | the whole figure | internal error |
+  | Labels justified outside 0..1 | tree-011, -060, -083 | 128 | failed (rightly paired) |
+  | Polar coordinates (circular, fan, inward layouts) | tree-025, -038, -057 | 241 | unbound, `CoordPolar` |
+  | Text drawn as glyph outlines (`emojifont` turns `showtext` on) | book figures: tree-014, -046, -054, -062 | 1721 + 37 | count mismatch; failed |
+  | Points in several shapes in one leaf | tree-014 | 12690 | count mismatch |
+  | Rotated labels | tree-072 | 34 | unbound, "rotated text?" |
+  | Repelled label boxes and their connectors | tree-054 | 41 + 28 | failed; unbound |
+  | A text leaf with 5 elements for 11 rows | tree-003 | 5 | unbound |
+  | Not explained | tree-045 | 6 | failed |
+
+  The classes add up to the run's totals: failed 128 + 37 + 41 + 6 = 212; unbound 241 + 34 + 28 + 5 = 308; count mismatch 1721 + 12690 = 14411.
+- v0, development set: binding run `2026-11-11-1353` is the reference every binder change is compared with (ggplot layer elements 98.4% checked, failed 8, unbound 370; heatmap 250 of 250; base 98.6%; patchwork 104 checked of 1783).
+
+**Assumptions to test** (riskiest first):
+
+1. *The offset of a justified or rotated label from its row is a share of the label's own measured size, so it can be checked as tightly as an unjustified one.* Evidence, one hand drawing (svglite 2.2.2, host, 2026-11-11): the anchors of `hjust = -0.1` labels sit at x + 0.1 × `textLength` within 0.38 pt; the baseline under `vjust = -0.5` sits 0.75 pt from where the string height of "M" puts it. Tested in Task 2. The along-baseline check keeps its tolerance (0.5 pt); the across-baseline check may be no looser than today's box (one font size). If that cannot hold, justified labels are unbound with the reason "justified outside 0..1", never verified by a looser rule.
+2. *The coord's own transform puts built rows where a non-Cartesian panel draws them,* and a segment under polar coordinates is a munched path whose ends are its row's transformed ends. Tested in Task 3, on a fixture and on tree-025, -038, -057. If ggtree's geoms draw circular layouts other than the coord says, binding them needs per-geom code, which design §绑定假设 holds against; those leaves stay unbound with the reason, and the claim is narrowed in the design doc.
+3. *Mapping Cartesian panels through the coord's transform changes nothing on v0.* Tested in Task 3 by v0's development binding run against run `1353`. Any element that moves is explained before the task is done.
+4. *A text leaf drawn as outlines can be told from the page alone* (a text grob whose elements are all `<path>`), without asking whether `showtext` is on. Tested in Task 4 on a fixture under `showtext` and on the four book figures.
+5. *tree-041 is one parser limit, not a class of pages:* libxml2 refuses a node over 10^7 bytes unless `HUGE` is set; with it, tree-041 is captured and nothing else on the page changes. Tested in Task 1. If tree-041 then fails elsewhere (memory, time), it is refused with that reason.
+
+**Architecture:** Changes stay in capture and binding. `R/core-substrate.R` and `R/core-bind.R` parse gloss's own pages without the parser's size limit (Task 1). The text comparison in `R/core-bind.R` works in the label's own frame (along and across its baseline), from row columns the engine states when it has them (`hjust`, `vjust`, `angle`), so the comparison is still chosen by tag and counts, never by geom names (Task 2). `R/engine-ggplot.R` puts rows on the device through `Coord$transform()` with the panel's params instead of its own linear map, and `R/core-bind.R` gains a comparison for a path paired one per row whose row has ends: its first and last vertices at the row's ends (Task 3). Capture says when a text leaf was drawn as outlines, and the binder gives that as the reason (Task 4). `bench/R/runner.R`'s comparator gets the same parser option as gloss (a bench change, Task 1). Not touched: roles, labels and the workbench; the bundle format; exported functions; the M1 plan's tasks.
+
+**Out of scope:**
+
+- The stratum's held-out half, until Task 7 under decision 1.
+- `aplot` compositions: the stratum's figure test leaves them out (three PSUs), so no retained figure measures an engine for them; a later round if the owner widens the test.
+- Repelled labels (tree-054): ggrepel places them at draw time, not at their rows; stub Task 6.
+- Rules, roles and anything measured on v0's held-out set.
+
+**Tech stack:** R 4.5.2; ggplot2 (`Coord$transform()`, `coord_munch()`), grid, svglite >= 2.2, xml2; showtext for one fixture (Suggests); the bench container (Bioconductor 3.21, ggtree 3.16.3, ggplot2 4.0.0).
+
+**Done when** (the stratum's 29 development figures in the container with no network, unless said):
+
+- tree-041 is captured or refused with a reason, and no figure of the 29 ends in an error that is not a refusal. A test with a page over the parser's limit fails before the fix.
+- Labels justified outside 0..1 or rotated: the elements of tree-011, -060, -083 and -072 counted above are verified or ambiguous, with the along-baseline tolerance at 0.5 pt. A fixture test fails before the change; a mutation that permutes the labels of a leaf fails on every label it moves, ties aside.
+- Polar coordinates: no layer leaf of tree-025, -038 or -057 is unbound for "the panel's scales cannot be mapped"; each is checked or unbound for another stated reason. A fixture under `coord_polar()` fails before the change; the same mutation fails.
+- Glyph outlines: every text leaf of the 29 figures drawn as outlines says so in its reason, and none of its elements is `failed`.
+- v0: after each binder change, v0's development binding run moves no element from verified or ambiguous to failed, unbound or count mismatch against run `1353`; any other move is listed with its cause.
+- The stratum's shares (per figure first, then per element with and without tree-014's leaf) reported against run `2118`; predictions committed before each run; every run archived in `bench/runs/`.
+- The suite passes with its counts at every commit that touches `R/` or `tests/`; the container suite also passes for Tasks 1 and 4 (code that reads what the device wrote).
+
+**Decisions (the owner's; the recommendation is Claude's):**
+
+1. *When the stratum's held-out half is run.* (a) Once, at the end of this plan, with the binder frozen at a commit and predictions committed before: a reported number for tree figures now. A later change to the binder (M1 Tasks 3-6) would mean a second run, archived and reported as made after the first. (b) After M1 closes, together with v0's held-out binding run: one run for both, and no reported number on tree figures until then. **Recommended: (a).** The lab cares about tree figures now, and nothing in the M1 tasks left open is planned to change how ggplot layers bind. Needed only by Task 7.
+
+---
+
+## Progress tracking
+
+**Status legend**
+- `[ ]` Not started
+- `[~]` In progress
+- `[x]` Completed
+- `[!]` Blocked
+- `[-]` Cancelled
+
+**Plan maintenance rules**
+- Update when a task lands, in the same commit as the code.
+- When marking `[x]`, record the command and the observed result (counts, numbers, figure set).
+- When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
+
+**Current state** _(update as results come in)_
+- Suite: 9 files, 88 tests, 544 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `b02ea8c`).
+- Key numbers: stratum development half, 28 of 29 captured; 40.1% of layer elements checked (83.3% without tree-014's leaf of points); every layer element checked in 15 of 27 ggplot figures (run `2118`).
+
+**Overall progress**
+- [ ] Task 1: A page over the parser's limit (tree-041)
+- [ ] Task 2: Labels in their own frame: justification and rotation (tree-011, -060, -083, -072; tree-045)
+- [ ] Task 3: Polar coordinates through the coord's transform (tree-025, -038, -057)
+- [ ] Task 4: Text drawn as glyph outlines (the book figures)
+- [ ] Task 5: Points in several shapes (tree-014) _(stub)_
+- [ ] Task 6: What remains: repelled labels (tree-054), tree-003's text leaf _(stub)_
+- [ ] Task 7: The stratum's held-out half, one run _(stub; decision 1)_
+- [ ] Task 8: Records: design notes, NEWS, dev log, closing notes
+
+Each of Tasks 1-4 ends with a run on the stratum's development half, predictions committed before it. Tasks 2-4 change the binder, so each also reruns v0's development binding and compares it with run `1353`.
+
+---
+
+### Task 1: A page over the parser's limit (tree-041)
+
+**Status:** `[ ]`
+
+**Tests assumption:** 5.
+
+**Files**
+- Modify: `R/core-substrate.R`, `R/core-bind.R` (every parse of a page gloss drew); `bench/R/runner.R` (the comparator).
+- Test: `tests/testthat/test-capture.R` (a page with an embedded raster over 10^7 bytes of base64).
+
+**Intent**
+- The invariant: when gloss cannot capture a page it refuses and says why. tree-041 gets neither; an error of the XML parser escapes. Its page embeds images whose base64 exceeds libxml2's limit for one node.
+- Pages gloss drew itself are trusted input; the limit guards against hostile documents, which gloss does not parse on this path. A plain SVG handed to gloss from outside (`figure_from_plain_svg()`) keeps the limit, and a document over it is refused with the reason.
+
+**Checklist**
+- [ ] A test that fails first: a ggplot or grid page with a raster large enough that its base64 exceeds 10^7 bytes is captured, its elements counted, and its binding step runs.
+- [ ] Parse gloss's own pages with `HUGE`; the bench's comparator too (a bench change, recorded as such).
+- [ ] A plain SVG over the limit from outside: refused with a reason naming the limit (a test).
+- [ ] Suite on the host; container suite (code that reads what the device wrote).
+- [ ] Predictions (63-), then `capture.R dev tree` and `bind.R dev tree` in the container; scored.
+
+**Verification**
+- `NOT_CRAN=true Rscript -e "devtools::test()"` on the host and `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/suite.R`.
+- `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev tree`: tree-041 captured or refused with a reason; the other 28 as in run `2110`.
+
+---
+
+### Task 2: Labels in their own frame: justification and rotation
+
+**Status:** `[ ]`
+
+**Tests assumption:** 1.
+
+**Files**
+- Modify: `R/core-bind.R` (the text comparison), `R/engine-ggplot.R` (state `hjust`, `vjust`, `angle` with the rows when the built data has them).
+- Test: `tests/testthat/test-bind.R`.
+
+**Intent**
+- The text rule puts the anchor's x at the row's x and the row's y inside the text's box. A label written with `hjust = -.1` is drawn a tenth of its own width away from its row and fails, rightly paired (128 elements in three figures). A rotated label is not compared at all (34 elements in tree-072), and polar layouts rotate their tip labels (Task 3 needs this).
+- In the label's own frame the offset from the row is known: along the baseline, (hjust − the anchor svglite wrote) × `textLength`, which svglite writes from the same measure R used to place it; across the baseline, a share of the text's height. The check reads the angle from the element's transform and the justification from the row, so it applies to any engine whose rows state them.
+- tree-045's 6 failed elements (3 label boxes, 3 tip labels, `plot_tree(orient = "v")` of cardelino) are read before the rule changes: if they are another class, they get their own line here or in Task 6.
+
+**Checklist**
+- [ ] Read tree-045's failed elements and say what they are.
+- [ ] Tests that fail first: `geom_text()` with `hjust = -0.1, vjust = -0.5`; with `angle = 30` and `hjust = 0.3`; a label leaf with its labels permuted fails on every moved label.
+- [ ] The comparison in the label's frame; along the baseline at 0.5 pt; across it no looser than today's box.
+- [ ] Suite on the host.
+- [ ] Predictions, then `bind.R dev tree` and `bind.R dev` (v0) in the container; v0 compared with run `1353` leaf by leaf.
+
+**Verification**
+- The elements of tree-011, -060, -083 and -072 counted in the starting state: verified or ambiguous. v0: no element moves to failed or unbound.
+
+---
+
+### Task 3: Polar coordinates through the coord's transform
+
+**Status:** `[ ]`
+
+**Tests assumption:** 2 and 3.
+
+**Files**
+- Modify: `R/engine-ggplot.R` (`ggplot_rows_on_device()` through `Coord$transform()` and the panel's params; panels of a non-Cartesian coord are mappable), `R/core-bind.R` (a path paired one per row whose row has ends).
+- Test: `tests/testthat/test-bind.R`.
+
+**Intent**
+- Circular and fan layouts are common in tree figures, and three of 28 bind nothing. The engine maps rows through continuous or discrete scales only; the coord's own transform is what ggplot2 uses to draw, under any coord.
+- Under a non-linear coord, `GeomSegment` draws each segment as a path munched along the coord: one path per row, its ends at the row's transformed ends.
+
+**Checklist**
+- [ ] Tests that fail first: `coord_polar()` with points, segments and text (rotated by `angle`); permuted rows fail.
+- [ ] Rows through `Coord$transform()`; a coord whose transform fails leaves its leaves unbound with the coord's name and the error.
+- [ ] Path one per row with ends: first and last vertices at the row's ends.
+- [ ] Suite on the host.
+- [ ] Predictions, then `bind.R dev tree` and `bind.R dev` (v0); v0 compared with run `1353`.
+
+**Verification**
+- No leaf of tree-025, -038, -057 unbound for "the panel's scales cannot be mapped". v0 unchanged, or every move explained.
+
+---
+
+### Task 4: Text drawn as glyph outlines
+
+**Status:** `[ ]`
+
+**Tests assumption:** 4.
+
+**Files**
+- Modify: `R/core-substrate.R` (a text leaf whose elements are all paths is marked as outlines), `R/core-bind.R` (the reason).
+- Test: `tests/testthat/test-capture.R`, `tests/testthat/test-bind.R` (under `showtext`, skipped when it is not installed).
+
+**Intent**
+- The ggtree book's setup attaches `emojifont`, which turns `showtext` on; every glyph is then a path. A text leaf draws one element per glyph and is a count mismatch, or, when every label is one glyph, passes the count and fails on position (37 elements). Neither says what happened.
+- First say it. Binding the outlines (a label's glyphs together, against the label's box) is a later step, decided from how many leaves of the four figures it would reach.
+
+**Checklist**
+- [ ] Tests that fail first: under `showtext`, a text leaf's reason names glyph outlines; a one-glyph-per-label leaf's elements are not `failed`.
+- [ ] The mark in capture; the reason in the binder.
+- [ ] Suite on the host; container suite.
+- [ ] Count, on the four book figures, the text leaves whose glyph paths would group into labels by count (non-space characters per label): the number for deciding the later step.
+- [ ] Predictions, then `capture.R dev tree` and `bind.R dev tree`.
+
+**Verification**
+- Every text leaf drawn as outlines in the 29 figures has the reason; no element of one is `failed`.
+
+---
+
+### Task 5: Points in several shapes (tree-014)
+
+**Status:** `[ ]` _(stub; written out after Tasks 1-4)_
+
+One leaf of 8100 points in eight shapes draws 12690 elements: some shapes are several primitives. Capture's expected count per shape, then a comparison for one row drawn as several elements around one centre. Half of the stratum's layer elements, one figure.
+
+### Task 6: What remains (tree-054's repelled labels, tree-003's text leaf)
+
+**Status:** `[ ]` _(stub)_
+
+### Task 7: The stratum's held-out half, one run
+
+**Status:** `[ ]` _(stub; decision 1)_
+
+### Task 8: Records
+
+**Status:** `[ ]`
+
+- Design §绑定假设 and §风险与未决问题 (the tree item, class by class), §与上一版的区别; NEWS for user-facing changes (pages over the parser's limit; justified, rotated and polar labels bound); dev log; closing notes.
+
+---
+
+## Scope changes
+
+_(append-only; never edit completed tasks above)_
+
+## Closing notes
+
+_(filled in when the plan moves to `done/`)_

@@ -27,6 +27,7 @@ See [`_template.md`](_template.md).
 ## Active plans
 
 - [2026-11-11-m1-roles-and-binding.md](2026-11-11-m1-roles-and-binding.md): M1, first slice: roles and bindings on the development set. Opened 2026-11-11; the owner's three decisions settled.
+- [2026-11-11-tree-binding.md](2026-11-11-tree-binding.md): gloss on the tree stratum's development half: every page captured or refused with a reason; justified, rotated and polar labels and glyph outlines checked or named. Opened 2026-11-11 on the owner's word; decision 1 (when the held-out half runs) open, needed only by Task 7.
 
 ## Completed plans
 
