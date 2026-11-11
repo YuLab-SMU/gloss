@@ -1,0 +1,169 @@
+run: 2026-11-11-0837-capture-heldout.csv | 54 figures | held-out set
+
+Outcomes by engine
+           outcome
+engine      captured refused Sum
+  base             7       2   9
+  ggplot          29       0  29
+  grid             5       0   5
+  heatmap          3       0   3
+  patchwork        8       0   8
+  Sum             52       2  54
+
+Status detail
+
+           captured refused: mixed page 
+                 52                   2 
+
+Not captured
+       id engine recovered              status
+ bioc-019   base      base refused: mixed page
+ bioc-023   base      base refused: mixed page
+                                                                                     message
+ The page mixes base graphics and grid (130 base operations, 29 grid\ngrobs); gloss cannot a
+ The page mixes base graphics and grid (64 base operations, 1 grid grob);\ngloss cannot attr
+
+Prediction 5 (>= 90% capture without error)
+  captured / figures that rerun: 52/54 = 96% 
+  captured / all held-out figures: 52/54 = 96% 
+  verdict: right 
+
+Prediction 6 (grid scenes fail more often than returned objects)
+  not captured, recovered by grid.grab(): 0/5 = 0% 
+  not captured, returned objects: 0/40 = 0% 
+  not captured, base (recordPlot), for reference: 2/9 = 22% 
+  verdict: wrong (n = 5 grid, 40 objects) 
+
+Prediction 7 (>= 30% of captured figures have a leaf with a count mismatch)
+   29/52 = 56% | verdict: right 
+  by engine:
+     base 0/7 = 0% 
+     ggplot 17/29 = 59% 
+     grid 4/5 = 80% 
+     heatmap 0/3 = 0% 
+     patchwork 8/8 = 100% 
+
+Prediction 8 (>= 95% of captured figures: the only unowned element is the device background)
+   52/52 = 100% | verdict: right 
+
+Capture size and time (captured figures)
+    engine  n median_elements median_leaves median_seconds max_seconds
+      base  7            60.0            14           0.11        0.38
+    ggplot 29           122.0            14           0.29        1.67
+      grid  5           553.0            35           0.25        0.35
+   heatmap  3           455.0            21           0.26        0.41
+ patchwork  8           245.5            53           0.62        5.35
+
+Fidelity (captured scene = what the code drew on svglite; not predicted)
+  base      faithful 7/7 = 100% | not compared 0 | median primitives differing among the rest -
+  ggplot    faithful 28/29 = 97% | not compared 0 | median primitives differing among the rest 1715
+  grid      faithful 5/5 = 100% | not compared 0 | median primitives differing among the rest -
+  heatmap   faithful 3/3 = 100% | not compared 0 | median primitives differing among the rest -
+  patchwork faithful 7/8 = 88% | not compared 0 | median primitives differing among the rest 742
+  not faithful:
+            id    engine recovered prims_ref prims_scene prims_differ
+      exts-002    ggplot    object      1834        1839         1715
+ patchwork-013 patchwork    object      2279        2279          742
+
+Fidelity verdicts (equal / known exception / different)
+           verdict
+engine      equal not_deterministic known_exception different Sum
+  base          7                 0               0         0   7
+  ggplot       28                 1               0         0  29
+  grid          5                 0               0         0   5
+  heatmap       3                 0               0         0   3
+  patchwork     7                 1               0         0   8
+  Sum          50                 2               0         0  52
+
+Known exceptions, with the reason
+  none
+
+Different: first primitives present on only one side
+  none
+
+Which leaves mismatch: 29/52 = 56% captured figures
+          id    engine leaves_mismatch
+ gallery-009 patchwork               3
+ gallery-012    ggplot               1
+ gallery-014    ggplot               2
+ gallery-016    ggplot               1
+ gallery-017    ggplot               2
+ gallery-019    ggplot               1
+ gallery-022    ggplot               1
+ gallery-031    ggplot               2
+                                                                                                   mismatch_leaves
+ L006:panel.grid.major.y..polyline.251 L007:panel.grid.major.x..polyline.253 L017:panel.grid.major.x..polyline.287
+                                                                             L006:panel.grid.major.x..polyline.183
+                                       L005:panel.grid.major.y..polyline.235 L006:panel.grid.major.x..polyline.237
+                                                                             L004:panel.grid.major.y..polyline.475
+                                                          L004:panel.grid.major.y..polyline.475 L036:GRID.text.492
+                                                                                                L010:GRID.text.220
+                                                                                                L016:GRID.text.212
+                                       L004:panel.grid.major.y..polyline.150 L005:panel.grid.major.x..polyline.152
+Rasterized dense leaves: 2 captured figures
+          id engine dense_leaves
+ gallery-003 ggplot            1
+ gallery-069 ggplot            1
+
+Page route: outcome by page
+      result
+page   equal not_deterministic refused: mixed page Sum
+  base     7                 0                   2   9
+  grid    43                 2                   0  45
+  Sum     50                 2                   2  54
+
+The bench's verdict against gloss's own (captured figures)
+                   gloss
+bench               equal Sum
+  equal                50  50
+  not_deterministic     2   2
+  Sum                  52  52
+  agreement on pages (plan Task 4 reading): 52/52 = 100% | identical verdicts: 50/52 = 96% 
+  different for the bench while gloss says equal (failed invariant), pages : 0 
+  verdicts not identical:
+            id    engine           verdict gloss_verdict self_differ
+      exts-002    ggplot not_deterministic         equal        1399
+ patchwork-013 patchwork not_deterministic         equal         742
+ gloss_differ
+            0
+            0
+
+Base leaf names over 7 captured base pages (leaves, elements; design §分类)
+     name figures leaves elements
+   plotXY       5     79     7015
+     axis       5     27      285
+      box       3     86       86
+     text       6     25       60
+     rect       2      3       37
+    mtext       1     11       11
+   arrows       1      1       10
+    title       3      4        7
+  polygon       1      6        6
+  symbols       1      1        6
+ segments       1      3        3
+   abline       1      1        2
+
+Not deterministic (two plain drawings differ, the bench's proof)
+            id    engine self_differ           verdict gloss_verdict
+      exts-002    ggplot        1399 not_deterministic         equal
+ patchwork-013 patchwork         742 not_deterministic         equal
+
+Objects: the object drawn alone against the page the code left: 36/40 = 90% equal
+            id    engine code_differ           verdict
+   gallery-003    ggplot       37814             equal
+   gallery-069    ggplot       38018             equal
+      exts-002    ggplot        1174 not_deterministic
+ patchwork-013 patchwork         742 not_deterministic
+
+Withheld tables or panels: 3/52 = 6% captured figures
+            id    engine
+      exts-015    ggplot
+      bioc-012    ggplot
+ patchwork-013 patchwork
+                                                                    withheld
+                                            panels built_layer1 built_layer2
+                                                                      panels
+ plot2_built_layer1 plot2_built_layer2 plot2_built_layer3 plot2_built_layer4
+
+Drawn pages per figure (gloss): more than one in 0 of 52 captured figures
+Dense figures compared on a vector recapture: 2 
