@@ -58,15 +58,15 @@
 
 **Current state** _(update as results come in)_
 - Suite: 9 files, 88 tests, 544 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11).
-- Key numbers: frame 85 PSUs (84 in scope, 83 available: 41 help topics, 26 vignettes, 16 book chapters); sampled 83; retained 0 (nothing run yet).
+- Key numbers: frame 85 PSUs (84 in scope, 83 available: 41 help topics, 26 vignettes, 16 book chapters); sampled 83; retained 57; all 57 rerun with no network; split 29 development, 28 held-out. No capture run on any of them yet.
 
 **Overall progress**
 - [x] Task 1: The frame
 - [x] Task 2: The draw
-- [ ] Task 3: Harvest with the stratum's class test; outcomes
-- [ ] Task 4: Offline check, split of the stratum, attribution, manifest
+- [x] Task 3: Harvest with the stratum's class test; outcomes
+- [x] Task 4: Offline check, split of the stratum, attribution, manifest
 - [ ] Task 5: Predictions, then the first capture run on the stratum's development half _(stub; written out after Task 4)_
-- [ ] Task 6: Records: bench README (v1), design §评测设计 note, dev log, closing notes
+- [~] Task 6: Records: bench README (v1), design §评测设计 note, dev log, closing notes _(all but the closing notes, which wait for Task 5)_
 
 ---
 
@@ -115,7 +115,7 @@
 
 ### Task 3: Harvest with the stratum's class test; outcomes
 
-**Status:** `[ ]`
+**Status:** `[x]` (2026-11-11)
 
 **Tests assumptions:** 1, 2, 3.
 
@@ -124,26 +124,48 @@
 - Create: `bench/figures/tree-*/`, rows in `bench/runs/attempts.csv`.
 
 **Checklist**
-- [ ] The class test, with a check that fails first.
-- [ ] Harvest in the container, online for installs, every PSU of the stratum; one outcome row each.
-- [ ] For every PSU that ran: the classes of all figures it drew (assumption 2), compositions holding a tree counted.
+- [x] The class test, with a check that fails first.
+- [x] Harvest in the container, online for installs, every PSU of the stratum; one outcome row each.
+- [x] For every PSU that ran: the classes of all figures it drew (assumption 2), compositions holding a tree counted.
 
 **Verification**
 - `bench/docker/run.sh Rscript bench/R/harvest.R <tree ids>`; outcome table by kind. Fewer than 16 retained: assumption 1's branch.
+
+**Result**
+- The test and the book kind (`271d7a7`): `Rscript bench/R/check-tree.R`, failing first (no `tree` column, no `book_script`), then 10 of 10 OK on the host (ggtree 4.0.1) and offline in the container (ggtree 3.16.3, ggplot2 4.0.0). `Rscript bench/R/check-runner.R` on the host: runner check OK, so the five strata of v0 run as before.
+- Harvest at `1f09e30`, in the container: `tree-001` and `tree-005` first, then the other 81 (45 minutes wall-clock, 47 minutes of PSU time, the longest PSU 277 s; the `bioc` library already held most packages). 83 outcome rows, none missing; the 160 rows of v0 in `attempts.csv` byte-identical (`cmp`).
+
+  | Kind | PSUs | retained | no figure | code error | needs network | outside population |
+  |---|---|---|---|---|---|---|
+  | help topic | 41 | 34 | 7 | 0 | 0 | 0 |
+  | vignette | 26 | 15 | 6 | 3 | 0 | 2 |
+  | book chapter | 16 | 8 | 0 | 4 | 3 | 1 |
+  | all | 83 | **57** | 13 | 7 | 3 | 3 |
+
+  Assumption 1 holds (57, against a floor of 16). Assumption 3 holds: no harness error, no missing-package outcome.
+- What every PSU drew (`bench/runs/tree-candidates.csv`): 69 of the 83 drew at least one figure, 255 in all; 159 hold a tree by the test (119 `ggtree`, 2 `ggtreeSpace`, 38 patchwork holding one). Not counted: 56 plain ggplot, 13 grid, 10 `aplot`, 6 patchwork without a tree, 6 `ggsc`, 3 base, 2 `ggraph`. The retained figures: 52 `ggtree` plots and 5 patchwork compositions.
+- **Assumption 2 holds with a known loss.** One PSU drew a tree the test does not see: `ggtree::geom_tree`, whose example is `ggplot(tree) + geom_tree()`, a plain ggplot. Three more ended as "no figure" having drawn only `aplot` compositions, which may hold a tree and cannot be told so by class (ggmsa 1, scDotPlot 4, SVP 3). The test was fixed before the run and is not changed (Scope changes).
+- Code errors, read from the outcome rows: two are ggtree 3.16.3 objects that ggplot2 4.0.0 refuses (`@mapping must be <ggplot2::mapping>`; chapter 9 and mitology), a mismatch inside the pinned `bioc` environment (Bioconductor 3.21 with CRAN of its last day); one is the book's `conflicted` setting stopping `as.factor` (chapter 12); one chapter needs an object of an earlier chapter (chapter 3, `nhx`). Three chapters need the network when rerun (`BiocManager::repositories()`, a download inside a geom, the Open Tree of Life API).
 
 ---
 
 ### Task 4: Offline check, split of the stratum, attribution, manifest
 
-**Status:** `[ ]`
+**Status:** `[x]` (2026-11-11)
 
 **Files**
 - Modify: `bench/R/split.R` or a sibling that splits one added stratum without touching existing rows; `bench/split.csv`, `bench/MANIFEST.md5`, `bench/figures/SOURCES.md` (rows added).
 
 **Checklist**
-- [ ] `offline-check.R` on the stratum's retained figures (no network).
-- [ ] Split by seed `20261109 + 100 + 6`, before any capture run on a figure of the stratum; the odd figure to development, as in v0.
-- [ ] `git diff` of `split.csv` and `MANIFEST.md5`: added rows only.
+- [x] `offline-check.R` on the stratum's retained figures (no network).
+- [x] Split by seed `20261109 + 100 + 6`, before any capture run on a figure of the stratum; the odd figure to development, as in v0.
+- [x] `git diff` of `split.csv` and `MANIFEST.md5`: added rows only.
+
+**Result**
+- `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/offline-check.R tree`: 57 of 57 rerun with no network interface and come back holding their tree; the rows of v0 in `offline-check.csv` unchanged.
+- `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/attribution.R`: `figures/SOURCES.md` gains 59 lines and loses none (57 figures, the book's license sentence); every figure has a license (8 chapters under CC BY-NC-SA 4.0).
+- `Rscript bench/R/split-tree.R`: 29 development (28 ggplot, 1 patchwork), 28 held-out (24 ggplot, 4 patchwork). It checks that no figure of the stratum is in a capture run's table. `split.csv`: 57 lines added, 0 removed, the first 110 lines byte-identical to v0's. `MANIFEST.md5`: 121 lines added and 5 replaced, the five being files that grew by rows (`sample.csv`, `split.csv`, `runs/attempts.csv`, `runs/offline-check.csv`, `figures/SOURCES.md`); no checksum of a v0 figure or frame changed.
+- The bench after this: 166 figures (109 + 57), 84 development (55 + 29), 82 held-out (54 + 28), the two parts reported apart.
 
 ---
 
@@ -155,7 +177,7 @@
 
 ### Task 6: Records
 
-**Status:** `[ ]`
+**Status:** `[~]` (2026-11-11: README, design notes and dev log written; closing notes when Task 5 is done)
 
 - `bench/README.md`: v1, the stratum's row in *Sources*, seed and allocation, how it is reported.
 - Design §评测设计: a dated note under the paragraph on the population (the stratum, added after looking at v0's held-out capture run; reported apart).
@@ -167,6 +189,7 @@
 
 _(append-only; never edit completed tasks above)_
 
+- 2026-11-11 — **The figure test is kept as fixed, with what it loses said.** **Evidence:** Task 3's table: one help topic draws its tree through `ggplot()` and three vignettes draw only `aplot` compositions; all four are "no figure" outcomes. **Effect:** none on the split, which is made on the 57 figures the test fixed before the run retained. Widening the test now (a ggplot whose data is a tree; an `aplot` whose plots hold a `ggtree`) would be a change made after looking at outcomes; it is the owner's to decide, as a later round over the same 83 PSUs, reported as such. aplot is also a kind of object gloss has no engine for yet, which is its own finding.
 - 2026-11-11 — **The owner settles decisions 1 and 2: the frame is (b), help topics, the 27 packages and the chapters of the ggtree book; every available PSU is taken.** **Evidence:** the owner's answers, asked before anything was drawn; the book's source at `1af8f25` (2022-07-13): `_bookdown.yml` builds 19 files, 16 of them chapters with evaluated R code; its online version is CC BY-NC-SA 4.0 (`index.Rmd`). **Effect:** the frame is 85 PSUs, 84 in scope, 83 available (Task 1's result above is the frame before the book: 69). A chapter is one PSU, so the book gives at most 16 figures, one per chapter by seed, as every PSU does. Task 3 gains a new kind of source: a chapter's chunks that knitr evaluates, run alone after the book's shared setup (`setup.R` with `p_load(x)` read as `require(x)`, since the harness installs; `conflicted.R` and `software-link.R` inlined), in the `bioc` environment, with files the chapter reads from the repository vendored like URL data. A chapter that needs an earlier chapter's objects ends as a code error and is counted. Assumption 2 is restated for the book, whose figures are often several trees side by side: a figure counts when its object is a `ggtree` or a patchwork that holds one; cowplot and aplot compositions cannot be told by class and are counted in Task 3's table of what every PSU drew. The frozen code of a chapter is redistributed under the book's license, named in `bench/figures/SOURCES.md`; the allocation of "all 67" is read as all of the widened frame (Claude's reading of the two answers together).
 
 ## Closing notes
