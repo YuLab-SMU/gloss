@@ -52,3 +52,10 @@ dev_docs/*_files/
 # Bench: data vendored into frozen figures stays out of git (owner, 2026-11-10;
 # several sources state no license). Checksums: bench/MANIFEST.md5; URLs: meta.json.
 bench/figures/*/data/
+
+# Label sheets: the page images and outlined SVGs are rebuilt by
+# bench/R/label-sheet.R (38 MB for the development set); the leaf and element
+# tables labels resolve against are kept. The pilot's sheets are kept whole
+# in bench/labels/pilot/sheets/.
+bench/labels/sheets/*.png
+bench/labels/sheets/*.svg
