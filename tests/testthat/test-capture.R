@@ -567,3 +567,34 @@ test_that("a dense base leaf becomes a raster with the same element table", {
   png <- ras$substrate$rasters[[id]]
   expect_identical(png[1:4], as.raw(c(0x89, 0x50, 0x4e, 0x47)))
 })
+
+test_that("gloss() leaves a recorded plot unchanged, so it can be captured again", {
+  # Development binding run 2026-11-11-1205: three grid figures, handed to
+  # gloss as recorded plots, failed their second capture in the same session
+  # ("0 probes drew"). The first capture had wrapped the leaves of grid's
+  # display list in place, and that list is the one inside the recording.
+  record <- function(draw) local({
+    s <- svglite::svgstring(width = 4, height = 3)
+    on.exit(grDevices::dev.off())
+    grDevices::dev.control("enable")
+    draw()
+    grDevices::recordPlot()
+  })
+  pages <- list(
+    grid = record(function() {
+      grid::grid.newpage()
+      grid::grid.rect(gp = grid::gpar(fill = "grey90"))
+      grid::grid.points(grid::unit(c(0.2, 0.5), "npc"), grid::unit(c(0.3, 0.6), "npc"))
+    }),
+    base = record(function() graphics::plot(1:10, (1:10)^2))
+  )
+  for (nm in names(pages)) {
+    rp <- pages[[nm]]
+    before <- serialize(rp, NULL)
+    first <- gloss(rp, width = 4, height = 3, context = FALSE)
+    expect_identical(serialize(rp, NULL), before, label = paste(nm, "recording after the first capture"))
+    second <- gloss(rp, width = 4, height = 3, context = FALSE)
+    expect_identical(second$substrate$elements, first$substrate$elements, label = nm)
+    expect_identical(second$substrate$leaves, first$substrate$leaves, label = nm)
+  }
+})

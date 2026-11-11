@@ -444,7 +444,12 @@ back_to_device <- function(dev) {
 # Draw `x` the way R displays it; returns how.
 draw_input <- function(x) {
   if (inherits(x, "recordedplot")) {
-    grDevices::replayPlot(x)
+    # Replay a deep copy. grid's display list, restored from the recording,
+    # is the list inside the recording itself: wrapping its leaves in place
+    # changed the caller's object, and a second capture of it failed (bench
+    # run 2026-11-11-1205, three grid figures). A copy through serialize()
+    # replays as two pages; a deep copy in memory replays as one.
+    grDevices::replayPlot(rlang::duplicate(x, shallow = FALSE))
     return("replayPlot()")
   }
   if (is.function(x)) {
