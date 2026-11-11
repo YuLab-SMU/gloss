@@ -1,0 +1,8 @@
+ggplot2 4.0.3 | layers: 5 
+panel-1.gTree.19: 8 children
+  grill.gTree.17 | NULL | geom_point.points.2 | GRID.segments.3 | GRID.segments.4 | GRID.segments.5 | NULL | panel.border..zeroGrob.6
+layer 1 GeomPoint: draws a points, adding 1 child
+layer 2 GeomVline: draws a segments, adding 1 child
+layer 3 GeomHline: draws a segments, adding 1 child
+layer 4 GeomHline: draws a segments, adding 1 child
+layer 5 GeomTextRepel: draws a NULL, adding 1 child

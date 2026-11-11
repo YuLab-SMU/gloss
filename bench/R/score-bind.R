@@ -9,6 +9,11 @@
 # base: `unbound` with "states no bindings", reported apart). Their elements
 # are verified, ambiguous, failed (in a paired leaf), or in a leaf that is
 # unbound or count_mismatch.
+#
+# 2026-11-11, after scoring run 2026-11-11-1205: failed leaves are listed
+# grouped (the first version printed one row per leaf, 2000 rows for one
+# figure), and a per-figure share is added. Every number the predictions
+# 21-27 were scored on is unchanged.
 
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 1L) stop("usage: Rscript bench/R/score-bind.R <run.csv>")
@@ -71,12 +76,23 @@ if (nrow(ub)) {
   print(r[order(-r$elements), ], right = FALSE)
 }
 
-line("\n== figures with failed elements")
+line("\n== failed elements by figure, geom and tag")
 fl <- layer[layer$failed > 0, ]
 if (nrow(fl)) {
-  print(fl[, c("id", "engine", "leaf", "table", "geom", "tag", "mode", "status", "n_elements", "verified",
-               "ambiguous", "failed", "max_dev")], row.names = FALSE)
+  fl$geom[is.na(fl$geom)] <- "-"
+  print(stats::aggregate(cbind(leaves = 1, failed = failed, elements = n_elements) ~ id + engine + geom + tag + mode,
+                         fl, sum), row.names = FALSE)
 } else line("none")
+
+line("\n== checked share per figure (ggplot): the element-weighted share is dominated by the largest figures")
+if (nrow(gg)) {
+  pf <- stats::aggregate(cbind(elements = n_elements, checked = verified + ambiguous, failed = failed) ~ id + stratum, gg, sum)
+  pf$share <- round(pf$checked / pf$elements, 3)
+  line("figures %d; median share %.3f; share >= 0.8 in %d; share 0 in %d; largest two figures hold %d of %d elements",
+       nrow(pf), stats::median(pf$share), sum(pf$share >= 0.8), sum(pf$share == 0),
+       sum(sort(pf$elements, decreasing = TRUE)[1:min(2, nrow(pf))]), sum(pf$elements))
+  print(pf[order(pf$share, -pf$elements), ], row.names = FALSE)
+}
 
 line("\n== ambiguous elements: in dense leaves / elsewhere")
 line("%d / %d", sum(layer$ambiguous[layer$dense %in% TRUE]), sum(layer$ambiguous[!layer$dense %in% TRUE]))

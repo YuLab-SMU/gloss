@@ -222,3 +222,26 @@ What is bound, by construction and not predicted: ggplot leaves under a layer an
 27. **No captured figure ends in a bind error** (the engine's bind step and the core's checks never stop with an error).
 
 **What would change the plan:** 22 wrong for point layers (assumption 1 of the plan: order binding); 21 far below 80% with the unbound share spread over many classes (the geometry families are too few). Anything else wrong is reported as wrong and goes to the dev log.
+
+### Predictions 21–27 on the development set (scored 2026-11-11)
+
+Run `runs/2026-11-11-1205-bind-dev.*` at `77c21ff` (the commit holding the predictions; clean tree), the first and only complete run before any change; scored by `bench/R/score-bind.R` at that commit. The score file was regenerated afterwards with the scorer's failure listing grouped and a per-figure table added (see the scorer's header); no number below changed. 54 figures captured, 1 not (gallery-053, the animation, as in every capture run).
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 21. ggplot: ≥ 80% of layer elements checked (point guess 90%) | 8094 of 24800 = 32.6%. Per figure: median 99.6%, 17 of 31 figures ≥ 80%, 9 at 0% | **wrong** |
+| 22. ggplot: ≤ 1% of layer elements fail; no element of a point layer fails | 2038 failed (8.2%); 0 failed in point layers (`GeomPoint`: 1132 verified, 122 ambiguous, over circles, polygons and rects) | **wrong** in its first half, right in its second |
+| 23. exts checked ≥ 10 points below gallery | exts 32.0%, gallery 34.2% | **wrong** |
+| 24. Largest unbound class among ggplot layer leaves, by leaves: "neither one per row nor one per group" | "no comparison for `<text>` elements paired one per group", 2000 leaves, one figure (gallery-029); then ggbreak's print method, 29; then "neither one per row nor one per group", 22 | **wrong** |
+| 25. Heatmap: no body cell fails; ≥ 90% of body-leaf elements verified | 250 of 250 body cells verified, colour included; annotations and dendrograms (156 elements) unbound by design | right |
+| 26. < 5% of checked ggplot elements outside dense leaves ambiguous | 126 of 8094 (1.6%); none in dense leaves | right |
+| 27. No captured figure ends in a bind error | 3 (gallery-056, exts-007, bioc-001, all grid pages handed over as recorded plots) | **wrong** |
+
+- **21 and 23 are wrong because two figures hold most of the elements, and both are binder defects, not failures of the order assumption.** exts-022 (12275 elements, half of all ggplot layer elements) is unbound: its panels hold more children than background, 5 layers and foreground, which the binder requires before it pairs anything. gallery-029 (4060) draws `geom_label()`, whose own `draw_panel` makes one child per row; the binder assumed one per group, paired each label with the whole group, and the check failed all 2000 label boxes. The checks did what they are for: a wrong pairing came out `failed`, not `verified`.
+- **22's first half is wrong for the same reason and three smaller ones.** Of 2038 failed elements, 2000 are gallery-029's labels; 30 are `geom_area()` outlines, drawn through `ymax` and compared with `y` (gallery-024); 8 are labels that are drawn away from their rows by design (ggrepel, gallery-059; plotROC's offset labels, exts-014). Its second half, the one the plan would change on, holds: no element of a point layer failed.
+- **27 is wrong because of a defect in capture, not in binding.** The runner captures each figure twice in one process (once for the capture record, once inside `bind_capture()`). The first capture of a recorded grid page wrapped the leaves of grid's display list in place, and that list is the one inside the caller's recording, so the second capture failed its integrity check ("0 probes drew"). Fixed in `98ad505` with a test that fails before; a gloss user capturing the same recording twice would have hit it too.
+- **The plan's trigger is not met.** Assumption 1 would change the plan if point layers failed (none did) or if the unbound share were spread over many classes; it is concentrated in two figures and two causes, both in the binder.
+
+#### Changes made after looking at run 2026-11-11-1205
+
+- `98ad505`: recorded plots are replayed from a deep copy (above).
