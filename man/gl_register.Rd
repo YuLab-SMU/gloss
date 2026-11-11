@@ -55,9 +55,15 @@ describes an array.
 
 Fields by kind:
 \itemize{
-\item \code{engine}: \code{classes}, \code{prepare(x, width, height)}, \code{grob(state)};
-optional \code{tables(state)}, \code{panels(state, substrate)}, \code{describe(state)},
-\code{example()}, \code{packages}.
+\item \code{engine}: \code{classes}, \code{prepare(x, width, height)}; optional \code{page}
+(\code{"grid"}, the default, or \code{"base"}: the kind of page its inputs draw,
+which chooses among engines that declare the same class), \code{draw(state)},
+\code{tables(state)}, \code{panels(state, substrate)}, \code{describe(state)},
+\code{example()}, \code{packages}. gloss draws the input itself and captures that
+page; \code{draw} is only for an engine that must keep what drawing returns.
+It draws on the current device and returns the state to use afterwards,
+and its page must be the page the input draws (the contract test checks
+this on \code{example()}).
 \item \code{rules}: \code{engine}, \code{rules}.
 \item \code{layer}: \code{body} (schema); optional \code{depends}, \code{verify}, \code{scope}.
 \item \code{check}: \code{run(table, args)}; \code{schema} describes \code{args}.

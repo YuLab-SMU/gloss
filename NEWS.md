@@ -1,5 +1,13 @@
 # gloss 0.0.0.9000
 
+## Page capture, grid pages (2026-11-11, ADR-0006)
+
+- `gloss()` lets the figure draw itself on its svglite device and captures that page: an object is printed (`show()` for S4), a grob drawn with `grid.draw()`, a function called, a recorded plot replayed. Engines no longer build the grob gloss draws. An object with its own `print()` method is captured as what that method draws (ggbreak's cut axis, ggExtra's marginal plots); the refusal by class is gone.
+- gloss compares the captured page with the page drawn, primitive for primitive and with clip regions. Equal: captured. A figure that draws differently each time (random label placement, for example) is captured with a warning and the verdict `not_deterministic`. A capture that changed the figure stops with an error. The verdict, the kind of page, how it was drawn and the page count are in `meta$page` and printed with the figure.
+- A function or a recorded plot that draws with grid is captured by the grid engine; it used to stop with "EXPR must be a length 1 vector". A grob whose name is a vector (treemap) is captured. A page with nothing on it and a page mixing base graphics and grid are refused with the reason. An input that draws several pages is captured as its last page, with a warning.
+- Engine plugins: `grob(state)` is no longer part of the contract. New optional fields: `page` (`"grid"` or `"base"`), which chooses among engines declaring the same class, and `draw(state)`, for an engine that must keep what drawing returns (ComplexHeatmap's drawn list); its page must be the page the input draws, and `gl_test_plugin()` checks it on `example()`.
+- Base figures are still drawn through gridGraphics, now as the base engine's drawing step.
+
 ## Fixes found by the bench development set (2026-11-10)
 
 - A ggplot without layers is captured, alone or as a wrapped patchwork element (`wrap_elements()`, `wrap_ggplot_grob()`); it used to fail with "subscript out of bounds".

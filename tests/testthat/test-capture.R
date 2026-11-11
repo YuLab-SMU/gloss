@@ -135,27 +135,152 @@ test_that("a ggplot extension that builds into something else is refused, alone 
   expect_equal(gloss(p, context = FALSE)$meta$engine, "ggplot")
 })
 
-test_that("a figure that prints through its own method is refused, not captured as another figure", {
-  # A subclass with its own print() can draw something other than the grob the
-  # engine builds: ggbreak's ggcut (exts-018) prints a cut axis and gloss
-  # captured the uncut plot, with no error (bench 2026-11-10). The check is by
-  # class: ggExtra's ggMarginal() (gallery-052) is refused too, although its
-  # print() draws the same grob (a known over-refusal, see R/core-substrate.R).
+test_that("an object whose print method draws another figure is captured as what print draws", {
+  # Replaces "a figure that prints through its own method is refused"
+  # (efe9936): ADR-0006 point 5 removes the refusal by class. ggbreak's ggcut
+  # (exts-018) prints a cut axis, and the engine-built grob was the uncut plot;
+  # gloss now captures the page print() draws. ggExtra (gallery-052) was
+  # refused by class although its capture was correct.
   skip_if_no("ggplot2")
-  own_print <- function(x, ...) invisible(NULL)
-  assign("print.gloss_test_print", own_print, envir = globalenv())
-  on.exit(rm("print.gloss_test_print", envir = globalenv()), add = TRUE)
+  registerS3method("print", "gloss_test_print", function(x, ...) {
+    y <- x
+    class(y) <- setdiff(class(x), "gloss_test_print")
+    print(y + ggplot2::labs(title = "drawn by print"))
+    invisible(x)
+  }, envir = baseenv())
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
   custom <- p
   class(custom) <- c("gloss_test_print", class(p))
-  expect_error(gloss(custom, context = FALSE), "custom print method")
-  # The standard print paths still capture.
-  expect_equal(gloss(p, context = FALSE)$meta$engine, "ggplot")
-  expect_equal(gloss(grid::rectGrob(), context = FALSE)$meta$engine, "grid")
+  fig <- gloss(custom, width = 5, height = 4, context = FALSE)
+  plain <- plain_svg(function() print(custom), 5, 4)
+  expect_equal(fig$meta$engine, "ggplot")
+  expect_true("drawn by print" %in% fig$substrate$elements$text)
+  expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain))
+  expect_identical(clip_regions(fig$substrate$scene), clip_regions(plain))
+  expect_equal(fig$meta$page$verdict, "equal")
   if (requireNamespace("ggExtra", quietly = TRUE)) {
     g <- ggExtra::ggMarginal(p, type = "histogram")
-    expect_error(gloss(g, context = FALSE), "custom print method")
+    fig <- gloss(g, width = 5, height = 4, context = FALSE)
+    plain <- plain_svg(function() print(g), 5, 4)
+    expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain), label = "ggExtra")
+    expect_identical(clip_regions(fig$substrate$scene), clip_regions(plain), label = "ggExtra clip regions")
   }
+})
+
+test_that("a grob whose name is a vector is captured", {
+  # treemap draws grid.rect(name = <one name per rectangle>) (bench
+  # gallery-056); grid draws it, grid.grab() returned a tree it cannot index.
+  draw <- function() {
+    grid::grid.newpage()
+    grid::grid.rect(x = c(0.25, 0.75), width = 0.3, height = 0.3,
+                    gp = grid::gpar(fill = c("red", "blue")), name = c("left", "right"))
+  }
+  fig <- gloss(draw, width = 3, height = 3, context = FALSE)
+  plain <- plain_svg(draw, 3, 3)
+  expect_equal(fig$meta$engine, "grid")
+  expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain))
+  lv <- fig$substrate$leaves
+  expect_equal(nrow(lv), 1L)
+  expect_equal(lv$name, "left")
+  expect_equal(c(lv$n_expected, lv$n_drawn), c(2L, 2L))
+  expect_equal(fig$meta$page$renamed, 1L)
+})
+
+test_that("a function or a recorded plot that draws with grid is captured by the grid engine", {
+  # A function drawing with grid stopped with "EXPR must be a length 1 vector"
+  # (dev log 2026-11-10-page-capture-spike): the base engine took every
+  # function. Class does not fix the page kind; the page drawn does.
+  f <- function() {
+    grid::grid.newpage()
+    grid::pushViewport(grid::viewport(width = 0.8, height = 0.8, xscale = c(0, 10), yscale = c(0, 10)))
+    grid::grid.rect(gp = grid::gpar(fill = "grey95"))
+    grid::grid.points(c(2, 5, 8), c(3, 7, 4), pch = 19, default.units = "native")
+    grid::upViewport()
+    grid::grid.text("title", y = 0.95)
+  }
+  fig <- gloss(f, width = 3, height = 3, context = FALSE)
+  plain <- plain_svg(f, 3, 3)
+  expect_equal(fig$meta$engine, "grid")
+  expect_equal(fig$meta$page$kind, "grid")
+  expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain))
+  pts <- fig$substrate$leaves[fig$substrate$leaves$class == "points", ]
+  expect_equal(c(pts$xscale0, pts$xscale1), c(0, 10))
+  rp <- local({
+    s <- svglite::svgstring(width = 3, height = 3)
+    on.exit(grDevices::dev.off())
+    grDevices::dev.control("enable")
+    f()
+    grDevices::recordPlot()
+  })
+  fig <- gloss(rp, width = 3, height = 3, context = FALSE)
+  expect_equal(fig$meta$engine, "grid")
+  expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain))
+})
+
+test_that("an empty page and a page mixing base and grid are refused with the reason", {
+  expect_error(gloss(function() invisible(NULL), context = FALSE), "drew nothing")
+  mixed <- function() {
+    graphics::plot(1:3)
+    grid::grid.text("on top", y = 0.9)
+  }
+  expect_error(gloss(mixed, context = FALSE), "base graphics and grid")
+})
+
+test_that("an input that draws several pages is captured as its last page, with a warning", {
+  f <- function() {
+    grid::grid.newpage()
+    grid::grid.rect(gp = grid::gpar(fill = "red"))
+    grid::grid.newpage()
+    grid::grid.circle(r = 0.3, gp = grid::gpar(fill = "blue"))
+  }
+  expect_warning(fig <- gloss(f, width = 3, height = 3, context = FALSE), "2 pages")
+  expect_equal(fig$meta$page$pages, 2L)
+  expect_equal(fig$substrate$leaves$class, "circle")
+  expect_identical(scene_signatures(fig$substrate$scene),
+                   scene_signatures(plain_svg(function() grid::grid.circle(r = 0.3, gp = grid::gpar(fill = "blue")), 3, 3)))
+})
+
+test_that("the self-check compares the captured page with the page drawn", {
+  # Equal: captured, and the verdict is stored and printed.
+  fig <- gloss(grid::circleGrob(r = 0.3), width = 2, height = 2, context = FALSE)
+  expect_equal(fig$meta$page$verdict, "equal")
+  expect_equal(fig$meta$page$differ, 0L)
+  expect_output(print(fig), "page: grid, .*equal to the page drawn")
+  # Not deterministic: every drawing differs, so does a plain redraw.
+  registerS3method("makeContent", "gloss_test_random", function(x) {
+    grid::setChildren(x, grid::gList(grid::pointsGrob(stats::runif(5), stats::runif(5), pch = 19)))
+  }, envir = asNamespace("grid"))
+  rnd <- grid::gTree(cl = "gloss_test_random", name = "rnd")
+  expect_warning(fig <- gloss(rnd, width = 2, height = 2, context = FALSE), "not deterministic")
+  expect_equal(fig$meta$page$verdict, "not_deterministic")
+  expect_gt(fig$meta$page$differ, 0L)
+  expect_output(print(fig), "not deterministic")
+  # Capture changed the figure while a plain redraw does not: abort.
+  local_mocked_bindings(scalar_names = function(x, acc) {
+    if (inherits(x, "rect")) x$gp <- grid::gpar(fill = "purple")
+    x
+  })
+  expect_error(gloss(grid::rectGrob(gp = grid::gpar(fill = "grey")), width = 2, height = 2, context = FALSE),
+               "changed the figure")
+})
+
+test_that("the self-check verdict follows from the three pages", {
+  a <- c("rect x=1", "circle r=2")
+  b <- c("rect x=1", "circle r=3")
+  expect_equal(page_verdict(a, a, redraw = function() stop("not needed"))$verdict, "equal")
+  expect_equal(page_verdict(a, b, redraw = function() b)$verdict, "not_deterministic")
+  expect_error(page_verdict(a, b, redraw = function() a), "changed the figure")
+  # random at draw time: the second plain redraw differs from the first
+  draws <- list(c("rect x=1", "circle r=4"), c("rect x=1", "circle r=5"))
+  n <- new.env()
+  n$k <- 0L
+  redraw <- function() {
+    n$k <- n$k + 1L
+    draws[[n$k]]
+  }
+  expect_equal(page_verdict(a, b, redraw = redraw)$verdict, "not_deterministic")
+  # deterministic redraws that disagree with the captured page: abort
+  expect_error(page_verdict(a, b, redraw = function() c("rect x=1", "circle r=4")), "changed the figure")
 })
 
 test_that("fills, clipping paths and gTree alpha are captured unchanged", {

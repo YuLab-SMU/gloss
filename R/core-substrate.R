@@ -1,39 +1,59 @@
-# Capture by graphics-group delimiting plus probes (ADR-0001).
+# Capture the page the figure draws (ADR-0006), by graphics-group delimiting
+# plus probes (ADR-0001).
 #
-# Every leaf of the grid.force()d scene becomes
+# The input draws itself on gloss's svglite device: print() or show() for an
+# object, grid.draw() for a grob, a call for a function, replayPlot() for a
+# recorded plot. That page is the reference. On a grid page the display list
+# is forced and every leaf is wrapped in place as
 #   gTree(children = gList(probe, groupGrob(leaf without vp)), vp = leaf$vp)
-# and the scene is drawn once on svglite. The device puts each leaf's output
-# in its own <g id="group-k">; the probe records the viewport path, device
-# box and native scales at draw time. Groups are then inlined in place of
-# their <use>, so the scene keeps the device's drawing order.
+# and grid redraws it. The device puts each leaf's output in its own
+# <g id="group-k">; the probe records the viewport path, device box and
+# native scales at draw time. Groups are then inlined in place of their
+# <use>, so the scene keeps the device's drawing order. The captured page is
+# compared with the page drawn before anything else is built from it.
 
 #' Capture a figure into a substrate
 #'
-#' `gloss()` draws the figure once with svglite and traces every drawn
-#' element to the leaf grob, viewport and panel that produced it. The result
-#' is a read-only substrate plus the figure's data tables, each with an
-#' inferred row key, and the context sniffed at capture time.
+#' `gloss()` lets the figure draw itself on an svglite device, captures that
+#' page, and traces every drawn element to the leaf grob, viewport and panel
+#' that produced it. The result is a read-only substrate plus the figure's
+#' data tables, each with an inferred row key, and the context sniffed at
+#' capture time.
+#'
+#' The figure draws itself the way R displays it: an object is printed
+#' (`show()` for S4), a grob is drawn with [grid::grid.draw()], a function is
+#' called and a recorded plot is replayed. An object with its own `print()`
+#' method is captured as what that method draws. If the input draws several
+#' pages, the last is captured with a warning. A page with nothing on it, and
+#' a page that mixes base graphics and grid, are refused with the reason.
+#'
+#' gloss then compares the captured page with the page the figure drew,
+#' primitive for primitive and with the clip region of each. When they are
+#' equal the figure is captured. When a plain redraw of the page differs from
+#' the first drawing too, the figure is not deterministic (it draws random
+#' numbers, for example): it is captured with a warning, and the verdict is
+#' stored in `meta$page`. When only the capture differs, gloss stops: it would
+#' otherwise hold another figure.
 #'
 #' The engine is chosen from the classes the registered engine plugins
-#' declare, in the order of `class(x)`; `engine` overrides the choice.
-#' Built-in engines handle ggplot2 plots, patchwork compositions,
-#' ComplexHeatmap heatmaps, base graphics (a `recordedplot` or a function
-#' that draws the plot, through gridGraphics) and any grid grob.
-#'
-#' A figure whose `print()` method is not a standard draw the engines follow
-#' is refused with its reason: it could draw a different figure from the grob
-#' gloss builds.
+#' declare, in the order of `class(x)`; `engine` overrides the choice. When
+#' several engines declare the class but capture different kinds of page (a
+#' function can draw with base graphics or with grid), the page drawn
+#' chooses. Built-in engines handle ggplot2 plots, patchwork compositions,
+#' ComplexHeatmap heatmaps, base graphics (a `recordedplot` or a function that
+#' draws the plot, through gridGraphics) and any grid grob, function or
+#' recorded plot that draws with grid.
 #'
 #' Within each leaf the expected number of drawn elements is compared with
 #' the number the device drew. A leaf whose counts differ keeps its
 #' structure but is marked `count_mismatch` and is never bound to data rows.
 #'
 #' Leaves that draw at least `dense` non-text elements are kept as a raster
-#' drawn by a PNG device from the same grob, plus a binary index of their
-#' element geometry; queries treat them like any other leaf.
+#' drawn by a PNG device from the same display list, plus a binary index of
+#' their element geometry; queries treat them like any other leaf.
 #'
 #' @param x A figure: a ggplot, patchwork, `Heatmap`/`HeatmapList`,
-#'   `recordedplot`, a function drawing a base plot, or a grob.
+#'   `recordedplot`, a function that draws a plot, or a grob.
 #' @param ... Passed to methods.
 #' @param width,height Size in inches. Defaults to the current knitr chunk's
 #'   figure size, or 7 by 5.
@@ -64,8 +84,8 @@ gloss.default <- function(x, ..., width = NULL, height = NULL, dense = 10000,
   if (identical(call[[1]], as.symbol("gloss.default"))) call[[1]] <- as.symbol("gloss")
   env <- parent.frame()
   size <- figure_size(width, height)
-  eng <- find_engine(x, engine)
-  gl_capture(x, eng, width = size$width, height = size$height, dense = dense,
+  engines <- engine_candidates(x, engine)
+  gl_capture(x, engines, width = size$width, height = size$height, dense = dense,
              context = context, expr = expr, call = call, env = env,
              size_basis = size$basis)
 }
@@ -81,11 +101,15 @@ figure_size <- function(width, height) {
   list(width = as.double(width %||% 7), height = as.double(height %||% 5), basis = basis)
 }
 
-find_engine <- function(x, engine = NULL) {
-  if (!is.null(engine)) return(gl_plugin("engine", engine))
+# The engines that declare the first class of `x` any engine declares, most
+# recently registered first. Candidates that capture different kinds of page
+# (a function: base or grid) are told apart by the page drawn.
+engine_candidates <- function(x, engine = NULL) {
+  if (!is.null(engine)) return(list(gl_plugin("engine", engine)))
   engines <- rev(plugins_of("engine"))
   for (cls in class(x)) {
-    for (e in engines) if (cls %in% e$classes) return(e)
+    hit <- Filter(function(e) cls %in% e$classes, engines)
+    if (length(hit)) return(unname(hit))
   }
   cli::cli_abort(c(
     "No engine plugin handles an object of class {.cls {class(x)}}.",
@@ -93,41 +117,7 @@ find_engine <- function(x, engine = NULL) {
   ))
 }
 
-# A subclass with its own print() method can draw a different figure from the
-# grob the engine builds: ggbreak's print.ggcut draws a cut axis, and gloss
-# captured the uncut plot with no error (bench 2026-11-10: exts-018).
-# Refuse before capture instead of silently capturing another figure.
-# The check is by class, so it also refuses objects whose print() draws
-# exactly the grob the engine would: ggExtra's print.ggExtraPlot is
-# grid.draw(x) (gallery-052; 83 = 83 primitives, dev log
-# 2026-11-10-page-capture-spike). Known over-refusal, kept until the capture
-# route is decided (idea/2026-11-10-page-capture.md).
-# Only print() is checked: extensions whose ggplot_build() returns something
-# other than a built ggplot are already refused by build_ggplot().
-standard_print_methods <- function() {
-  classes <- c("ggplot2::ggplot", "ggplot", "patchwork", "gtable", "grob",
-               "gList", "recordedplot", "function")
-  out <- lapply(classes, function(cls) {
-    tryCatch(utils::getS3method("print", cls, optional = TRUE), error = function(e) NULL)
-  })
-  out[!vapply(out, is.null, logical(1))]
-}
-
-check_print_dispatch <- function(x) {
-  std <- standard_print_methods()
-  for (cls in class(x)) {
-    m <- tryCatch(utils::getS3method("print", cls, optional = TRUE),
-                  error = function(e) NULL)
-    if (is.null(m)) next
-    if (any(vapply(std, function(f) identical(f, m), logical(1)))) return(invisible(NULL))
-    cli::cli_abort(c(
-      sprintf("%s has a custom print method (print.%s); gloss would capture another figure.",
-              class(x)[1], cls),
-      i = "The engine draws a grob built from the object. Draw the object's own print output as a grid scene instead."
-    ))
-  }
-  invisible(NULL)
-}
+engine_page <- function(engine) engine$page %||% "grid"
 
 #' Capture with a given engine plugin
 #'
@@ -135,7 +125,9 @@ check_print_dispatch <- function(x) {
 #' the plugin object.
 #'
 #' @param x The figure.
-#' @param engine An engine plugin, as returned by [gl_plugin()].
+#' @param engine An engine plugin, as returned by [gl_plugin()], or a list of
+#'   candidate engine plugins; when the candidates capture different kinds of
+#'   page, the page `x` draws chooses among them.
 #' @param width,height Size in inches.
 #' @param dense,context See [gloss()].
 #' @param expr,call,env The expression, call and calling environment, used
@@ -147,41 +139,69 @@ check_print_dispatch <- function(x) {
 gl_capture <- function(x, engine, width = 7, height = 5, dense = 10000,
                        context = TRUE, expr = NULL, call = NULL,
                        env = parent.frame(), size_basis = "argument") {
-  check_print_dispatch(x)
-  state <- engine$prepare(x, width, height)
-  cap <- capture_scene(function() engine$grob(state), width, height)
-  sub <- build_substrate(cap, width, height, dense)
-  if (!is.null(engine$panels)) {
-    pan <- engine$panels(state, sub)
+  engines <- if (inherits(engine, "gloss_plugin")) list(engine) else engine
+  cap <- capture_page(x, engines, width, height)
+  eng <- cap$engine
+  state <- cap$state
+  doc <- inline_groups(cap)
+  check <- page_verdict(
+    drawn = page_signature(xml2::read_xml(cap$drawn)),
+    captured = page_signature(doc),
+    redraw = function() page_signature(xml2::read_xml(plain_svg(function() draw_dl(cap$orig), width, height)))
+  )
+  if (cap$pages > 1L) {
+    cli::cli_warn(c(
+      "The input drew {cap$pages} pages; gloss captured the last one.",
+      i = "The page count is stored in {.code meta$page$pages}."
+    ))
+  }
+  if (identical(check$verdict, "not_deterministic")) {
+    cli::cli_warn(c(
+      "The figure is not deterministic: drawn again, {check$differ} of its {check$primitives} primitive{?s} differ from the first drawing.",
+      i = "gloss captured a redraw. The verdict is stored in {.code meta$page$verdict}."
+    ))
+  }
+  sub <- substrate_from_doc(doc, cap, width, height, dense)
+  if (!is.null(eng$panels)) {
+    pan <- eng$panels(state, sub)
     if (!is.null(pan)) {
       sub$panels <- pan$panels
       sub$leaves$panel <- unname(pan$leaf_panel[sub$leaves$id])
     }
   }
-  tables <- if (!is.null(engine$tables)) engine$tables(state) else list()
+  tables <- if (!is.null(eng$tables)) eng$tables(state) else list()
   tables <- lapply(tables, new_table)
   names(tables) <- vapply(tables, `[[`, "", "name")
   fig <- new_figure(
     meta = list(
       gloss = gloss_version(),
       api = gloss_api_version,
-      engine = engine$name,
-      engine_version = engine$version,
+      engine = eng$name,
+      engine_version = eng$version,
       class = class(x),
       width = width,
       height = height,
       size_basis = size_basis,
       dense = as.double(dense),
       device = paste("svglite", pkg_version_or_na("svglite")),
-      created = now_utc()
+      created = now_utc(),
+      page = list(
+        kind = cap$kind,
+        drawn_by = cap$drawn_by,
+        pages = cap$pages,
+        verdict = check$verdict,
+        differ = check$differ,
+        primitives = check$primitives,
+        renamed = cap$renamed
+      )
     ),
     substrate = sub,
     tables = tables,
     context = list(),
-    plugins = plugin_row(engine)
+    plugins = plugin_row(eng)
   )
   if (isTRUE(context)) {
-    input <- list(x = x, expr = expr, call = call, env = env, engine = engine$name,
+    input <- list(x = x, expr = expr, call = call, env = env, engine = eng$name,
                   state = state, tables = tables, width = width, height = height,
                   substrate = sub)
     sniffed <- sniff_context(input)
@@ -289,7 +309,166 @@ expected_count <- function(g) {
 
 # ---- drawing ---------------------------------------------------------------
 
-capture_scene <- function(make_grob, width, height) {
+# Draw `x` on a fresh svglite device, choose the engine and capture the page.
+# Returns what the substrate is built from (`svg`, the captured page, and the
+# probes and leaves), the page first drawn (`drawn`), the display list before
+# and after wrapping (`orig`, `dl`), and how the page was drawn.
+capture_page <- function(x, engines, width, height) {
+  prev <- grDevices::dev.cur()
+  on.exit(if (prev > 1L && prev %in% grDevices::dev.list()) grDevices::dev.set(prev), add = TRUE)
+  dev <- open_page_device(width, height)
+  on.exit(close_page_device(dev), add = TRUE)
+  kinds <- unique(vapply(engines, engine_page, ""))
+  eng <- if (length(kinds) == 1L) engines[[1]] else NULL
+  state <- NULL
+  if (!is.null(eng)) state <- eng$prepare(x, width, height)
+  drawn_by <- if (!is.null(eng$draw)) draw_engine(eng, state, dev) else draw_input(x)
+  if (is.list(drawn_by)) {
+    state <- drawn_by$state
+    drawn_by <- "the engine"
+  }
+  back_to_device(dev)
+  pages <- length(dev$read())
+  page <- page_kind()
+  if (is.null(eng)) {
+    # Class did not fix the page kind: the page drawn chooses the engine.
+    refuse_page(page, NULL)
+    hit <- Filter(function(e) identical(engine_page(e), page$kind), engines)
+    if (!length(hit)) refuse_page(page, engines[[1]])
+    eng <- hit[[1]]
+    state <- eng$prepare(x, width, height)
+    if (!is.null(eng$draw)) {
+      # The engine draws the page itself; start again on a fresh device.
+      close_page_device(dev)
+      dev <- open_page_device(width, height)
+      state <- draw_engine(eng, state, dev)$state
+      drawn_by <- "the engine"
+      back_to_device(dev)
+      page <- page_kind()
+    }
+  }
+  refuse_page(page, eng)
+  drawn_at <- length(dev$read())
+  cap <- capture_grid_page()
+  close_page_device(dev)
+  all_pages <- as.character(dev$read())
+  # The page drawn is closed once grid starts the next one; keep it and the last.
+  cap$drawn <- all_pages[drawn_at]
+  cap$svg <- all_pages[length(all_pages)]
+  cap$engine <- eng
+  cap$state <- state
+  cap$kind <- page$kind
+  cap$drawn_by <- drawn_by
+  cap$pages <- as.integer(pages)
+  cap
+}
+
+open_page_device <- function(width, height) {
+  s <- svglite::svgstring(width = width, height = height, standalone = TRUE)
+  dev <- grDevices::dev.cur()
+  # Devices that support graphics groups report their compositing operators.
+  comp <- grDevices::dev.capabilities("compositing")$compositing
+  if (!is.character(comp) || !length(comp)) {
+    grDevices::dev.off(dev)
+    cli::cli_abort("The capture device does not support graphics groups (needs R >= 4.2 and svglite >= 2.2).")
+  }
+  # Base graphics are recorded only on a device with its display list on.
+  grDevices::dev.control("enable")
+  list(dev = dev, read = s)
+}
+
+close_page_device <- function(dev) {
+  if (dev$dev %in% grDevices::dev.list()) grDevices::dev.off(dev$dev)
+  invisible()
+}
+
+# The input may open, switch or close devices while it draws.
+back_to_device <- function(dev) {
+  if (!dev$dev %in% grDevices::dev.list()) {
+    cli::cli_abort(c(
+      "The input closed gloss's device while drawing, so there is no page to capture.",
+      i = "gloss captures the page the input draws on the device it opens."
+    ))
+  }
+  if (grDevices::dev.cur() != dev$dev) grDevices::dev.set(dev$dev)
+  invisible()
+}
+
+# Draw `x` the way R displays it; returns how.
+draw_input <- function(x) {
+  if (inherits(x, "recordedplot")) {
+    grDevices::replayPlot(x)
+    return("replayPlot()")
+  }
+  if (is.function(x)) {
+    x()
+    return("calling the function")
+  }
+  if (inherits(x, c("grob", "gList"))) {
+    grid::grid.newpage()
+    grid::grid.draw(x)
+    return("grid.draw()")
+  }
+  if (isS4(x)) {
+    methods::show(x)
+    return("show()")
+  }
+  print(x)
+  "print()"
+}
+
+# An engine's own drawing step keeps what drawing returns (ADR-0006 point 4);
+# the contract test checks that its page is the input's own page.
+draw_engine <- function(eng, state, dev) {
+  out <- eng$draw(state)
+  list(state = if (is.null(out)) state else out)
+}
+
+# What the current page holds: base graphics operations on the device's
+# display list, grid grobs on grid's.
+page_kind <- function() {
+  rp <- tryCatch(grDevices::recordPlot(), error = function(e) NULL)
+  ops <- if (is.null(rp)) character() else vapply(rp[[1]], dl_op, "")
+  base <- any(startsWith(ops, "C_") & ops != "C_par")
+  grobs <- length(grid::grid.ls(viewports = FALSE, recursive = FALSE, print = FALSE)$name)
+  kind <- if (base && grobs > 0L) "mixed" else if (base) "base" else if (grobs > 0L) "grid" else "empty"
+  list(kind = kind, base_ops = sum(startsWith(ops, "C_") & ops != "C_par"), grobs = grobs)
+}
+
+# Name of the graphics call behind a display-list entry; "call" for entries
+# that are not a registered native routine.
+dl_op <- function(el) {
+  f <- tryCatch(el[[2]][[1]], error = function(e) NULL)
+  if (is.list(f) && !is.null(f$name)) f$name else "call"
+}
+
+# Stop on a page gloss cannot capture with `eng`; with `eng = NULL`, only on
+# pages no engine can capture.
+refuse_page <- function(page, eng) {
+  if (identical(page$kind, "empty")) {
+    cli::cli_abort(c(
+      "The input drew nothing on gloss's device.",
+      i = "gloss captures the page the input draws: it prints an object, calls a function or replays a recorded plot.",
+      i = "An animation, or code that draws on another device, leaves this page empty."
+    ))
+  }
+  if (identical(page$kind, "mixed")) {
+    cli::cli_abort(c(
+      "The page mixes base graphics and grid ({page$base_ops} base operation{?s}, {page$grobs} grid grob{?s}); gloss cannot attribute its elements.",
+      i = "Capture a page drawn by one graphics system."
+    ))
+  }
+  if (!is.null(eng) && identical(page$kind, "base")) {
+    cli::cli_abort(c(
+      "The input drew a base graphics page, which engine {.val {eng$name}} cannot capture.",
+      i = "Base pages are captured by the base engine, through gridGraphics until gloss captures them directly."
+    ))
+  }
+  invisible()
+}
+
+# Wrap the grid display list of the current device in place and redraw it.
+capture_grid_page <- function() {
   rec <- new_env()
   rec$n <- 0L
   rec$order <- character()
@@ -299,30 +478,113 @@ capture_scene <- function(make_grob, width, height) {
   acc$leaves <- list()
   acc$grobs <- list()
   acc$rec <- rec
+  acc$renamed <- 0L
+  acc$orig <- list()
+  acc$dl <- list()
+  grid::grid.force()
+  grid::grid.DLapply(function(elt) {
+    i <- length(acc$orig) + 1L
+    acc$orig[i] <- list(elt)
+    new <- if (inherits(elt, "grob")) wrap_leaves(scalar_names(elt, acc), character(), acc) else elt
+    acc$dl[i] <- list(new)
+    new
+  })
+  grid::grid.refresh()
+  list(leaves = acc$leaves, probes = rec$probe, order = rec$order, grobs = acc$grobs,
+       orig = acc$orig, dl = acc$dl, renamed = acc$renamed)
+}
 
-  s <- svglite::svgstring(width = width, height = height, standalone = TRUE)
-  dev <- grDevices::dev.cur()
-  closed <- FALSE
-  on.exit(if (!closed && dev %in% grDevices::dev.list()) grDevices::dev.off(dev), add = TRUE)
-  # Devices that support graphics groups report their compositing operators.
-  comp <- grDevices::dev.capabilities("compositing")$compositing
-  if (!is.character(comp) || !length(comp)) {
-    cli::cli_abort("The capture device does not support graphics groups (needs R >= 4.2 and svglite >= 2.2).")
+# A grob's name is one string, but grid does not check it: treemap draws
+# grid.rect(..., name = <one name per rectangle>) (bench gallery-056). Drawing
+# ignores the name, so the first is kept and the grob counted.
+scalar_names <- function(x, acc) {
+  if (length(x$name) != 1L) {
+    acc$renamed <- acc$renamed + 1L
+    x$name <- as.character(x$name)[1]
   }
+  if (inherits(x, "gTree") && length(x$children)) {
+    nms <- names(x$children)
+    kids <- lapply(nms, function(nm) scalar_names(x$children[[nm]], acc))
+    new_kids <- do.call(grid::gList, kids)
+    names(new_kids) <- nms
+    x$children <- new_kids
+  }
+  x
+}
+
+# Draw a list of grid display-list elements on a new page of the current
+# device, as grid.refresh() draws the display list.
+draw_dl <- function(dl) {
   grid::grid.newpage()
-  g <- make_grob()
-  grDevices::dev.set(dev)
-  if (inherits(g, "gList")) g <- grid::gTree(children = g)
-  forced <- grid::grid.force(g)
-  wrapped <- wrap_leaves(forced, character(), acc)
-  grid::grid.newpage()
-  grid::grid.draw(wrapped)
-  grDevices::dev.off(dev)
-  closed <- TRUE
-  pages <- as.character(s())
-  # The scene is forced on one page and drawn on the next; keep the last.
-  list(svg = pages[length(pages)], leaves = acc$leaves, probes = rec$probe,
-       order = rec$order, wrapped = wrapped, grobs = acc$grobs)
+  for (e in dl) if (!is.null(e)) grid::grid.draw(e, recording = FALSE)
+  invisible()
+}
+
+# ---- self-check -------------------------------------------------------------
+
+# Compare the captured page with the page drawn (ADR-0006 point 3). `drawn`
+# and `captured` are page signatures; `redraw()` returns the signature of a
+# plain redraw of the display list the capture wrapped.
+page_verdict <- function(drawn, captured, redraw) {
+  n <- length(drawn)
+  if (identical(drawn, captured)) {
+    return(list(verdict = "equal", differ = 0L, primitives = n))
+  }
+  differ <- signature_diff(drawn, captured)
+  plain <- redraw()
+  if (!identical(plain, drawn)) {
+    if (identical(plain, captured) || !identical(redraw(), plain)) {
+      return(list(verdict = "not_deterministic", differ = differ, primitives = n))
+    }
+  }
+  cli::cli_abort(c(
+    "Capture changed the figure: the captured page differs from the page drawn in {differ} primitive{?s}, while a plain redraw {if (identical(plain, drawn)) 'equals the page drawn' else 'is the same every time'}.",
+    i = "gloss stops rather than hold another figure. This is a gloss defect; please report it with the figure's code."
+  ))
+}
+
+# Primitives without a match in the other page, either way; a page with the
+# same primitives in another order counts the positions that differ.
+signature_diff <- function(a, b) {
+  ta <- table(a)
+  tb <- table(b)
+  common <- intersect(names(ta), names(tb))
+  d <- length(a) + length(b) - 2L * sum(pmin(ta[common], tb[common]))
+  if (d == 0L && !identical(a, b)) d <- sum(a != b)
+  as.integer(d)
+}
+
+# Tag, attributes and text of every drawn primitive in document order, with
+# the clip regions in force for it: the geometry of every clipPath referenced
+# by an ancestor group, outermost first (ids differ between drawings, geometry
+# does not). Attributes added by gloss (data-gloss-*) are ignored.
+page_signature <- function(doc) {
+  ns <- svg_ns(doc)
+  nodes <- xml2::xml_find_all(doc, prim_xpath(), ns)
+  if (!length(nodes)) return(character())
+  defs <- xml2::xml_find_all(doc, "//d1:clipPath", ns)
+  geom <- vapply(defs, function(d) {
+    paste(vapply(xml2::xml_children(d), function(k) {
+      a <- xml2::xml_attrs(k)
+      paste(xml2::xml_name(k), paste(names(a), a, sep = "=", collapse = " "))
+    }, ""), collapse = ";")
+  }, "")
+  names(geom) <- xml2::xml_attr(defs, "id")
+  anc <- xml2::xml_find_all(nodes, "ancestor::d1:g[@clip-path]", ns, flatten = FALSE)
+  chain <- vapply(anc, function(a) {
+    if (!length(a)) return("")
+    ids <- sub("^url\\(#(.*)\\)$", "\\1", xml2::xml_attr(a, "clip-path"))
+    paste(geom[ids], collapse = " > ")
+  }, "")
+  paste(node_signatures(nodes), "|clip:", chain)
+}
+
+node_signatures <- function(nodes) {
+  vapply(nodes, function(n) {
+    a <- xml2::xml_attrs(n)
+    a <- a[!startsWith(names(a), "data-gloss-")]
+    paste(xml2::xml_name(n), paste(sprintf("%s=%s", names(a), a), collapse = " "), xml2::xml_text(n))
+  }, "")
 }
 
 # ---- parsing ---------------------------------------------------------------
@@ -337,6 +599,11 @@ prim_xpath <- function(root = "//") {
 }
 
 build_substrate <- function(cap, width, height, dense = Inf) {
+  substrate_from_doc(inline_groups(cap), cap, width, height, dense)
+}
+
+# Parse the captured page and put each leaf's group in place of its <use>.
+inline_groups <- function(cap) {
   doc <- xml2::read_xml(cap$svg)
   ns <- svg_ns(doc)
   n_probe <- length(cap$order)
@@ -371,7 +638,11 @@ build_substrate <- function(cap, width, height, dense = Inf) {
   }
   empty_defs <- xml2::xml_find_all(doc, "//d1:defs[not(*)]", ns)
   xml2::xml_remove(empty_defs)
+  doc
+}
 
+substrate_from_doc <- function(doc, cap, width, height, dense = Inf) {
+  ns <- svg_ns(doc)
   leaves <- leaves_table(cap)
   elements <- elements_table(doc, ns)
   counts <- table(factor(elements$leaf, levels = leaves$id))
@@ -635,13 +906,14 @@ text_boxes <- function(nodes, style) {
 # ---- dense leaves -----------------------------------------------------------
 
 # Draw only the dense leaves, each with its own viewport, on a transparent
-# PNG device of the same size. Everything else is replaced by nothing, so
-# viewports and clipping are those of the captured scene.
+# PNG device of the same size, from the wrapped display list. Everything else
+# is replaced by nothing, so viewports and clipping are those of the captured
+# page.
 rasterize_leaves <- function(cap, ids, width, height, dpi = 144) {
   out <- list()
   for (id in ids) {
-    tree <- keep_only_leaf(cap$wrapped, id, cap$grobs)
-    out[[id]] <- render_png(tree, width, height, dpi)
+    dl <- lapply(cap$dl, keep_only_leaf, id = id, grobs = cap$grobs)
+    out[[id]] <- render_png(dl, width, height, dpi)
   }
   out
 }
@@ -663,7 +935,7 @@ keep_only_leaf <- function(x, id, grobs) {
   x
 }
 
-render_png <- function(tree, width, height, dpi) {
+render_png <- function(dl, width, height, dpi) {
   f <- tempfile(fileext = ".png")
   on.exit(unlink(f), add = TRUE)
   if (has_pkg("ragg")) {
@@ -672,10 +944,7 @@ render_png <- function(tree, width, height, dpi) {
     grDevices::png(f, width = width, height = height, units = "in", res = dpi, bg = "transparent")
   }
   dev <- grDevices::dev.cur()
-  tryCatch({
-    grid::grid.newpage()
-    grid::grid.draw(tree)
-  }, finally = grDevices::dev.off(dev))
+  tryCatch(draw_dl(dl), finally = grDevices::dev.off(dev))
   readBin(f, "raw", file.size(f))
 }
 
@@ -710,6 +979,16 @@ print.gloss_figure <- function(x, ...) {
     cat(sprintf("  context found: %s; not found: %s\n",
                 listing(names(x$context)[found]), listing(names(x$context)[!found])))
   }
+  pg <- m$page
+  if (!is.null(pg$verdict)) {
+    how <- switch(pg$verdict,
+      equal = sprintf("captured page equal to the page drawn (%d primitives)", pg$primitives),
+      not_deterministic = sprintf("not deterministic: drawn again, %d of %d primitives differ; the captured page is a redraw",
+                                  pg$differ, pg$primitives),
+      pg$verdict)
+    cat(sprintf("  page: %s, drawn by %s; %s\n", pg$kind, pg$drawn_by, how))
+    if (isTRUE(pg$pages > 1L)) cat(sprintf("  the input drew %d pages; the last is captured\n", pg$pages))
+  }
   if (length(x$status)) {
     for (nm in names(x$status)) cat(sprintf("  status %s: %s\n", nm, paste(format(x$status[[nm]]), collapse = ", ")))
   }
@@ -723,12 +1002,7 @@ print.gloss_figure <- function(x, ...) {
 # Attributes added by gloss (data-gloss-*) are ignored.
 scene_signatures <- function(svg) {
   doc <- xml2::read_xml(svg)
-  nodes <- xml2::xml_find_all(doc, prim_xpath(), svg_ns(doc))
-  vapply(nodes, function(n) {
-    a <- xml2::xml_attrs(n)
-    a <- a[!startsWith(names(a), "data-gloss-")]
-    paste(xml2::xml_name(n), paste(sprintf("%s=%s", names(a), a), collapse = " "), xml2::xml_text(n))
-  }, "")
+  node_signatures(xml2::xml_find_all(doc, prim_xpath(), svg_ns(doc)))
 }
 
 plain_svg <- function(draw, width, height) {

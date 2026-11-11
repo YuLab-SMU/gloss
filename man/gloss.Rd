@@ -19,7 +19,7 @@ gloss(x, ...)
 }
 \arguments{
 \item{x}{A figure: a ggplot, patchwork, \code{Heatmap}/\code{HeatmapList},
-\code{recordedplot}, a function drawing a base plot, or a grob.}
+\code{recordedplot}, a function that draws a plot, or a grob.}
 
 \item{...}{Passed to methods.}
 
@@ -39,29 +39,44 @@ class.}
 A \code{gloss_figure}.
 }
 \description{
-\code{gloss()} draws the figure once with svglite and traces every drawn
-element to the leaf grob, viewport and panel that produced it. The result
-is a read-only substrate plus the figure's data tables, each with an
-inferred row key, and the context sniffed at capture time.
+\code{gloss()} lets the figure draw itself on an svglite device, captures that
+page, and traces every drawn element to the leaf grob, viewport and panel
+that produced it. The result is a read-only substrate plus the figure's
+data tables, each with an inferred row key, and the context sniffed at
+capture time.
 }
 \details{
-The engine is chosen from the classes the registered engine plugins
-declare, in the order of \code{class(x)}; \code{engine} overrides the choice.
-Built-in engines handle ggplot2 plots, patchwork compositions,
-ComplexHeatmap heatmaps, base graphics (a \code{recordedplot} or a function
-that draws the plot, through gridGraphics) and any grid grob.
+The figure draws itself the way R displays it: an object is printed
+(\code{show()} for S4), a grob is drawn with \code{\link[grid:grid.draw]{grid::grid.draw()}}, a function is
+called and a recorded plot is replayed. An object with its own \code{print()}
+method is captured as what that method draws. If the input draws several
+pages, the last is captured with a warning. A page with nothing on it, and
+a page that mixes base graphics and grid, are refused with the reason.
 
-A figure whose \code{print()} method is not a standard draw the engines follow
-is refused with its reason: it could draw a different figure from the grob
-gloss builds.
+gloss then compares the captured page with the page the figure drew,
+primitive for primitive and with the clip region of each. When they are
+equal the figure is captured. When a plain redraw of the page differs from
+the first drawing too, the figure is not deterministic (it draws random
+numbers, for example): it is captured with a warning, and the verdict is
+stored in \code{meta$page}. When only the capture differs, gloss stops: it would
+otherwise hold another figure.
+
+The engine is chosen from the classes the registered engine plugins
+declare, in the order of \code{class(x)}; \code{engine} overrides the choice. When
+several engines declare the class but capture different kinds of page (a
+function can draw with base graphics or with grid), the page drawn
+chooses. Built-in engines handle ggplot2 plots, patchwork compositions,
+ComplexHeatmap heatmaps, base graphics (a \code{recordedplot} or a function that
+draws the plot, through gridGraphics) and any grid grob, function or
+recorded plot that draws with grid.
 
 Within each leaf the expected number of drawn elements is compared with
 the number the device drew. A leaf whose counts differ keeps its
 structure but is marked \code{count_mismatch} and is never bound to data rows.
 
 Leaves that draw at least \code{dense} non-text elements are kept as a raster
-drawn by a PNG device from the same grob, plus a binary index of their
-element geometry; queries treat them like any other leaf.
+drawn by a PNG device from the same display list, plus a binary index of
+their element geometry; queries treat them like any other leaf.
 }
 \examples{
 if (requireNamespace("ggplot2", quietly = TRUE)) {

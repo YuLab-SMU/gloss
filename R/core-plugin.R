@@ -7,6 +7,7 @@ registry <- new.env(parent = emptyenv())
 is_fn <- function(x) is.function(x)
 is_chr <- function(x) is.character(x) && length(x) >= 1L && !anyNA(x)
 is_list <- function(x) is.list(x)
+is_page_kind <- function(x) is_string(x) && x %in% c("grid", "base")
 
 # Required and optional fields per kind, each with a predicate and a label.
 plugin_kinds <- function() {
@@ -15,10 +16,12 @@ plugin_kinds <- function() {
   chr <- f(is_chr, "a character vector")
   lst <- f(is_list, "a list")
   str <- f(is_string, "a single string")
+  page <- f(is_page_kind, '"grid" or "base"')
   list(
     engine = list(
-      required = list(classes = chr, prepare = fn, grob = fn),
-      optional = list(tables = fn, panels = fn, describe = fn, example = fn, packages = chr),
+      required = list(classes = chr, prepare = fn),
+      optional = list(page = page, draw = fn, tables = fn, panels = fn, describe = fn,
+                      example = fn, packages = chr),
       contract = contract_engine
     ),
     rules = list(
@@ -84,9 +87,15 @@ gl_plugin_kinds <- function() names(plugin_kinds())
 #' describes an array.
 #'
 #' Fields by kind:
-#' * `engine`: `classes`, `prepare(x, width, height)`, `grob(state)`;
-#'   optional `tables(state)`, `panels(state, substrate)`, `describe(state)`,
-#'   `example()`, `packages`.
+#' * `engine`: `classes`, `prepare(x, width, height)`; optional `page`
+#'   (`"grid"`, the default, or `"base"`: the kind of page its inputs draw,
+#'   which chooses among engines that declare the same class), `draw(state)`,
+#'   `tables(state)`, `panels(state, substrate)`, `describe(state)`,
+#'   `example()`, `packages`. gloss draws the input itself and captures that
+#'   page; `draw` is only for an engine that must keep what drawing returns.
+#'   It draws on the current device and returns the state to use afterwards,
+#'   and its page must be the page the input draws (the contract test checks
+#'   this on `example()`).
 #' * `rules`: `engine`, `rules`.
 #' * `layer`: `body` (schema); optional `depends`, `verify`, `scope`.
 #' * `check`: `run(table, args)`; `schema` describes `args`.
@@ -176,6 +185,11 @@ plugin_problems <- function(plugin, spec) {
   }
   known <- c("kind", "name", "version", "api", "schema", "package", "description",
              names(spec$required), names(spec$optional))
+  if (identical(plugin$kind, "engine") && !is.null(plugin$grob)) {
+    out <- c(out, paste("`grob` is no longer part of the engine contract (ADR-0006): gloss captures",
+                        "the page the input draws. Supply `draw` only to keep what drawing returns."))
+    known <- c(known, "grob")
+  }
   extra <- setdiff(names(plugin), known)
   if (length(extra)) out <- c(out, sprintf("unknown field(s): %s.", paste(extra, collapse = ", ")))
   out
@@ -336,6 +350,21 @@ contract_engine <- function(plugin) {
   if (is.null(fig)) return(out)
   s <- fig$substrate
   c(out, list(
+    contract_check("its drawing step draws the page the input draws", {
+      if (is.null(plugin$draw)) "skipped: no drawing step; gloss draws the input itself"
+      else {
+        ex <- plugin$example()
+        own <- page_signature(xml2::read_xml(plain_svg(function() draw_input(ex), 7, 5)))
+        by_engine <- page_signature(xml2::read_xml(plain_svg(function() {
+          plugin$draw(plugin$prepare(ex, 7, 5))
+        }, 7, 5)))
+        if (!identical(own, by_engine)) {
+          stop(sprintf("the engine's page differs from the input's own page in %d primitives",
+                       signature_diff(own, by_engine)))
+        }
+        TRUE
+      }
+    }),
     contract_check("records the engine in the substrate", identical(fig$meta$engine, plugin$name)),
     contract_check("finds at least one leaf", nrow(s$leaves) > 0L),
     contract_check("every drawn element except the device background has a leaf", {

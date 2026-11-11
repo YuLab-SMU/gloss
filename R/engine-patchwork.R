@@ -12,7 +12,6 @@ register_engine_patchwork <- function() {
       plots <- patchwork_plots(x)
       list(plot = x, plots = plots, built = lapply(plots, build_ggplot))
     },
-    grob = function(state) patchwork::patchworkGrob(state$plot),
     tables = function(state) {
       out <- list()
       for (i in seq_along(state$plots)) {

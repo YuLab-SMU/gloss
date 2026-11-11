@@ -43,12 +43,18 @@ test_that("a third-party plugin registers, lists, runs and unregisters", {
 })
 
 test_that("a third-party engine is dispatched by class and passes the contract", {
+  # ADR-0006 point 4: the engine no longer builds a grob (the toy engine had
+  # `grob = function(state) pointsGrob(...)`); the object draws itself through
+  # its print() method and gloss captures that page.
+  registerS3method("print", "toy_plot", function(x, ...) {
+    grid::grid.newpage()
+    grid::grid.points(x$x, x$y, pch = 19, default.units = "native",
+                      vp = grid::viewport(xscale = c(0, 10), yscale = c(0, 10)))
+    invisible(x)
+  }, envir = baseenv())
   gl_register("engine", "toy", "0.1.0", package = "ext",
               classes = "toy_plot",
               prepare = function(x, width, height) list(x = x),
-              grob = function(state) grid::pointsGrob(state$x$x, state$x$y, pch = 19,
-                                                     vp = grid::viewport(xscale = c(0, 10), yscale = c(0, 10)),
-                                                     default.units = "native"),
               tables = function(state) list(list(name = "raw", data = data.frame(id = c("a", "b"), x = state$x$x, y = state$x$y))),
               example = function() structure(list(x = c(2, 8), y = c(3, 7)), class = "toy_plot"))
   on.exit(gl_unregister("engine", "toy"))
@@ -59,6 +65,50 @@ test_that("a third-party engine is dispatched by class and passes the contract",
   expect_equal(sum(fig$substrate$elements$tag == "circle"), 2L)
   res <- gl_test_plugin("engine", "toy")
   expect_false(any(res$passed %in% FALSE))
+})
+
+test_that("an engine no longer builds a grob, and a drawing step must draw the input's own page", {
+  expect_error(gl_register("engine", "old", "0.1.0", classes = "old_plot",
+                           prepare = function(x, width, height) list(x = x),
+                           grob = function(state) grid::rectGrob()),
+               "no longer part of the engine contract")
+  expect_error(gl_register("engine", "bad", "0.1.0", classes = "x", page = "pdf",
+                           prepare = function(x, width, height) list(x = x)), "page")
+  # A drawing step that keeps what drawing returns, and draws the same page.
+  registerS3method("print", "toy_drawn", function(x, ...) {
+    grid::grid.newpage()
+    grid::grid.circle(r = x$r)
+    invisible(x)
+  }, envir = baseenv())
+  ex <- function() structure(list(r = 0.3), class = "toy_drawn")
+  gl_register("engine", "kept", "0.1.0", classes = "toy_drawn",
+              prepare = function(x, width, height) list(x = x),
+              draw = function(state) {
+                print(state$x)
+                state$drawn <- "what drawing returned"
+                state
+              },
+              tables = function(state) list(list(name = "kept", data = data.frame(id = "a", v = state$drawn))),
+              example = ex)
+  on.exit(gl_unregister("engine", "kept"), add = TRUE)
+  fig <- gloss(ex(), width = 2, height = 2, context = FALSE)
+  expect_equal(fig$tables$kept$data$v, "what drawing returned")
+  res <- gl_test_plugin("engine", "kept")
+  expect_true(res$passed[res$check == "its drawing step draws the page the input draws"])
+  # A drawing step that draws another page fails the contract.
+  gl_register("engine", "other", "0.1.0", classes = "toy_drawn",
+              prepare = function(x, width, height) list(x = x),
+              draw = function(state) {
+                grid::grid.newpage()
+                grid::grid.rect()
+                state
+              },
+              example = ex)
+  on.exit(gl_unregister("engine", "other"), add = TRUE)
+  res <- gl_test_plugin("engine", "other")
+  hit <- res$check == "its drawing step draws the page the input draws"
+  expect_false(res$passed[hit])
+  expect_match(res$message[hit], "differs")
 })
 
 test_that("the schema language checks shapes", {

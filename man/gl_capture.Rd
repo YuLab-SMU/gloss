@@ -20,7 +20,9 @@ gl_capture(
 \arguments{
 \item{x}{The figure.}
 
-\item{engine}{An engine plugin, as returned by \code{\link[=gl_plugin]{gl_plugin()}}.}
+\item{engine}{An engine plugin, as returned by \code{\link[=gl_plugin]{gl_plugin()}}, or a list of
+candidate engine plugins; when the candidates capture different kinds of
+page, the page \code{x} draws chooses among them.}
 
 \item{width, height}{Size in inches.}
 

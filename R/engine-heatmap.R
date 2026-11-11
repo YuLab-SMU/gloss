@@ -1,6 +1,7 @@
 # Engine plugin: ComplexHeatmap. Tables are the matrices and the row and
 # column orders after clustering; panels are the heatmap body slices, with
-# the native scales of their viewports.
+# the native scales of their viewports. The engine draws the heatmap itself
+# to keep what draw() returns; its page is the page show() draws.
 
 register_engine_heatmap <- function() {
   gl_register(
@@ -15,15 +16,11 @@ register_engine_heatmap <- function() {
       st$height <- height
       st
     },
-    grob = function(state) {
-      dev <- grDevices::dev.cur()
-      g <- grid::grid.grabExpr(
-        { state$drawn <- ComplexHeatmap::draw(state$ht) },
-        wrap.grobs = FALSE, width = state$width, height = state$height,
-        device = function(width, height) svglite::svglite(nullfile(), width, height)
-      )
-      grDevices::dev.set(dev)
-      g
+    # Draws on the page and keeps the drawn HeatmapList: the row and column
+    # orders after clustering exist only once the heatmap is drawn.
+    draw = function(state) {
+      state$drawn <- ComplexHeatmap::draw(state$ht)
+      state
     },
     tables = function(state) heatmap_tables(state$drawn),
     panels = function(state, substrate) heatmap_panels(substrate),

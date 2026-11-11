@@ -53,11 +53,11 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 7 files, 49 tests, 298 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `aef42f2`).
-- Key numbers: development set on the engine route 40 equal / 6 known exceptions / 5 different of 51 captured; page route not in `R/`.
+- Suite: 7 files, 56 tests, 338 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, after Task 1).
+- Key numbers: development set on the engine route 40 equal / 6 known exceptions / 5 different of 51 captured; grid pages captured by the page route in `R/` (Task 1), not yet run on the development set; six fixtures identical to the engine route.
 
 **Overall progress**
-- [ ] Task 1: Grid pages in the core: draw, wrap in place, self-check
+- [x] Task 1: Grid pages in the core: draw, wrap in place, self-check
 - [ ] Task 2: Engines on the page: tables and panels that describe what was drawn
 - [ ] Task 3: Dense leaves, size and time
 - [ ] Task 4: Bench on the page route; development run of the grid step
@@ -70,7 +70,7 @@
 
 ### Task 1: Grid pages in the core
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** 2 (wrapping in place), first half.
 
@@ -82,21 +82,28 @@
 - Put the spike's grid route (`dev_docs/research/capture-fidelity/page-capture.R`: `page_kind()`, `capture_grid_page()`, `scalar_names()`, `clip_signatures()`) into the core, with the self-check and the refusals of ADR-0006. Closes the silent wrong figure (ggbreak) and the over-refusal (ggExtra).
 
 **Checklist**
-- [ ] Failing tests first: an object whose print method draws something other than its built grob is captured as what print draws (a synthetic ggplot subclass, and `ggExtra::ggMarginal()`); a grob with a vector name is captured; a function that draws with grid is captured; a function that draws nothing is refused with a reason
-- [ ] Draw by `print()`/`show()`, a call, or `replayPlot()` on gloss's svglite; read the page kind; mixed and empty pages abort with the reason
-- [ ] Wrap the display list in place and redraw; keep the first drawing as the reference
-- [ ] Self-check with primitives and clip regions; three verdicts (equal, not deterministic, capture changed the figure: abort); the verdict stored in the figure's meta and shown by `print()`
-- [ ] Several pages: the last is captured, the count is stored and warned
-- [ ] Engine contract: `grob` not required; optional drawing step; contract test that an engine's page equals `print(x)` on its example
-- [ ] Before the first change in `R/`: tag the last commit of the engine route (`engine-route-final`), the baseline of Task 8
-- [ ] The test "a figure that prints through its own method is refused" (two expectations of the error "custom print method") is replaced by the capture tests above. This is a change of intended behaviour by ADR-0006 point 5, recorded here, not a loosened test
-- [ ] Base figures stay on gridGraphics in this task, through the engine's own drawing step
+- [x] Failing tests first: an object whose print method draws something other than its built grob is captured as what print draws (a synthetic ggplot subclass, and `ggExtra::ggMarginal()`); a grob with a vector name is captured; a function that draws with grid is captured; a function that draws nothing is refused with a reason
+- [x] Draw by `print()`/`show()`, a call, or `replayPlot()` on gloss's svglite; read the page kind; mixed and empty pages abort with the reason
+- [x] Wrap the display list in place and redraw; keep the first drawing as the reference
+- [x] Self-check with primitives and clip regions; three verdicts (equal, not deterministic, capture changed the figure: abort); the verdict stored in the figure's meta and shown by `print()`
+- [x] Several pages: the last is captured, the count is stored and warned
+- [x] Engine contract: `grob` not required; optional drawing step; contract test that an engine's page equals `print(x)` on its example
+- [x] Before the first change in `R/`: tag the last commit of the engine route (`engine-route-final`), the baseline of Task 8
+- [x] The test "a figure that prints through its own method is refused" (two expectations of the error "custom print method") is replaced by the capture tests above. This is a change of intended behaviour by ADR-0006 point 5, recorded here, not a loosened test
+- [x] Base figures stay on gridGraphics in this task, through the engine's own drawing step
 
 **Verification**
 - `NOT_CRAN=true Rscript -e "devtools::test()"`: the new tests fail before and pass after; the six inputs' regression (identical to plain svglite, clip regions) passes unchanged; element counts 134, 186, 293, 115, 10040 on the five grid inputs as in `s5-drop-in.out`.
 - Would change the plan: an input whose element table changes beyond leaf names; a self-check that fails on a deterministic fixture.
 
-**Result** _(filled in when done)_
+**Result** (2026-11-11)
+- Tag `engine-route-final` on `f48c124`.
+- Tests first: 7 new or replaced tests in `test-capture.R`, 2 in `test-plugin.R`. Before the change: 56 tests, 304 expectations, 10 tests failing (7 failed expectations, 9 errors). After: `NOT_CRAN=true Rscript -e "devtools::test()"` 7 files, 56 tests, 338 expectations, 0 failed, 0 skipped.
+- Fixtures (`dev_docs/research/capture-fidelity/p1-fixtures-vs-engine-route.R`, host, the tag in a worktree): the six inputs' element tables are identical to the engine route's (134, 186, 60, 293, 115, 10040 rows), panels, tables and clip regions identical, verdict `equal` on all six. Leaf tables: same rows; `name` and `path` differ only in grid's automatic numbering, except the heatmap's `path`, which lost the `GRID.gTree.N/` root that `grid.grabExpr()` added (16 of 16 leaves). Nothing in `R/` reads `path`; the tests match it with `grepl()`.
+- Decisions settled here (ADR-0006 left them to the plan): the engine fields are `page` (`"grid"`, default, or `"base"`) and `draw(state)`, which returns the state; the verdict is `meta$page$verdict` (`equal`, `not_deterministic`), with `kind`, `drawn_by`, `pages`, `differ`, `primitives`, `renamed`. A grob is drawn with `grid.draw()`, because `print()` of a grob prints its description. The plain redraw of the self-check draws the forced display list that was wrapped, so the first comparison needs no restored random state and gloss writes no `.Random.seed`; it runs only when the captured page differs from the page drawn. A second plain redraw tells a figure random at draw time from a capture that changed it.
+- Dense leaves are rasterised from the wrapped display list (needed here for the existing dense tests to pass); Task 3 still compares the rasters with today's.
+- Not as expected: the base engine's drawing step (gridGraphics) passes the new contract check on its `example()`. gridGraphics draws a function on its own device, where the background is transparent; the same plot recorded on svglite differs by 1 primitive (the background rect), and `rect(border = 0)` by 2. A contract check on one example cannot see gridGraphics' differences; Task 5 removes them.
+- Time, not yet against the limit: `points_1e4` 0.29 s on the engine route, 0.96 s here; the two signature passes of the self-check take 0.40 s of it. Assumption 3 is tested in Task 3.
 
 ---
 

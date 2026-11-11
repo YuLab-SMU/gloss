@@ -9,7 +9,6 @@ register_engine_ggplot <- function() {
     prepare = function(x, width, height) {
       list(plot = x, built = build_ggplot(x))
     },
-    grob = function(state) ggplot2::ggplot_gtable(state$built),
     tables = function(state) ggplot_tables(state$plot, state$built),
     panels = function(state, substrate) ggplot_panels(state$built, substrate),
     describe = function(state) ggplot_describe(state$plot),
