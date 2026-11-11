@@ -1,11 +1,11 @@
 # M0: the substrate
 
-> Status: active.
+> Status: closed 2026-11-11 (Tasks 1–10 done; Task 9 carried out under the bench v0 plan).
 > Date opened: 2026-11-09. Owner: Yonghe Xia.
 
 **Goal:** `gloss(x)` captures any ggplot, patchwork, ComplexHeatmap, base or grid figure into a read-only substrate (elements, leaves, panels, tables with inferred row keys, context), which can be queried and written to a directory or a single HTML/SVG file and read back without loss.
 
-**Why now:** M0 is the first milestone in [design §实施计划](../dev_docs/design.qmd#sec-plan); every later capability reads the substrate. ADR-0001 and ADR-0003 both list M0 follow-ups (capture in `core-substrate.R`; registry, `gl_register()`, `gl_test_plugin()`).
+**Why now:** M0 is the first milestone in [design §实施计划](../../dev_docs/design.qmd#sec-plan); every later capability reads the substrate. ADR-0001 and ADR-0003 both list M0 follow-ups (capture in `core-substrate.R`; registry, `gl_register()`, `gl_test_plugin()`).
 
 **Architecture:** Core files `core-plugin.R` (registry, plugin schema, contract tests), `core-substrate.R` (group + probe capture, `<use>` inlining, element table, per-leaf counts, dense rasters), `core-data.R` (tables, row-key inference, `gl_key()`), `core-codec.R` (lossless JSON for tables and metadata), `core-bundle.R` (directory and single file, restore). `identify.R` holds the public geometry queries. Engines (`engine-*.R`), context sniffers (`context-*.R`) and the single-file projections (`project-*.R`) are plugins registered in `.onLoad()` through `gl_register()`, like a third-party plugin would be. Not touched: classification, structure and data trees (M1), records, anchors and layers (M2), checks, operations, ARIA (M3), agents (M4).
 
@@ -43,7 +43,7 @@
 - [x] Task 6: Dense leaves: raster plus binary index
 - [x] Task 7: Context sniffing
 - [x] Task 8: Bundle: directory, single file, restore
-- [ ] Task 9: Benchmark sampling frame, split and freeze
+- [x] Task 9: Benchmark sampling frame, split and freeze (under the bench v0 plan; frozen in `e985d82`)
 - [x] Task 10: Records: ADRs, NEWS, dev log, design status
 
 Full suite on 2026-11-09: `NOT_CRAN=true Rscript -e "devtools::test()"`: 7 files, 45 tests, 268 expectations, 0 failed, 0 skipped. `R CMD check --no-manual` (built with `--no-build-vignettes`): 0 errors, 0 warnings, 0 notes.
@@ -197,7 +197,7 @@ Full suite on 2026-11-09: `NOT_CRAN=true Rscript -e "devtools::test()"`: 7 files
 
 ### Task 9: Benchmark sampling frame, split and freeze
 
-**Status:** `[ ]`
+**Status:** `[x]` (2026-11-11, closed with a pointer: the work is the [bench v0 plan](2026-11-09-bench-v0.md), Tasks 1–5)
 
 **Intent**
 - Design §评测设计: the sampling frame, strata, seed, development and held-out split are fixed in `bench/` before M1 starts.
@@ -207,6 +207,11 @@ Full suite on 2026-11-09: `NOT_CRAN=true Rscript -e "devtools::test()"`: 7 files
 - [ ] Stratified random sample of 100–200 figures with code and data; seed recorded
 - [ ] Attempted and retained counts with failure reasons
 - [ ] Development / held-out split, frozen with a commit
+
+**Result** (2026-11-11, recorded when the plan closed; the checklist above stays as written)
+- Frame: R Graph Gallery, ggplot2 extensions, Bioconductor Visualization vignettes, patchwork, ComplexHeatmap (`Rscript bench/R/frame.R`). TidyTuesday dropped: no figure code in its repository (bench v0 scope change of 2026-11-09, owner's decision).
+- Sample: 160 PSUs, seed `20261109` (`bench/sample.csv`, `bench/README.md`); `bench/runs/attempts.csv` has 160 outcome rows (gallery 70, exts 30, bioc 30, patchwork 15, heatmap 15), each retained or with a failure class.
+- Eligible after the no-network pass: 109 of 160. Split seeded 50/50 within strata: 55 development, 54 held-out (`bench/split.csv`, `bench/MANIFEST.md5`), frozen in `e985d82` on 2026-11-10 ([dev log](../../dev_logs/2026-11-10-bench-freeze.md)).
 
 ---
 
@@ -230,4 +235,17 @@ _(append-only; never edit completed tasks above)_
 
 ## Closing notes
 
-Filled in when the plan moves to `done/`.
+Closed 2026-11-11, two days after its code landed; it stayed open only for Task 9, which the bench v0 plan carried out. Closing dev log: [2026-11-11-m1-plan.md](../../dev_logs/2026-11-11-m1-plan.md); the M0 work itself is in [2026-11-09-m0-substrate.md](../../dev_logs/2026-11-09-m0-substrate.md). NEWS: "M0: the substrate (2026-11-09)".
+
+**End state against starting state**
+- Suite: none at the start; 7 files / 45 tests / 268 expectations / 0 failed / 0 skipped when Tasks 1–8 and 10 landed (2026-11-09); 8 / 67 / 438 / 0 / 0 at the close, after the page-capture plan.
+- The three verification criteria, as met on 2026-11-09: the six input classes drawn identically to plain svglite with only the device background unowned; directory → single file → directory byte-identical and `gl_read(gl_write(fig))` equal to `fig`; the 10^5-point single file 2.65 MiB, under 3 MB. All three are tests in the suite ("the six input classes draw exactly what plain svglite draws" in `test-capture.R`; the byte-identical round trip and "a 1e5-point scatter is written as a single file under 3 MB" in `test-bundle.R`) and pass at the close, on the page route.
+- Benchmark: 109 eligible figures, 55 / 54, frozen (Task 9).
+
+**What did not hold.** Criterion 1 was a regression property, not fidelity: on the development set the M0 route captured 51 of 55 figures and 40 equal the page the code drew (bench v0 Task 8). The capture route was replaced by capturing the page the figure draws ([ADR-0006](../../dev_docs/decisions/0006-capture-the-page-the-figure-draws.md), [plan](2026-11-11-page-capture.md)). gridGraphics, used here for base figures, is no longer a dependency.
+
+**What moved in the design and the ADRs:** ADR-0004 (engine dispatch through the registry) and ADR-0005 (bundle format v0) settled in M0; masks refused; guides moved to M1; `gl_key()` keeps a key history until M2 records. ADR-0001's unit of attribution and ADR-0004's engine contract were later changed by ADR-0006.
+
+**What the next plan starts with:** M1, [plan/2026-11-11-m1-roles-and-binding.md](../2026-11-11-m1-roles-and-binding.md).
+
+ADR-0004, ADR-0005 and the design's earlier dev logs link to this plan's old place, `plan/2026-11-09-m0-substrate.md`; ADRs change only their status line and logs are append-only, so those links stay as written.

@@ -1,6 +1,6 @@
 # M1, first slice: roles and bindings on the development set
 
-> Status: draft. Becomes active when the owner settles the three open decisions at the end of the header.
+> Status: active (opened as a draft; the owner settled its three open decisions on 2026-11-11, see Scope changes).
 > Date opened: 2026-11-11. Owner: Yonghe Xia.
 
 **Goal:** On the 54 captured development figures, every drawn element has a role given by a rule or is listed as residue with a reason; every element of a data-mark leaf is bound to rows with a verified status or listed unbound with a reason; and against labels written to a fixed guideline, no rule error goes without a flag.
@@ -45,7 +45,7 @@
 - Time for classification and binding reported at 10^3, 10^4 and 10^5 points; Task 6 decides from it whether they run at capture or on demand.
 - Each number from a run archived in `bench/runs/`; predictions committed before the first run of each task; the suite passes with its counts at every commit that touches `R/` or `tests/`.
 
-**Open decisions (the owner's):**
+**Decisions (the owner's; all three settled 2026-11-11 as recommended, see Scope changes):**
 1. *Who labels the development set.* (a) Claude labels all 54 figures from the rendered page and the leaf sheet, committed before any rule runs on the development set; the owner labels the 5 pilot figures independently for κ. (b) The owner labels all 54. (c) The owner and a second person label all 54, which is the protocol the held-out set needs anyway. Recommended: (a). The development set is for tuning; the held-out labels, which give the reported numbers, need two people whatever is chosen here. The cost of (a): the labeller also writes the rules, so a cue that misleads both (a base legend's `rect` read as data) can agree with itself. The pilot and the blind order (labels before rules) are the guard.
 2. *Where rule roles and engine bindings live.* Appendix A has `gl_classify()` write into the `structure` layer and tbl-layers lists rules as a source of `structure` records, which needs M2's record core. Alternative: roles and bindings are derived tables of the substrate, recomputed whenever it is rebuilt and versioned by the plugin that made them, like leaves and panels; only what code cannot derive (corrections, agent fills, human notes) is a record, and queries lay records over the derived tables. Recommended: the second (principle 2: what code determines is recomputed, not stored as a claim; principle 4: a rebuilt substrate needs no rebase for its own derived facts). Settled by ADR-0007 in Task 6; until then nothing is exported.
 3. *Corrections in M1 or M2.* The milestone puts the correction interface in M1. Recommended: move `gl_reclassify()` to the plan that builds the record core, and say so in design §实施计划 with a dated note; this slice gives the residue list and the flags it will correct.
@@ -71,7 +71,7 @@
 - Key numbers: none yet; see the starting state.
 
 **Overall progress**
-- [ ] Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels _(waits for open decision 1)_
+- [ ] Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels _(decision 1(a): Claude labels, the owner labels the pilot)_
 - [ ] Task 2: Order binding for grid-page engines, verified by back-substitution
 - [ ] Task 3: Rules as plugins; coverage on the development set
 - [ ] Task 4: Accuracy against the labels; consistency checks; silent errors
@@ -80,7 +80,7 @@
 - [ ] Task 7: Structure tree, data tree and their mapping _(stub)_
 - [ ] Task 8: Records: design notes, NEWS, dev log, closing notes
 
-Tasks 1 and 2 can run side by side: Task 1 is labelling time, Task 2 needs no labels. Under open decision 1(a), Task 3's rules do not run on the development set before the labels are committed (labels before rules); under (b) or (c) Task 3 can start at once.
+Tasks 1 and 2 can run side by side: Task 1 is labelling time, Task 2 needs no labels. Under decision 1(a), Task 3's rules do not run on the development set before the labels are committed (labels before rules).
 
 ---
 
@@ -254,6 +254,8 @@ ADR-0007 from open decision 2, with the numbers of Tasks 2–5 (time, size in th
 ## Scope changes
 
 _(append-only; never edit completed tasks above)_
+
+- 2026-11-11 — **Owner's decisions: all three as recommended.** (1) Claude labels the 54 development figures from the rendered page and the leaf sheet, committed before any rule runs on the development set; the owner labels the 5 pilot figures independently. (2) Rule roles and engine bindings are derived tables of the substrate, recomputed when it is rebuilt and versioned by the plugin that made them; corrections, agent fills and human notes are records laid over them. ADR-0007 records this in Task 6 with the numbers of Tasks 2–5; nothing is exported before it. (3) `gl_reclassify()` moves to the plan that builds the record core. **Evidence:** the plan's header (who writes rules and labels; Appendix A's `structure` layer needs M2's record core). **Effect:** the plan is active; Task 1 has its annotators; design §实施计划 gets a dated note for (2) and (3). The owner also asked to close the M0 and bench v0 plans first and then start Task 2.
 
 ## Closing notes
 

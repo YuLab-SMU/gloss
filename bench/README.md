@@ -1,6 +1,6 @@
 # bench
 
-The gloss benchmark: R figures with runnable code and data, sampled from published sources, split into a development set and a held-out set. Not part of the package build. The design is [design §评测设计](../dev_docs/design.qmd); the plan that builds v0 is [plan/2026-11-09-bench-v0.md](../plan/2026-11-09-bench-v0.md).
+The gloss benchmark: R figures with runnable code and data, sampled from published sources, split into a development set and a held-out set. Not part of the package build. The design is [design §评测设计](../dev_docs/design.qmd); the plan that builds v0 is [plan/done/2026-11-09-bench-v0.md](../plan/done/2026-11-09-bench-v0.md).
 
 ## Rules
 
