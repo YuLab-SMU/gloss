@@ -498,3 +498,22 @@ Runs `runs/2026-11-11-2221-capture-dev-tree.*` and `runs/2026-11-11-2224-bind-de
 - **Why the label boxes fail is not the book's fonts:** the same six labels drawn with plain `geom_label(hjust = .5)` on the host, without `showtext`, give the same deviations (0.72, 0.74, 0.67, 0.74; 0.50 and 0.37 pass). The binder compares a polygon's vertex mean with the row; a label's box is not centred on its row to 0.5 pt. tree-045's 3 failed label boxes, "not explained" in run `2118`, are the same class. v0's 2000 label boxes (gallery-029) passed as ambiguous.
 - The 11 copies of the frog image are `geom_image(x = .8, y = 5.5)` with x and y set as parameters: one image per row of the tree's 11 nodes, all at one place.
 - Stratum, after Task 1 (ggplot figures, 28): every layer element checked in 15, at least 80% in 18, none in 3; 25037 layer elements, 40.0% checked, failed 222, unbound 325, count mismatch 14482.
+
+## Labels in their own frame (tree binding plan Task 2)
+
+Written 2026-11-11, after the text comparison was changed (`934af71`) and before it ran on any bench figure. What was known: runs `2224` (stratum) and `1353` (v0) and their leaves; the code of tree-011, -041, -045, -060, -072, -083; ggplot2's `labelGrob()`, cardelino's `plot_tree()` and shadowtext 0.1.6's `shadowtextGrob()` (read in the container): shadowtext draws each label 17 times, 16 halo copies moved by 0.1 × the string height of "X" (about 0.8 pt at 11 pt) in 16 directions of the device, then the label.
+
+### How the runs are made and scored (fixed before the runs)
+
+- `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/bind.R dev tree`, then `... bench/R/bind.R dev`, at the commit that holds these predictions, with a clean tree; scored with `score-bind.R`, and with `compare-bind.R` against runs `2224` (stratum) and `1353` (v0).
+
+### Predictions
+
+67. **The 128 elements of tree-011, -060 and -083 that failed are verified or ambiguous, and no layer element of these three figures fails.**
+68. **Every layer element of tree-045 is verified or ambiguous** (its label boxes by the box rule, its tip labels at `hjust = 0.39`), apart from the leaf that drew nothing (a count mismatch with 0 elements).
+69. **tree-041's 4 failed label boxes are verified or ambiguous; its 6 aligned lines still fail** (ggtree's draw-time `nudge_x`, Task 6).
+70. **No element of tree-072 is unbound. The label's own leaf is verified, 6 of the 16 halo leaves are verified and 10 fail, each by less than 1 pt:** 14 of its 34 elements verified, 20 failed. For a label rotated 90°, a halo copy moved by about 0.8 pt in direction θ is off its baseline by 0.8 |sin θ|, under 0.5 pt only for the 6 directions within 22.5° of horizontal.
+71. **On the stratum, no leaf outside these six figures changes (`compare-bind.R` against `2224`), and there is no regression.** Failed elements 222 → 104 (repelled boxes 41, glyph outlines 37, tree-041's lines 6, tree-072's halos 20); unbound 325 → 291.
+72. **v0's development set: no regression against run `1353`, and no leaf changes except, at most, the two text leaves of exts-014 (`GeomRocci`, 6 failed elements), which may now verify.** v0's layer text is gallery-029's 2000 labels (ambiguous: hjust and vjust 0.5, so neither rule moves them), base text (no justification stated: the old rule) and a few leaves.
+
+Not scored: the stratum's element-weighted share rises from 40.0% to about 40.6%; per figure, every layer element checked in 18 of 28 ggplot figures (tree-011, -045 and -060 join the 15), at least 80% in 20.
