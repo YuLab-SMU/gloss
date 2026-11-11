@@ -149,11 +149,11 @@ gl_capture <- function(x, engine, width = 7, height = 5, dense = 10000,
   cap <- capture_page(x, engines, width, height)
   eng <- cap$engine
   state <- cap$state
-  doc <- inline_groups(cap)
+  doc <- if (identical(cap$route, "base")) base_scene_doc(cap) else inline_groups(cap)
   check <- page_verdict(
     drawn = page_signature(xml2::read_xml(cap$drawn)),
     captured = page_signature(doc),
-    redraw = function() page_signature(xml2::read_xml(plain_svg(function() draw_dl(cap$orig), width, height)))
+    redraw = function() page_signature(xml2::read_xml(cap$redraw()))
   )
   if (cap$pages > 1L) {
     cli::cli_warn(c(
@@ -209,7 +209,8 @@ gl_capture <- function(x, engine, width = 7, height = 5, dense = 10000,
         verdict = check$verdict,
         differ = check$differ,
         primitives = check$primitives,
-        renamed = cap$renamed
+        renamed = cap$renamed %||% 0L,
+        note = cap$note %||% NA_character_
       )
     ),
     substrate = sub,
@@ -370,12 +371,26 @@ capture_page <- function(x, engines, width, height) {
   }
   refuse_page(page, eng)
   drawn_at <- length(dev$read())
-  cap <- capture_grid_page()
-  close_page_device(dev)
+  if (identical(page$kind, "base")) {
+    # The base route replays the recorded page on a device of its own.
+    rp <- page$rp
+    close_page_device(dev)
+    cap <- capture_base_page(rp, width, height)
+    if (inherits(x, "recordedplot")) {
+      cap$note <- paste("A recorded plot is replayed with svglite's text metrics; if it was recorded on",
+                        "another device, text and what is placed from it can differ from that device's page.")
+    }
+  } else {
+    cap <- capture_grid_page()
+    orig <- cap$orig
+    cap$redraw <- function() plain_svg(function() draw_dl(orig), width, height)
+    cap$draw_leaf <- function(id) draw_dl(lapply(cap$dl, keep_only_leaf, id = id, grobs = cap$grobs))
+    close_page_device(dev)
+  }
   all_pages <- as.character(dev$read())
   # The page drawn is closed once grid starts the next one; keep it and the last.
   cap$drawn <- all_pages[drawn_at]
-  cap$svg <- all_pages[length(all_pages)]
+  if (is.null(cap$svg)) cap$svg <- all_pages[length(all_pages)]
   cap$engine <- eng
   cap$state <- state
   cap$kind <- page$kind
@@ -453,7 +468,7 @@ page_kind <- function() {
   base <- any(startsWith(ops, "C_") & ops != "C_par")
   grobs <- length(grid::grid.ls(viewports = FALSE, recursive = FALSE, print = FALSE)$name)
   kind <- if (base && grobs > 0L) "mixed" else if (base) "base" else if (grobs > 0L) "grid" else "empty"
-  list(kind = kind, base_ops = sum(startsWith(ops, "C_") & ops != "C_par"), grobs = grobs)
+  list(kind = kind, base_ops = sum(startsWith(ops, "C_") & ops != "C_par"), grobs = grobs, rp = rp)
 }
 
 # Name of the graphics call behind a display-list entry; "call" for entries
@@ -479,10 +494,10 @@ refuse_page <- function(page, eng) {
       i = "Capture a page drawn by one graphics system."
     ))
   }
-  if (!is.null(eng) && identical(page$kind, "base")) {
+  if (!is.null(eng) && identical(page$kind, "base") && !identical(engine_page(eng), "base")) {
     cli::cli_abort(c(
       "The input drew a base graphics page, which engine {.val {eng$name}} cannot capture.",
-      i = "Base pages are captured by the base engine, through gridGraphics until gloss captures them directly."
+      i = "Base pages are captured by an engine that declares {.code page = \"base\"}, such as the base engine."
     ))
   }
   invisible()
@@ -539,6 +554,252 @@ draw_dl <- function(dl) {
   grid::grid.newpage()
   for (e in dl) if (!is.null(e)) grid::grid.draw(e, recording = FALSE)
   invisible()
+}
+
+# ---- base pages ---------------------------------------------------------------
+
+# A recorded base page replayed one display-list entry at a time on a file
+# svglite device kept valid while it is written; after each entry only the
+# bytes it added are read (dev_docs/research/capture-fidelity/s6: 5008
+# entries in 0.31 s, the same counts and page as parsing the whole page after
+# each entry). An entry's primitives are the primitives the device wrote
+# during it, so the leaf is the entry and nothing is estimated (ADR-0006).
+#
+# The display list's structure is internal to R and may change between
+# versions; the self-check compares the result with the page drawn, so a
+# change shows as a difference, not as a silently wrong capture.
+utf8_text <- function(bytes) {
+  x <- rawToChar(bytes)
+  Encoding(x) <- "UTF-8"
+  x
+}
+
+capture_base_page <- function(rp, width, height) {
+  dl <- as.list(rp[[1]])
+  ops <- vapply(dl, dl_op, "")
+  f <- tempfile(fileext = ".svg")
+  svglite::svglite(f, width = width, height = height, standalone = TRUE, always_valid = TRUE)
+  dev <- grDevices::dev.cur()
+  rd <- new_env()
+  rd$con <- NULL
+  rd$pos <- 0
+  on.exit({
+    if (!is.null(rd$con)) close(rd$con)
+    if (dev %in% grDevices::dev.list()) grDevices::dev.off(dev)
+    unlink(f)
+  }, add = TRUE)
+  # The bytes added since the last read, without the closing tags that keep
+  # the file valid (the next write overwrites them).
+  read_new <- function() {
+    size <- file.size(f)
+    if (is.na(size) || size < rd$pos) {
+      cli::cli_abort("Replaying the base page started a new page; gloss cannot split it by entry.")
+    }
+    if (size == rd$pos) return("")
+    if (is.null(rd$con)) rd$con <- file(f, "rb")
+    seek(rd$con, rd$pos)
+    bytes <- readBin(rd$con, "raw", size - rd$pos)
+    txt <- utf8_text(bytes)
+    closing <- regmatches(txt, regexpr("(\\s*</g>)*\\s*</svg>\\s*$", txt))
+    # offsets are bytes: a label may hold multibyte characters (plotmath writes alpha as U+03B1)
+    keep <- length(bytes) - if (length(closing)) nchar(closing, "bytes") else 0L
+    rd$pos <- rd$pos + keep
+    utf8_text(bytes[seq_len(keep)])
+  }
+  grDevices::dev.control("enable")
+  # An empty display list restores the recorded graphics state and starts the page.
+  stub <- rp
+  stub[1] <- list(NULL)
+  grDevices::replayPlot(stub)
+  head <- read_new()
+  n <- length(dl)
+  chunks <- character(n)
+  boxes <- matrix(NA_real_, n, 8)
+  for (k in seq_len(n)) {
+    e <- dl[[k]]
+    res <- tryCatch(do.call(e[[1]], as.list(e[[2]]), quote = TRUE), error = function(err) err)
+    if (inherits(res, "error")) {
+      cli::cli_abort(c(
+        "Replaying display-list entry {k} ({ops[k]}) of the base page failed: {conditionMessage(res)}",
+        i = "gloss captures a base page by replaying its display list one entry at a time."
+      ))
+    }
+    chunks[k] <- read_new()
+    boxes[k, ] <- plot_region(width, height)
+  }
+  grDevices::dev.off(dev)
+  if (is.null(rd$con)) rd$con <- file(f, "rb")
+  seek(rd$con, rd$pos)
+  tail <- utf8_text(readBin(rd$con, "raw", file.size(f) - rd$pos))
+  entries <- base_entries(dl, ops, chunks, boxes, head, width, height)
+  list(route = "base", svg = paste0(head, paste(entries$text, collapse = ""), tail),
+       leaves_df = entries$leaves, entry_counts = entries$counts, renamed = 0L,
+       redraw = function() plain_svg(function() grDevices::replayPlot(rp), width, height),
+       draw_leaf = function(id) {
+         k <- entries$entry[[id]]
+         graphics::par(bg = "transparent")  # the recorded background would cover the scene
+         grDevices::replayPlot(stub)
+         graphics::par(bg = "transparent")
+         for (j in seq_len(n)) {
+           if (j == k || !entries$drew[j]) do.call(dl[[j]][[1]], as.list(dl[[j]][[2]]), quote = TRUE)
+         }
+       })
+}
+
+# The plot region on the device in SVG user units (origin top-left), and
+# par("usr"), after the entry just replayed.
+plot_region <- function(width, height) {
+  tryCatch({
+    x <- graphics::grconvertX(c(0, 1), "npc", "ndc") * width * pt_per_in
+    y <- (1 - graphics::grconvertY(c(1, 0), "npc", "ndc")) * height * pt_per_in
+    c(x, y, graphics::par("usr"))
+  }, error = function(e) rep(NA_real_, 8))
+}
+
+# Leaves, wrapped text and counts per entry. Each run of an entry's
+# primitives between two clip changes is wrapped in <g data-gloss-leaf>; the
+# clip in force at the entry's first primitive decides whether the leaf lies
+# in its figure's plot region.
+base_entries <- function(dl, ops, chunks, boxes, head, width, height) {
+  n <- length(chunks)
+  clip <- clip_tracker(head)
+  text <- chunks
+  counts <- integer(n)
+  in_plot <- logical(n)
+  ids <- character(n)
+  k_leaf <- 0L
+  for (k in seq_len(n)) {
+    lines <- strsplit(chunks[k], "\n", fixed = TRUE)[[1]]
+    prim <- base_prim(lines)
+    if (any(prim)) {
+      first <- which(prim)[1]
+      at <- clip$feed(lines[seq_len(first - 1L)])
+      clip$feed(lines[first:length(lines)])
+      in_plot[k] <- !is.null(at) && !anyNA(boxes[k, 1:4]) && all(abs(at - boxes[k, 1:4]) < 0.02)
+      k_leaf <- k_leaf + 1L
+      ids[k] <- sprintf("L%03d", k_leaf)
+      w <- wrap_entry(chunks[k], ids[k], lines = lines, prim = prim)
+      text[k] <- w$text
+      counts[k] <- w$n
+    } else {
+      clip$feed(lines)
+    }
+  }
+  drew <- counts > 0L
+  fig <- cumsum(ops == "C_plot_new")
+  name <- sub("^C_", "", ops)
+  vp <- ifelse(in_plot, sprintf("figure-%d::plot", fig), sprintf("figure-%d", fig))
+  k <- which(drew)
+  leaves <- data.frame(
+    id = ids[k], name = name[k], path = sprintf("base/%d/%s", k, name[k]), class = name[k], vp = vp[k],
+    x0 = round_pt(boxes[k, 1]), y0 = round_pt(boxes[k, 3]), x1 = round_pt(boxes[k, 2]), y1 = round_pt(boxes[k, 4]),
+    xscale0 = boxes[k, 5], xscale1 = boxes[k, 6], yscale0 = boxes[k, 7], yscale1 = boxes[k, 8],
+    n_expected = vapply(dl[k], base_expected, integer(1)),
+    stringsAsFactors = FALSE
+  )
+  list(text = text, leaves = leaves, counts = stats::setNames(counts[k], ids[k]),
+       drew = drew, entry = stats::setNames(as.list(k), ids[k]))
+}
+
+base_prim_line <- "^<(circle|rect|line|polyline|polygon|path|text|image)[ />]"
+
+# Drawn primitive lines of an entry's output. svglite's page background
+# (width and height 100%) is the device's, not the entry's: it stays without
+# a leaf, as on grid pages.
+base_prim <- function(lines) {
+  grepl(base_prim_line, lines, perl = TRUE) & !startsWith(lines, "<rect width='100%' height='100%'")
+}
+
+# Wrap each run of primitive lines of one entry's output in a leaf group.
+# svglite writes a drawn primitive on a line of its own, from the first
+# column; clip-path definitions are indented. The scene's counts are checked
+# against these afterwards.
+wrap_entry <- function(chunk, id, lines = strsplit(chunk, "\n", fixed = TRUE)[[1]],
+                       prim = base_prim(lines)) {
+  if (!any(prim)) return(list(text = chunk, n = 0L))
+  r <- rle(prim)
+  ends <- cumsum(r$lengths)
+  starts <- ends - r$lengths + 1L
+  out <- character()
+  for (i in seq_along(r$lengths)) {
+    seg <- lines[starts[i]:ends[i]]
+    out <- c(out, if (r$values[i]) c(sprintf("<g data-gloss-leaf='%s'>", id), seg, "</g>") else seg)
+  }
+  trail <- if (endsWith(chunk, "\n")) "\n" else ""
+  list(text = paste0(paste(out, collapse = "\n"), trail), n = sum(prim))
+}
+
+# Which clip region is in force, as c(x0, x1, y0, y1) in SVG user units,
+# from the clip-path definitions and clip groups svglite writes, read in
+# drawing order: feed() reads lines and returns the clip in force after them.
+clip_tracker <- function(head) {
+  st <- new_env()
+  st$geom <- list()
+  st$current <- NULL
+  st$pending <- NULL
+  feed <- function(lines) {
+    for (ln in lines[grep("<clipPath id=|^\\s+<rect x=|^<g clip-path=|^</g>$", lines)]) {
+      if (grepl("<clipPath id=", ln, fixed = TRUE)) {
+        st$pending <- sub("^.*<clipPath id='([^']+)'.*$", "\\1", ln)
+      } else if (startsWith(ln, "<g clip-path=")) {
+        st$current <- st$geom[[sub("^<g clip-path='url\\(#([^)]+)\\)'>.*$", "\\1", ln)]]
+      } else if (identical(ln, "</g>")) {
+        st$current <- NULL
+      } else if (!is.null(st$pending)) {
+        v <- as.numeric(regmatches(ln, gregexpr("-?[0-9.]+", ln))[[1]][1:4])
+        st$geom[[st$pending]] <- c(v[1], v[1] + v[3], v[2], v[2] + v[4])
+        st$pending <- NULL
+      }
+    }
+    st$current
+  }
+  feed(strsplit(head, "\n", fixed = TRUE)[[1]])
+  list(feed = feed)
+}
+
+# The scene of a base page, with its leaf groups.
+base_scene_doc <- function(cap) {
+  doc <- tryCatch(xml2::read_xml(cap$svg), error = function(e) NULL)
+  if (is.null(doc)) {
+    cli::cli_abort(c(
+      "Capture integrity check failed: the base page split by entry is not well-formed SVG.",
+      i = "Please report the figure."
+    ))
+  }
+  if (length(xml2::xml_find_all(doc, "//d1:mask", svg_ns(doc)))) {
+    cli::cli_abort("The figure uses a mask, which gloss cannot attribute.")
+  }
+  doc
+}
+
+# How many SVG elements a display-list entry is expected to draw; NA when
+# unknown. The argument positions are those of R's graphics routines.
+base_expected <- function(e) {
+  a <- tryCatch(as.list(e[[2]]), error = function(err) list())
+  op <- tryCatch(a[[1]]$name, error = function(err) "")
+  if (!is.character(op) || length(op) != 1L) return(NA_integer_)
+  ok_xy <- function(xy) !is.na(xy$x) & !is.na(xy$y) & is.finite(xy$x) & is.finite(xy$y)
+  out <- switch(op,
+    C_plotXY = {
+      type <- a[[3]]
+      ok <- ok_xy(a[[2]])
+      if (identical(type, "p")) sum(ok)
+      else if (identical(type, "l")) {
+        r <- rle(ok)
+        sum(r$values & r$lengths >= 2L)
+      } else NA
+    },
+    C_text = {
+      lab <- a[[3]]
+      # plotmath (an expression or call) draws an unknown number of pieces
+      if (!is.atomic(lab) || anyNA(lab) || any(grepl("\n", as.character(lab), fixed = TRUE))) NA
+      else max(length(a[[2]]$x), length(lab))
+    },
+    C_rect = max(lengths(a[2:5])),
+    C_segments = max(lengths(a[2:5])),
+    NA
+  )
+  as.integer(out)
 }
 
 # ---- self-check -------------------------------------------------------------
@@ -708,10 +969,17 @@ inline_groups <- function(cap) {
 
 substrate_from_doc <- function(doc, cap, width, height, dense = Inf) {
   ns <- svg_ns(doc)
-  leaves <- leaves_table(cap)
+  leaves <- if (!is.null(cap$leaves_df)) cap$leaves_df else leaves_table(cap)
   elements <- elements_table(doc, ns)
   counts <- table(factor(elements$leaf, levels = leaves$id))
   leaves$n_drawn <- as.integer(counts[leaves$id])
+  if (!is.null(cap$entry_counts) && !identical(leaves$n_drawn, unname(cap$entry_counts[leaves$id]))) {
+    bad <- leaves$id[leaves$n_drawn != cap$entry_counts[leaves$id]]
+    cli::cli_abort(c(
+      "Capture integrity check failed: the scene attributes to {length(bad)} display-list entr{?y/ies} other counts than the device wrote while replaying ({.val {utils::head(bad, 3)}}).",
+      i = "The page could not be split by entry; please report the figure."
+    ))
+  }
   leaves$status <- ifelse(is.na(leaves$n_expected), "unknown",
                           ifelse(leaves$n_expected == leaves$n_drawn, "ok", "count_mismatch"))
   leaves$bindable <- leaves$status == "ok"
@@ -976,10 +1244,7 @@ text_boxes <- function(nodes, style) {
 # page.
 rasterize_leaves <- function(cap, ids, width, height, dpi = 144) {
   out <- list()
-  for (id in ids) {
-    dl <- lapply(cap$dl, keep_only_leaf, id = id, grobs = cap$grobs)
-    out[[id]] <- render_png(dl, width, height, dpi)
-  }
+  for (id in ids) out[[id]] <- render_png(function() cap$draw_leaf(id), width, height, dpi)
   out
 }
 
@@ -1000,7 +1265,7 @@ keep_only_leaf <- function(x, id, grobs) {
   x
 }
 
-render_png <- function(dl, width, height, dpi) {
+render_png <- function(draw, width, height, dpi) {
   f <- tempfile(fileext = ".png")
   on.exit(unlink(f), add = TRUE)
   if (has_pkg("ragg")) {
@@ -1009,7 +1274,7 @@ render_png <- function(dl, width, height, dpi) {
     grDevices::png(f, width = width, height = height, units = "in", res = dpi, bg = "transparent")
   }
   dev <- grDevices::dev.cur()
-  tryCatch(draw_dl(dl), finally = grDevices::dev.off(dev))
+  tryCatch(draw(), finally = grDevices::dev.off(dev))
   readBin(f, "raw", file.size(f))
 }
 

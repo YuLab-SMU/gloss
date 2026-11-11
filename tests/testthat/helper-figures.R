@@ -39,7 +39,7 @@ six_inputs <- function() {
   list(
     ggplot_facet = list(x = pf, draw = function() print(pf)),
     patchwork = list(x = pw, draw = function() print(pw)),
-    base = list(x = base_scatter, draw = function() grid::grid.draw(gridGraphics::echoGrob(base_scatter, name = "graphics"))),
+    base = list(x = base_scatter, draw = base_scatter),
     heatmap = list(x = ht, draw = function() ComplexHeatmap::draw(ht)),
     ggrepel = list(x = pr, draw = function() print(pr)),
     points_1e4 = list(x = pb, draw = function() print(pb))

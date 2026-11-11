@@ -53,15 +53,16 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 7 files, 60 tests, 374 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, after Task 3).
+- Suite: 7 files, 65 tests, 420 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, after Task 5).
 - Key numbers: development run `2026-11-11-0627` (page route for grid pages, base still through gridGraphics): 54 captured, 1 refused; grid pages 42 equal, 2 not deterministic, 0 different; base 1 equal, 5 known exceptions, 4 different; gloss's verdict and the bench's agree on 44 of 44 grid pages under the Task 4 reading.
+- Base route (Task 5, fixtures only): 26 of 26 hand-built base pages equal to the code's own page (gridGraphics: 14 of 26); the development set is Task 6.
 
 **Overall progress**
 - [x] Task 1: Grid pages in the core: draw, wrap in place, self-check
 - [x] Task 2: Engines on the page: tables and panels that describe what was drawn
 - [x] Task 3: Dense leaves, size and time
 - [x] Task 4: Bench on the page route; development run of the grid step
-- [ ] Task 5: Base pages by display-list entry
+- [x] Task 5: Base pages by display-list entry
 - [ ] Task 6: Base on the development set; names and classification re-measured; gridGraphics out; `R CMD check` _(stub)_
 - [ ] Task 7: Records: design §元素归属 rewritten, NEWS, dev logs _(stub)_
 - [ ] Task 8: Held-out predictions and run _(stub; needs the owner's go-ahead)_
@@ -210,7 +211,7 @@
 
 ### Task 5: Base pages by display-list entry
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** 5 (a display-list entry is a usable leaf).
 
@@ -222,21 +223,29 @@
 - A base page is captured as the base graphics engine draws it, not as gridGraphics redraws it. The leaf is a display-list entry; its elements are the primitives the device wrote during that entry.
 
 **Checklist**
-- [ ] Failing tests first: the six inputs' base input equals the code's own page on svglite (today it equals gridGraphics' page); `rect(border = 0)` and a plot recorded on svglite are captured equal to their own page (gridGraphics: 2 and 1 primitives differ); a 5000-entry page captures in linear time (s6: 0.31 s)
-- [ ] Replay in the core, entry by entry, on a file svglite device kept valid (`always_valid = TRUE`), reading the bytes each entry adds; restore the recorded graphics state first by replaying the plot with an empty display list
-- [ ] Leaf groups: each run of an entry's primitives between two clip changes is wrapped in `<g data-gloss-leaf>`; the parsed scene must hold, per leaf, the count read during the replay (integrity check, abort otherwise)
-- [ ] Leaves: name from the entry's call (`plotXY`, `text`, `axis`, ...), path `base/<entry>/<name>`, vp `figure-<n>` (n counts `plot.new()`), box and scales from `par("fig", "plt", "usr")` after the entry; expected counts for `plotXY` (type `p` and `l`), `text`, `rect`, `segments`, unknown elsewhere
-- [ ] Panels from the replay: one per figure, box from `fig` and `plt`, scales from `usr`; a leaf belongs to a panel when its primitives are clipped to that figure's plot region
-- [ ] Self-check as for grid pages; the plain redraw is `replayPlot()` of the recorded page
-- [ ] Dense leaves: the entry redrawn alone on the PNG device, the other entries that drew anything skipped
-- [ ] Base engine: no drawing step, no gridGraphics; a recorded plot carries a note that it is replayed with svglite's text metrics
-- [ ] Measure on the fixtures, against the engine route: element counts, leaves, panel boxes and scales (s5: within 0.005 pt of the drawn points)
+- [x] Failing tests first: the six inputs' base input equals the code's own page on svglite (today it equals gridGraphics' page); `rect(border = 0)` and a plot recorded on svglite are captured equal to their own page (gridGraphics: 2 and 1 primitives differ); a 5000-entry page captures in linear time (s6: 0.31 s)
+- [x] Replay in the core, entry by entry, on a file svglite device kept valid (`always_valid = TRUE`), reading the bytes each entry adds; restore the recorded graphics state first by replaying the plot with an empty display list
+- [x] Leaf groups: each run of an entry's primitives between two clip changes is wrapped in `<g data-gloss-leaf>`; the parsed scene must hold, per leaf, the count read during the replay (integrity check, abort otherwise)
+- [x] Leaves: name from the entry's call (`plotXY`, `text`, `axis`, ...), path `base/<entry>/<name>`, vp `figure-<n>` (n counts `plot.new()`), box and scales from `par("fig", "plt", "usr")` after the entry; expected counts for `plotXY` (type `p` and `l`), `text`, `rect`, `segments`, unknown elsewhere
+- [x] Panels from the replay: one per figure, box from `fig` and `plt`, scales from `usr`; a leaf belongs to a panel when its primitives are clipped to that figure's plot region
+- [x] Self-check as for grid pages; the plain redraw is `replayPlot()` of the recorded page
+- [x] Dense leaves: the entry redrawn alone on the PNG device, the other entries that drew anything skipped
+- [x] Base engine: no drawing step, no gridGraphics; a recorded plot carries a note that it is replayed with svglite's text metrics
+- [x] Measure on the fixtures, against the engine route: element counts, leaves, panel boxes and scales (s5: within 0.005 pt of the drawn points)
 
 **Verification**
 - `NOT_CRAN=true Rscript -e "devtools::test()"`: the new tests fail before and pass after; the base panel test of `test-identify.R` passes from the replay's panels (built data mapped through `usr` lands on the drawn circles within 0.011 pt).
 - Would change the plan: an entry whose primitives cannot be told apart from another's on the device (the counts read during the replay disagree with the parsed scene); a fixture whose page differs from the code's.
 
-**Result** _(filled in when done)_
+**Result** (2026-11-11)
+
+- Suite: before Task 5, 7 files / 60 tests / 374 expectations / 0 failed / 0 skipped (a81cbbc). With the new tests and the old code: 64 tests, 403 expectations, 6 tests failing (15 failed expectations, 2 errors). After: 7 files / 65 tests / 420 expectations / 0 failed / 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`). The 65th test came from p5 (below).
+- Fixtures (hand-built, so this shows the mechanism, not coverage): `Rscript dev_docs/research/capture-fidelity/p5-base-fixtures.R /tmp/gloss-engine-route` -> `p5-base-fixtures.out`. On the 26 base pages of s2, equal to the code's own page on svglite with clip regions: page route 26 of 26, all with the verdict `equal`; engine route (gridGraphics, tag `engine-route-final`) 14 of 26. Counted leaves 169 of 169 `ok`, 0 `count_mismatch`. Data through each panel's `usr` scales onto the drawn circles: largest gap 0.005 to 0.007 pt (scatter, log axes, `pairs` figure 2, `layout`), under the 0.011 pt of the verification. Time per page 0.00 to 0.54 s.
+- Linear reading: 5000 `segments()` calls, `gloss()` 0.79 to 0.98 s (3 runs), 5000 leaves, verdict `equal`.
+- Leaf names over the 26 pages: `segments` 91, `axis` 58, `polygon` 52, `plotXY` 48, `box` 47, `text` 24, `title` 18, `rect` 9, `abline` 5, `mtext` 5, others 1 to 3. Task 6 re-measures them on the development set for design §分类.
+- Found while measuring (dev log 2026-11-11): text written by plotmath stopped `base_expected()` (an expression is not atomic), and behind it the page was cut at byte offsets with `substr()`, which counts characters, so any multibyte character (plotmath writes alpha as U+03B1; any non-ASCII label) left the split page not well-formed and the capture aborted on the integrity check. Fixed (byte slices; an expression has no expected count); test "base text drawn as plotmath or with multibyte characters is split by entry". The integrity check caught it as designed: no page was captured wrong.
+- Two runs of p5 were wrong and are not kept: sourcing s2 ran its `load_all(".")` over the tag, so the engine-route column measured the page route (26 of 26 on both sides, which did not match s0's `rect(border = 0)` result and gave it away); the `pairs` check put disp on the mpg scale (`pairs()` fills by column), a 1383.889 pt gap.
+- Would change the plan: neither condition occurred. No entry's primitives were confused with another's (the integrity check held on 26 pages and 5000 entries); no fixture differed from the code's page.
 
 ### Task 6: Base on the development set _(stub)_
 

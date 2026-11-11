@@ -62,13 +62,37 @@ test_that("facet_grid panels are matched to the layout by position", {
   }
 })
 
-test_that("base plot windows use the native scales gridGraphics gives them", {
-  skip_if_no("gridGraphics")
+test_that("base plot regions use the user coordinates of the replay, also with mfrow and log axes", {
+  fig <- gloss(function() {
+    graphics::par(mfrow = c(1, 2))
+    graphics::plot(1:10, (1:10)^2, log = "y", pch = 19)
+    graphics::plot(mtcars$hp, mtcars$qsec, pch = 19)
+  }, width = 7, height = 4, context = FALSE)
+  pan <- gl_panels(fig)
+  expect_equal(nrow(pan), 2L)
+  lv <- gl_leaf(fig)
+  pts <- lv[lv$class == "plotXY", ]
+  expect_equal(pts$panel, pan$id)
+  el <- gl_elements(fig, list(leaf = pts$id[2]))
+  px <- gl_to_pixel(fig, pan$id[2], mtcars$hp, mtcars$qsec)
+  expect_lt(max(abs(px$x - circle_centres(el)$cx)), 0.011)
+  expect_lt(max(abs(px$y - circle_centres(el)$cy)), 0.011)
+  el1 <- gl_elements(fig, list(leaf = pts$id[1]))
+  px1 <- gl_to_pixel(fig, pan$id[1], 1:10, log10((1:10)^2))
+  expect_lt(max(abs(px1$y - circle_centres(el1)$cy)), 0.011)
+})
+
+test_that("base plot regions use the user coordinates of the replay", {
+  # Panels come from par("usr") and the plot region after each display-list
+  # entry; the points are the plotXY entry (gridGraphics called its leaf
+  # "points" until page-capture plan Task 5).
   fig <- gloss(function() plot(mtcars$wt, mtcars$mpg, pch = 19), width = 6, height = 4, context = FALSE)
   pan <- gl_panels(fig)
   expect_equal(nrow(pan), 1L)
   lv <- gl_leaf(fig)
-  leaf <- lv$id[lv$class == "points" & lv$panel %in% pan$id]
+  leaf <- lv$id[lv$class == "plotXY" & lv$panel %in% pan$id]
+  expect_length(leaf, 1L)
+  expect_true(all(is.na(lv$panel[lv$name %in% c("axis", "title")])))
   el <- gl_elements(fig, list(leaf = leaf[1]))
   px <- gl_to_pixel(fig, pan$id, mtcars$wt, mtcars$mpg)
   expect_lt(max(abs(px$x - circle_centres(el)$cx)), 0.011)

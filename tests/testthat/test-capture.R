@@ -1,5 +1,7 @@
 test_that("the six input classes draw exactly what plain svglite draws", {
-  skip_if_no("ggplot2", "patchwork", "gridGraphics", "ComplexHeatmap", "ggrepel")
+  # The base input's reference is its own page on svglite (it was gridGraphics'
+  # page until page-capture plan Task 5).
+  skip_if_no("ggplot2", "patchwork", "ComplexHeatmap", "ggrepel")
   inputs <- six_inputs()
   for (nm in names(inputs)) {
     inp <- inputs[[nm]]
@@ -401,4 +403,108 @@ test_that("the page signature reads every primitive with its clip regions, as a 
   before <- page_signature(doc)
   for (g in xml2::xml_find_all(doc, "//d1:g[@clip-path]", svg_ns(doc))) xml2::xml_set_attr(g, "clip-path", NULL)
   expect_false(identical(page_signature(doc), before))
+})
+
+test_that("a base page is captured as base graphics draws it, one leaf per display-list entry", {
+  # gridGraphics redrew base pages with a second implementation of base
+  # graphics: rect(border = 0) differed in 2 primitives, a plot recorded on
+  # svglite in 1 (the background rect), 9 of 10 development base figures
+  # differed (dev log 2026-11-10-page-capture-spike). Page-capture plan Task 5.
+  border0 <- function() {
+    graphics::plot.new()
+    graphics::rect(0.2, 0.2, 0.8, 0.8, col = "white", border = 0)
+  }
+  scatter <- function() graphics::plot(mtcars$wt, mtcars$mpg, pch = 19, main = "A title")
+  rp <- local({
+    s <- svglite::svgstring(width = 5, height = 4)
+    on.exit(grDevices::dev.off())
+    grDevices::dev.control("enable")
+    scatter()
+    grDevices::recordPlot()
+  })
+  cases <- list(border0 = list(x = border0, draw = border0), scatter = list(x = scatter, draw = scatter),
+                recorded = list(x = rp, draw = scatter))
+  for (nm in names(cases)) {
+    fig <- gloss(cases[[nm]]$x, width = 5, height = 4, context = FALSE)
+    plain <- plain_svg(cases[[nm]]$draw, 5, 4)
+    expect_equal(fig$meta$engine, "base", label = nm)
+    expect_equal(fig$meta$page$kind, "base", label = nm)
+    expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain), label = nm)
+    expect_identical(clip_regions(fig$substrate$scene), clip_regions(plain), label = paste(nm, "clip regions"))
+    el <- fig$substrate$elements
+    expect_equal(sum(is.na(el$leaf)), 1L, label = paste(nm, "unowned"))
+    expect_equal(sum(fig$substrate$leaves$n_drawn), sum(!is.na(el$leaf)), label = nm)
+  }
+  expect_match(fig$meta$page$note, "text metrics")
+  # Leaves are display-list entries, named by their call, with expected counts.
+  lv <- gloss(scatter, width = 5, height = 4, context = FALSE)$substrate$leaves
+  expect_true(all(c("plotXY", "axis", "box", "title") %in% lv$name))
+  pts <- lv[lv$name == "plotXY", ]
+  expect_equal(c(pts$n_expected, pts$n_drawn), c(32L, 32L))
+  expect_equal(pts$status, "ok")
+  expect_true(all(is.na(lv$n_expected[lv$name == "axis"])))
+  expect_match(pts$path, "^base/[0-9]+/plotXY$")
+})
+
+test_that("base text drawn as plotmath or with multibyte characters is split by entry", {
+  # p5-base-fixtures: an expression label made base_expected() fail on anyNA();
+  # behind it, the page was cut at byte offsets with substr(), which counts
+  # characters, so a multibyte character (plotmath writes alpha as U+03B1)
+  # left the split page not well-formed.
+  pm <- function() {
+    graphics::plot(1:3, 1:3, main = quote(alpha^2 + beta[i]))
+    graphics::text(2, 2, expression(sqrt(x), bar(y)))
+    graphics::text(2.5, 1.2, "µg/L")
+    graphics::text(1.5, 1.5, "plain")
+  }
+  fig <- gloss(pm, width = 5, height = 4, context = FALSE)
+  plain <- plain_svg(pm, 5, 4)
+  expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain))
+  expect_true("µg/L" %in% fig$substrate$elements$text)
+  lv <- fig$substrate$leaves
+  expect_equal(fig$meta$page$verdict, "equal")
+  expect_true(all(is.na(lv$n_expected[lv$name %in% c("title", "text")][1:2])))
+  plain <- lv[lv$name == "text", ]
+  expect_equal(plain$n_expected[nrow(plain)], 1L)
+  expect_equal(plain$status[nrow(plain)], "ok")
+})
+
+test_that("base leaves keep the counts read while replaying, also across clip changes", {
+  # An entry's primitives between two clip changes are wrapped separately;
+  # the wrapped scene must hold, per leaf, the count read during the replay.
+  chunk <- paste(c("<circle cx='1' cy='1' r='1' />", "<circle cx='2' cy='2' r='1' />",
+                   "</g>", "<defs>", "  <clipPath id='cpX'>", "    <rect x='0' y='0' width='9' height='9' />",
+                   "  </clipPath>", "</defs>", "<g clip-path='url(#cpX)'>",
+                   "<text x='1' y='1'>a</text>", ""), collapse = "\n")
+  w <- wrap_entry(chunk, "L007")
+  expect_equal(w$n, 3L)
+  expect_equal(lengths(regmatches(w$text, gregexpr("<g data-gloss-leaf='L007'>", w$text, fixed = TRUE))), 2L)
+  # many entries, linear reading: 5000 segments() calls
+  skip_on_cran()
+  many <- function() {
+    graphics::plot(0:1, 0:1, type = "n")
+    set.seed(1)
+    for (i in seq_len(5000)) graphics::segments(stats::runif(1), stats::runif(1), stats::runif(1), stats::runif(1))
+  }
+  t0 <- proc.time()[["elapsed"]]
+  fig <- gloss(many, width = 5, height = 4, context = FALSE)
+  secs <- proc.time()[["elapsed"]] - t0
+  expect_equal(sum(fig$substrate$leaves$name == "segments"), 5000L)
+  expect_equal(fig$meta$page$verdict, "equal")
+  expect_lt(secs, 30)
+})
+
+test_that("a dense base leaf becomes a raster with the same element table", {
+  big <- function() {
+    set.seed(6)
+    graphics::plot(stats::rnorm(3000), stats::rnorm(3000), pch = 19)
+  }
+  vec <- gloss(big, width = 4, height = 3, dense = Inf, context = FALSE)
+  ras <- gloss(big, width = 4, height = 3, dense = 1000, context = FALSE)
+  expect_identical(ras$substrate$elements, vec$substrate$elements)
+  expect_equal(sum(ras$substrate$leaves$dense), 1L)
+  id <- ras$substrate$leaves$id[ras$substrate$leaves$dense]
+  expect_equal(ras$substrate$leaves$name[ras$substrate$leaves$id == id], "plotXY")
+  png <- ras$substrate$rasters[[id]]
+  expect_identical(png[1:4], as.raw(c(0x89, 0x50, 0x4e, 0x47)))
 })
