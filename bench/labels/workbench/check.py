@@ -387,6 +387,49 @@ proc = subprocess.run([sys.executable, os.path.join(HERE, "serve.py"), "--sheets
 expect("team: labels made elsewhere that do not fit the sheets stop the server, with the reason",
        proc.returncode != 0 and "does not fit the sheet of ex-base" in proc.stderr and "the label says" in proc.stderr)
 shutil.rmtree(root)
+# a set that grows: figures added after someone froze their labels stay blind to them
+# until they have labelled those too (the second batch, added to a running pilot)
+grow = tempfile.mkdtemp(prefix="wb-check-")
+gs, gt = os.path.join(grow, "sheets"), os.path.join(grow, "team")
+os.makedirs(os.path.join(gt, "key"))
+add = lambda name: [shutil.copy(f, os.path.join(gs, os.path.basename(f).replace("ex-base", name))) for f in glob.glob(os.path.join(EX, "ex-base*"))]
+os.mkdir(gs)
+add("aa-base")
+shutil.copy(os.path.join(EX, "labels", "ex-base.csv"), os.path.join(gt, "key", "aa-base.csv"))
+serve_grow = lambda: subprocess.Popen([sys.executable, os.path.join(HERE, "serve.py"), "--sheets", gs, "--examples", "", "--team", gt,
+                                       "--invite", "pass", "--port", str(PORT), "--no-open"],
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+proc = serve_grow()
+proc.stdout.readline()
+try:
+    g = call("/api/join", {"nickname": "early", "invite": "pass"})[1]["token"]
+    post("aa-base", {"labels": state_of(want["ex-base"]), "seconds": 30}, g)
+    s, opened = call("/api/open/aa-base", {}, g)
+    first = s == 200 and opened["peers"]["annotators"] == ["early", "key"]
+finally:
+    stop(proc)
+add("zz-base")
+shutil.copy(os.path.join(EX, "labels", "ex-base.csv"), os.path.join(gt, "key", "zz-base.csv"))
+proc = serve_grow()
+proc.stdout.readline()
+try:
+    cfg_g = call("/api/config", token=g)[1]
+    ov = call("/api/overview", token=g)[1]
+    blind = (call("/api/figure/zz-base", token=g)[1]["peers"] is None and call("/api/peers/zz-base", token=g)[1]["peers"] is None
+             and call("/api/open/zz-base", {}, g)[0] == 403 and [f["id"] for f in ov["figures"]] == ["aa-base"]
+             and all(p["figures"] == 1 for p in ov["pairs"]))
+    expect("a set that grows: the figure frozen before stays open, the added one is blind until it is labelled",
+           first and [(f["id"], f["locked"], f["done"]) for f in cfg_g["figures"]] == [("aa-base", True, True), ("zz-base", False, False)]
+           and call("/api/peers/aa-base", token=g)[1]["peers"]["annotators"] == ["early", "key"] and blind)
+    post("zz-base", {"labels": state_of(want["ex-base"]), "seconds": 30}, g)
+    s, opened = call("/api/open/zz-base", {}, g)
+    expect("a set that grows: once the added figure is labelled it opens and freezes like the first",
+           s == 200 and opened["peers"]["annotators"] == ["early", "key"] and "independent" in opened["state"]
+           and [f["locked"] for f in call("/api/config", token=g)[1]["figures"]] == [True, True]
+           and os.path.exists(os.path.join(gt, "early", "zz-base.csv")))
+finally:
+    stop(proc)
+shutil.rmtree(grow)
 if skipped:
     print("%d check(s) skipped" % skipped)
 sys.exit(0 if ok else 1)

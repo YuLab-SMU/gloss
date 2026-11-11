@@ -1,0 +1,8 @@
+"figure","k","leaf","key","occurrence","class","n_elements","tags","x0","y0","x1","y1","text","fill","stroke","path","elements","role","kind","note"
+"gallery-056","1","L001","data_title | GRID.text","1","text","1","text","235.4","13.6","268.6","27.6","value","","","GRID.text.1","all","annotation","title","the treemap's default title, the name of the size variable; unsure: guide other"
+"gallery-056","2","L002","data::data_asp | subgroup-1","1","rect","9","rect","14.2","32.3","489.8","352.9","","#AB8E1E","","subgroup-1","all","data","area","treemap rectangles of the subgroups"
+"gallery-056","3","L003","data::data_asp | GRID.rect","1","rect","9","rect","66.6","101.6","488.4","305.9","","","","GRID.rect.30","all","data","other","the box behind a subgroup label, placed with the label; invisible; unsure: decoration background"
+"gallery-056","4","L004","data::data_asp | GRID.text","1","text","9","text","66.6","101.8","488.4","306.7","subgroup-1","#FFFFFF","","GRID.text.2","all","data","text",""
+"gallery-056","5","L005","data::data_asp | group-1","1","rect","3","rect","14.2","32.3","489.8","352.9","","","","group-1","all","data","area","treemap rectangles of the groups, outline only"
+"gallery-056","6","L006","data::data_asp | GRID.rect","2","rect","3","rect","121.2","123.1","399.9","294.1","","#ABB150","","GRID.rect.41","all","data","other","the box behind a group label, placed with the label; unsure: decoration background"
+"gallery-056","7","L007","data::data_asp | GRID.text","2","text","3","text","121.2","123.7","399.9","295","group-1","","","GRID.text.31","all","data","text",""
