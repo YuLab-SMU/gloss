@@ -577,3 +577,17 @@ Scored 2026-11-11. v0: `runs/2026-11-11-2315-bind-dev.*` at `9f448a1` (clean tre
 |---|---|---|
 | 76. v0 against `2303`: only gallery-020's labels change, unbound → verified (5) | 7113 of 7114 leaves unchanged; gallery-020 L003 verified 5; 0 regressions | right |
 | 77. Stratum against `2300`: no leaf changes | 595 of 595 unchanged | right |
+
+## Text drawn as glyph outlines (tree binding plan Task 4)
+
+Written 2026-11-11, after the binder was changed to name a text leaf whose elements are all paths, and before the change ran on any bench figure. From run `2327`: 67 layer leaves of class `text` drawn as paths, 1829 elements, in tree-014, -041, -046, -054 and -062 (the book's figures; `emojifont` turns `showtext` on): 56 are count mismatches (1792 elements), 11 match their counts and failed on position (37 elements: tree-014 11, tree-046 26); none had a verified or ambiguous element. v0: no such leaf. The runs are made after the bench's workers were changed to load a copy of gloss's source taken when the run starts.
+
+### How the runs are made and scored (fixed before the runs)
+
+- `bind.R dev tree`, then `bind.R dev`, in the container with no network, at the commit that holds these predictions, with a clean tree; `compare-bind.R` against runs `2327` and `2315`.
+
+### Predictions
+
+78. **Each of the 67 leaves has a reason naming glyph outlines; the 11 that matched their counts are unbound, the 56 others stay count mismatches.** Failed 104 → 67, unbound 50 → 87; count mismatch (14482) and the checked share (41.5%) do not move, and no element moves out of verified or ambiguous.
+79. **No other leaf changes:** on the stratum, the changed leaves are these 67; on v0, none of the 7114.
+80. **In at least 54 of the 67 leaves (80%), the number of paths equals the number of the labels' characters other than spaces,** as the reason reports them: `showtext` draws one outline per glyph and nothing for a space, so most leaves could be grouped into labels by count. Leaves where they differ would be labels drawn through plotmath or glyphs that draw no outline.
