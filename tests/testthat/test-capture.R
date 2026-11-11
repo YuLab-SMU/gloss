@@ -158,6 +158,20 @@ test_that("an object whose print method draws another figure is captured as what
   expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain))
   expect_identical(clip_regions(fig$substrate$scene), clip_regions(plain))
   expect_equal(fig$meta$page$verdict, "equal")
+  # Its built data and panels describe the plot before print.gloss_test_print,
+  # not the page: they are withheld with the reason; the raw data is kept.
+  expect_false(any(grepl("^built_", names(fig$tables))))
+  expect_true("raw" %in% names(fig$tables))
+  expect_equal(nrow(fig$substrate$panels), 0L)
+  w <- fig$status$withheld
+  expect_setequal(w$what, c("built_layer1", "panels"))
+  expect_true(all(grepl("print.gloss_test_print", w$reason, fixed = TRUE)))
+  expect_output(print(fig), "withheld panels: print.gloss_test_print")
+  # A plain ggplot keeps its built tables and panels.
+  plain_fig <- gloss(p, width = 5, height = 4, context = FALSE)
+  expect_true("built_layer1" %in% names(plain_fig$tables))
+  expect_equal(nrow(plain_fig$substrate$panels), 1L)
+  expect_null(plain_fig$status$withheld)
   if (requireNamespace("ggExtra", quietly = TRUE)) {
     g <- ggExtra::ggMarginal(p, type = "histogram")
     fig <- gloss(g, width = 5, height = 4, context = FALSE)

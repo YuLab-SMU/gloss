@@ -1,0 +1,6 @@
+== jitter without a seed, 32 rows, 5 runs per rule (set.seed(k) before gloss()) ==
+  separate_build  rows on the page: 0, 0, 0, 0, 0 of 32
+  same_rng_state  rows on the page: 32, 32, 32, 32, 32 of 32
+  engine_draws    rows on the page: 32, 32, 32, 32, 32 of 32
+
+engine draws vs print(), same seed: identical=TRUE, 0 primitives differ

@@ -1,4 +1,13 @@
 # Engine plugin: ggplot2.
+#
+# ggplot2's print() starts a page, builds the plot and draws its gtable. The
+# engine does the same and keeps the build, so the built tables are the data
+# drawn even when the build draws random numbers (position_jitter() without a
+# seed: 0 of 32 rows on the page from a separate build, 32 of 32 from the
+# drawn one; dev_docs/research/capture-fidelity/p2-jitter-tables.out). An
+# object whose class has its own print method (ggbreak's ggcut) is printed;
+# its built data and panels describe the plot before that method, so they are
+# withheld with the reason (ADR-0006 point 4). Its raw data is kept.
 
 register_engine_ggplot <- function() {
   gl_register(
@@ -7,10 +16,29 @@ register_engine_ggplot <- function() {
     classes = c("ggplot", "ggplot2::ggplot"),
     packages = "ggplot2",
     prepare = function(x, width, height) {
-      list(plot = x, built = build_ggplot(x))
+      owner <- ggplot_print_owner(x)
+      # An extension whose ggplot_build() returns something else (gganimate)
+      # is refused before its own print method runs.
+      list(plot = x, owner = owner, built = if (is.null(owner)) NULL else build_ggplot(x))
     },
-    tables = function(state) ggplot_tables(state$plot, state$built),
-    panels = function(state, substrate) ggplot_panels(state$built, substrate),
+    draw = function(state) {
+      if (is.null(state$owner)) {
+        ggplot2::set_last_plot(state$plot)
+        grid::grid.newpage()
+        state$built <- build_ggplot(state$plot)
+        grid::grid.draw(ggplot2::ggplot_gtable(state$built))
+      } else {
+        print(state$plot)
+      }
+      state
+    },
+    tables = function(state) {
+      ggplot_tables(state$plot, state$built, withheld = print_owner_reason(state$owner))
+    },
+    panels = function(state, substrate) {
+      if (!is.null(state$owner)) return(list(withheld = print_owner_reason(state$owner)))
+      ggplot_panels(state$built, substrate)
+    },
     describe = function(state) ggplot_describe(state$plot),
     example = function() {
       ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$wt, .data$mpg)) +
@@ -31,6 +59,28 @@ build_ggplot <- function(x) {
     ))
   }
   built
+}
+
+# The class whose print method draws `x`, when that method is not ggplot2's.
+ggplot_print_owner <- function(x) {
+  std <- lapply(c("ggplot2::ggplot", "ggplot"), function(cls) {
+    tryCatch(utils::getS3method("print", cls, optional = TRUE), error = function(e) NULL)
+  })
+  std <- std[!vapply(std, is.null, logical(1))]
+  for (cls in class(x)) {
+    m <- tryCatch(utils::getS3method("print", cls, optional = TRUE), error = function(e) NULL)
+    if (is.null(m)) next
+    if (any(vapply(std, function(f) identical(f, m), logical(1)))) return(NULL)
+    return(cls)
+  }
+  NULL
+}
+
+print_owner_reason <- function(owner) {
+  if (is.null(owner)) return(NULL)
+  sprintf(paste("print.%s draws the page, not ggplot2's print method; the built data and panels",
+                "describe the plot before that method, so gloss cannot show they describe the page drawn."),
+          owner)
 }
 
 quo_vars <- function(q) {
@@ -57,11 +107,14 @@ ggplot_facet_vars <- function(built) {
   setdiff(names(lay), c("PANEL", "ROW", "COL", "SCALE_X", "SCALE_Y", "COORD"))
 }
 
-ggplot_tables <- function(plot, built) {
+# Raw tables of the plot and of its layers, and the built data of each
+# layer. With `withheld`, the built data are listed as withheld with that
+# reason instead (the raw data are what the plot was given, whatever drew it).
+ggplot_tables <- function(plot, built, withheld = NULL) {
   key_aes <- c("label", "group", "data_id", "tooltip", "text", "id")
   maps <- c(list(plot$mapping), lapply(plot$layers, function(l) l$mapping))
   referenced <- unique(c(unlist(lapply(maps, function(m) unlist(lapply(m, quo_vars)))),
-                         ggplot_facet_vars(built)))
+                         if (is.null(built)) character() else ggplot_facet_vars(built)))
   hints_all <- unlist(lapply(maps, mapping_symbols))
   hints <- hints_all[names(hints_all) %in% key_aes]
   out <- list()
@@ -84,6 +137,13 @@ ggplot_tables <- function(plot, built) {
   # built data follows the built plot's layers: ggplot_build() adds a
   # geom_blank layer to a plot that has none (wrapped patchwork elements)
   built_layers <- built$plot$layers %||% plot$layers
+  if (!is.null(withheld)) {
+    n <- if (is.null(built)) max(1L, length(plot$layers)) else length(built$data)
+    for (i in seq_len(n)) {
+      out[[length(out) + 1L]] <- list(name = sprintf("built_layer%d", i), withheld = withheld)
+    }
+    return(out)
+  }
   for (i in seq_along(built$data)) {
     l <- if (i <= length(built_layers)) built_layers[[i]] else NULL
     out[[length(out) + 1L]] <- list(
@@ -106,7 +166,11 @@ ggplot_panels <- function(built, substrate, prefix = "", leaf_filter = NULL) {
   }, "")
   vps <- unique(stats::na.omit(seg))
   lay <- built$layout$layout
-  if (!length(vps) || length(vps) != nrow(lay)) return(NULL)
+  if (length(vps) != nrow(lay)) {
+    return(list(withheld = sprintf(
+      "%d panel viewport%s on the page and %d panel%s in the built layout: panels cannot be matched to the page.",
+      length(vps), if (length(vps) == 1L) "" else "s", nrow(lay), if (nrow(lay) == 1L) "" else "s")))
+  }
   first <- match(vps, seg)
   box <- leaves[first, c("x0", "y0", "x1", "y1")]
   col_rank <- match(round(box$x0, 1), sort(unique(round(box$x0, 1))))

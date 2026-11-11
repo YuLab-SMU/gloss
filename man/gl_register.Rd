@@ -63,7 +63,11 @@ which chooses among engines that declare the same class), \code{draw(state)},
 page; \code{draw} is only for an engine that must keep what drawing returns.
 It draws on the current device and returns the state to use afterwards,
 and its page must be the page the input draws (the contract test checks
-this on \code{example()}).
+this on \code{example()}). Tables and panels are the engine's statements about
+the page drawn: a table it cannot show describes that page is returned as
+\code{list(name = , withheld = reason)} instead of with \code{data}, and \code{panels()}
+can return \code{list(withheld = reason)}; gloss lists them in
+\code{fig$status$withheld}.
 \item \code{rules}: \code{engine}, \code{rules}.
 \item \code{layer}: \code{body} (schema); optional \code{depends}, \code{verify}, \code{scope}.
 \item \code{check}: \code{run(table, args)}; \code{schema} describes \code{args}.

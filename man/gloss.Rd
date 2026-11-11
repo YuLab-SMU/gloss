@@ -70,6 +70,12 @@ ComplexHeatmap heatmaps, base graphics (a \code{recordedplot} or a function that
 draws the plot, through gridGraphics) and any grid grob, function or
 recorded plot that draws with grid.
 
+The engine's tables and panels are statements about the page drawn. Those
+it cannot show describe that page are withheld and listed with the reason
+in \code{fig$status$withheld}: the built data of a ggplot printed by another
+class's print method, and of a patchwork plot whose build draws random
+numbers.
+
 Within each leaf the expected number of drawn elements is compared with
 the number the device drew. A leaf whose counts differ keeps its
 structure but is marked \code{count_mismatch} and is never bound to data rows.

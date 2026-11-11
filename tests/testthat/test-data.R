@@ -1,3 +1,20 @@
+test_that("a patchwork plot whose build draws random numbers has its built tables withheld", {
+  # patchwork's print() builds each plot itself; gloss's tables come from
+  # another build. Two builds that differ show the built data cannot be shown
+  # to be the data drawn.
+  skip_if_no("ggplot2", "patchwork")
+  steady <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  shaken <- ggplot2::ggplot(mtcars, ggplot2::aes(cyl, mpg)) +
+    ggplot2::geom_point(position = ggplot2::position_jitter(width = 0.3, height = 0))
+  fig <- gloss(patchwork::wrap_plots(steady, shaken), width = 6, height = 3, context = FALSE)
+  expect_true("plot1_built_layer1" %in% names(fig$tables))
+  expect_false("plot2_built_layer1" %in% names(fig$tables))
+  expect_true("plot2_raw" %in% names(fig$tables))
+  w <- fig$status$withheld
+  expect_equal(w$what, "plot2_built_layer1")
+  expect_match(w$reason, "two builds")
+})
+
 test_that("the five key rules apply in order", {
   k <- gl_infer_key(mtcars)
   expect_equal(c(k$rule, k$key), c("1", ".rownames"))

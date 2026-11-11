@@ -95,7 +95,11 @@ gl_plugin_kinds <- function() names(plugin_kinds())
 #'   page; `draw` is only for an engine that must keep what drawing returns.
 #'   It draws on the current device and returns the state to use afterwards,
 #'   and its page must be the page the input draws (the contract test checks
-#'   this on `example()`).
+#'   this on `example()`). Tables and panels are the engine's statements about
+#'   the page drawn: a table it cannot show describes that page is returned as
+#'   `list(name = , withheld = reason)` instead of with `data`, and `panels()`
+#'   can return `list(withheld = reason)`; gloss lists them in
+#'   `fig$status$withheld`.
 #' * `rules`: `engine`, `rules`.
 #' * `layer`: `body` (schema); optional `depends`, `verify`, `scope`.
 #' * `check`: `run(table, args)`; `schema` describes `args`.

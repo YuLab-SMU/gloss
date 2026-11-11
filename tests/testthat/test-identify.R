@@ -23,6 +23,26 @@ test_that("built data mapped through each panel's scales lands on the drawn poin
   expect_equal(gl_panels(fig)$key, c("am=0", "am=1"))
 })
 
+test_that("jittered points land on the rows of the built table", {
+  # position_jitter() without a seed draws random numbers in the build. With
+  # print() drawing the page and the engine building separately, 0 of 32 rows
+  # landed on their point (p2-jitter-tables.out); the engine now draws the
+  # build its tables come from. Tolerance: the SVG prints 0.01 pt.
+  skip_if_no("ggplot2")
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(cyl, mpg)) +
+    ggplot2::geom_point(position = ggplot2::position_jitter(width = 0.4, height = 0))
+  for (k in 1:3) {
+    fig <- gloss(p, width = 5, height = 4, context = FALSE)
+    built <- gl_table(fig, "built_layer1")
+    lv <- gl_leaf(fig)
+    el <- gl_elements(fig, list(leaf = lv$id[grepl("geom_point", lv$path)]))
+    px <- gl_to_pixel(fig, gl_panels(fig)$id, built$x, built$y)
+    cc <- circle_centres(el)
+    expect_equal(nrow(cc), 32L)
+    expect_equal(sum(abs(px$x - cc$cx) < 0.011 & abs(px$y - cc$cy) < 0.011), 32L)
+  }
+})
+
 test_that("facet_grid panels are matched to the layout by position", {
   skip_if_no("ggplot2")
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point() +

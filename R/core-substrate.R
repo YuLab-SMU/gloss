@@ -44,6 +44,12 @@
 #' draws the plot, through gridGraphics) and any grid grob, function or
 #' recorded plot that draws with grid.
 #'
+#' The engine's tables and panels are statements about the page drawn. Those
+#' it cannot show describe that page are withheld and listed with the reason
+#' in `fig$status$withheld`: the built data of a ggplot printed by another
+#' class's print method, and of a patchwork plot whose build draws random
+#' numbers.
+#'
 #' Within each leaf the expected number of drawn elements is compared with
 #' the number the device drew. A leaf whose counts differ keeps its
 #' structure but is marked `count_mismatch` and is never bound to data rows.
@@ -162,15 +168,26 @@ gl_capture <- function(x, engine, width = 7, height = 5, dense = 10000,
     ))
   }
   sub <- substrate_from_doc(doc, cap, width, height, dense)
+  # Tables and panels are the engine's statements about the page; those it
+  # cannot show describe the page drawn come back withheld, with the reason.
+  withheld <- data.frame(what = character(), reason = character(), stringsAsFactors = FALSE)
   if (!is.null(eng$panels)) {
     pan <- eng$panels(state, sub)
-    if (!is.null(pan)) {
+    if (!is.null(pan$withheld)) {
+      withheld <- rbind(withheld, data.frame(what = "panels", reason = pan$withheld, stringsAsFactors = FALSE))
+    } else if (!is.null(pan)) {
       sub$panels <- pan$panels
       sub$leaves$panel <- unname(pan$leaf_panel[sub$leaves$id])
     }
   }
   tables <- if (!is.null(eng$tables)) eng$tables(state) else list()
-  tables <- lapply(tables, new_table)
+  held <- vapply(tables, function(t) !is.null(t$withheld), logical(1))
+  if (any(held)) {
+    withheld <- rbind(withheld, data.frame(what = vapply(tables[held], `[[`, "", "name"),
+                                           reason = vapply(tables[held], `[[`, "", "withheld"),
+                                           stringsAsFactors = FALSE))
+  }
+  tables <- lapply(tables[!held], new_table)
   names(tables) <- vapply(tables, `[[`, "", "name")
   fig <- new_figure(
     meta = list(
@@ -207,6 +224,10 @@ gl_capture <- function(x, engine, width = 7, height = 5, dense = 10000,
     sniffed <- sniff_context(input)
     fig$context <- sniffed$items
     fig$plugins <- rbind(fig$plugins, sniffed$plugins)
+  }
+  if (nrow(withheld)) {
+    rownames(withheld) <- NULL
+    fig$status$withheld <- withheld
   }
   fig$meta$id <- substrate_id(fig$substrate)
   fig
@@ -989,8 +1010,13 @@ print.gloss_figure <- function(x, ...) {
     cat(sprintf("  page: %s, drawn by %s; %s\n", pg$kind, pg$drawn_by, how))
     if (isTRUE(pg$pages > 1L)) cat(sprintf("  the input drew %d pages; the last is captured\n", pg$pages))
   }
-  if (length(x$status)) {
-    for (nm in names(x$status)) cat(sprintf("  status %s: %s\n", nm, paste(format(x$status[[nm]]), collapse = ", ")))
+  w <- x$status$withheld
+  if (is.data.frame(w) && nrow(w)) {
+    for (i in seq_len(nrow(w))) cat(sprintf("  withheld %s: %s\n", w$what[i], w$reason[i]))
+  }
+  rest <- x$status[setdiff(names(x$status), "withheld")]
+  if (length(rest)) {
+    for (nm in names(rest)) cat(sprintf("  status %s: %s\n", nm, paste(format(x$status[[nm]]), collapse = ", ")))
   }
   invisible(x)
 }

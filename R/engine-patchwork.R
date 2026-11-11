@@ -1,6 +1,11 @@
 # Engine plugin: patchwork compositions. Each ggplot in the composition
 # contributes its tables, prefixed with its position ("plot2_built_layer1").
 # Panels of patchwork plots are not mapped yet (M1).
+#
+# patchwork's print() builds every plot itself, so the engine's builds are
+# other builds. A plot built twice with different data draws random numbers
+# in its build: its built data cannot be shown to be the data drawn, and are
+# withheld with the reason (ADR-0006 point 4).
 
 register_engine_patchwork <- function() {
   gl_register(
@@ -10,15 +15,22 @@ register_engine_patchwork <- function() {
     packages = c("patchwork", "ggplot2"),
     prepare = function(x, width, height) {
       plots <- patchwork_plots(x)
-      list(plot = x, plots = plots, built = lapply(plots, build_ggplot))
+      built <- lapply(plots, build_ggplot)
+      again <- lapply(plots, ggplot2::ggplot_build)
+      random <- !mapply(function(a, b) identical(a$data, b$data), built, again)
+      list(plot = x, plots = plots, built = built, random = unname(random))
     },
     tables = function(state) {
       out <- list()
       for (i in seq_along(state$plots)) {
-        tabs <- ggplot_tables(state$plots[[i]], state$built[[i]])
+        reason <- if (isTRUE(state$random[i])) {
+          sprintf(paste("plot %d: two builds give different data (its build draws random numbers),",
+                        "so its built data cannot be shown to be the data patchwork drew."), i)
+        }
+        tabs <- ggplot_tables(state$plots[[i]], state$built[[i]], withheld = reason)
         for (t in tabs) {
           t$name <- sprintf("plot%d_%s", i, t$name)
-          t$description <- sprintf("plot %d: %s", i, t$description)
+          if (!is.null(t$description)) t$description <- sprintf("plot %d: %s", i, t$description)
           out[[length(out) + 1L]] <- t
         }
       }

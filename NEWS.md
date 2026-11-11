@@ -7,6 +7,8 @@
 - A function or a recorded plot that draws with grid is captured by the grid engine; it used to stop with "EXPR must be a length 1 vector". A grob whose name is a vector (treemap) is captured. A page with nothing on it and a page mixing base graphics and grid are refused with the reason. An input that draws several pages is captured as its last page, with a warning.
 - Engine plugins: `grob(state)` is no longer part of the contract. New optional fields: `page` (`"grid"` or `"base"`), which chooses among engines declaring the same class, and `draw(state)`, for an engine that must keep what drawing returns (ComplexHeatmap's drawn list); its page must be the page the input draws, and `gl_test_plugin()` checks it on `example()`.
 - Base figures are still drawn through gridGraphics, now as the base engine's drawing step.
+- A ggplot's built tables are the data drawn even when the build draws random numbers (`position_jitter()` without a seed): the engine draws the build it keeps, as ggplot2's `print()` does. They used to come from another build, which put none of 32 jittered rows on their point.
+- Tables and panels that gloss cannot show describe the page drawn are withheld, with the reason in `fig$status$withheld` and in the printed figure: the built data and panels of a ggplot printed by another class's print method (ggbreak), the built data of a patchwork plot whose two builds differ, and panels whose number does not match the page. Raw tables are kept.
 
 ## Fixes found by the bench development set (2026-11-10)
 

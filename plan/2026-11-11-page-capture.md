@@ -53,12 +53,12 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 7 files, 56 tests, 338 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, after Task 1).
+- Suite: 7 files, 59 tests, 363 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, after Task 2).
 - Key numbers: development set on the engine route 40 equal / 6 known exceptions / 5 different of 51 captured; grid pages captured by the page route in `R/` (Task 1), not yet run on the development set; six fixtures identical to the engine route.
 
 **Overall progress**
 - [x] Task 1: Grid pages in the core: draw, wrap in place, self-check
-- [ ] Task 2: Engines on the page: tables and panels that describe what was drawn
+- [x] Task 2: Engines on the page: tables and panels that describe what was drawn
 - [ ] Task 3: Dense leaves, size and time
 - [ ] Task 4: Bench on the page route; development run of the grid step
 - [ ] Task 5: Base pages by display-list entry _(stub; written out after Task 4)_
@@ -109,7 +109,7 @@
 
 ### Task 2: Engines on the page
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** 1.
 
@@ -121,17 +121,24 @@
 - Tables and panels are statements about the page. Show that they hold, or withhold them.
 
 **Checklist**
-- [ ] Measure first, before changing engines: a ggplot with `position_jitter()` and no seed; drawn point positions against the built table mapped through the panel scales. Record how many points agree when the engine builds separately, and when it builds from the random state `print()` started with
-- [ ] Measure on the two development figures with their own print methods (exts-018 ggbreak, gallery-052 ggExtra) what the ggplot engine's `tables()` and `panels()` return against the page: leaves found, panels matched, counts
-- [ ] From the two measurements choose the rule (rebuild from the saved random state; or the engine's own drawing step where the print method is ggplot2's) and write it as a scope change with the numbers
-- [ ] Where the engine's panels or tables cannot be matched to the page, withhold them with a reason in the substrate's status; test with the synthetic subclass
-- [ ] ComplexHeatmap: draw on the page directly, keep the drawn list for tables; no `grid.grabExpr()`
+- [x] Measure first, before changing engines: a ggplot with `position_jitter()` and no seed; drawn point positions against the built table mapped through the panel scales. Record how many points agree when the engine builds separately, and when it builds from the random state `print()` started with
+- [x] Measure on the two development figures with their own print methods (exts-018 ggbreak, gallery-052 ggExtra) what the ggplot engine's `tables()` and `panels()` return against the page: leaves found, panels matched, counts
+- [x] From the two measurements choose the rule (rebuild from the saved random state; or the engine's own drawing step where the print method is ggplot2's) and write it as a scope change with the numbers
+- [x] Where the engine's panels or tables cannot be matched to the page, withhold them with a reason in the substrate's status; test with the synthetic subclass
+- [x] ComplexHeatmap: draw on the page directly, keep the drawn list for tables; no `grid.grabExpr()`
 
 **Verification**
 - Tests: jittered points agree with the table for every row (a tolerance of the SVG's printed precision, stated in the test); the subclass fixture has no tables and a reason; heatmap and patchwork tables equal today's on the fixtures.
 - Would change the plan: no rule makes the jittered table agree. Then tables of a randomly built plot are withheld, and M1 binding on such figures is a recorded limit.
 
-**Result** _(filled in when done)_
+**Result** (2026-11-11)
+- Measured before changing engines (package at `19f39d7`): jitter without a seed, 32 rows, 5 runs: separate build 0, 0, 0, 0, 0 of 32 rows on their point; build from the random state `print()` starts with 32 of 32 in 5 of 5; the engine drawing its own build 32 of 32 in 5 of 5, and its page identical to `print()`'s from the same seed (0 primitives differ) (`p2-jitter-tables.R`, host).
+- exts-018 (ggbreak, container, `p2-own-print.out`): `print.ggcut` draws 3 sub-panels of 20 bars each, every leaf `ok` (20 = 20), against a build with 1 panel and 20 rows; `panels()` returned nothing without a reason (4 panel viewports, 1 layout row), and `built_layer1` was offered with 20 rows on the uncut scale, which M1 would have bound by count. gallery-052 (ggExtra) is a gtable: grid engine, no tables or panels, verdict `equal`.
+- Rule: see the scope change below. After it, exts-018 keeps `raw` (20 rows) and lists `built_layer1` and `panels` as withheld with the reason (`p2-own-print-t2.out`).
+- Tests first: 4 new tests (jitter rows in `test-identify.R`, withheld for the subclass in `test-capture.R`, a random patchwork plot in `test-data.R`, withheld reasons through a bundle in `test-bundle.R`); before the change 59 tests, 354 expectations, 4 tests failing (the jitter test: 0 of 32 rows in each of 3 runs). After: `NOT_CRAN=true Rscript -e "devtools::test()"` 7 files, 59 tests, 363 expectations, 0 failed, 0 skipped.
+- Fixtures after the rule (`p1-fixtures-vs-engine-route.R`): heatmap and patchwork tables identical to the engine route's, as are the other four inputs' tables; verdict `equal` on all six.
+- ComplexHeatmap draws on the page and keeps the drawn list (done in Task 1; no `grid.grabExpr()`).
+- `ggplot_panels()` now withholds with a reason when the page's panel viewports and the built layout disagree in number (it returned `NULL` silently).
 
 ---
 
@@ -205,6 +212,8 @@ Predictions for the held-out capture run written into `bench/predictions.md` and
 ## Scope changes
 
 _(append-only; never edit completed tasks above)_
+
+**2026-11-11, Task 2: the rule for tables (assumption 1).** A second build is not the drawn one when the build draws random numbers: with `position_jitter()` and no seed, 0 of 32 rows were on their point in 5 of 5 runs (`p2-jitter-tables.out`). Both candidate rules gave 32 of 32 in 5 of 5. Chosen: the engine's own drawing step where the print method is ggplot2's. It draws ggplot2's print steps (`grid.newpage()`, `ggplot_build()`, `ggplot_gtable()`, `grid.draw()`) and keeps the build; its page is `print()`'s (0 primitives differ from the same seed; contract check on `example()`). Not chosen: restoring the random state before `print()`. It writes `.Random.seed` into the global environment, and it is right only if the print method draws its random numbers in the same order as gloss's build, which gloss cannot check. Elsewhere tables are withheld with the reason (ADR-0006 point 4): a ggplot whose class has its own print method keeps its raw tables, and its built tables and panels are withheld (exts-018). patchwork has no public way to draw a kept build, so a plot whose two builds differ has its built tables withheld. Effect on the open tasks: Task 4 counts the development figures with withheld tables or panels; nothing else changes. This is the case the ADR names ("something the drawing returns"), so the ADR is not changed.
 
 ## Closing notes
 

@@ -38,6 +38,26 @@ test_that("a figure read back from a bundle is identical to the one written", {
   }
 })
 
+test_that("withheld tables and panels keep their reasons through a bundle", {
+  skip_if_no("ggplot2")
+  registerS3method("print", "gloss_test_bundle_print", function(x, ...) {
+    y <- x
+    class(y) <- setdiff(class(x), "gloss_test_bundle_print")
+    print(y)
+    invisible(x)
+  }, envir = baseenv())
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  class(p) <- c("gloss_test_bundle_print", class(p))
+  fig <- gloss(p, width = 4, height = 3, context = FALSE)
+  expect_equal(nrow(fig$status$withheld), 2L)
+  for (path in c(withr::local_tempfile(fileext = ".html"), file.path(withr::local_tempdir(), "x.gloss"))) {
+    gl_write(fig, path, embed = "all")
+    back <- gl_read(path)
+    expect_identical(back$status, fig$status, label = path)
+    expect_identical(back$meta, fig$meta, label = path)
+  }
+})
+
 test_that("dense leaves round-trip through the index and raster", {
   skip_if_no("ggplot2")
   set.seed(4)
