@@ -54,14 +54,14 @@
 
 **Current state** _(update as results come in)_
 - Suite: 7 files, 60 tests, 374 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, after Task 3).
-- Key numbers: development set on the engine route 40 equal / 6 known exceptions / 5 different of 51 captured; grid pages captured by the page route in `R/` (Task 1), not yet run on the development set; six fixtures identical to the engine route.
+- Key numbers: development run `2026-11-11-0627` (page route for grid pages, base still through gridGraphics): 54 captured, 1 refused; grid pages 42 equal, 2 not deterministic, 0 different; base 1 equal, 5 known exceptions, 4 different; gloss's verdict and the bench's agree on 44 of 44 grid pages under the Task 4 reading.
 
 **Overall progress**
 - [x] Task 1: Grid pages in the core: draw, wrap in place, self-check
 - [x] Task 2: Engines on the page: tables and panels that describe what was drawn
 - [x] Task 3: Dense leaves, size and time
-- [ ] Task 4: Bench on the page route; development run of the grid step
-- [ ] Task 5: Base pages by display-list entry _(stub; written out after Task 4)_
+- [x] Task 4: Bench on the page route; development run of the grid step
+- [ ] Task 5: Base pages by display-list entry
 - [ ] Task 6: Base on the development set; names and classification re-measured; gridGraphics out; `R CMD check` _(stub)_
 - [ ] Task 7: Records: design §元素归属 rewritten, NEWS, dev logs _(stub)_
 - [ ] Task 8: Held-out predictions and run _(stub; needs the owner's go-ahead)_
@@ -174,7 +174,7 @@
 
 ### Task 4: Bench on the page route; development run of the grid step
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** 4.
 
@@ -182,24 +182,61 @@
 - Modify: `bench/R/runner.R` (recovery, comparison), `capture.R`, `score-capture.R`, `check-runner.R`
 
 **Checklist**
-- [ ] Comparison with clip regions; `check-runner.R` gains a case that loses a clip with every primitive unchanged and must be `different`
-- [ ] A verdict `not_deterministic`, proved by the bench itself (two plain drawings of the figure differ), never assumed from the package
-- [ ] Recovery: an object stays an object; a page the code drew is handed over as a recorded plot, not through `grid.grab()`. Check on fixtures that the replayed page captures like the page drawn in place
-- [ ] The reference for an object is the page that object draws alone; the page the frozen code left is reported beside it (39 of 42 objects equal it in the spike)
-- [ ] Record gloss's own verdict per figure and its agreement with the bench's
-- [ ] `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev`, archived, labelled as made after looking
+- [x] Comparison with clip regions; `check-runner.R` gains a case that loses a clip with every primitive unchanged and must be `different`
+- [x] A verdict `not_deterministic`, proved by the bench itself (two plain drawings of the figure differ), never assumed from the package
+- [x] Recovery: an object stays an object; a page the code drew is handed over as a recorded plot, not through `grid.grab()`. Check on fixtures that the replayed page captures like the page drawn in place
+- [x] The reference for an object is the page that object draws alone; the page the frozen code left is reported beside it (39 of 42 objects equal it in the spike)
+- [x] Record gloss's own verdict per figure and its agreement with the bench's
+- [x] `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev`, archived, labelled as made after looking
 
 **Verification**
 - `Rscript bench/R/check-runner.R`: OK, with the new cases failing before the change.
 - Development run: the grid-step line of *Done when*. Would change the plan: any figure different without gloss's verdict saying so; a grid page that errors.
 
-**Result** _(filled in when done)_
+**Result** (2026-11-11)
+- Harness (`ebd7e2a`): a drawn page, base or grid, is handed over as `recordPlot()`; an object's reference is the page it draws alone, and the page the code left is compared beside it; the bench's own comparator (primitives and clip regions, no gloss code) decides; `not_deterministic` only when the bench's two plain drawings differ; gloss's verdict, page kind, drawer, page count and withheld items recorded per figure; dense figures judged on a vector recapture (`dense = Inf`) instead of being a known exception.
+- `Rscript bench/R/check-runner.R`: FAILED before the change (two drawn grid pages recovered as `gTree`; the random figure `different`; the object sharing a page `different`; dense a known exception; gloss's verdict not recorded; the lost clip not judged), OK after, on the host and in the container. Assumption 4 on fixtures: the two drawn grid pages of the synthetic script (raw grid calls, lattice) replayed by gloss are equal to the page the code drew.
+- Development run `2026-11-11-0627` (`GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev`, commit `ebd7e2a`, made after looking; archived with its log and score in `bench/runs/`): 54 captured, 1 refused, 0 errors.
+  - Grid pages, 44: 42 equal, 2 not deterministic (gallery-059: two drawings differ in 5 primitives; heatmap-008: in 236), 0 different, 0 errors.
+  - gallery-053 refused: "<gganim> builds into <gganim_built>, not a built ggplot" (the ggplot engine checks the build before an own print method runs; the spike saw an empty page).
+  - Base pages, 10, still through gridGraphics: 1 equal, 5 known exceptions (one background rect), 4 different (gallery-008, -013, -038, bioc-004), as in the starting state.
+  - Against the engine route (`2026-11-10-1424`): exts-018 (ggbreak) and gallery-056 (treemap) now equal; exts-022 (dense) equal on the vector page instead of a known exception.
+  - gloss's verdict against the bench's, grid pages: 43 of 44 agree; 0 figures the bench finds different while gloss says equal. The one disagreement is heatmap-008 (bench `not_deterministic`, gloss `equal`, see the scope change below). Base pages: gloss says equal on 10 (it compares with gridGraphics' page), the bench on 1.
+  - Objects: drawn alone, 39 of 41 equal the page the code left (gallery-052 holds two figures, 136 primitives; gallery-059 is random), as in the spike.
+  - Withheld: 1 of 54 captured figures (exts-018: `panels`, `built_layer1`).
+  - Time per captured figure, median by engine 0.21 to 0.49 s; maximum 25.5 s (ggplot).
 
 ---
 
-### Task 5: Base pages by display-list entry _(stub)_
+### Task 5: Base pages by display-list entry
 
-Replay by entry in the core, reading only the new bytes of a file device (`s6-details.R`: 5008 entries in 0.32 s against 53 s); leaves, names from the entry's call, expected counts, leaf marks in the scene, panels and scales from `par()`; the base engine without gridGraphics; a recorded plot from another device captured with a recorded note. Written out after Task 4, from what Tasks 1 to 4 showed about the substrate's format.
+**Status:** `[ ]`
+
+**Tests assumption:** 5 (a display-list entry is a usable leaf).
+
+**Files**
+- Modify: `R/core-substrate.R` (base route: replay by entry, leaf groups, self-check, dense leaves), `R/engine-base.R` (no gridGraphics; panels from the replay)
+- Test: `tests/testthat/test-capture.R`, `test-identify.R`, `helper-figures.R`
+
+**Intent**
+- A base page is captured as the base graphics engine draws it, not as gridGraphics redraws it. The leaf is a display-list entry; its elements are the primitives the device wrote during that entry.
+
+**Checklist**
+- [ ] Failing tests first: the six inputs' base input equals the code's own page on svglite (today it equals gridGraphics' page); `rect(border = 0)` and a plot recorded on svglite are captured equal to their own page (gridGraphics: 2 and 1 primitives differ); a 5000-entry page captures in linear time (s6: 0.31 s)
+- [ ] Replay in the core, entry by entry, on a file svglite device kept valid (`always_valid = TRUE`), reading the bytes each entry adds; restore the recorded graphics state first by replaying the plot with an empty display list
+- [ ] Leaf groups: each run of an entry's primitives between two clip changes is wrapped in `<g data-gloss-leaf>`; the parsed scene must hold, per leaf, the count read during the replay (integrity check, abort otherwise)
+- [ ] Leaves: name from the entry's call (`plotXY`, `text`, `axis`, ...), path `base/<entry>/<name>`, vp `figure-<n>` (n counts `plot.new()`), box and scales from `par("fig", "plt", "usr")` after the entry; expected counts for `plotXY` (type `p` and `l`), `text`, `rect`, `segments`, unknown elsewhere
+- [ ] Panels from the replay: one per figure, box from `fig` and `plt`, scales from `usr`; a leaf belongs to a panel when its primitives are clipped to that figure's plot region
+- [ ] Self-check as for grid pages; the plain redraw is `replayPlot()` of the recorded page
+- [ ] Dense leaves: the entry redrawn alone on the PNG device, the other entries that drew anything skipped
+- [ ] Base engine: no drawing step, no gridGraphics; a recorded plot carries a note that it is replayed with svglite's text metrics
+- [ ] Measure on the fixtures, against the engine route: element counts, leaves, panel boxes and scales (s5: within 0.005 pt of the drawn points)
+
+**Verification**
+- `NOT_CRAN=true Rscript -e "devtools::test()"`: the new tests fail before and pass after; the base panel test of `test-identify.R` passes from the replay's panels (built data mapped through `usr` lands on the drawn circles within 0.011 pt).
+- Would change the plan: an entry whose primitives cannot be told apart from another's on the device (the counts read during the replay disagree with the parsed scene); a fixture whose page differs from the code's.
+
+**Result** _(filled in when done)_
 
 ### Task 6: Base on the development set _(stub)_
 
@@ -220,6 +257,8 @@ Predictions for the held-out capture run written into `bench/predictions.md` and
 _(append-only; never edit completed tasks above)_
 
 **2026-11-11, Task 2: the rule for tables (assumption 1).** A second build is not the drawn one when the build draws random numbers: with `position_jitter()` and no seed, 0 of 32 rows were on their point in 5 of 5 runs (`p2-jitter-tables.out`). Both candidate rules gave 32 of 32 in 5 of 5. Chosen: the engine's own drawing step where the print method is ggplot2's. It draws ggplot2's print steps (`grid.newpage()`, `ggplot_build()`, `ggplot_gtable()`, `grid.draw()`) and keeps the build; its page is `print()`'s (0 primitives differ from the same seed; contract check on `example()`). Not chosen: restoring the random state before `print()`. It writes `.Random.seed` into the global environment, and it is right only if the print method draws its random numbers in the same order as gloss's build, which gloss cannot check. Elsewhere tables are withheld with the reason (ADR-0006 point 4): a ggplot whose class has its own print method keeps its raw tables, and its built tables and panels are withheld (exts-018). patchwork has no public way to draw a kept build, so a plot whose two builds differ has its built tables withheld. Effect on the open tasks: Task 4 counts the development figures with withheld tables or panels; nothing else changes. This is the case the ADR names ("something the drawing returns"), so the ADR is not changed.
+
+**2026-11-11, Task 4: what "gloss's verdict agrees with the bench's" means.** heatmap-008 is `Heatmap(..., km = 2)`: k-means runs inside `draw()`, so two drawings of the object differ (the bench's proof: 236 primitives). gloss says `equal`, and it is right about what it claims: its capture equals the page it drew (0 primitives differ), because the random numbers are drawn before grid's display list holds fixed grobs, and the engine's tables come from that same drawn list. gloss's self-check sees randomness only between its drawing and its capture (gallery-059: ggrepel places labels inside `makeContent()`); it does not certify that a figure draws the same page twice, and the jittered ggplot of Task 2 is another such case. The spike's "43 equal, 1 not deterministic" came from the page the code left, which it never drew a second time. Agreement in *Done when* is therefore read as: the bench's `equal` implies gloss's `equal`; the bench's `not_deterministic` allows gloss's `equal` or `not_deterministic`; the bench's `different` with gloss's `equal` is the failed invariant, unchanged. With this reading the grid pages agree 44 of 44. The design doc gets a dated note on what `equal` certifies.
 
 ## Closing notes
 
