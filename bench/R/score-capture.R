@@ -86,7 +86,7 @@ if ("faithful" %in% names(cap)) {
 # before it have no verdict column; their strict fidelity numbers stand.
 if ("verdict" %in% names(cap)) {
   cat("\nFidelity verdicts (equal / known exception / different)\n")
-  v <- factor(got$verdict, levels = c("equal", "known_exception", "different"))
+  v <- factor(got$verdict, levels = c("equal", "not_deterministic", "known_exception", "different"))
   print(addmargins(table(engine = got$engine, verdict = v)))
 
   cat("\nKnown exceptions, with the reason\n")
@@ -112,29 +112,51 @@ if ("verdict" %in% names(cap)) {
 
 # Page route (page-capture plan Task 4, 2026-11-11). Runs from then on record
 # the bench's proof of determinism, the page the code left against the object
-# alone, and gloss's own verdict. Base figures are still drawn by
-# gridGraphics (the base engine's drawing step) until plan Task 5.
+# alone, and gloss's own verdict. Base figures were drawn by gridGraphics (the
+# base engine's drawing step) until plan Task 5; runs with a leaf_names column
+# (plan Task 6 on) replay base pages by entry and judge them like grid pages.
 if ("gloss_verdict" %in% names(cap)) {
+  by_entry <- "leaf_names" %in% names(cap)
   cap$page <- ifelse(cap$engine == "base", "base", ifelse(is.na(cap$page_kind), "-", cap$page_kind))
-  cat("\nPage route: outcome by page (base = base engine, through gridGraphics)\n")
+  cat(if (by_entry) "\nPage route: outcome by page\n" else "\nPage route: outcome by page (base = base engine, through gridGraphics)\n")
   cap$result <- ifelse(cap$outcome == "captured", cap$verdict, cap$status)
   print(addmargins(table(page = cap$page, result = cap$result)))
 
   cat("\nThe bench's verdict against gloss's own (captured figures)\n")
   print(addmargins(table(bench = got$verdict, gloss = got$gloss_verdict, useNA = "ifany")))
-  grid_got <- got[got$engine != "base", ]
-  agree <- grid_got$verdict == grid_got$gloss_verdict
-  cat("  agreement on grid pages:", pct(sum(agree, na.rm = TRUE), nrow(grid_got)), "\n")
-  broken <- got[got$verdict %in% "different" & got$gloss_verdict %in% "equal" & got$engine != "base", ]
-  cat("  different for the bench while gloss says equal (failed invariant), grid pages:", nrow(broken), "\n")
+  judged <- if (by_entry) got else got[got$engine != "base", ]
+  what <- if (by_entry) "pages" else "grid pages"
+  strict <- judged$verdict == judged$gloss_verdict
+  # plan Task 4 scope change: the bench's equal implies gloss's equal; the
+  # bench's not_deterministic allows gloss's equal or not_deterministic
+  # (gloss certifies its capture against its own drawing); the bench's
+  # different with gloss's equal is the failed invariant
+  agree <- ifelse(judged$verdict %in% "equal", judged$gloss_verdict %in% "equal",
+           ifelse(judged$verdict %in% "not_deterministic", judged$gloss_verdict %in% c("equal", "not_deterministic"),
+                  FALSE))
+  cat("  agreement on", what, "(plan Task 4 reading):", pct(sum(agree), nrow(judged)),
+      "| identical verdicts:", pct(sum(strict, na.rm = TRUE), nrow(judged)), "\n")
+  broken <- judged[judged$verdict %in% "different" & judged$gloss_verdict %in% "equal", ]
+  cat("  different for the bench while gloss says equal (failed invariant),", what, ":", nrow(broken), "\n")
   if (nrow(broken)) print(broken[, c("id", "engine", "prims_differ", "diff_scene", "diff_ref")], row.names = FALSE)
-  if (any(!agree, na.rm = TRUE)) {
-    cat("  disagreements:\n")
-    print(grid_got[which(!agree), c("id", "engine", "verdict", "gloss_verdict", "self_differ", "gloss_differ")], row.names = FALSE)
+  if (any(!agree | !strict, na.rm = TRUE)) {
+    cat("  verdicts not identical:\n")
+    print(judged[which(!strict | is.na(strict)), c("id", "engine", "verdict", "gloss_verdict", "self_differ", "gloss_differ")], row.names = FALSE)
   }
   b <- got[got$engine == "base", ]
-  cat("  base pages: gloss compares with gridGraphics' page, the bench with the code's:",
-      sum(b$gloss_verdict %in% "equal"), "equal for gloss,", sum(b$verdict %in% "equal"), "equal for the bench, of", nrow(b), "\n")
+  if (!by_entry) {
+    cat("  base pages: gloss compares with gridGraphics' page, the bench with the code's:",
+        sum(b$gloss_verdict %in% "equal"), "equal for gloss,", sum(b$verdict %in% "equal"), "equal for the bench, of", nrow(b), "\n")
+  } else if (nrow(b)) {
+    cat("\nBase leaf names over", nrow(b), "captured base pages (leaves, elements; design \u00a7\u5206\u7c7b)\n")
+    parts <- strsplit(unlist(strsplit(b$leaf_names[nzchar(b$leaf_names)], " ", fixed = TRUE)), ":", fixed = TRUE)
+    nm <- data.frame(name = vapply(parts, `[`, "", 1),
+                     leaves = as.integer(vapply(parts, `[`, "", 2)),
+                     elements = as.integer(vapply(parts, `[`, "", 3)), stringsAsFactors = FALSE)
+    tot <- aggregate(cbind(leaves, elements) ~ name, data = nm, FUN = sum)
+    tot$figures <- as.integer(table(nm$name)[tot$name])
+    print(tot[order(-tot$elements, tot$name), c("name", "figures", "leaves", "elements")], row.names = FALSE)
+  }
 
   cat("\nNot deterministic (two plain drawings differ, the bench's proof)\n")
   nd <- got[got$deterministic %in% FALSE, c("id", "engine", "self_differ", "verdict", "gloss_verdict")]

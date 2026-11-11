@@ -486,6 +486,14 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
           cap$unowned_other <- NA_character_
         }
         cap$dense_leaves <- sum(s$leaves$dense %in% TRUE)
+        # leaf names with their counts of leaves and elements, most elements
+        # first: "name:leaves:elements" (base names for design §分类, plan Task 6)
+        if (nrow(s$leaves)) {
+          nl <- table(s$leaves$name)
+          ne <- tapply(s$leaves$n_drawn, s$leaves$name, sum)[names(nl)]
+          o <- order(-ne, names(nl))
+          cap$leaf_names <- paste(sprintf("%s:%d:%d", names(nl), as.integer(nl), as.integer(ne))[o], collapse = " ")
+        } else cap$leaf_names <- ""
         bad <- s$leaves[which(s$leaves$status == "count_mismatch"), , drop = FALSE]
         cap$mismatch_leaves <- if (nrow(bad))
           paste(utils::head(substr(paste0(bad$id, ":", bad$name), 1L, 40L), 20L), collapse = " ") else ""
@@ -580,9 +588,10 @@ compare_pages <- function(scene, ref) {
 # - equal: the captured page is the reference, primitives and clip regions;
 # - not_deterministic: two plain drawings of the figure differ, so no capture
 #   can equal the reference (page-capture plan Task 4);
-# - known exception: gridGraphics' one extra "graphics-background" rect when a
-#   recorded base plot is echoed on svglite (base pages, until plan Task 5);
 # - different: everything else, with the diff recorded.
+# There is no known exception any more (page-capture plan Task 6): the one
+# extra background rect of gridGraphics' echo of a recorded base page was the
+# only one, and base pages are now replayed by entry.
 # Dense leaves are no longer an exception: their fidelity is judged on a
 # vector capture of the same figure.
 fidelity_verdict <- function(cap) {
@@ -591,13 +600,6 @@ fidelity_verdict <- function(cap) {
   if (isFALSE(cap$deterministic)) return(list(
     verdict = "not_deterministic",
     exception = sprintf("two plain drawings differ in %s primitives", nvl(cap$self_differ, NA))))
-  one_rect <- isTRUE(cap$prims_differ == 1) &&
-    isTRUE(cap$diff_scene_n == 1) && isTRUE(cap$diff_ref_n == 0) &&
-    nvl(cap$prims_scene, 0) == nvl(cap$prims_ref, 0) + 1 &&
-    startsWith(nvl(cap$diff_scene, ""), "rect ")
-  if (one_rect) return(list(
-    verdict = "known_exception",
-    exception = "gridGraphics background rect: one extra rect, nothing missing"))
   list(verdict = "different", exception = NA_character_)
 }
 

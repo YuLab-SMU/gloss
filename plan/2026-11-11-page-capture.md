@@ -63,7 +63,7 @@
 - [x] Task 3: Dense leaves, size and time
 - [x] Task 4: Bench on the page route; development run of the grid step
 - [x] Task 5: Base pages by display-list entry
-- [ ] Task 6: Base on the development set; names and classification re-measured; gridGraphics out; `R CMD check` _(stub)_
+- [~] Task 6: Base on the development set; names and classification re-measured; gridGraphics out; `R CMD check`
 - [ ] Task 7: Records: design §元素归属 rewritten, NEWS, dev logs _(stub)_
 - [ ] Task 8: Held-out predictions and run _(stub; needs the owner's go-ahead)_
 
@@ -247,9 +247,40 @@
 - Two runs of p5 were wrong and are not kept: sourcing s2 ran its `load_all(".")` over the tag, so the engine-route column measured the page route (26 of 26 on both sides, which did not match s0's `rect(border = 0)` result and gave it away); the `pairs` check put disp on the mpg scale (`pairs()` fills by column), a 1383.889 pt gap.
 - Would change the plan: neither condition occurred. No entry's primitives were confused with another's (the integrity check held on 26 pages and 5000 entries); no fixture differed from the code's page.
 
-### Task 6: Base on the development set _(stub)_
+### Task 6: Base on the development set
 
-Development run of the base step against the last line of *Done when*; the base names in design §分类 measured again on the development base figures; gridGraphics removed from `Suggests` and the tests; `R CMD build` and `R CMD check --as-cran`; the recorded-plot structure tested on each R version available.
+**Status:** `[~]`
+
+**Tests:** the last two lines of *Done when* (as read after the scope change of 2026-11-11, Task 6, below).
+
+**Files**
+- Modify: `bench/R/runner.R` (no known exception; leaf names per figure), `bench/R/capture.R`, `bench/R/score-capture.R`, `bench/R/check-runner.R`; `DESCRIPTION`, `.Rbuildignore`; comments in `R/` and `tests/` that still name gridGraphics.
+- Records: `bench/runs/`, `dev_docs/research/capture-fidelity/README.md`.
+
+**Intent**
+- Base pages of the development set captured as their code draws them, judged by the bench with no exception; gridGraphics out of the package; the package checked as CRAN would.
+
+**Checklist**
+- [x] Bench judges base pages like grid pages: the gridGraphics background-rect exception removed from `fidelity_verdict()`; `check-runner.R` asserts base fidelity (it reported it) and that leaf names are recorded; the score judges agreement on every captured page under the Task 4 reading and tallies base leaf names
+- [x] Linux: the bench container is the first Linux run of the base route (see Result)
+- [x] Predictions below committed before the run
+- [ ] Development run (`GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev`), archived with its log and score
+- [ ] Base leaf names on the development base figures, from the run; the base figure of design §分类 classified again with rules for call names (the design text is Task 7)
+- [ ] gridGraphics out of `DESCRIPTION` and the tests; the bench container keeps it (Task 8 runs the tag's engine route there)
+- [ ] `R CMD build --no-build-vignettes .` and `R CMD check --as-cran`; known hygiene items to look at: `Rplots.pdf` not in `.Rbuildignore`, non-ASCII comments in 4 files of `R/`, `<<-` in M0 code (closures writing their own function's locals)
+- [ ] Recorded-plot structure: R 4.5.2 is the only version on the host and in the bench image; other versions are not run (installing them is the owner's call)
+
+**Predictions for the development run** (written 2026-11-11 after looking at run `2026-11-11-0627` and the fixtures of Task 5, so they are not blind; development set only)
+- 55 figures: 54 captured, 1 refused (gallery-053, "not a static ggplot"), 0 errors, 0 timeouts.
+- Grid pages, 44: unchanged from `0627`, 42 equal, 2 not deterministic (gallery-059, heatmap-008).
+- Base pages, 10: 10 equal (in `0627`, through gridGraphics: 1 equal, 5 one background rect, 4 different: gallery-008, -013, -038, bioc-004). gloss's own verdict `equal` on all 10.
+- Agreement, Task 4 reading: 54 of 54 captured figures; identical verdicts 53 of 54 (heatmap-008); 0 failed invariants.
+- Base leaves with a count mismatch: 0 (fixtures: 0 of 169 counted leaves); lower confidence than the lines above, since development figures may draw text or points the expected counts do not foresee.
+- Would change the plan: a base page the bench finds different (the replay by entry does not reproduce the code's page); any figure the bench finds different while gloss says equal (failed invariant, blocks the plan).
+
+**Result** _(filled in when done)_
+- Bench harness: `Rscript bench/R/check-runner.R` FAILED before the change (the one-rect case still `known_exception`; leaf names not recorded) and OK after, on the host and, with the read fix below, in the container. On the old run, the new score prints the Task 4 numbers again (`2026-11-11-0627`: agreement 44 of 44 grid pages, identical verdicts 43 of 44).
+- Linux (`254bd73`): the first container check stopped every base capture on the integrity check ("the base page split by entry is not well-formed SVG"). A file connection kept open and seeked again returned bytes from before svglite rewrote its closing tags (2 of 8 entries of `plot(1:10, (1:10)^2)`; 0 on macOS); each read now opens its own connection. Container suite before: `test-capture.R` 5 errors (4 base pages, 1 `Rplots.pdf` in the read-only repository, fixed in `03abb95`); after: 7 files / 65 tests / 420 expectations / 0 failed / 0 errors / 0 skipped, as on the host.
 
 ### Task 7: Records _(stub)_
 
@@ -268,6 +299,8 @@ _(append-only; never edit completed tasks above)_
 **2026-11-11, Task 2: the rule for tables (assumption 1).** A second build is not the drawn one when the build draws random numbers: with `position_jitter()` and no seed, 0 of 32 rows were on their point in 5 of 5 runs (`p2-jitter-tables.out`). Both candidate rules gave 32 of 32 in 5 of 5. Chosen: the engine's own drawing step where the print method is ggplot2's. It draws ggplot2's print steps (`grid.newpage()`, `ggplot_build()`, `ggplot_gtable()`, `grid.draw()`) and keeps the build; its page is `print()`'s (0 primitives differ from the same seed; contract check on `example()`). Not chosen: restoring the random state before `print()`. It writes `.Random.seed` into the global environment, and it is right only if the print method draws its random numbers in the same order as gloss's build, which gloss cannot check. Elsewhere tables are withheld with the reason (ADR-0006 point 4): a ggplot whose class has its own print method keeps its raw tables, and its built tables and panels are withheld (exts-018). patchwork has no public way to draw a kept build, so a plot whose two builds differ has its built tables withheld. Effect on the open tasks: Task 4 counts the development figures with withheld tables or panels; nothing else changes. This is the case the ADR names ("something the drawing returns"), so the ADR is not changed.
 
 **2026-11-11, Task 4: what "gloss's verdict agrees with the bench's" means.** heatmap-008 is `Heatmap(..., km = 2)`: k-means runs inside `draw()`, so two drawings of the object differ (the bench's proof: 236 primitives). gloss says `equal`, and it is right about what it claims: its capture equals the page it drew (0 primitives differ), because the random numbers are drawn before grid's display list holds fixed grobs, and the engine's tables come from that same drawn list. gloss's self-check sees randomness only between its drawing and its capture (gallery-059: ggrepel places labels inside `makeContent()`); it does not certify that a figure draws the same page twice, and the jittered ggplot of Task 2 is another such case. The spike's "43 equal, 1 not deterministic" came from the page the code left, which it never drew a second time. Agreement in *Done when* is therefore read as: the bench's `equal` implies gloss's `equal`; the bench's `not_deterministic` allows gloss's `equal` or `not_deterministic`; the bench's `different` with gloss's `equal` is the failed invariant, unchanged. With this reading the grid pages agree 44 of 44. The design doc gets a dated note on what `equal` certifies.
+
+**2026-11-11, Task 6: the counts the development run is held to.** *Done when* says "53 equal, 1 not deterministic, 1 refused" after the base step. Those counts came from the spike, which judged the page the code left and never drew a figure twice. Run `2026-11-11-0627` drew each figure twice and found two that are not deterministic: gallery-059 (5 primitives) and heatmap-008 (`Heatmap(km = 2)`, 236 primitives; Task 4 scope change). The line is therefore read as: 52 equal, 2 not deterministic, 1 refused, 0 errors, 0 different. "gloss's own verdict agrees with the bench's (55 of 55)" is read under the Task 4 reading over the 54 captured figures; the refused figure has no verdict on either side and counts as agreeing when its refusal carries a reason. Nothing else in *Done when* changes.
 
 ## Closing notes
 

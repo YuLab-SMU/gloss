@@ -15,7 +15,9 @@ This log is extended as the plan's remaining tasks land; Task 7 closes it.
 | `55e9b34` | 2 | Engines on the page: ggplot draws its kept build; ComplexHeatmap keeps its drawn list; withheld tables and panels with reasons. |
 | `a81cbbc` | 3 | `page_signature()` reads each top-level group once (regex), node by node only where clipping or defs nest. |
 | `ebd7e2a`, `51c26d7` | 4 | Bench on the page route; development run `2026-11-11-0627`. |
-| _this commit_ | 5 | Base pages replayed entry by entry on a file svglite device; a leaf per display-list entry; base engine without gridGraphics. |
+| `ff0489d` | 5 | Base pages replayed entry by entry on a file svglite device; a leaf per display-list entry; base engine without gridGraphics. |
+| `254bd73`, `03abb95` | 6 | Each base entry read through a fresh connection (Linux); the ggExtra test builds on a null device. |
+| _next commit_ | 6 | Bench judges base pages with no known exception; leaf names per figure; Task 6 predictions. |
 
 ## Measured
 
@@ -37,6 +39,9 @@ This log is extended as the plan's remaining tasks land; Task 7 closes it.
 - **gallery-053 (gganimate) is refused by the ggplot engine's build check** before any page is drawn; the spike had seen an empty page. → plan Task 4 result; the refusal carries its reason, nothing else to change.
 - **Base text with a multibyte character stopped the capture** (Task 5). plotmath writes alpha as U+03B1; the page was cut at byte offsets with `substr()`, which counts characters, so the split page was not well-formed and the integrity check aborted. In front of it, `base_expected()` failed on an expression label. Fixed with a test; the integrity check refused rather than captured a wrong page, as designed. → plan Task 5 result.
 - **The first p5 runs measured the page route twice.** p5 got its fixtures by sourcing s2, whose first line is `load_all(".")`, so the tag's package was replaced by this checkout; the giveaway was `rect(border = 0)` equal on the "engine route", against s0's 2 primitives. Its `pairs` check also mapped disp on the mpg scale (`pairs()` fills by column), a 1383.889 pt gap. → fixed in the script; README row of p5 and plan Task 5 result. Nowhere else: a script error, not a claim about gloss. Lesson for research scripts: take fixtures by evaluating their assignment, never by sourcing a script that loads a package.
+
+- **The base route failed on Linux, and only there.** The first bench-container check stopped every base capture on the integrity check: a file connection kept open and seeked again returned bytes from before svglite rewrote the closing tags of its always-valid file (2 of 8 entries of one plot; 0 on macOS, with the same svglite 2.2.2 and R 4.5.2). The host suite cannot see it; the container suite could (5 errors in `test-capture.R` before the fix, 0 after; full suite 65 / 420 / 0 there). → fixed in `254bd73`; plan Task 6 result. Lesson: a new reader of device output runs the suite in the container before it is called done. → nowhere else yet; Task 7 decides whether the container suite becomes a standing step in AGENTS.md.
+- **A test left `Rplots.pdf` behind** (ggExtra builds grobs with no device open), and `.Rbuildignore` has no rule for it. → test fixed in `03abb95`; the build rule is checked in Task 6's `R CMD build`.
 
 ## What's next
 

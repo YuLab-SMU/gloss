@@ -87,6 +87,7 @@ for (k in seq_len(nrow(todo))) {
     gloss_verdict = cap$gloss_verdict %||% NA, gloss_differ = cap$gloss_differ %||% NA,
     page_kind = cap$page_kind %||% NA, drawn_by = cap$drawn_by %||% NA, pages = cap$pages %||% NA,
     withheld = cap$withheld %||% NA, vector_recapture = cap$vector_recapture %||% NA,
+    leaf_names = substr(cap$leaf_names %||% "", 1, 600),
     warnings = substr(cap$warnings %||% "", 1, 240),
     seconds = cap$seconds %||% NA,
     stringsAsFactors = FALSE)

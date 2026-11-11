@@ -35,12 +35,11 @@ check <- function(name, script, expect_engines) {
     cat(sprintf("    reference: untouched by recovery %s, open page = closed page %s\n",
                 r2$reference$untouched %||% NA, r2$reference$same_as_closed %||% NA))
     # the fidelity check answers for every figure; where recovery drew nothing
-    # the repaired open page equals the closed one; ggplot, heatmap and grid
-    # scenes equal what the code drew. (Base figures recorded on svglite gain
-    # gridGraphics' "graphics-background" leaf, one primitive: reported, not asserted.)
+    # the repaired open page equals the closed one; every scene, base pages
+    # included, equals what the code drew (base pages are replayed by entry
+    # since page-capture plan Task 5; gridGraphics added a background rect).
     fa <- r2$capture$faithful %||% NA
-    if (is.na(fa) || isFALSE(r2$reference$same_as_closed) ||
-        (!identical(c1$engine, "base") && !isTRUE(fa))) {
+    if (is.na(fa) || isFALSE(r2$reference$same_as_closed) || !isTRUE(fa)) {
       cat("!! fidelity check: faithful", fa, ", open page = closed page", r2$reference$same_as_closed %||% NA, "\n"); ok <- FALSE
     }
     if (!identical(r2$recovered$engine, c1$engine) || !identical(r2$capture$status, "captured")) ok <- FALSE
@@ -273,8 +272,9 @@ cat(sprintf("\n== capture in env bioc: recovered %s, capture %s, %s leaves, unow
 if (!bioc_ok) ok <- FALSE
 
 # Part 1f: fidelity verdicts. A strict difference is classified from the diff
-# itself. The mutations below matter: two extra primitives, or an extra rect
-# plus a missing primitive, must NOT become a known exception.
+# itself. Since page-capture plan Task 6 there is no known exception: the one
+# extra background rect that gridGraphics added to recorded base pages is a
+# difference like any other, and so are its mutations.
 check_fidelity <- function() {
   good <- TRUE
   base_cap <- list(faithful = FALSE, dense_leaves = 0L, prims_differ = 1L,
@@ -287,7 +287,7 @@ check_fidelity <- function() {
          want = "not_deterministic"),
     list(name = "deterministic, different", cap = list(faithful = FALSE, deterministic = TRUE, prims_differ = 5L),
          want = "different"),
-    list(name = "one background rect", cap = base_cap, want = "known_exception"),
+    list(name = "one background rect", cap = base_cap, want = "different"),
     list(name = "two extra primitives", cap = modifyList(base_cap, list(prims_differ = 2L, diff_scene_n = 2L,
                                                                         prims_scene = 40L)), want = "different"),
     list(name = "extra rect and one missing", cap = modifyList(base_cap, list(prims_differ = 2L, diff_ref_n = 1L,
@@ -326,7 +326,7 @@ check_fidelity <- function() {
     list(name = "ggplot", want = "equal",
          code = c("library(ggplot2)", "d <- data.frame(x=1:20,y=1:20,g=rep(c('a','b'),10))",
                   "ggplot(d, aes(x,y)) + geom_point() + facet_wrap(~g)")),
-    list(name = "base", want = "known_exception", code = c("plot(1:10, (1:10)^2)")),
+    list(name = "base", want = "equal", code = c("plot(1:10, (1:10)^2)")),
     # a dense leaf is a raster in the capture; fidelity is judged on the
     # vector page (a second capture with dense = Inf), so it is equal
     list(name = "dense", want = "equal",
@@ -349,13 +349,17 @@ check_fidelity <- function() {
     cap <- r$capture %||% list()
     cat(sprintf("  %-8s verdict %-16s (%s)\n", f$name, cap$verdict %||% NA, cap$exception %||% NA))
     if (!identical(cap$status, "captured") || !identical(cap$verdict, f$want)) good <- FALSE
-    if (identical(f$name, "base") && !isTRUE(cap$prims_differ == 1)) good <- FALSE
     if (identical(f$name, "dense") && !isTRUE(cap$dense_leaves >= 1)) good <- FALSE
-    if (f$name %in% c("ggplot", "dense", "random", "two on a page") && !identical(cap$gloss_verdict, f$want)) {
+    if (!identical(cap$gloss_verdict, f$want)) {
       cat("!! gloss's own verdict", cap$gloss_verdict %||% NA, "against the bench's", f$want, "\n"); good <- FALSE
     }
     if (identical(f$name, "two on a page") && !isFALSE(cap$code_faithful)) {
       cat("!! the page the code left should differ from the object alone\n"); good <- FALSE
+    }
+    # leaf names per figure (page-capture plan Task 6: base names for design
+    # §分类): a base page's points are its plotXY entry
+    if (identical(f$name, "base") && !grepl("(^| )plotXY:", cap$leaf_names %||% "")) {
+      cat("!! leaf names not recorded:", cap$leaf_names %||% NA, "\n"); good <- FALSE
     }
     # prediction 7 measured count mismatches; the run must now name the leaves
     if (identical(f$name, "ggplot") && !nzchar(cap$mismatch_leaves %||% "")) good <- FALSE
