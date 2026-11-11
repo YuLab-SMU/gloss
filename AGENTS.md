@@ -29,6 +29,7 @@ Directories that don't exist yet are created when first needed.
 - `Rscript -e "devtools::load_all()"` — load the package for development.
 - `NOT_CRAN=true Rscript -e "devtools::test()"` — run the full suite. Without `NOT_CRAN` the slow tests (for example the 10^5-point size check) are skipped, so always set it when you record counts.
 - `Rscript -e "devtools::load_all(); testthat::test_file('tests/testthat/test-<name>.R')"` — run one test file.
+- `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/suite.R` — run the full suite in the bench container (Linux, slow tests on). Required for code that reads device output; see *Tests*.
 - `quarto render dev_docs/design.qmd --to html` — render the design doc (rendered output is gitignored).
 - `R CMD build --no-build-vignettes .` then `R CMD check --no-manual gloss_*.tar.gz` — routine check; use `--as-cran` before a release.
 
@@ -115,6 +116,7 @@ Tests are the main feedback signal; measurements on the bench development set ar
 
 - Run the full suite (with `NOT_CRAN=true`) at the start and end of a session and record the counts in the dev log.
 - Don't delete, skip or loosen a test to get a green run. A skip for a known defect carries a reason and points to the plan task or risk that tracks it. Environment skips (`skip_if_no()` for a Suggests package, `skip_on_cran()`) are fine, but a run with skips is recorded with its skip count, not as a clean run.
+- Code that reads what a graphics device wrote (the SVG svglite writes to a file or a string, a recorded plot, the display list) is done only when the full suite has also passed in the bench container: `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/suite.R`. Record the container's counts beside the host's. The host is macOS and cannot stand in for Linux here: on 2026-11-11 a file connection kept open returned stale bytes on Linux only, and every base capture was refused there while the host suite passed (`254bd73`). Other changes need the host suite only.
 - A fixture test shows that a mechanism works on that fixture. Claims about coverage come from the bench development set; reported numbers come from the held-out set (design §评测设计).
 - testthat edition 3; files named `test-<feature>.R`; helpers in `tests/testthat/helper-*.R`.
 - No network calls or paid API keys by default. Agent loops are tested with a scripted `aisdk::LanguageModelV1` subclass; real-model tests are gated with `Sys.getenv()` and `skip_if_not()`.
