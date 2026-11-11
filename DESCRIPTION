@@ -31,6 +31,7 @@ Imports:
     xml2
 Suggests:
     ComplexHeatmap,
+    ggExtra,
     ggplot2,
     ggrepel,
     knitr,
