@@ -20,7 +20,7 @@ plugin_kinds <- function() {
   list(
     engine = list(
       required = list(classes = chr, prepare = fn),
-      optional = list(page = page, draw = fn, tables = fn, panels = fn, describe = fn,
+      optional = list(page = page, draw = fn, tables = fn, panels = fn, bind = fn, describe = fn,
                       example = fn, packages = chr),
       contract = contract_engine
     ),
@@ -99,7 +99,10 @@ gl_plugin_kinds <- function() names(plugin_kinds())
 #'   the page drawn: a table it cannot show describes that page is returned as
 #'   `list(name = , withheld = reason)` instead of with `data`, and `panels()`
 #'   can return `list(withheld = reason)`; gloss lists them in
-#'   `fig$status$withheld`.
+#'   `fig$status$withheld`. `bind(state, substrate)` (experimental, not yet
+#'   used by exported functions) states which rows of its tables each leaf
+#'   drew, with their positions on the device; gloss checks every pairing
+#'   against the drawn geometry and never takes it on trust.
 #' * `rules`: `engine`, `rules`.
 #' * `layer`: `body` (schema); optional `depends`, `verify`, `scope`.
 #' * `check`: `run(table, args)`; `schema` describes `args`.
@@ -366,6 +369,16 @@ contract_engine <- function(plugin) {
           stop(sprintf("the engine's page differs from the input's own page in %d primitives",
                        signature_diff(own, by_engine)))
         }
+        TRUE
+      }
+    }),
+    contract_check("its bind step pairs the example's rows, and every pairing verifies", {
+      if (is.null(plugin$bind)) "skipped: no bind step"
+      else {
+        b <- bind_capture(plugin$example(), engine = plugin$name)
+        st <- b$elements$status
+        if (!length(st)) stop("no element was paired")
+        if (any(st == "failed")) stop(sprintf("%d of %d paired elements failed", sum(st == "failed"), length(st)))
         TRUE
       }
     }),

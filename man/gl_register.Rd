@@ -67,7 +67,10 @@ this on \code{example()}). Tables and panels are the engine's statements about
 the page drawn: a table it cannot show describes that page is returned as
 \code{list(name = , withheld = reason)} instead of with \code{data}, and \code{panels()}
 can return \code{list(withheld = reason)}; gloss lists them in
-\code{fig$status$withheld}.
+\code{fig$status$withheld}. \code{bind(state, substrate)} (experimental, not yet
+used by exported functions) states which rows of its tables each leaf
+drew, with their positions on the device; gloss checks every pairing
+against the drawn geometry and never takes it on trust.
 \item \code{rules}: \code{engine}, \code{rules}.
 \item \code{layer}: \code{body} (schema); optional \code{depends}, \code{verify}, \code{scope}.
 \item \code{check}: \code{run(table, args)}; \code{schema} describes \code{args}.

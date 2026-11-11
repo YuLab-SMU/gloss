@@ -26,7 +26,9 @@ register_engine_ggplot <- function() {
         ggplot2::set_last_plot(state$plot)
         grid::grid.newpage()
         state$built <- build_ggplot(state$plot)
-        grid::grid.draw(ggplot2::ggplot_gtable(state$built))
+        # The table drawn is kept: binding maps leaves to layers through it.
+        state$gtable <- ggplot2::ggplot_gtable(state$built)
+        grid::grid.draw(state$gtable)
       } else {
         print(state$plot)
       }
@@ -38,6 +40,13 @@ register_engine_ggplot <- function() {
     panels = function(state, substrate) {
       if (!is.null(state$owner)) return(list(withheld = print_owner_reason(state$owner)))
       ggplot_panels(state$built, substrate)
+    },
+    bind = function(state, substrate) {
+      if (!is.null(state$owner)) {
+        return(list(claims = list(), unbound = data.frame(
+          leaf = substrate$leaves$id, reason = print_owner_reason(state$owner), stringsAsFactors = FALSE)))
+      }
+      ggplot_bind(state$built, state$gtable, substrate)
     },
     describe = function(state) ggplot_describe(state$plot),
     example = function() {
@@ -225,4 +234,147 @@ ggplot_describe <- function(plot) {
     facet = class(plot$facet)[1],
     coord = class(plot$coordinates)[1]
   )
+}
+
+# ---- binding ----------------------------------------------------------------
+
+# Pairings of layer leaves with built rows (core-bind.R checks them).
+#
+# Which layer drew a leaf is read from the gtable the engine drew, by
+# construction (ggplot2 4.x, Facet$draw_panel_content and Coord$draw_panel):
+# a panel grob's children are the coord's background, the facet's
+# background, one grob per layer in layer order, the facet's foreground and
+# the coord's foreground; with theme(panel.ontop = TRUE) both coord grobs come
+# last. A panel whose children do not number layers + 4 is not paired. A
+# layer grob built by Geom$draw_panel's default holds its groups' grobs in
+# the order of factor(group), a fixed number per group; when its children
+# divide evenly among the panel's groups, each leaf below child j is paired
+# with group ceiling(j / (children / groups)) only.
+#
+# Rows are put on the device through the panel's scales (identify.R's
+# mapping); infinite positions go to the panel's edges, as ggplot2 squishes
+# them. Under coord_flip() the horizontal scale is the data's y.
+ggplot_bind <- function(built, gtable, sub) {
+  leaves <- sub$leaves
+  unbound <- function(ids, reason) data.frame(leaf = ids, reason = rep(reason, length(ids)), stringsAsFactors = FALSE)
+  if (is.null(gtable)) return(list(claims = list(), unbound = unbound(leaves$id, "the drawn gtable was not kept")))
+  n_layers <- length(built$data)
+  ontop <- isTRUE(built$plot$theme$panel.ontop %||% ggplot2::theme_get()$panel.ontop)
+  pan_rows <- grep("^panel", gtable$layout$name)
+  layer_of <- list()      # layer grob name -> layer index
+  group_of <- list()      # layer grob name -> named child index (draw_group children)
+  panel_names <- character()
+  bad_panels <- character()
+  for (j in pan_rows) {
+    g <- gtable$grobs[[j]]
+    kids <- g$children
+    panel_names <- c(panel_names, g$name)
+    if (length(kids) != n_layers + 4L) {
+      bad_panels <- c(bad_panels, g$name)
+      next
+    }
+    at <- (if (ontop) 1L else 2L) + seq_len(n_layers)
+    for (i in seq_len(n_layers)) {
+      lg <- kids[[at[i]]]
+      layer_of[[lg$name]] <- i
+      if (inherits(lg, "gTree") && length(lg$children)) {
+        group_of[[lg$name]] <- stats::setNames(seq_along(lg$children), names(lg$children))
+      }
+    }
+  }
+  coord <- class(built$layout$coord)[1]
+  flip <- identical(coord, "CoordFlip")
+  claims <- list()
+  ub <- unbound(character(), character())
+  outside <- character()
+  for (r in seq_len(nrow(leaves))) {
+    lf <- leaves[r, ]
+    seg <- strsplit(lf$path, "/", fixed = TRUE)[[1]]
+    at <- match(TRUE, seg %in% panel_names)
+    if (is.na(at)) {
+      outside <- c(outside, lf$id)
+      next
+    }
+    if (seg[at] %in% bad_panels) {
+      ub <- rbind(ub, unbound(lf$id, sprintf("the panel holds other grobs than background, %d layer%s and foreground",
+                                             n_layers, plural(n_layers))))
+      next
+    }
+    child <- if (at < length(seg)) seg[at + 1L] else NA_character_
+    i <- layer_of[[child %|NA|% ""]]
+    if (is.null(i)) {
+      outside <- c(outside, lf$id)
+      next
+    }
+    pid <- lf$panel
+    prow <- sub$panels[sub$panels$id %in% pid, , drop = FALSE]
+    if (!nrow(prow)) {
+      ub <- rbind(ub, unbound(lf$id, "the leaf lies in no panel with scales"))
+      next
+    }
+    if (!all(c(prow$x_type, prow$y_type) %in% c("continuous", "discrete"))) {
+      ub <- rbind(ub, unbound(lf$id, sprintf("the panel's scales cannot be mapped (%s)", coord)))
+      next
+    }
+    d <- built$data[[i]]
+    d$row <- seq_len(nrow(d))
+    d <- d[as.character(d$PANEL) == sub("^panel", "", pid), , drop = FALSE]
+    pred <- ggplot_rows_on_device(d, prow, flip)
+    if (is.null(pred)) {
+      ub <- rbind(ub, unbound(lf$id, "the layer's rows carry neither x and y nor xmin, xmax, ymin and ymax"))
+      next
+    }
+    groups <- NULL
+    gmap <- group_of[[child]]
+    if (!is.null(gmap) && at + 2L <= length(seg) && seg[at + 2L] %in% names(gmap)) {
+      gs <- sort(unique(pred$group))
+      nk <- length(gmap)
+      if (length(gs) && nk %% length(gs) == 0L) {
+        per <- nk %/% length(gs)
+        groups <- gs[ceiling(gmap[[seg[at + 2L]]] / per)]
+      }
+    }
+    claims[[length(claims) + 1L]] <- list(leaf = lf$id, table = sprintf("built_layer%d", i),
+                                          pred = pred, groups = groups)
+  }
+  list(claims = claims, unbound = ub, outside = outside)
+}
+
+`%|NA|%` <- function(a, b) if (length(a) != 1L || is.na(a)) b else a
+
+# Built rows of one panel on the device: x, y and, where the layer has them,
+# xmin, xmax, ymin, ymax, xend, yend; rows missing their required positions
+# are dropped, as the geom drops them before drawing.
+ggplot_rows_on_device <- function(d, prow, flip) {
+  pos <- c("x", "y", "xmin", "xmax", "ymin", "ymax", "xend", "yend")
+  if (flip) {
+    swap <- c(x = "y", y = "x", xmin = "ymin", xmax = "ymax", ymin = "xmin", ymax = "xmax", xend = "yend", yend = "xend")
+    hit <- names(d) %in% names(swap)
+    names(d)[hit] <- swap[names(d)[hit]]
+  }
+  has <- function(cols) all(cols %in% names(d)) && !all(is.na(d[cols]))
+  req <- if (has(c("x", "y"))) c("x", "y") else if (has(c("xmin", "xmax", "ymin", "ymax"))) c("xmin", "xmax", "ymin", "ymax") else NULL
+  if (is.null(req)) return(NULL)
+  num <- function(v) suppressWarnings(as.double(v))
+  keep <- stats::complete.cases(as.data.frame(lapply(d[req], num)))
+  d <- d[keep, , drop = FALSE]
+  to_x <- function(v) {
+    v <- num(v)
+    out <- prow$x0 + (v - prow$x_min) / (prow$x_max - prow$x_min) * (prow$x1 - prow$x0)
+    out[!is.na(v) & v == -Inf] <- prow$x0
+    out[!is.na(v) & v == Inf] <- prow$x1
+    out
+  }
+  to_y <- function(v) {
+    v <- num(v)
+    out <- prow$y1 - (v - prow$y_min) / (prow$y_max - prow$y_min) * (prow$y1 - prow$y0)
+    out[!is.na(v) & v == -Inf] <- prow$y1
+    out[!is.na(v) & v == Inf] <- prow$y0
+    out
+  }
+  out <- data.frame(row = d$row, group = if ("group" %in% names(d)) d$group else rep(1L, nrow(d)))
+  for (col in intersect(pos, names(d))) {
+    out[[col]] <- if (startsWith(col, "x")) to_x(d[[col]]) else to_y(d[[col]])
+  }
+  out
 }

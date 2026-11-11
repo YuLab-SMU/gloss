@@ -24,6 +24,7 @@ register_engine_heatmap <- function() {
     },
     tables = function(state) heatmap_tables(state$drawn),
     panels = function(state, substrate) heatmap_panels(substrate),
+    bind = function(state, substrate) heatmap_bind(state$drawn, substrate),
     describe = function(state) {
       hl <- state$drawn
       list(heatmaps = names(hl@ht_list), classes = vapply(hl@ht_list, function(h) class(h)[1], ""))
@@ -96,4 +97,67 @@ native_panels <- function(leaves, seg, key_fun = identity) {
     stringsAsFactors = FALSE
   )
   list(panels = panels, leaf_panel = stats::setNames(panels$id[match(seg, vps)], leaves$id))
+}
+
+# ---- binding ----------------------------------------------------------------
+
+# Body cells paired with matrix cells (core-bind.R checks them). A body slice
+# is drawn in viewport <name>_heatmap_body_<i>_<j>, one rect per cell, column
+# by column, top row first, rows and columns in the slice's order after
+# clustering. Each cell's place in the slice's viewport and its colour, the
+# colour mapping of its value, are what the elements must show; the colour is
+# the check that the order is right, since every cell sits at its grid place
+# whatever value it holds. A body drawn as a raster image has one element
+# and is not paired. Annotations and dendrograms are not paired yet.
+heatmap_bind <- function(drawn, sub) {
+  leaves <- sub$leaves
+  claims <- list()
+  ub <- data.frame(leaf = character(), reason = character(), stringsAsFactors = FALSE)
+  outside <- character()
+  hits <- regmatches(leaves$vp, regexec("(?:^|::)([^:]+)_heatmap_body_([0-9]+)_([0-9]+)$", leaves$vp, perl = TRUE))
+  for (r in seq_len(nrow(leaves))) {
+    h <- hits[[r]]
+    if (!length(h)) {
+      if (grepl("_dend_|annotation", leaves$vp[r])) {
+        ub <- rbind(ub, data.frame(leaf = leaves$id[r], reason = "annotation tracks and dendrograms are not paired yet",
+                                   stringsAsFactors = FALSE))
+      } else {
+        outside <- c(outside, leaves$id[r])
+      }
+      next
+    }
+    nm <- h[2]
+    ht <- if (nm %in% names(drawn@ht_list)) drawn@ht_list[[nm]] else NULL
+    if (is.null(ht) || !methods::is(ht, "Heatmap")) {
+      ub <- rbind(ub, data.frame(leaf = leaves$id[r], reason = sprintf("no heatmap named '%s' in the drawn list", nm),
+                                 stringsAsFactors = FALSE))
+      next
+    }
+    i <- as.integer(h[3])
+    j <- as.integer(h[4])
+    ro <- ht@row_order_list[[i]]
+    co <- ht@column_order_list[[j]]
+    m <- ht@matrix
+    nr <- length(ro)
+    nc <- length(co)
+    lf <- leaves[r, ]
+    cell_r <- rep(ro, times = nc)
+    cell_c <- rep(co, each = nr)
+    pos_r <- rep(seq_len(nr), times = nc)
+    pos_c <- rep(seq_len(nc), each = nr)
+    w <- (lf$x1 - lf$x0) / nc
+    hgt <- (lf$y1 - lf$y0) / nr
+    value <- m[cbind(cell_r, cell_c)]
+    fill <- tryCatch(ComplexHeatmap::map_to_colors(ht@matrix_color_mapping, value), error = function(e) NULL)
+    pred <- data.frame(
+      row = (cell_c - 1L) * nrow(m) + cell_r,   # cell of the matrix table, column-major
+      group = seq_along(cell_r),
+      x = lf$x0 + (pos_c - 0.5) * w, y = lf$y0 + (pos_r - 0.5) * hgt,
+      xmin = lf$x0 + (pos_c - 1) * w, xmax = lf$x0 + pos_c * w,
+      ymin = lf$y0 + (pos_r - 1) * hgt, ymax = lf$y0 + pos_r * hgt
+    )
+    if (!is.null(fill)) pred$fill <- as.character(fill)
+    claims[[length(claims) + 1L]] <- list(leaf = lf$id, table = paste0("matrix_", nm), pred = pred)
+  }
+  list(claims = claims, unbound = ub, outside = outside)
 }

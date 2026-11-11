@@ -146,6 +146,16 @@ engine_page <- function(engine) engine$page %||% "grid"
 gl_capture <- function(x, engine, width = 7, height = 5, dense = 10000,
                        context = TRUE, expr = NULL, call = NULL,
                        env = parent.frame(), size_basis = "argument") {
+  capture_figure(x, engine, width = width, height = height, dense = dense, context = context,
+                 expr = expr, call = call, env = env, size_basis = size_basis)$fig
+}
+
+# gl_capture()'s work. Also returns the engine and its state after drawing,
+# which the figure does not keep: binding (core-bind.R) reads the build and
+# the grob tree the engine drew.
+capture_figure <- function(x, engine, width = 7, height = 5, dense = 10000,
+                           context = TRUE, expr = NULL, call = NULL,
+                           env = parent.frame(), size_basis = "argument") {
   engines <- if (inherits(engine, "gloss_plugin")) list(engine) else engine
   cap <- capture_page(x, engines, width, height)
   eng <- cap$engine
@@ -232,7 +242,7 @@ gl_capture <- function(x, engine, width = 7, height = 5, dense = 10000,
     fig$status$withheld <- withheld
   }
   fig$meta$id <- substrate_id(fig$substrate)
-  fig
+  list(fig = fig, engine = eng, state = state)
 }
 
 new_figure <- function(meta, substrate, tables, context, plugins) {
