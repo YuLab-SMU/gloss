@@ -403,3 +403,21 @@ Written 2026-11-11, before gloss has captured any figure of the stratum. What wa
 56. **In every captured figure the only unowned element is the device background.** v0: 54 of 54. Read from the line "Prediction 8".
 57. **No figure times out; the median capture takes under 1 second and the slowest under 60.** v0's ggplot and patchwork figures: median 0.36 s, maximum 27 s on 12347 elements. Read from the `seconds` column and the status table.
 
+### Predictions 53-57 on the stratum's development figures (scored 2026-11-11)
+
+Two runs. `runs/2026-11-11-2052-capture-dev-tree.*` at `d73bde9` (clean tree; the predictions committed in it) is the run the predictions were made for. In it the bench's own comparator gave no verdict on five captured figures, all from book chapters: the book's setup loads `conflicted`, and the comparator's bare `setdiff()` stopped inside the worker ("found in 3 packages"). That is a defect of the bench, not of gloss, whose own verdicts were recorded for all 28. It was fixed in `a578985` (the worker's code is closed over base; a check that fails without the fix), and `runs/2026-11-11-2110-capture-dev-tree.*` at `a578985` is the same run again. **The second run was made after looking at the first.** Nothing in gloss changed between them, and on the 23 figures that had a verdict every column of the two runs is equal apart from the seconds. The same fix left v0 where it was: `runs/2026-11-11-2104-capture-dev.*` equals run `1339` in all 38 columns besides the seconds, on all 55 figures.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 53. At least 27 of 29 captured; none refused for lack of an engine; if one fails, tree-041 | 28 of 29 in both runs, no refusal. tree-041 is an error, not a refusal: `internal error: Huge input lookup`, the XML parser's limit on a text node, met by the page's embedded images | right |
+| 54. At most 9 captured figures with a count-mismatch leaf; at most 3 with one in a panel grid line | 6 of 28 (21%; v0's ggplot and patchwork figures 30 of 37, 81%), none in a panel grid line: text leaves in all six (tree-014, -045, -061, -062, -077, and the 43 repelled labels of tree-054) and one leaf of points in tree-014 | right |
+| 55. Every verdict `equal` except tree-054 `not_deterministic`; none `different`; gloss's own verdict the same on every figure | first run: 23 `equal`, 5 with no verdict of the bench (the defect above), so not scorable as written; second run: 27 `equal`, tree-054 `not_deterministic` (two plain drawings differ in 309 primitives), none `different`, gloss's verdict identical on all 28. gloss's own verdicts were these in the first run already | right on the second run; **not scorable on the run it was made for** |
+| 56. The only unowned element is the device background, every captured figure | 28 of 28 | right |
+| 57. No timeout; median under 1 s, slowest under 60 s | no timeout; median 0.34 s and slowest 4.8 s (tree-014, 14830 elements) in the first run, 0.30 s and 3.8 s in the second | right |
+
+- 4 right of 5 on the first run with one not scorable, 5 of 5 on the second. I named tree-041 as the likely failure and tree-054 as the one that is not deterministic; both for the reason given.
+- **tree-041 is a defect of gloss, and of the bench's comparator in the same way.** gloss stops with an internal error where it should either read the page or refuse and say why. Not changed here: it goes to the plan that tunes gloss on this stratum, with a test that fails first.
+- The mismatch leaves are text, not grid lines, which `theme_tree()` does not draw. Why a text leaf of a tree draws a different number of elements than its grob holds is not known from this run; the binding run names the counts.
+- One figure's page differs from the object drawn alone (tree-066: 335 primitives; the code left more on the page than the object), with the verdict `equal` on the object's own page, as the scorer reports for v0.
+- Not predicted, and seen only because this run was looked at: **the bench trusted the search path the figure's code builds.** v0 has no figure that loads `conflicted`; a package that masks a base function with a different one would have changed the bench's own arithmetic without an error.
+
