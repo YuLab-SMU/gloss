@@ -85,6 +85,43 @@ vignette_files <- function(pkg, lib = bench_libpaths()) {
   data.frame(dir = info[, "Dir"], file = info[, "File"], r = info[, "R"], stringsAsFactors = FALSE)
 }
 
+# A chapter of the ggtree book (bench v1, tree stratum), run alone: the chunks
+# knitr evaluates, after the book's shared setup. The book loads its packages
+# with pacman::p_load(), which installs what is missing and goes on when one
+# fails; here the harness installs, so p_load(x) is read as require(x) and
+# pacman's own lines are dropped. Files the setup sources are inlined. The
+# knitr options of index.Rmd's first chunk are not run.
+book_setup <- function(root, file = "setup.R", seen = character()) {
+  x <- readLines(file.path(root, file), warn = FALSE)
+  out <- character(); skip <- 0L
+  for (i in seq_along(x)) {
+    line <- x[i]; t <- trimws(line)
+    if (skip > 0L) { skip <- skip - 1L; next }
+    if (startsWith(t, "#")) { out <- c(out, line); next }
+    if (grepl("^if \\(!requireNamespace\\(\"pacman\"", t)) {
+      # the three-line block that installs pacman
+      skip <- which(trimws(x[-seq_len(i)]) == "}")[1]
+      next
+    }
+    if (t == "library(pacman)") next
+    m <- regmatches(t, regexec("^(pacman::)?p_load\\(([A-Za-z0-9.]+)\\)$", t))[[1]]
+    if (length(m)) { out <- c(out, sprintf("require(%s)", m[3])); next }
+    m <- regmatches(t, regexec("^source\\(\"([^\"]+)\"\\)$", t))[[1]]
+    if (length(m) && file.exists(file.path(root, m[2])) && !m[2] %in% seen) {
+      out <- c(out, sprintf("# ---- %s ----", m[2]), book_setup(root, m[2], c(seen, file)))
+      next
+    }
+    out <- c(out, line)
+  }
+  out
+}
+book_script <- function(psu, root = file.path(src_root, "treebook", "repo")) {
+  chunks <- Filter(function(k) k$eval, rmd_chunks(file.path(root, psu)))
+  code <- lapply(chunks, `[[`, "code")
+  list(setup = clean_code(book_setup(root)), chunks = lapply(code, clean_code),
+       chunk_labels = vapply(chunks, `[[`, "", "header"), nbsp = count_nbsp(unlist(code)))
+}
+
 vignette_script <- function(pkg, vig) {
   doc <- file.path(vig$dir, "doc")
   rfile <- file.path(doc, vig$r)
@@ -220,10 +257,10 @@ shp_sidecars <- c("shx", "dbf", "prj", "cpg")
 
 # Download URL literals (and, for Gallery posts, relative data paths that exist
 # in the Gallery repository) into dir/data/ and rewrite the literals.
-vendor_data <- function(chunks, dir, gallery = FALSE) {
+vendor_data <- function(chunks, dir, gallery = FALSE, base = if (gallery) sources$gallery$raw else NULL, data_ext = get("data_ext", globalenv())) {
   code <- unlist(chunks)
   lits <- unique(unlist(regmatches(code, gregexpr("([\"'])(https?://[^\"'[:space:]]+)\\1", code))))
-  lits <- unique(c(lits, if (gallery) unique(unlist(regmatches(code, gregexpr("([\"'])([A-Za-z0-9_./-]+)\\1", code))))))
+  lits <- unique(c(lits, if (!is.null(base)) unique(unlist(regmatches(code, gregexpr("([\"'])([A-Za-z0-9_./-]+)\\1", code))))))
   rewrites <- list()
   for (lit in lits) {
     target <- substr(lit, 2, nchar(lit) - 1)
@@ -231,7 +268,7 @@ vendor_data <- function(chunks, dir, gallery = FALSE) {
     if (is_url && !(grepl(data_ext, sub("[?#].*$", "", target), ignore.case = TRUE) ||
                     grepl("raw\\.githubusercontent|gist\\.github|/raw/", target))) next
     if (!is_url && !grepl(data_ext, target, ignore.case = TRUE)) next
-    url <- if (is_url) target else paste0(sources$gallery$raw, "/", sub("^\\./", "", target))
+    url <- if (is_url) target else paste0(base, "/", sub("^\\./", "", target))
     name <- basename(sub("[?#].*$", "", url))
     dest <- file.path(dir, "data", name)
     k <- 1
@@ -322,6 +359,13 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
     else if (inherits(v, c("Heatmap", "HeatmapList"))) "heatmap"
     else "grid"
   }
+  # a figure of the ggtree family (bench v1, tree stratum): a ggtree plot, or a
+  # patchwork that holds one. A cowplot or aplot composition cannot be told so.
+  holds_tree <- function(v) {
+    if (inherits(v, "ggtree")) return(TRUE)
+    if (!inherits(v, "patchwork")) return(FALSE)
+    isTRUE(tryCatch(any(vapply(v$patches$plots, holds_tree, TRUE)), error = function(e) FALSE))
+  }
   printer <- c("print", "plot", "draw", "grid.draw", "show")
   env <- new.env(parent = globalenv())
   cand <- list(); out_classes <- character(); err <- NULL; n_expr <- 0L
@@ -329,9 +373,9 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
   t0 <- Sys.time()
   if (length(setup)) eval(parse(text = setup), env)
   prev <- dl(); changed <- FALSE; changed_kind <- NA_character_
-  add <- function(ch, ex, kind, cls, engine)
+  add <- function(ch, ex, kind, cls, engine, tree = FALSE)
     cand[[length(cand) + 1]] <<- data.frame(chunk = ch, expr = ex, kind = kind, class = cls, engine = engine,
-                                            stringsAsFactors = FALSE)
+                                            tree = tree, stringsAsFactors = FALSE)
   for (i in seq_along(chunks)) {
     exprs <- tryCatch(parse(text = chunks[[i]], keep.source = TRUE), error = function(e) e)
     if (inherits(exprs, "error")) { err <- list(chunk = i, expr = 0L, stage = "parse", message = conditionMessage(exprs)); break }
@@ -374,7 +418,7 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
         prev <- now
       }
       if (last_obj) {
-        add(i, j, "object", class(v)[1], engine_of(v))
+        add(i, j, "object", class(v)[1], engine_of(v), holds_tree(v))
         # a printed object also draws; don't count that drawing again
         changed <- FALSE
       }
@@ -384,7 +428,8 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
     changed <- FALSE
   }
   cand <- if (length(cand)) do.call(rbind, cand) else
-    data.frame(chunk = integer(), expr = integer(), kind = character(), class = character(), engine = character())
+    data.frame(chunk = integer(), expr = integer(), kind = character(), class = character(), engine = character(),
+               tree = logical())
   cand <- cand[!is.na(cand$kind), , drop = FALSE]
   result <- list(candidates = cand, error = err, n_expr = n_expr, out_classes = unique(out_classes),
                  elapsed = as.numeric(difftime(Sys.time(), t0, units = "secs")))
@@ -411,7 +456,8 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
       if (!is.na(k)) { fig <- grDevices::recordPlot(); kind <- k }
     }
     result$recovered <- list(kind = kind, class = if (is.null(fig)) NA else class(fig)[1],
-                             engine = if (is.null(fig)) NA else if (kind == "object") engine_of(fig) else kind)
+                             engine = if (is.null(fig)) NA else if (kind == "object") engine_of(fig) else kind,
+                             tree = identical(kind, "object") && holds_tree(fig))
     if (!is.null(devs$svg_pages)) {
       untouched <- identical(as.character(devs$svg_pages()), pre_pages)
       if (devs$num %in% grDevices::dev.list()) grDevices::dev.off(devs$num)

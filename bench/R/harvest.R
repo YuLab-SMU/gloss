@@ -14,6 +14,14 @@ attempts_file <- file.path(bench_root, "runs", "attempts.csv")
 figures_root <- file.path(bench_root, "figures")
 work_root <- file.path(cache_root, "work")
 stratum_engine <- c(patchwork = "patchwork", heatmap = "heatmap")
+# Strata whose figures are told by what the figure holds, not by its engine
+# (bench v1): in the tree stratum a figure counts when it is a ggtree plot or
+# a patchwork holding one (the worker's `tree`). Every figure a PSU of such a
+# stratum drew is listed in runs/tree-candidates.csv, counted or not.
+stratum_tree <- "tree"
+tree_candidates_file <- file.path(bench_root, "runs", "tree-candidates.csv")
+# files a book chapter reads from the book's repository, besides data_ext
+book_ext <- sub("\\)\\$$", "|nex|nwk|newick|tree|tre|fas|fasta|phy|png|jpe?g|svg|pdf)$", data_ext)
 max_topics <- 8L
 
 missing_package_re <- paste(
@@ -59,7 +67,7 @@ packages_in_error <- function(msg) {
 # (a vignette that prints a table and then fails before its figures is a code
 # error), and a run that drew figures of another engine is "no figure" of the
 # stratum's engine. Widget or table output is named in the detail either way.
-psu_outcome <- function(last, failed, note = "", install_detail = "") {
+psu_outcome <- function(last, failed, note = "", install_detail = "", tree = FALSE) {
   if (is.null(last)) {
     return(list(outcome = if (length(failed)) "missing package" else "no code",
                 detail = if (length(failed)) install_detail else note))
@@ -71,9 +79,10 @@ psu_outcome <- function(last, failed, note = "", install_detail = "") {
     return(list(outcome = "outside population", detail = shown))
   }
   detail <- if (!is.null(err)) paste(err$stage, err$message) else if (nrow(last$candidates)) {
-    # ran cleanly, but its figures are not of the stratum's engine
-    n <- table(last$candidates$engine)
-    paste("figures of other engines:", paste(names(n), n, sep = " x", collapse = ", "))
+    # ran cleanly, but its figures are not of the stratum's engine (or, in the
+    # tree stratum, hold no tree: then their classes say what they are)
+    n <- table(if (tree) last$candidates$class else last$candidates$engine)
+    paste(if (tree) "figures holding no tree:" else "figures of other engines:", paste(names(n), n, sep = " x", collapse = ", "))
   } else "ran without error, no figure"
   if (nzchar(shown)) detail <- paste0(detail, " (also shown: ", shown, ")")
   if (length(failed)) detail <- paste0(install_detail, " | run: ", detail)
@@ -194,6 +203,13 @@ build_script <- function(row, work_dir) {
     script$chunks <- v$chunks; rewrites <- v$rewrites
     return(list(scripts = list(script), pkgs = pkgs_status, rewrites = rewrites, vignette = vig$file))
   }
+  if (row$kind == "book") {
+    script <- book_script(row$psu)
+    pkgs_status <- ensure_packages(code_packages(c(script$setup, unlist(script$chunks))))
+    v <- vendor_data(script$chunks, work_dir, base = sources$treebook$raw, data_ext = book_ext)
+    script$chunks <- v$chunks; rewrites <- v$rewrites
+    return(list(scripts = list(script), pkgs = pkgs_status, rewrites = rewrites))
+  }
   stop("unknown kind ", row$kind)
 }
 
@@ -207,7 +223,7 @@ harvest_psu <- function(row) {
                     stringsAsFactors = FALSE)
   b <- tryCatch(build_script(row, work_dir), error = function(e) list(error = conditionMessage(e)))
   if (!is.null(b$error)) { out$outcome <- "setup error"; out$detail <- b$error; return(out) }
-  timeout <- if (row$kind == "vignette") 900 else 300
+  timeout <- if (row$kind %in% c("vignette", "book")) 900 else 300
   chosen <- NULL; last <- NULL; script <- NULL; n_fig <- 0L
   for (s in b$scripts) {
     ri <- run_installing(s, work_dir, seed = seed_for(row$id), timeout = timeout, pkgs = b$pkgs)
@@ -216,6 +232,14 @@ harvest_psu <- function(row) {
     last <- r
     cand <- r$candidates
     if (!is.na(stratum_engine[row$stratum])) cand <- cand[cand$engine == stratum_engine[row$stratum], , drop = FALSE]
+    if (row$stratum %in% stratum_tree) {
+      if (nrow(cand)) {
+        all_cand <- cbind(id = row$id, cand)
+        old <- if (file.exists(tree_candidates_file)) read_csv(tree_candidates_file) else all_cand[0, ]
+        write_csv(rbind(old[old$id != row$id, ], all_cand), tree_candidates_file)
+      }
+      cand <- cand[cand$tree %in% TRUE, , drop = FALSE]
+    }
     n_fig <- n_fig + nrow(cand)
     if (nrow(cand)) {
       set.seed(seed_for(row$id))
@@ -230,7 +254,8 @@ harvest_psu <- function(row) {
   out$missing_packages <- paste(failed, collapse = " ")
   if (is.null(chosen)) {
     o <- psu_outcome(last, failed, note = b$note %||% "",
-                     install_detail = paste(fail$package, fail$reason, sep = ": ", collapse = "; "))
+                     install_detail = paste(fail$package, fail$reason, sep = ": ", collapse = "; "),
+                     tree = row$stratum %in% stratum_tree)
     out$outcome <- o$outcome
     out$detail <- substr(o$detail, 1, 300)
     out$seconds <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
@@ -242,6 +267,8 @@ harvest_psu <- function(row) {
                packages = b$pkgs, harvested = format(Sys.time(), tz = "UTC", usetz = TRUE))
   fig_dir <- freeze_figure(row$id, script, chosen, work_dir, meta)
   e <- check_eligibility(fig_dir, chosen$engine)
+  # a figure of the tree stratum must come back holding its tree
+  if (row$stratum %in% stratum_tree && e$ok && !isTRUE(e$run$recovered$tree)) e$ok <- FALSE
   out[c("chunk", "expr", "engine", "class")] <- chosen[c("chunk", "expr", "engine", "class")]
   if (e$ok) {
     out$outcome <- "retained"
