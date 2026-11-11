@@ -421,3 +421,23 @@ Two runs. `runs/2026-11-11-2052-capture-dev-tree.*` at `d73bde9` (clean tree; th
 - One figure's page differs from the object drawn alone (tree-066: 335 primitives; the code left more on the page than the object), with the verdict `equal` on the object's own page, as the scorer reports for v0.
 - Not predicted, and seen only because this run was looked at: **the bench trusted the search path the figure's code builds.** v0 has no figure that loads `conflicted`; a package that masks a base function with a different one would have changed the bench's own arithmetic without an error.
 
+
+## The tree stratum: binding on its development figures (tree plan Task 5)
+
+Written 2026-11-11, after the stratum's capture runs and before gloss's bind step has run on any figure of the stratum. What was known: the capture runs' tables (which show leaves and counts, no binding), the code of the 29 development figures, the binder's rules as written in `R/core-bind.R` and `R/engine-ggplot.R`, and v0's binding run `2026-11-11-1353`.
+
+### How the run is made and scored (fixed before the run)
+
+- `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/bind.R dev tree`, at the commit that holds these predictions, with a clean tree; scored by `Rscript bench/R/score-bind.R` on its file. Layer elements, verified, ambiguous, failed, unbound and count_mismatch as that script defines them.
+- "Cartesian figures" are the captured figures other than tree-025, tree-038 and tree-057, whose trees are drawn on polar coordinates (`open_tree()`, `layout_inward_circular()`).
+- The numbers are the stratum's. They are not added to a number of v0.
+
+### Predictions
+
+58. **No captured figure ends in a bind error.** v0: 0 of 54.
+59. **The three figures on polar coordinates bind nothing:** every layer leaf of tree-025, tree-038 and tree-057 is unbound, with the reason that the panel's scales cannot be mapped (`CoordPolar`), and none of their elements is verified, ambiguous or failed. The ggplot engine maps rows to the device through continuous or discrete panel scales only.
+60. **Branches bind on Cartesian figures:** of the `line` elements in leaves paired with a segment geom (ggtree's own or ggplot2's `GeomSegment`), at least 95% are verified or ambiguous and none fails. A branch is a segment whose two ends are in the layer's built rows.
+61. **Labels set off from their node by justification fail the binder's text rule, though the pairing is right.** The rule is "the anchor's x at the row's x, the row's y inside the text's box"; a label with `hjust` or `vjust` outside 0..1 is drawn away from its row's position by a share of its own size. The text leaves written so in tree-011 (`geom_tiplab(hjust = -.1)`), tree-060 (`geom_nodelab(hjust = -.1)`), tree-062 (`vjust = -.5`) and tree-083 (`hjust = -0.5`, `vjust = -0.7`) have failed elements, and so have the repelled labels of tree-054 that are not count mismatches (v0's one `GeomLabelRepel` figure: text and box failed). **At least 90% of the run's failed elements are in these five figures.**
+62. **The plain trees bind whole.** Of tree-008, -010, -012, -017, -021, -032, -046, -050, -068, -069 and -074 (a tree, with tip labels justified inside 0..1, tip or root points, a root edge, strips or one facet panel of points), at least 9 of the 11 have every layer element verified or ambiguous: none failed, unbound or in a count-mismatch leaf.
+
+A point guess that is not scored, because three figures hold most of the elements (tree-014 14830, tree-061 5281, tree-079 2185) and I cannot tell how their layers bind: verified or ambiguous on about 80% of the layer elements of the Cartesian figures.
