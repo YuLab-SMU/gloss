@@ -548,3 +548,18 @@ Written 2026-11-11, after the ggplot engine was changed to put rows on the devic
 73. **Every layer element of tree-025, -038 and -057 is verified or ambiguous** (241: 192 branch polylines by their ends, 49 rotated tip labels by the frame rule of Task 2); none fails, none is unbound.
 74. **On the stratum nothing else changes:** `compare-bind.R` against `2241` lists changed leaves in these three figures only, and no regression. Unbound 291 → 50; checked 40.6% → 41.5%; every layer element checked in 22 of 28 ggplot figures, and no figure at 0.
 75. **v0: no regression against `2244`, and changed leaves only in gallery-020, exts-017, exts-024, patchwork-010 and patchwork-011.** gallery-020's 5 labels are verified; its 5 slices and exts-024's 20 bars are unbound with the reason that rectangles are munched along the coord; the `coord_sf()` leaves stay unbound with other reasons. No element of v0 fails that did not before (failed stays 8). Cartesian panels, now mapped by `CoordCartesian$transform()` instead of the engine's own linear map, give the same statuses and counts on every leaf.
+
+### Predictions 73-75 (scored 2026-11-11)
+
+Runs `runs/2026-11-11-2300-bind-dev-tree.*` (stratum) and `runs/2026-11-11-2303-bind-dev.*` (v0), both at `c19c6f5` (clean tree; the predictions committed in it), container, no network.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 73. Every layer element of tree-025, -038, -057 checked; none failed or unbound | 241 of 241: branch polylines 154 verified and 58 ambiguous... by leaf: tree-025 29 verified, 29 ambiguous, 15 labels verified; tree-038 the same; tree-057 38 + 38 verified, 8 + 11 labels verified. 0 failed, 0 unbound | right |
+| 74. Nothing else on the stratum changes; no regression; unbound 291 → 50; 41.5%; every layer element checked in 22 of 28 ggplot figures, none at 0 | `compare-bind.R` against `2241`: 585 of 595 leaves unchanged, the 10 changed all in the three figures; 0 regressions; unbound 50; 41.5%; 22 of 28; none at 0 | right |
+| 75. v0: no regression against `2244`; changes only in gallery-020, exts-017, exts-024, patchwork-010, -011; gallery-020's 5 labels verified; its slices and exts-024's bars unbound for rectangles munched along the coord; the `coord_sf()` leaves unbound with other reasons; failed stays 8 | 0 regressions, failed 8, changed leaves only in the five figures (7 of 7114). Slices and bars as predicted. **But gallery-020's 5 labels were given the rectangles' reason**, and **the three `geom_sf()` leaves of patchwork-010 and -011 are `count_mismatch`**, not unbound (exts-017's raster: unbound, no comparison for `<image>`) | **wrong** |
+
+- 2 right of 3.
+- **The labels:** a label stacked on the slices (`position_stack(vjust = 0.5)`) keeps the stack's `xmin`..`ymax` in its rows. The engine took any rows with those bounds, under a coord that is not linear, for rectangles, whatever was drawn. A defect of the rule as written, found by this prediction; fixed with a test that failed first (the rectangles' reason now needs polygons or paths to be drawn), and the runs made again after looking (below).
+- **The `geom_sf()` leaves:** their counts never matched (1606 paths for 1 row; 10 for 1 twice) and capture said so all along; the binder used to stop at the coord before it reached the counts. 1626 elements move from unbound to count mismatch; neither is checked.
+- Branches of a circular tree bind as `ambiguous` in one of the two segment leaves of tree-025 and -038: a fan's vertical segments at the root have zero length, so several rows meet at one point.
