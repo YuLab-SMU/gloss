@@ -186,13 +186,14 @@ decode_dense_index <- function(bytes, descriptors) {
   out <- list()
   for (d in descriptors) {
     n <- as.integer(d$n)
-    read_col <- function() {
-      v <- readBin(byte_unshuffle(raw[pos + seq_len(4L * n)], 4L), "integer", n = n, size = 4L, endian = "little")
-      pos <<- pos + 4L * n
-      v
+    # six int32 columns of n values each, one after the other
+    read_col <- function(k) {
+      readBin(byte_unshuffle(raw[pos + 4L * n * (k - 1L) + seq_len(4L * n)], 4L),
+              "integer", n = n, size = 4L, endian = "little")
     }
-    x0 <- read_col(); y0 <- read_col(); w <- read_col(); h <- read_col()
-    tag <- read_col(); style <- read_col()
+    x0 <- read_col(1L); y0 <- read_col(2L); w <- read_col(3L); h <- read_col(4L)
+    tag <- read_col(5L); style <- read_col(6L)
+    pos <- pos + 24L * n
     first <- as.integer(sub("^e", "", d$first_id))
     styles <- d$styles
     out[[d$leaf]] <- data.frame(

@@ -38,10 +38,12 @@ sniff_data <- function(input) {
 
 scan_code_for_data <- function(text, env, base_dir = ".") {
   exprs <- tryCatch(parse(text = text, keep.source = FALSE), error = function(e) NULL)
-  objects <- character()
-  files <- list()
+  # What one call and the calls inside it name: data objects and files read,
+  # in the order met (the call itself, then its arguments).
   walk <- function(e) {
-    if (!is.call(e)) return(invisible())
+    objects <- character()
+    files <- list()
+    if (!is.call(e)) return(list(objects = objects, files = files))
     fn <- e[[1]]
     fname <- if (is.symbol(fn)) as.character(fn)
              else if (is.call(fn) && identical(fn[[1]], as.symbol("::"))) as.character(fn[[3]])
@@ -49,26 +51,32 @@ scan_code_for_data <- function(text, env, base_dir = ".") {
     args <- as.list(e)[-1]
     first_sym <- length(args) && is.symbol(args[[1]]) && nzchar(as.character(args[[1]]))
     if (fname %in% c("ggplot", "Heatmap", "plot", "with") && first_sym) {
-      objects <<- c(objects, as.character(args[[1]]))
+      objects <- c(objects, as.character(args[[1]]))
     }
     if ("data" %in% names(args) && is.symbol(args[["data"]])) {
-      objects <<- c(objects, as.character(args[["data"]]))
+      objects <- c(objects, as.character(args[["data"]]))
     }
     if (fname %in% read_functions && length(args) && is.character(args[[1]])) {
       p <- args[[1]]
       cand <- if (file.exists(p)) p else file.path(base_dir, p)
-      if (file.exists(cand)) {
-        files[[length(files) + 1L]] <<- list(path = normalizePath(cand), reader = fname,
-                                             md5 = unname(tools::md5sum(cand)),
-                                             bytes = file.size(cand))
+      files[[1L]] <- if (file.exists(cand)) {
+        list(path = normalizePath(cand), reader = fname, md5 = unname(tools::md5sum(cand)),
+             bytes = file.size(cand))
       } else {
-        files[[length(files) + 1L]] <<- list(path = p, reader = fname, md5 = NA_character_,
-                                             bytes = NA_real_)
+        list(path = p, reader = fname, md5 = NA_character_, bytes = NA_real_)
       }
     }
-    for (i in seq_along(args)) if (is.call(args[[i]])) walk(args[[i]])
+    for (i in seq_along(args)) if (is.call(args[[i]])) {
+      inner <- walk(args[[i]])
+      objects <- c(objects, inner$objects)
+      files <- c(files, inner$files)
+    }
+    list(objects = objects, files = files)
   }
-  for (e in as.list(exprs)) walk(e)
+  found <- lapply(as.list(exprs), walk)
+  objects <- as.character(unlist(lapply(found, `[[`, "objects")))
+  files <- unlist(lapply(found, `[[`, "files"), recursive = FALSE)
+  if (is.null(files)) files <- list()
   objects <- unique(objects)
   if (!is.null(env)) {
     objects <- objects[vapply(objects, function(o) {

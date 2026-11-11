@@ -1145,20 +1145,14 @@ pair_range <- function(s) {
 }
 
 element_boxes <- function(nodes, tag, style) {
-  n <- length(nodes)
-  x0 <- x1 <- y0 <- y1 <- rep(NA_real_, n)
-  set <- function(i, a, b, c, d) {
-    x0[i] <<- a
-    x1[i] <<- b
-    y0[i] <<- c
-    y1[i] <<- d
-  }
+  # one row per element: x0, x1, y0, y1
+  box <- matrix(NA_real_, nrow = length(nodes), ncol = 4L)
   i <- which(tag == "circle")
   if (length(i)) {
     cx <- num_attr(nodes[i], "cx")
     cy <- num_attr(nodes[i], "cy")
     r <- num_attr(nodes[i], "r")
-    set(i, cx - r, cx + r, cy - r, cy + r)
+    box[i, ] <- cbind(cx - r, cx + r, cy - r, cy + r)
   }
   i <- which(tag %in% c("rect", "image"))
   if (length(i)) {
@@ -1175,7 +1169,7 @@ element_boxes <- function(nodes, tag, style) {
       w[pct] <- vb[3]
       h[pct] <- vb[4]
     }
-    set(i, pmin(x, x + w), pmax(x, x + w), pmin(y, y + h), pmax(y, y + h))
+    box[i, ] <- cbind(pmin(x, x + w), pmax(x, x + w), pmin(y, y + h), pmax(y, y + h))
   }
   i <- which(tag == "line")
   if (length(i)) {
@@ -1183,24 +1177,24 @@ element_boxes <- function(nodes, tag, style) {
     ay <- num_attr(nodes[i], "y1")
     bx <- num_attr(nodes[i], "x2")
     by <- num_attr(nodes[i], "y2")
-    set(i, pmin(ax, bx), pmax(ax, bx), pmin(ay, by), pmax(ay, by))
+    box[i, ] <- cbind(pmin(ax, bx), pmax(ax, bx), pmin(ay, by), pmax(ay, by))
   }
   i <- which(tag %in% c("polyline", "polygon"))
   if (length(i)) {
     b <- pair_range(xml2::xml_attr(nodes[i], "points"))
-    set(i, b[, 1], b[, 2], b[, 3], b[, 4])
+    box[i, ] <- cbind(b[, 1], b[, 2], b[, 3], b[, 4])
   }
   i <- which(tag == "path")
   if (length(i)) {
     b <- pair_range(xml2::xml_attr(nodes[i], "d"))
-    set(i, b[, 1], b[, 2], b[, 3], b[, 4])
+    box[i, ] <- cbind(b[, 1], b[, 2], b[, 3], b[, 4])
   }
   i <- which(tag == "text")
   if (length(i)) {
     b <- text_boxes(nodes[i], style[i])
-    set(i, b[, 1], b[, 2], b[, 3], b[, 4])
+    box[i, ] <- cbind(b[, 1], b[, 2], b[, 3], b[, 4])
   }
-  list(x0 = x0, x1 = x1, y0 = y0, y1 = y1)
+  list(x0 = box[, 1L], x1 = box[, 2L], y0 = box[, 3L], y1 = box[, 4L])
 }
 
 # Text boxes from the anchor point, textLength and font size. Ascent and
