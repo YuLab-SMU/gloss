@@ -23,8 +23,10 @@
   the drawing order; the guideline's worked examples of the same class.
 
   Standard examples: every role and kind is shown, beside its option, as it
-  appears in the guideline's worked examples (the leaves the vocabulary names
-  for that kind); pointing at an option enlarges them, E shows them all.
+  appears in the guideline's worked examples (a role in each example figure,
+  a kind as the leaves the vocabulary names for it); pointing at an option
+  enlarges them, a click on the small picture opens them large (the whole
+  figure beside the detail), E shows them all.
 -->
 <style>
   :root {
@@ -119,7 +121,17 @@
   .opt.ex { grid-template-columns: 26px 1fr auto; }
   .thumb { display: block; width: 86px; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #fff; align-self: center; }
   .thumb svg, .excard svg { display: block; width: 100%; aspect-ratio: 16 / 10; background: #fff; }
-  .choices:not(.kinds) .thumb { width: 100px; }
+  .thumbs { display: flex; gap: 4px; align-self: center; cursor: zoom-in; position: relative; }
+  .thumbs:hover .thumb { border-color: var(--ink); }
+  .thumbs .more { position: absolute; right: 2px; bottom: 2px; background: var(--ink); color: #fff; border-radius: 8px; font-size: 10px; padding: 0 5px; line-height: 15px; }
+  .choices:not(.kinds) .thumb { width: 66px; }
+  .sheet.wide { width: min(1180px, 100%); }
+  .zoomrow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 14px; }
+  .zoomrow.one { grid-template-columns: 1fr; }
+  .zoomrow svg { display: block; width: 100%; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  .zoomrow .cap { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+  .excard.click { cursor: zoom-in; }
+  .zoomrow .wb-ex.wb-dim [data-gloss-leaf]:not(.wb-cur), #expreview .wb-ex.wb-dim [data-gloss-leaf]:not(.wb-cur) { opacity: .38; }
   /* a role in the example figure: its leaves in the role's colour (svglite writes fills in the style attribute) */
   .wb-role .wb-cur * { stroke: var(--c) !important; }
   .wb-role .wb-cur [style*="fill: #"], .wb-role .wb-cur text { fill: var(--c) !important; fill-opacity: .6; stroke: none !important; }
@@ -544,7 +556,8 @@ function option(key, name, hint, title, fn, color, extra, thumb, preview) {
 }
 // ---- the standard examples: a role or a kind as the guideline's worked examples show it -----
 // A copy of an example page with the leaves `lit` says undimmed; cached, one node per place it is shown.
-function exCopy(key, ex, lit, box, index) {
+// `view`: "crop" zooms to the box, "whole" shows the page with the box drawn.
+function exCopy(key, ex, lit, box, index, view) {
   if (thumbs.has(key)) return thumbs.get(key);
   let node = null;
   if (ex) {
@@ -558,34 +571,67 @@ function exCopy(key, ex, lit, box, index) {
       if (index) [...g.children].forEach((c, n) => { if (!index.includes(n + 1)) c.style.opacity = ".18"; });
     }
     drawBox(node, box);
-    zoom(node, ex.vb, box, 16 / 10);
+    if (view === "whole") node.setAttribute("viewBox", ex.vb.join(" ")); else zoom(node, ex.vb, box, 16 / 10);
   }
   thumbs.set(key, node);
   return node;
 }
-function kindExample(role, kind, n, place) {
+function kindExample(role, kind, n, place, view) {
   const spec = (REFK[role + " / " + kind] || [])[n], ex = spec && REF.find(f => f.id === spec.figure);
   const box = spec && spec.box.every(v => v != null) ? spec.box : null;
-  return exCopy([place, role, kind, n].join("|"), ex, lf => lf.k === spec.k, box, spec && spec.index);
+  return exCopy([place, role, kind, n, view].join("|"), ex, lf => lf.k === spec.k, box, spec && spec.index, view);
 }
-function roleExample(role, place) {
-  const node = exCopy([place, role].join("|"), REF.find(f => f.id === REFROLE), lf => lf.labels.some(l => l.role === role), null, null);
+// The example figures that show a role, the vocabulary's own first.
+function roleFigures(role) {
+  return REF.filter(f => f.leaves.some(lf => lf.labels.some(l => l.role === role)))
+            .sort((a, b) => (b.id === REFROLE) - (a.id === REFROLE));
+}
+function roleExample(role, place, ex) {
+  const node = exCopy([place, role, ex.id].join("|"), ex, lf => lf.labels.some(l => l.role === role), null, null, "whole");
   if (node) { node.classList.add("wb-role"); node.style.setProperty("--c", "var(--" + role + ")"); }
   return node;
 }
-function thumbOf(node) {
+// The small pictures of an option; a click on them opens them large instead of choosing the option.
+function thumbsOf(p) {
   if (!REF.length) return null;
-  return node ? h("span", { class: "thumb" }, node) : h("span", { class: "thumb none" }, "示例图里", h("br"), "没有这一种");
+  const nodes = p.kind ? [kindExample(p.role, p.kind, 0, "option")].filter(Boolean) : roleFigures(p.role).map(ex => roleExample(p.role, "option", ex));
+  if (!nodes.length) return h("span", { class: "thumb none" }, "示例图里", h("br"), "没有这一种");
+  const more = p.kind ? (REFK[p.role + " / " + p.kind] || []).length : 0;
+  const box = h("span", { class: "thumbs", title: "点一下放大看" }, nodes.map(n => h("span", { class: "thumb" }, n)), more > 1 ? h("span", { class: "more" }, more + " 个") : null);
+  box.addEventListener("click", e => { e.stopPropagation(); e.preventDefault(); showZoom(p); });
+  return box;
 }
-function exCard(node, caption) { return h("div", { class: "excard" }, node, h("div", {}, caption)); }
-function exCards(p, place, most) {
-  if (!p.kind) { const n = roleExample(p.role, place); return n ? [exCard(n, "标准示例 " + REFROLE + "：亮着的都是 " + p.role)] : []; }
-  return (REFK[p.role + " / " + p.kind] || []).slice(0, most).map((spec, n) =>
-    exCard(kindExample(p.role, p.kind, n, place), [spec.figure, spec.text && !spec.index ? " “" + spec.text.slice(0, 22) + "”" : "", spec.index ? " · 这个叶子里的第 " + spec.index.join("、") + " 个元素" : ""].join("")));
+function exCard(node, caption, p) {
+  const c = h("div", { class: "excard" + (p ? " click" : ""), title: p ? "点一下放大看" : null }, node, h("div", {}, caption));
+  if (p) c.addEventListener("click", () => showZoom(p));
+  return c;
+}
+const specCaption = spec => [spec.figure, spec.text && !spec.index ? " “" + spec.text.slice(0, 22) + "”" : "", spec.index ? " · 这个叶子里的第 " + spec.index.join("、") + " 个元素" : ""].join("");
+function exCards(p, place, most, click) {
+  if (!p.kind) return roleFigures(p.role).slice(0, most).map(ex => exCard(roleExample(p.role, place, ex), ex.id + "：上了色的都是 " + p.role, click ? p : null));
+  return (REFK[p.role + " / " + p.kind] || []).slice(0, most).map((spec, n) => exCard(kindExample(p.role, p.kind, n, place), specCaption(spec), click ? p : null));
+}
+// Large: every example of the option; for a kind, the whole figure beside the detail.
+function showZoom(p) {
+  hidePreview();
+  const r = VOC.roles.find(x => x.role === p.role), k = p.kind && r.kinds.find(x => x.kind === p.kind);
+  const rows = p.kind
+    ? (REFK[p.role + " / " + p.kind] || []).map((spec, n) => h("div", { class: "zoomrow" },
+        h("div", { class: "cap" }, "示例 " + (n + 1) + " · " + specCaption(spec) + "（左：它在整张图里的位置；右：放大）"),
+        kindExample(p.role, p.kind, n, "zoom", "whole"), kindExample(p.role, p.kind, n, "zoom", "crop")))
+    : roleFigures(p.role).map(ex => h("div", { class: "zoomrow one" }, h("div", { class: "cap" }, ex.id + "：上了色的都是 " + p.role + "，其余的淡化了"), roleExample(p.role, "zoom", ex)));
+  $("#overBody").classList.add("wide");
+  $("#overBody").replaceChildren(
+    h("button", { class: "link", style: "float: right", onclick: hideOverview }, "关闭（Esc）"),
+    h("h2", {}, roleSpan(p.role, p.kind), " 在标准示例里"),
+    h("p", {}, (k ? k.hint_zh : r.question_zh) + (rows.length ? "" : " 细则的示例图里没有这一种。")),
+    ...rows);
+  $("#over").classList.add("on");
 }
 function showPreview(p, anchor) {
   const card = $("#expreview"), panel = $("#panel").getBoundingClientRect();
   if (!REF.length || window.innerWidth <= 1000 || panel.left < 490) return;
+  if ($("#over").classList.contains("on")) return;
   const r = VOC.roles.find(x => x.role === p.role), k = p.kind && r.kinds.find(x => x.kind === p.kind), cards = exCards(p, "preview", 4);
   card.replaceChildren(h("h3", {}, roleSpan(p.role, p.kind), " 在标准示例里"), h("p", {}, k ? k.hint_zh : r.question_zh),
     cards.length ? h("div", { class: "exgrid" + (cards.length === 1 ? " one" : "") }, cards) : h("p", {}, "细则的示例图里没有这一种。"));
@@ -602,12 +648,13 @@ function showExamples() {
   const r = stage === "kind" ? VOC.roles.find(x => x.role === role) : null;
   const rows = r ? r.kinds.map((k, n) => [(n + 1) % 10, { role: r.role, kind: k.kind }, k.hint_zh])
                  : VOC.roles.map((x, n) => [n + 1, { role: x.role }, x.question_zh]);
+  $("#overBody").classList.remove("wide");
   $("#overBody").replaceChildren(
     h("button", { class: "link", style: "float: right", onclick: hideOverview }, "关闭（Esc）"),
     h("h2", {}, r ? [roleSpan(r.role), " 的各个种类，在标准示例里"] : "五种角色，在标准示例里"),
-    h("p", {}, "标准示例是细则里手工画的三张图（ggplot、base、热图），每个叶子怎么标已经定好。亮着、框出来的就是这个选项；看完按 Esc，再按数字键作答。"),
+    h("p", {}, "标准示例是细则里手工画的三张图（ggplot、base、热图），每个叶子怎么标已经定好。亮着、框出来的就是这个选项；点图可以放大。看完按 Esc，再按数字键作答。"),
     ...rows.flatMap(([key, p, hint]) => {
-      const cards = exCards(p, "all", 3);
+      const cards = exCards(p, "all", 4, true);
       return [h("h3", {}, h("kbd", {}, key), " ", roleSpan(p.role, p.kind), " · " + hint),
               cards.length ? h("div", { class: "exgrid" + (cards.length === 1 ? " one" : "") }, cards) : h("p", {}, "细则的示例图里没有这一种。")];
     }));
@@ -644,16 +691,16 @@ function renderBody() {
     choices = h("div", { class: "choices" },
       h("h3", {}, h("span", {}, "它是什么？从上往下问，第一个“是”就选它"), h("span", {}, "按数字键")),
       VOC.roles.map((r, i) => option(i + 1, r.role, r.question_zh, r.question, () => pickRole(i), r.role, "",
-                                     thumbOf(roleExample(r.role, "option")), { role: r.role })));
+                                     thumbsOf({ role: r.role }), { role: r.role })));
   } else {
     const r = VOC.roles.find(x => x.role === role);
     choices = h("div", { class: "choices kinds" },
       h("h3", {}, h("span", {}, roleSpan(r.role), " 里的哪一种？"), h("span", {}, h("kbd", {}, "Esc"), " 返回")),
       r.kinds.map((k, i) => option((i + 1) % 10, k.kind, k.hint_zh, k.hint, () => commit(r.role, k.kind), null, "",
-                                   thumbOf(kindExample(r.role, k.kind, 0, "option")), { role: r.role, kind: k.kind })));
+                                   thumbsOf({ role: r.role, kind: k.kind }), { role: r.role, kind: k.kind })));
   }
   const rep = last ? option("␣", "和上一个一样", last.role + " / " + last.kind, "Space", () => commit(last.role, last.kind), null, " repeat",
-                            kindExample(last.role, last.kind, 0, "last") ? thumbOf(kindExample(last.role, last.kind, 0, "last")) : null, last) : null;
+                            kindExample(last.role, last.kind, 0, "last") ? h("span", { class: "thumb" }, kindExample(last.role, last.kind, 0, "last")) : null, last) : null;
   const note = h("input", { id: "note", placeholder: "备注（N）", value: draft.note });
   note.addEventListener("input", () => { draft.note = note.value; const l = getLabel(items[cur]); if (l) { l.note = draft.note; markDirty(); } });
   const tools = h("div", { class: "tools" },
@@ -753,6 +800,7 @@ async function showOverview() {
     if (FIG && S.independent) { FIG.peers = (await api("/api/peers/" + FIG.id)).peers; indexPeers(); render(); }
   } catch (e) { return toast(e.message); }
   const k2 = v => v == null ? "–" : v.toFixed(2);
+  $("#overBody").classList.remove("wide");
   const kids = [h("button", { class: "link", style: "float: right", onclick: hideOverview }, "关闭（Esc）"), h("h2", {}, "大家的进度和统计"),
     h("h3", {}, "谁在标 · " + o.people.length + " 人"),
     table(["昵称", "进度", "叶子", "标完的图"], o.people.map(p => [
@@ -977,7 +1025,10 @@ async function boot() {
   // Debugging aid: ?keys=Digit1,Digit1,Space replays key codes after loading.
   const replay = new URLSearchParams(location.search).get("keys");
   if (replay) for (const code of replay.split(",")) {
-    if (/^Hover\d$/.test(code)) {   // points at the n-th option
+    if (/^Zoom\d$/.test(code)) {    // clicks the pictures of the n-th option
+      const t = document.querySelectorAll(".choices .opt .thumbs")[Number(code.slice(4)) - 1];
+      if (t) t.click();
+    } else if (/^Hover\d$/.test(code)) {   // points at the n-th option
       const b = document.querySelectorAll(".choices .opt")[Number(code.slice(5)) - 1];
       if (b) b.dispatchEvent(new MouseEvent("mouseenter"));
     } else if (code === "Drag") {          // drags the current leaf 90 px right and 60 px up, with pointer events
