@@ -100,6 +100,32 @@ write_csv <- function(x, path) {
 
 read_csv <- function(path) utils::read.csv(path, stringsAsFactors = FALSE, fileEncoding = "UTF-8")
 
+# Strata added after v0 was frozen (README, "v1: the tree stratum"). A run of
+# "dev" or "heldout" covers v0's strata, as every run archived before v1 did;
+# an added stratum is run and scored on its own and the run's file name
+# carries its name, so no number of v0 moves when the split grows.
+strata_added <- "tree"
+
+# The figures of one run: a set of v0, or the same set of one added stratum.
+set_figures <- function(split, set, stratum = NULL) {
+  if (!set %in% c("dev", "heldout")) stop("a set is \"dev\" or \"heldout\", not \"", set, "\"")
+  if (is.null(stratum)) return(split[split$set == set & !split$stratum %in% strata_added, ])
+  if (!stratum %in% strata_added)
+    stop("\"", stratum, "\" is not a stratum added after v0 (", paste(strata_added, collapse = ", "),
+         "); the strata of v0 are run together")
+  split[split$set == set & split$stratum == stratum, ]
+}
+
+# The part of a run's file name that says what it covers, and its reading back.
+run_scope <- function(set, stratum = NULL) if (is.null(stratum)) set else paste(set, stratum, sep = "-")
+file_scope <- function(file) {
+  b <- basename(file)
+  set <- if (grepl("-(capture|bind|sheets)-heldout", b)) "heldout" else "dev"
+  hit <- strata_added[vapply(strata_added, function(s)
+    grepl(sprintf("-(capture|bind|sheets)-%s-%s([.-]|$)", set, s), b), logical(1))]
+  list(set = set, stratum = if (length(hit)) hit[1] else NULL)
+}
+
 # Debian-control style records (Bioconductor VIEWS) into a data frame.
 read_dcf_text <- function(path, fields) {
   x <- read.dcf(path, fields = fields)

@@ -5,6 +5,8 @@
 #      capture.R does and its substrate saved under runs/<stamp>-sheets-<set>/
 #      (the .rds files stay out of git), with an index of what was captured:
 #        GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/label-sheet.R capture dev [id ...]
+#      With no id, v0's development figures; a figure of a stratum added
+#      after v0 is captured when its id is given.
 #   2. draw, anywhere (it reads saved substrates only, runs no figure code):
 #        Rscript bench/R/label-sheet.R draw bench/runs/<stamp>-sheets-dev [out dir]
 #      writes <id>.csv, <id>.svg and the PNGs to bench/labels/sheets/ (default).
@@ -23,8 +25,13 @@ if (args[1] == "capture") {
   }, error = function(e) FALSE)
   if (reachable) stop("the network is reachable; run with GLOSS_BENCH_OFFLINE=true bench/docker/run.sh")
   split <- read_csv(file.path(bench_root, "split.csv"))
-  todo <- split[split$set == set, ]
-  if (length(args) > 2) todo <- todo[todo$id %in% args[-(1:2)], ]
+  todo <- set_figures(split, set)
+  if (length(args) > 2) {
+    ids <- args[-(1:2)]
+    todo <- do.call(rbind, c(list(todo), lapply(strata_added, function(s) set_figures(split, set, s))))
+    if (length(miss <- setdiff(ids, todo$id))) stop("not a figure of the ", set, " set: ", paste(miss, collapse = ", "))
+    todo <- todo[todo$id %in% ids, ]
+  }
   stamp <- format(Sys.time(), "%Y-%m-%d-%H%M", tz = "UTC")
   out <- normalizePath(file.path(bench_root, "runs", sprintf("%s-sheets-%s", stamp, set)), mustWork = FALSE)
   dir.create(out, recursive = TRUE)

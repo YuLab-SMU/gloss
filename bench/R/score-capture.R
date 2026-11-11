@@ -6,6 +6,10 @@
 # held-out figures of split.csv and scored by the same code (page-capture
 # plan Task 8); predictions 5-8 were made for the development set and are
 # printed for a held-out run as numbers, not as tests of them.
+# A run of a stratum added after v0 (file name with "-capture-<set>-tree") is
+# checked against that stratum's figures only and reported as that stratum's;
+# predictions 5-8 were made for v0 and are numbers there too. Its own
+# predictions are scored from these numbers by hand, in predictions.md.
 
 source("bench/R/common.R")
 args <- commandArgs(trailingOnly = TRUE)
@@ -13,11 +17,16 @@ runs <- sort(list.files(file.path(bench_root, "runs"), pattern = "-capture-dev[.
 file <- if (length(args)) args[1] else if (length(runs)) runs[1] else stop("no development capture run in bench/runs")
 cap <- read_csv(file)
 split <- read_csv(file.path(bench_root, "split.csv"))
-set <- if (grepl("-capture-heldout", basename(file), fixed = TRUE)) "heldout" else "dev"
-set_name <- if (set == "dev") "development" else "held-out"
-dev <- split[split$set == set, ]
+scope <- file_scope(file)
+set <- scope$set
+set_name <- paste0(if (set == "dev") "development" else "held-out",
+                   if (!is.null(scope$stratum)) paste0(" (", scope$stratum, " stratum)"))
+dev <- set_figures(split, set, scope$stratum)
 if (!setequal(cap$id, dev$id) || anyDuplicated(cap$id)) stop("the run does not cover the ", set_name, " set: ", nrow(cap), " of ", nrow(dev), " figures")
-cat("run:", basename(file), "|", nrow(cap), if (set == "heldout") "figures | held-out set\n\n" else "figures\n\n")
+cat("run:", basename(file), "|", nrow(cap),
+    if (set == "heldout" || !is.null(scope$stratum)) paste0("figures | ", set_name, " set\n\n") else "figures\n\n")
+if (!is.null(scope$stratum))
+  cat("Predictions 5-8 were made for v0's development set; for this stratum they are numbers, not tests.\n\n")
 
 # capture.R up to 803437f wrote status NA when gloss() raised an error that is
 # not a known refusal (refusal() returned NA_character_, which `%||% "error"`

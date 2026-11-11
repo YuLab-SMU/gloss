@@ -4,10 +4,14 @@
 #   GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev
 # The held-out set only produces reported numbers: running it needs the
 # explicit argument "heldout" and is archived like any other run.
+# A set is v0's. A stratum added after v0 is run on its own, by its name
+# after the set, and writes <stamp>-capture-<set>-<stratum>.csv:
+#   GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev tree
 
 source("bench/R/harvest.R")
 args <- commandArgs(trailingOnly = TRUE)
 set <- if (length(args)) args[1] else "dev"
+stratum <- if (length(args) > 1) args[2] else NULL
 stopifnot(set %in% c("dev", "heldout"))
 
 reachable <- tryCatch({
@@ -17,9 +21,9 @@ reachable <- tryCatch({
 if (reachable) stop("the network is reachable; run with GLOSS_BENCH_OFFLINE=true bench/docker/run.sh")
 
 split <- read_csv(file.path(bench_root, "split.csv"))
-todo <- split[split$set == set, ]
+todo <- set_figures(split, set, stratum)
 stamp <- format(Sys.time(), "%Y-%m-%d-%H%M", tz = "UTC")
-out_file <- file.path(bench_root, "runs", sprintf("%s-capture-%s.csv", stamp, set))
+out_file <- file.path(bench_root, "runs", sprintf("%s-capture-%s.csv", stamp, run_scope(set, stratum)))
 
 refusal <- function(msg) {
   if (grepl("uses a mask", msg)) return("refused: mask")
@@ -94,11 +98,11 @@ for (k in seq_len(nrow(todo))) {
   write_csv(do.call(rbind, rows), out_file)
   cat(sprintf("[%d/%d] %s %s: %s %s\n", k, nrow(todo), id, todo$engine[k], status, substr(rows[[k]]$message, 1, 70)))
 }
-env <- list(set = set, figures = nrow(todo), started = stamp, commit = git_head(), timeout = capture_timeout,
+env <- list(set = set, stratum = stratum %||% "v0", figures = nrow(todo), started = stamp, commit = git_head(), timeout = capture_timeout,
             R = R.version.string,
             image = Sys.getenv("GLOSS_BENCH_IMAGE_DIGEST", NA),
             environments = lapply(bench_envs, function(e) list(
               cran = e$cran,
-              packages = lapply(setNames(nm = c("gloss", "ggplot2", "ComplexHeatmap", "patchwork", "svglite", "gridGraphics", "grid")),
+              packages = lapply(setNames(nm = c("gloss", "ggplot2", "ComplexHeatmap", "patchwork", "ggtree", "aplot", "svglite", "gridGraphics", "grid")),
                                 function(p) tryCatch(as.character(utils::packageVersion(p, lib.loc = c(bench_libpaths(e), "."))), error = function(err) NA)))))
 jsonlite::write_json(env, sub("\\.csv$", ".json", out_file), auto_unbox = TRUE, pretty = TRUE)

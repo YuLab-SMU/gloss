@@ -6,12 +6,15 @@
 # The held-out set only produces reported numbers: running it needs the
 # explicit argument "heldout", predictions committed before, and is archived
 # like any other run.
+# A set is v0's. A stratum added after v0 is run on its own, by its name
+# after the set (bind.R dev tree), and its files carry the name.
 #
-# Output: runs/<stamp>-bind-<set>.csv (figures), -leaves.csv (leaves), .json.
+# Output: runs/<stamp>-bind-<set>[-<stratum>].csv (figures), -leaves.csv (leaves), .json.
 
 source("bench/R/harvest.R")
 args <- commandArgs(trailingOnly = TRUE)
 set <- if (length(args)) args[1] else "dev"
+stratum <- if (length(args) > 1) args[2] else NULL
 stopifnot(set %in% c("dev", "heldout"))
 
 reachable <- tryCatch({
@@ -21,9 +24,9 @@ reachable <- tryCatch({
 if (reachable) stop("the network is reachable; run with GLOSS_BENCH_OFFLINE=true bench/docker/run.sh")
 
 split <- read_csv(file.path(bench_root, "split.csv"))
-todo <- split[split$set == set, ]
+todo <- set_figures(split, set, stratum)
 stamp <- format(Sys.time(), "%Y-%m-%d-%H%M", tz = "UTC")
-out_file <- file.path(bench_root, "runs", sprintf("%s-bind-%s.csv", stamp, set))
+out_file <- file.path(bench_root, "runs", sprintf("%s-bind-%s.csv", stamp, run_scope(set, stratum)))
 leaf_file <- sub("\\.csv$", "-leaves.csv", out_file)
 
 git_head <- function() {
@@ -82,11 +85,11 @@ for (k in seq_len(nrow(todo))) {
   cat(sprintf("[%d/%d] %s %s: %s | verified %s ambiguous %s failed %s %s\n", k, nrow(todo), id, todo$engine[k], status,
               row$el_verified, row$el_ambiguous, row$el_failed, substr(row$message, 1, 60)))
 }
-env <- list(set = set, figures = nrow(todo), started = stamp, commit = git_head(), timeout = timeout,
+env <- list(set = set, stratum = stratum %||% "v0", figures = nrow(todo), started = stamp, commit = git_head(), timeout = timeout,
             tolerance_pt = 0.5, R = R.version.string,
             image = Sys.getenv("GLOSS_BENCH_IMAGE_DIGEST", NA),
             environments = lapply(bench_envs, function(e) list(
               cran = e$cran,
-              packages = lapply(setNames(nm = c("gloss", "ggplot2", "ComplexHeatmap", "patchwork", "svglite", "grid")),
+              packages = lapply(setNames(nm = c("gloss", "ggplot2", "ComplexHeatmap", "patchwork", "ggtree", "aplot", "svglite", "grid")),
                                 function(p) tryCatch(as.character(utils::packageVersion(p, lib.loc = c(bench_libpaths(e), "."))), error = function(err) NA)))))
 jsonlite::write_json(env, sub("\\.csv$", ".json", out_file), auto_unbox = TRUE, pretty = TRUE)
