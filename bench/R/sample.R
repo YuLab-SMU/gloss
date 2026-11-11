@@ -10,13 +10,19 @@ source("bench/R/common.R")
 RNGkind("Mersenne-Twister", "Inversion", "Rejection")
 
 allocation <- c(gallery = 70L, exts = 30L, bioc = 30L, patchwork = 15L, heatmap = 15L)
+# bench v1 (2026-11-11, plan 2026-11-11-bench-tree-stratum): a sixth stratum,
+# after the five of v0, whose draws it cannot move (each stratum has its own
+# seed and only skips what earlier strata drew). The owner's decision: every
+# PSU of its frame that is in scope and not drawn before, 83 of 85.
+allocation <- c(allocation, tree = 83L)
 
 frames <- list(
   gallery = transform(read_csv(file.path(bench_root, "frame/gallery.csv"))[, "psu", drop = FALSE], kind = "gallery"),
   exts = transform(read_csv(file.path(bench_root, "frame/exts.csv")), kind = "examples"),
   bioc = transform(read_csv(file.path(bench_root, "frame/bioc.csv"))[, "psu", drop = FALSE], kind = "vignette"),
   patchwork = read_csv(file.path(bench_root, "frame/patchwork.csv")),
-  heatmap = read_csv(file.path(bench_root, "frame/heatmap.csv"))
+  heatmap = read_csv(file.path(bench_root, "frame/heatmap.csv")),
+  tree = read_csv(file.path(bench_root, "frame/tree.csv"))
 )
 frames$heatmap$kind[frames$heatmap$kind == "bioc"] <- "vignette"
 # a PSU is identified by kind plus name; a Gallery post is the same PSU in

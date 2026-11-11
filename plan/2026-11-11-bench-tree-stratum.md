@@ -1,6 +1,6 @@
 # Bench v1: a stratum of tree figures (the ggtree family)
 
-> Status: draft (opened 2026-11-11 on the owner's decision to add figures of the ggtree kind; the frame is built, nothing is drawn or run until the owner settles decisions 1 and 2 below).
+> Status: active (opened 2026-11-11 as a draft on the owner's decision to add figures of the ggtree kind; the owner settled decisions 1 and 2 the same day, see Scope changes).
 > Date opened: 2026-11-11. Owner: Yonghe Xia.
 
 **Goal:** The bench holds a stratum of tree figures drawn with the ggtree family, sampled by seed from a frame fixed before the draw and split into development and held-out halves before any gloss code runs on them, so that capture, roles and bindings can be reported for this family apart from the 109 figures of v0.
@@ -58,11 +58,11 @@
 
 **Current state** _(update as results come in)_
 - Suite: 9 files, 88 tests, 544 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11).
-- Key numbers: frame 69 PSUs (68 in scope, 67 available); sampled 0; retained 0.
+- Key numbers: frame 85 PSUs (84 in scope, 83 available: 41 help topics, 26 vignettes, 16 book chapters); sampled 83; retained 0 (nothing run yet).
 
 **Overall progress**
 - [x] Task 1: The frame
-- [!] Task 2: The draw _(waits for decisions 1 and 2)_
+- [x] Task 2: The draw
 - [ ] Task 3: Harvest with the stratum's class test; outcomes
 - [ ] Task 4: Offline check, split of the stratum, attribution, manifest
 - [ ] Task 5: Predictions, then the first capture run on the stratum's development half _(stub; written out after Task 4)_
@@ -94,7 +94,7 @@
 
 ### Task 2: The draw
 
-**Status:** `[!]` (decisions 1 and 2)
+**Status:** `[x]` (2026-11-11)
 
 **Tests assumption:** 4.
 
@@ -102,11 +102,14 @@
 - Modify: `bench/R/sample.R` (a sixth stratum, `tree`), `bench/sample.csv` (rows added), `bench/R/common.R` (`env_for_stratum("tree")` is `bioc`).
 
 **Checklist**
-- [ ] `sample.R` with `tree` last in the order, seed `20261109 + 6`, the allocation of decision 2.
-- [ ] `git diff bench/sample.csv`: added rows only; the 160 rows of v0 byte-identical.
+- [x] `sample.R` with `tree` last in the order, seed `20261109 + 6`, the allocation of decision 2.
+- [x] `git diff bench/sample.csv`: added rows only; the 160 rows of v0 byte-identical.
 
 **Verification**
 - `Rscript bench/R/sample.R`; `git diff --stat bench/sample.csv`; a removed or changed line is a defect of the change, not a result.
+
+**Result**
+- `Rscript bench/R/sample.R`: 243 PSUs, 83 of them `tree-001` to `tree-084` by rank (41 topics, 26 vignettes, 16 book chapters; MicrobiotaProcess, drawn as bioc-021 in v0, skipped; `ggtree::zoomClade` out of scope). The first 161 lines of `bench/sample.csv` are byte-identical to v0's file (`cmp`); `git diff --numstat`: 83 added, 0 removed. Assumption 4 holds. Committed before any PSU of the stratum was run.
 
 ---
 
@@ -163,6 +166,8 @@
 ## Scope changes
 
 _(append-only; never edit completed tasks above)_
+
+- 2026-11-11 — **The owner settles decisions 1 and 2: the frame is (b), help topics, the 27 packages and the chapters of the ggtree book; every available PSU is taken.** **Evidence:** the owner's answers, asked before anything was drawn; the book's source at `1af8f25` (2022-07-13): `_bookdown.yml` builds 19 files, 16 of them chapters with evaluated R code; its online version is CC BY-NC-SA 4.0 (`index.Rmd`). **Effect:** the frame is 85 PSUs, 84 in scope, 83 available (Task 1's result above is the frame before the book: 69). A chapter is one PSU, so the book gives at most 16 figures, one per chapter by seed, as every PSU does. Task 3 gains a new kind of source: a chapter's chunks that knitr evaluates, run alone after the book's shared setup (`setup.R` with `p_load(x)` read as `require(x)`, since the harness installs; `conflicted.R` and `software-link.R` inlined), in the `bioc` environment, with files the chapter reads from the repository vendored like URL data. A chapter that needs an earlier chapter's objects ends as a code error and is counted. Assumption 2 is restated for the book, whose figures are often several trees side by side: a figure counts when its object is a `ggtree` or a patchwork that holds one; cowplot and aplot compositions cannot be told by class and are counted in Task 3's table of what every PSU drew. The frozen code of a chapter is redistributed under the book's license, named in `bench/figures/SOURCES.md`; the allocation of "all 67" is read as all of the widened frame (Claude's reading of the two answers together).
 
 ## Closing notes
 

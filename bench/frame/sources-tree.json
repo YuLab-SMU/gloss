@@ -10,14 +10,22 @@
     "ggtree": "3.16.3",
     "ggtreeExtra": "1.18.1"
   },
+  "book": {
+    "repo": "https://github.com/YuLab-SMU/treedata-book.git",
+    "sha": "1af8f25551105279a2b8b5b1a449eb002936ce9f",
+    "listed": 19,
+    "chapters": 16,
+    "license": "CC BY-NC-SA 4.0 (the online version, as index.Rmd states)"
+  },
   "frame": {
     "topics": 42,
     "vignettes": 27,
-    "rows": 69
+    "book": 16,
+    "rows": 85
   },
   "out_of_scope": {
     "rule": "help topic whose examples have no executable line (blank, comment or bare NULL only)",
     "tree": 1
   },
-  "not_in_frame": "the ggtree book (treedata-book): a bookdown source outside Bioconductor, not pinned by v0; CRAN packages that import ggtree"
+  "not_in_frame": "CRAN packages that import ggtree; Rmd files of the book's repository that the book does not build (ggtree-comicR, ggtree-identity, ggtree-plotly, Introduction, session-info, software-info)"
 }

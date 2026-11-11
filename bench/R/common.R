@@ -27,7 +27,8 @@ bench_envs <- list(
                               paste(R.version$major, sub("\\..*$", "", R.version$minor), sep = ".")))
 )
 dir.create(bench_envs$bioc$lib, recursive = TRUE, showWarnings = FALSE)
-env_for_stratum <- function(stratum) if (stratum %in% c("bioc", "heatmap")) bench_envs$bioc else bench_envs$cran
+# tree (bench v1, 2026-11-11): the ggtree family is Bioconductor's
+env_for_stratum <- function(stratum) if (stratum %in% c("bioc", "heatmap", "tree")) bench_envs$bioc else bench_envs$cran
 
 # The active environment: set per PSU (harvest) or per frozen figure (reruns).
 .bench_state <- new.env()
@@ -52,6 +53,13 @@ sources <- list(
   bioc = list(
     url = sprintf("https://bioconductor.org/packages/%s/bioc/VIEWS", "3.21"),
     version = "3.21"
+  ),
+  # the ggtree book's source (bench v1, tree stratum); its online version is
+  # CC BY-NC-SA 4.0 (index.Rmd). Cloned to <cache>/src/treebook/repo.
+  treebook = list(
+    repo = "https://github.com/YuLab-SMU/treedata-book.git",
+    sha = "1af8f25551105279a2b8b5b1a449eb002936ce9f",
+    raw = "https://raw.githubusercontent.com/YuLab-SMU/treedata-book/1af8f25551105279a2b8b5b1a449eb002936ce9f"
   )
 )
 
