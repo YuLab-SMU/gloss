@@ -154,3 +154,41 @@ What the predictions rest on: the 55 development figures, on which the page rout
 20. **No figure is `equal` on the engine route and refused, in error or `different` on the page route.** A figure `equal` on the engine route and `not_deterministic` on the page route can occur (heatmap-008 on the development set: the page route's bench draws the figure twice) and is not counted against this.
 
 **What would change the plan:** a failed invariant (10); a base figure the bench finds different (12); a figure the engine route gets right and the page route loses (20). Anything else wrong is reported as wrong and goes to the dev log.
+
+### Predictions 9–20 on the held-out set (scored 2026-11-11)
+
+Runs, one per route, the first and only ones: page route `runs/2026-11-11-0837-capture-heldout.*` (commit `529426c`, which holds the predictions; clean tree while it ran); engine route `runs/2026-11-11-0843-capture-heldout-engine-route.*` (clone at `f48c124`). Both archived in `f0413eb` before anything else was changed. Scores by `bench/R/score-capture.R` (`*-score.txt`).
+
+| | Page route | Engine route (its own judge) |
+|---|---|---|
+| Captured | 52 | 53 |
+| Refused | 2 (mixed page: bioc-019, bioc-023) | 1 (print method of its own: exts-015, ggsurvfit) |
+| Errors, timeouts | 0, 0 | 0, 0 |
+| `equal` | 50 | 40 |
+| `not_deterministic` | 2 (exts-002, patchwork-013) | no such verdict |
+| `known_exception` | no such verdict | 5 (3 one background rect, 2 dense leaf) |
+| `different` | 0 | 8 (6 base; exts-002 and patchwork-013, the two random figures) |
+| Base figures, 9 | 7 `equal`, 2 refused | 0 `equal`, 3 known exceptions, 6 different |
+| Base figures with a count mismatch | 0 of 7 captured | 7 of 9 |
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 9. ≥ 50 captured, ≤ 1 error, 0 timeouts (guess 52 / 2 refused / 0) | 52 captured, 2 refused, 0 errors, 0 timeouts | right |
+| 10. No failed invariant; no captured figure `different` | 0 and 0 of 52 | right |
+| 11. `equal` ≥ 47; `not_deterministic` 0–4 (guess 2) | 50 and 2 | right |
+| 12. All 9 base figures captured and `equal` | 7 of 9; 2 refused as mixed pages | **wrong** |
+| 13. ≤ 1 of the base figures with a count mismatch | 0 of 7 captured | right; see the limit below |
+| 14. gloss agrees with the bench on every captured figure; identical on all but ≤ 2 | 52 of 52; identical on 50 | right, at the limit |
+| 15. Only the device background is unowned, in every captured figure | 52 of 52 | right |
+| 16. Tables or panels withheld in ≤ 3 figures | 3 (exts-015, bioc-012, patchwork-013) | right, at the limit |
+| 17. Engine route captures no more than the page route; ≥ 2 of 54 refused or in error | 53 against 52; 1 refused | **wrong**, both halves |
+| 18. Engine route has ≥ 6 fewer `equal` | 10 fewer (40 against 50) | right |
+| 19. ≤ 2 of 9 base figures `equal` on the engine route; ≥ 3 with a count mismatch | 0 of 9; 7 of 9 | right |
+| 20. No figure `equal` on the engine route and refused, in error or `different` on the page route | 0 (the 40 are `equal` on both) | right as worded; see below |
+
+- **12 is wrong, and the reason is a defect in gloss, found by this run.** Both refusals say "the page mixes base graphics and grid". For bioc-019 the engine route's own capture shows the page is base only: its scene is the code's page plus one background rect, nothing missing, and gridGraphics redraws base operations only. The figure is the last of a vignette that drew a grid figure on an earlier page. Reproduced afterwards on a hand-built page, not on the held-out figures: a function that draws a grid page and then a base page is refused as mixed, with 0 grid operations on the device's display list for the page and 2 grobs left on grid's own display list from the page before; a page that really mixes the two has a grid operation on the device's display list. gloss counts grid's list, which a new base page does not clear. For bioc-023 (1 grid grob, 64 base operations; its code loads ggplot2 and motifStack) the same cause is likely and **not verified**. The refusal is the safe direction, no wrong capture; it costs figures. Nothing was changed before the runs were archived; the fix and its test are made after looking and are reported in the dev log. Neither held-out run is repeated.
+- **17 is wrong.** The engine route captured one figure more than the page route. It did so by capturing the two pages the page route refuses, and neither capture is the code's page under the engine route's own judge (bioc-019: one extra rect, a known exception; bioc-023: 72 primitives differ). The development set had three print-method refusals and one error on the engine route; the held-out set has one refusal and no error.
+- **20 holds as worded and comes close to failing in substance.** bioc-019 is a `known_exception` on the engine route, every primitive of the code's page present, and refused on the page route. That is one figure the engine route captured within its stated exception and the page route lost, for the defect above.
+- **13 is right and says less than on the development set.** The seven captured base figures have 110 leaves with an expected count, all `ok`, and 137 leaves with none (development: 1469 and 574). A leaf without an expected count cannot mismatch.
+- **18, by cause.** The ten figures `equal` on the page route and not on the engine route: seven base figures (five `different`, two with the extra background rect), one refused for its print method (exts-015), two dense figures. Only the two dense ones are the judge's doing: the engine route's judge calls a rasterized leaf a known exception, the page route's compares a vector recapture. Eight of the ten are differences between routes; the clip-blind comparator of the engine route can only have helped it.
+- **Not predicted.** Both `not_deterministic` figures are `equal` for gloss (development: one of two): the ggplot engine draws its kept build and patchwork-013's built tables are withheld, so gloss's two drawings are the same page. gloss's self-check did not see either figure's randomness; the bench's two plain drawings did (1399 and 742 primitives). Objects drawn alone equal the page the code left in 36 of 40 (development: 39 of 41). Time per captured figure: median 0.11 to 0.62 s by engine, maximum 5.3 s.

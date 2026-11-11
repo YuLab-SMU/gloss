@@ -65,7 +65,7 @@
 - [x] Task 5: Base pages by display-list entry
 - [x] Task 6: Base on the development set; names and classification re-measured; gridGraphics out; `R CMD check`
 - [x] Task 7: Records: design §元素归属 rewritten, NEWS, dev logs
-- [~] Task 8: Held-out predictions and run (owner's go-ahead 2026-11-11)
+- [x] Task 8: Held-out predictions and run (owner's go-ahead 2026-11-11)
 
 ---
 
@@ -312,7 +312,7 @@
 
 ### Task 8: Held-out predictions and run
 
-**Status:** `[~]` (owner's go-ahead: 2026-11-11)
+**Status:** `[x]` (owner's go-ahead: 2026-11-11)
 
 **Files**
 - Modify: `bench/predictions.md`, `bench/R/score-capture.R` (accepts a held-out file).
@@ -325,9 +325,16 @@
 - [x] Scorer accepts a held-out run; on the development runs it prints what it printed (`2026-11-11-0705`: byte-identical to the archived score)
 - [x] Engine-route procedure tried on the development set first: a clean clone at the tag with the seven vendored `data/` directories copied in (every file under `bench/figures/` has the repository's checksum). Run `2026-11-11-0832-capture-dev-engine-route`: 51 captured, 3 refused, 1 error; 40 equal, 6 known exceptions, 5 different, the counts of `2026-11-10-1424`
 - [x] Predictions 9–20 and the scoring rules in `bench/predictions.md`, committed before either held-out run; they state where the two routes' judges differ
-- [ ] Page route on the held-out set, archived with log and score
-- [ ] Engine route on the held-out set, archived with log and score
-- [ ] Predictions scored; design §评测设计, NEWS, dev log; plan closed
+- [x] Page route on the held-out set, archived with log and score
+- [x] Engine route on the held-out set, archived with log and score
+- [x] Predictions scored; design §评测设计, NEWS, dev log; plan closed
+
+**Result** (2026-11-11)
+- Predictions 9–20 and the scoring rules committed in `529426c` before either run; both runs archived in `f0413eb` before any change to gloss or the harness. Commands: `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R heldout`, once in the repository at `529426c` (clean tree), once in the clone at `f48c124`.
+- Page route, run `2026-11-11-0837`, 54 held-out figures: 52 captured, 2 refused ("the page mixes base graphics and grid": bioc-019, bioc-023), 0 errors, 0 timeouts; 50 equal, 2 not deterministic (exts-002, patchwork-013), 0 different. gloss's verdict agrees with the bench's on 52 of 52 (Task 4 reading), identical on 50; 0 failed invariants. Base: 7 of 9 equal, 2 refused; 0 count mismatches on 110 counted leaves (137 leaves have no expected count). Withheld tables or panels: 3 figures. Only the device background unowned: 52 of 52.
+- Engine route, run `2026-11-11-0843`, same figures, its own harness and judge: 53 captured, 1 refused (ggsurvfit's print method), 0 errors; 40 equal, 5 known exceptions, 8 different. Base: 0 of 9 equal; 7 of 9 with a count mismatch.
+- Predictions: 10 of 12 right; 12 and 17 wrong (`bench/predictions.md`). The lines that would change the plan: no failed invariant; no base figure the bench finds different; no figure `equal` on the engine route lost by the page route. One figure comes close to the third: bioc-019 is a known exception on the engine route (one extra rect, nothing missing) and refused on the page route.
+- The two refusals are a defect, not mixed pages (scope change below).
 
 ---
 
@@ -340,6 +347,8 @@ _(append-only; never edit completed tasks above)_
 **2026-11-11, Task 4: what "gloss's verdict agrees with the bench's" means.** heatmap-008 is `Heatmap(..., km = 2)`: k-means runs inside `draw()`, so two drawings of the object differ (the bench's proof: 236 primitives). gloss says `equal`, and it is right about what it claims: its capture equals the page it drew (0 primitives differ), because the random numbers are drawn before grid's display list holds fixed grobs, and the engine's tables come from that same drawn list. gloss's self-check sees randomness only between its drawing and its capture (gallery-059: ggrepel places labels inside `makeContent()`); it does not certify that a figure draws the same page twice, and the jittered ggplot of Task 2 is another such case. The spike's "43 equal, 1 not deterministic" came from the page the code left, which it never drew a second time. Agreement in *Done when* is therefore read as: the bench's `equal` implies gloss's `equal`; the bench's `not_deterministic` allows gloss's `equal` or `not_deterministic`; the bench's `different` with gloss's `equal` is the failed invariant, unchanged. With this reading the grid pages agree 44 of 44. The design doc gets a dated note on what `equal` certifies.
 
 **2026-11-11, Task 6: the counts the development run is held to.** *Done when* says "53 equal, 1 not deterministic, 1 refused" after the base step. Those counts came from the spike, which judged the page the code left and never drew a figure twice. Run `2026-11-11-0627` drew each figure twice and found two that are not deterministic: gallery-059 (5 primitives) and heatmap-008 (`Heatmap(km = 2)`, 236 primitives; Task 4 scope change). The line is therefore read as: 52 equal, 2 not deterministic, 1 refused, 0 errors, 0 different. "gloss's own verdict agrees with the bench's (55 of 55)" is read under the Task 4 reading over the 54 captured figures; the refused figure has no verdict on either side and counts as agreeing when its refusal carries a reason. Nothing else in *Done when* changes.
+
+**2026-11-11, Task 8: "mixed page" is decided from the wrong display list (found on the held-out set; everything below is made after looking).** *Out of scope* says pages mixing base and grid are refused, "0 of 55". The held-out run refused 2 of 54 as mixed, both base figures at the end of a Bioconductor vignette. For bioc-019 the engine route's capture of the same figure shows a base-only page (the code's page plus one background rect). Reproduced on a hand-built page, not on the held-out figures: a function drawing a grid page and then a base page is refused with "7 base operations, 2 grid grobs", while the device's display list for the page holds 0 grid operations; `page_kind()` counts the grobs on grid's own display list, which a new base page does not clear. So the count "0 of 55 mixed" was a count of this test, not of mixed pages, and prediction 12 was wrong for it. The held-out numbers above stand as run. The fix (decide from the device's display list) is a bug fix with its own failing test, made after looking, verified on fixtures and the development set only, and recorded in the dev log; no held-out run is repeated without the owner's word. Whether bioc-023 has the same cause is not verified.
 
 ## Closing notes
 
