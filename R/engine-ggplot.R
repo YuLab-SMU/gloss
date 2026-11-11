@@ -438,6 +438,7 @@ ggplot_rows_on_device <- function(d, prow, coord, pp) {
   # angle; core-bind.R compares them in the label's own frame.
   for (col in intersect(c("hjust", "vjust"), names(d))) out[[col]] <- just_value(d[[col]])
   if ("angle" %in% names(d)) out$angle <- num(d$angle)
+  if ("label" %in% names(d)) out$label <- as.character(d$label)
   attr(out, "linear") <- linear
   out
 }

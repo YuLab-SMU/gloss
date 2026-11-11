@@ -38,6 +38,7 @@ Suggests:
     patchwork,
     ragg,
     shiny,
+    showtext,
     systemfonts,
     testthat (>= 3.0.0),
     withr

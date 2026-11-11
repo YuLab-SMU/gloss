@@ -527,3 +527,30 @@ test_that("a path paired one per row whose row has ends verifies by its ends (ge
   expect_equal(lv$status, "verified")
   expect_equal(lv$verified, 3L)
 })
+
+test_that("text drawn as glyph outlines is named as such, and never failed", {
+  # The ggtree book's setup attaches emojifont, which turns showtext on: each
+  # glyph is drawn as a path (bench tree-014, -041, -046, -054, -062). A
+  # text leaf then drew one element per glyph, a count mismatch that did not
+  # say why, or, with one glyph per label, passed the count and failed on
+  # position as a shape (37 elements). Plan 2026-11-11-tree-binding, Task 4.
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("showtext")
+  showtext::showtext_auto(TRUE)
+  on.exit(showtext::showtext_auto(FALSE), add = TRUE)
+  d <- data.frame(x = 1:3, y = 1:3, one = c("A", "B", "C"), many = c("Alpha", "Be ta", "C"))
+  leaf_of <- function(col) {
+    p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, label = .data[[col]])) + ggplot2::geom_text()
+    b <- suppressWarnings(bind_capture(p))
+    b$leaves[b$leaves$table %in% "built_layer1", ]
+  }
+  one <- leaf_of("one")
+  expect_equal(one$status, "unbound")
+  expect_equal(one$failed, 0L)
+  expect_match(one$reason, "glyph outlines")
+  expect_match(one$reason, "3 paths for 3 labels")
+  many <- leaf_of("many")
+  expect_equal(many$status, "count_mismatch")
+  expect_match(many$reason, "glyph outlines")
+  expect_match(many$reason, "10 paths for 3 labels with 10 characters other than spaces")
+})

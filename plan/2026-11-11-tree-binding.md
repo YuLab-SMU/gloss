@@ -87,7 +87,7 @@
 - [x] Task 1: A page over the parser's limit (tree-041)
 - [x] Task 2: Labels in their own frame: justification and rotation (tree-011, -060, -083, -072; tree-045)
 - [x] Task 3: Polar coordinates through the coord's transform (tree-025, -038, -057)
-- [ ] Task 4: Text drawn as glyph outlines (the book figures)
+- [~] Task 4: Text drawn as glyph outlines (the book figures)
 - [ ] Task 5: Points in several shapes (tree-014) _(stub)_
 - [ ] Task 6: What remains: repelled labels (tree-054), tree-003's text leaf _(stub)_
 - [ ] Task 7: The stratum's held-out half, one run _(stub; decision 1)_
@@ -196,7 +196,7 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 
 ### Task 4: Text drawn as glyph outlines
 
-**Status:** `[ ]`
+**Status:** `[~]` (reason and test landed; the runs pending)
 
 **Tests assumption:** 4.
 
@@ -209,9 +209,9 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 - First say it. Binding the outlines (a label's glyphs together, against the label's box) is a later step, decided from how many leaves of the four figures it would reach.
 
 **Checklist**
-- [ ] Tests that fail first: under `showtext`, a text leaf's reason names glyph outlines; a one-glyph-per-label leaf's elements are not `failed`.
-- [ ] The mark in capture; the reason in the binder.
-- [ ] Suite on the host; container suite.
+- [x] Tests that fail first: under `showtext`, a text leaf's reason names glyph outlines; a one-glyph-per-label leaf's elements are not `failed`. — `test-bind.R` (`showtext` added to Suggests): labels "A", "B", "C" were `partly_failed` (2 failed), labels "Alpha", "Be ta", "C" a count mismatch saying only "drew 10 elements, its grob 3"; 6 of 7 expectations failed. After: unbound and count mismatch, each with a reason that names glyph outlines and counts paths, labels and characters.
+- [x] The mark in capture; the reason in the binder. — Changed from the plan: no mark in capture. The binder tells outlines from the leaf's class (`text`) and its elements' tags (all `path`), which capture already records, so the substrate and the bundle format do not move. `R/engine-ggplot.R` states each row's label, so the reason can count characters.
+- [x] Suite on the host; container suite. — Host 9 files / 96 tests / 620 expectations / 0 failed / 0 skipped; container the same (showtext installed there, so not skipped).
 - [ ] Count, on the four book figures, the text leaves whose glyph paths would group into labels by count (non-space characters per label): the number for deciding the later step.
 - [ ] Predictions, then `capture.R dev tree` and `bind.R dev tree`.
 

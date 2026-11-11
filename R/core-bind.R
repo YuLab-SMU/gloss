@@ -149,6 +149,19 @@ check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
     list(leaf = do.call(leaf_row, c(base, list(status = status, reason = reason, mode = mode))),
          elements = element_rows(ids, cl$leaf, cl$table, status = el_status))
   }
+  # A text leaf whose elements are all paths was drawn as glyph outlines
+  # (showtext: the ggtree book's figures). Outlines are not text, so no
+  # comparison here applies; say what they are, whether or not the counts
+  # match (plan 2026-11-11-tree-binding, Task 4).
+  outlines <- identical(leaf$class, "text") && n_el > 0L && all(g$tag == "path")
+  if (outlines) {
+    labels <- if (!is.null(pred$label)) pred$label else NULL
+    chars <- if (is.null(labels)) NA_integer_ else sum(nchar(gsub("[[:space:]]", "", labels)))
+    why <- sprintf("the text was drawn as glyph outlines (showtext?): %d path%s for %d label%s%s; no comparison for outlines",
+                   n_el, plural(n_el), n_rows, plural(n_rows),
+                   if (is.na(chars)) "" else sprintf(" with %d character%s other than spaces", chars, plural(chars)))
+    return(done(if (identical(leaf$status, "count_mismatch")) "count_mismatch" else "unbound", why))
+  }
   if (identical(leaf$status, "count_mismatch")) {
     return(done("count_mismatch", sprintf("the leaf drew %d elements, its grob %d", leaf$n_drawn, leaf$n_expected)))
   }
