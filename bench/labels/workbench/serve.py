@@ -67,8 +67,9 @@ REPO = os.path.normpath(os.path.join(HERE, "..", "..", ".."))
 # a leaf, its place in the drawing order, the guideline's examples of its class.
 # 3 (2026-11-11): also each role and kind shown in the guideline's worked
 # examples, beside the option. Kept with each figure's state, so that labels can
-# be told apart by the aids they were made with.
-WORKBENCH = 3
+# be told apart by the aids they were made with. 4 (2026-11-11): a guide in the
+# page; the page drawn with a margin, so that outlines at its edge show.
+WORKBENCH = 4
 MAX_BODY = 20 * 1024 * 1024
 MAX_ANNOTATORS = 200
 NICKNAME = re.compile(r"^[\w-]{2,16}$")

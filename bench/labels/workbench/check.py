@@ -207,7 +207,7 @@ try:
     with open(os.path.join(one, "out", ".workbench", "zz-base.json"), encoding="utf-8") as f:
         st = json.load(f)
     expect("a figure's state says which workbench made it, and where the reference was open",
-           st["workbench"] == 3 and st["labels"]["1"]["ref"] is True)
+           st["workbench"] == 4 and st["labels"]["1"]["ref"] is True)
 finally:
     stop(proc)
 # an example the vocabulary names that the examples do not label so stops the server

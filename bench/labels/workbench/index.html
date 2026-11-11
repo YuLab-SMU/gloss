@@ -27,6 +27,10 @@
   a kind as the leaves the vocabulary names for it); pointing at an option
   enlarges them, a click on the small picture opens them large (the whole
   figure beside the detail), E shows them all.
+
+  The page is drawn with a margin around it, so that the outline of a leaf
+  at the page's edge is not cut off. A guide (G) says what to do; it opens
+  by itself the first time.
 -->
 <style>
   :root {
@@ -56,7 +60,7 @@
   @media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
   #stage { padding: 10px; position: sticky; top: 58px; }
-  #page svg { display: block; width: 100%; height: auto; max-height: calc(100vh - 150px); background: #fff; }
+  #page svg { display: block; width: 100%; height: auto; max-height: calc(100vh - 150px); background: #e9e7df; }
   #page, #loupe { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #fff; }
   .wb-dim [data-gloss-leaf]:not(.wb-cur) { opacity: .42; }
   .wb-hl rect { fill: none; vector-effect: non-scaling-stroke; pointer-events: none; }
@@ -68,7 +72,7 @@
               font-size: 12px; line-height: 1.5; white-space: pre-wrap; }
   #panel { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
   #body { display: flex; flex-direction: column; gap: 8px; }
-  #loupe svg { display: block; width: 100%; aspect-ratio: 16 / 7; background: #fff; }
+  #loupe svg { display: block; width: 100%; aspect-ratio: 16 / 7; background: #e9e7df; }
   .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .meta .where { font-weight: 650; font-variant-numeric: tabular-nums; margin-right: 2px; }
   .chip { border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font-size: 12px; background: var(--soft); }
@@ -147,6 +151,10 @@
   .excard { font-size: 11.5px; color: var(--muted); }
   .excard svg { border: 1px solid var(--line); border-radius: 6px; }
   .excard b { color: var(--ink); }
+  .guide ol, .guide ul { margin: 4px 0; padding-left: 20px; font-size: 13px; line-height: 1.6; }
+  .guide li { margin: 2px 0; }
+  .guide kbd { margin: 0 1px; }
+  .guide .q { color: var(--muted); }
   .btn.ghost { background: var(--panel); color: var(--ink); margin: 3px; }
   .link { background: none; border: 0; padding: 0; color: var(--data); cursor: pointer; font: inherit; text-align: left; }
   .overlay { position: fixed; inset: 0; background: rgba(28, 28, 30, .45); z-index: 20; display: none; align-items: flex-start;
@@ -183,6 +191,7 @@
   <span class="brand">gloss 标注工作台</span>
   <span class="who" id="who"></span>
   <div id="tabs"></div>
+  <button class="tab" id="help">使用说明（G）</button>
   <button class="tab" id="team" hidden></button>
   <span id="total"></span>
 </header>
@@ -317,10 +326,21 @@ function cleanSvg(text) {
   return svg;
 }
 const SHAPES = "rect, circle, ellipse, line, polyline, polygon, path, text, image, use";
+// A page is shown with a margin, so that an outline at its edge is not cut off.
+const MARGIN = 7;
+const padded = vb => [vb[0] - MARGIN, vb[1] - MARGIN, vb[2] + 2 * MARGIN, vb[3] + 2 * MARGIN];
+// The device's page background is a rectangle of 100%: of the view, once there is a margin. Give it the page's size.
+function pinPage(svg, vb) {
+  svg.querySelectorAll('rect[width="100%"][height="100%"]').forEach(r => {
+    r.setAttribute("x", vb[0]); r.setAttribute("y", vb[1]); r.setAttribute("width", vb[2]); r.setAttribute("height", vb[3]);
+  });
+}
 function mountSvg(text) {
   const src = cleanSvg(text);
-  const main = document.importNode(src, true), loupe = document.importNode(src, true);
   FIG.viewBox = (src.getAttribute("viewBox") || "0 0 504 360").split(/\s+/).map(Number);
+  pinPage(src, FIG.viewBox);
+  src.setAttribute("viewBox", padded(FIG.viewBox).join(" "));
+  const main = document.importNode(src, true), loupe = document.importNode(src, true);
   // what the device drew outside every leaf (the page's own background)
   for (const root of [main, loupe]) root.querySelectorAll(SHAPES).forEach(n => { if (!n.closest("[data-gloss-leaf], defs, clipPath")) n.classList.add("wb-loose"); });
   $("#page").replaceChildren(main);
@@ -359,7 +379,7 @@ function drawBox(root, box) {
   }
 }
 function zoom(svg, vb, box, R) {
-  let view = vb;
+  let view = padded(vb);
   if (box) {
     const bw = box[2] - box[0], bh = box[3] - box[1];
     const w = Math.max(bw * 1.5 + 16, (bh * 1.5 + 16) * R, 80);
@@ -571,7 +591,7 @@ function exCopy(key, ex, lit, box, index, view) {
       if (index) [...g.children].forEach((c, n) => { if (!index.includes(n + 1)) c.style.opacity = ".18"; });
     }
     drawBox(node, box);
-    if (view === "whole") node.setAttribute("viewBox", ex.vb.join(" ")); else zoom(node, ex.vb, box, 16 / 10);
+    if (view === "whole") node.setAttribute("viewBox", padded(ex.vb).join(" ")); else zoom(node, ex.vb, box, 16 / 10);
   }
   thumbs.set(key, node);
   return node;
@@ -787,6 +807,55 @@ function nextDisputed() {
     if (disputed(items[i].k)) return go(i);
   }
 }
+// ---- the guide: what to do, from the vocabulary's questions and cases ---------
+function showGuide() {
+  hidePreview();
+  const K = (...ks) => ks.map(k => h("kbd", {}, k));
+  const li = (...kids) => h("li", {}, ...kids);
+  $("#overBody").classList.remove("wide");
+  $("#overBody").replaceChildren(h("div", { class: "guide" },
+    h("button", { class: "link", style: "float: right", onclick: hideOverview }, "关闭（Esc）"),
+    h("h2", {}, "使用说明"),
+    h("p", { class: "strong" }, "一张图是由很多块东西画出来的：背景、网格线、点、坐标轴、图例……每一块叫一个“叶子”。你的任务是告诉我们每个叶子是什么。一共 " + CFG.figures.length + " 张图，一张几分钟；随时可以关掉，回来接着标。"),
+    h("h3", {}, "1  每个叶子回答两步"),
+    h("p", {}, "左边的图上，当前的叶子用洋红色虚线框出来（其他的淡化），右上角是它的放大图。先选角色：从上往下问，第一个回答“是”的就选它。"),
+    h("ol", {}, VOC.roles.map(r => li(roleSpan(r.role), " ", h("span", { class: "q" }, r.question_zh)))),
+    h("p", {}, "再选它是这个角色里的哪一种（比如 guide 里的刻度线、刻度文字、图例标题）。选完自动跳到下一个叶子。"),
+    h("h3", {}, "2  按键"),
+    h("ul", {},
+      li(K("1"), "–", K("5"), " 选角色，再按数字选种类（", K("0"), " 是第 10 个）；", K("Esc"), " 退回去重选角色。"),
+      li(K("␣"), " 空格：和上一个叶子标成一样。连着好几个同类的叶子时最快。"),
+      li(K("←"), K("→"), " 回到上一个 / 去下一个；下面的小方块也可以点。已经标过的，重新选一次就是修改。"),
+      li(K("S"), " 一个叶子里的东西不是同一种时（比如 base 的坐标轴：轴线、刻度线、刻度文字画在一起），拆开，逐个元素标。"),
+      li(K("U"), " 拿不准：先选你认为最可能的，再按 U 做个记号。", K("N"), " 写备注。不要留空。"),
+      li(K("C"), " 看这张图的代码：位置是不是从数据来的、值是不是写死的，代码里最清楚。")),
+    h("h3", {}, "3  看不清它是什么的时候"),
+    h("ul", {},
+      li("叶子下面那一行写着它的", h("b", {}, "填充和描边"), "：“无（透明）”和“#FFFFFF 白色”是两回事。"),
+      li(K("F"), " 涂色：把它涂成洋红色。实心 = 有填充，实线 = 有描边，虚线 = 原本没有描边。"),
+      li(K("I"), " 单独看：放大图里只画它一个，底是灰色棋盘格，白色和透明一眼分得出。"),
+      li(K("H"), " 藏起它，看图上少了什么；", K("T"), " 掀掉画在它之后的东西；按住框出来的那一块可以拖到旁边，", K("M"), " 放回。"),
+      li("“第几层”那一行：1 在最底下，后画的盖在先画的上面；盖在它上面、被它盖住的叶子可以点过去看。"),
+      li(K("D"), " 开关“淡化其他”。")),
+    REF.length ? h("h3", {}, "4  每个选项长什么样：标准示例") : null,
+    REF.length ? h("ul", {},
+      li("每个选项右边的小图，是它在标准示例图（手工画的 ggplot、base、热图各一张，怎么标已经定好）里的样子。"),
+      li("鼠标停在选项上会放大；", h("b", {}, "点小图"), "打开大图（左边是它在整张图里的位置，右边是放大）；", K("E"), " 一次看完当前这一步的所有选项。"),
+      li(K("R"), " 示例图里同一种图形（比如都是 rect）分别是怎么标的。同一种图形可以是不同的角色，别照抄，看它在这张图里起什么作用。"),
+      li("有几个选项写着“示例图里没有这一种”：按文字说明判断。")) : null,
+    h("h3", {}, (REF.length ? "5" : "4") + "  这些情况已经定好怎么标"),
+    h("ul", {}, VOC.cases.map(c => li(c.zh))),
+    TEAM ? h("h3", {}, (REF.length ? "6" : "5") + "  和大家一起标") : null,
+    TEAM ? h("ul", {},
+      li(h("b", {}, "请独立完成。"), "标完之前不要和别人商量，也不要看别人的屏幕：我们要量的正是不同的人各自标，结果一不一致。"),
+      li("谁标了多少随时能看（", K("O"), "）。别人具体怎么标的，要等你" + (REVEAL === "figure" ? "标完一张图" : "把全部的图标完") + "、点“看看大家怎么标的”之后才显示；那一刻你的标注就定稿了。"),
+      li("定稿之后可以看每个叶子大家各选了什么、哪些有分歧（", K("X"), " 跳到下一个有分歧的）、整体的一致性。之后还能改，但改动另外记录。"),
+      li("换一台电脑接着标：在“大家的进度和统计”最下面有你的专属链接。")) : null,
+    h("p", {}, "这份说明随时可以再看：按 ", K("G"), "，或点页面顶上的“使用说明”。"),
+    h("button", { class: "btn", onclick: hideOverview }, "开始标注（Esc）")));
+  $("#over").classList.add("on");
+  $("#over").scrollTop = 0;
+}
 function table(head, rows) {
   return h("table", {}, h("tr", {}, head.map(x => h("th", {}, x))), rows.map(r => h("tr", {}, r.map(c => h("td", {}, c)))));
 }
@@ -950,9 +1019,10 @@ function onKey(e) {
   const code = e.code || "";
   if ($("#join").classList.contains("on")) return;
   if ($("#over").classList.contains("on")) {
-    if (code === "Escape" || code === "KeyO" || code === "KeyE") { hideOverview(); if (e.preventDefault) e.preventDefault(); }
+    if (["Escape", "Enter", "KeyO", "KeyE", "KeyG"].includes(code)) { hideOverview(); if (e.preventDefault) e.preventDefault(); }
     return;
   }
+  if (code === "KeyG") { showGuide(); if (e.preventDefault) e.preventDefault(); return; }
   if (TEAM && code === "KeyO") { showOverview(); if (e.preventDefault) e.preventDefault(); return; }
   if (TEAM && code === "KeyX") { nextDisputed(); if (e.preventDefault) e.preventDefault(); return; }
   const digit = /^(Digit|Numpad)(\d)$/.exec(code);
@@ -1001,12 +1071,14 @@ async function boot() {
   try {
     const ref = await api("/api/reference");
     REF = ref.figures.map(f => {
-      const dom = cleanSvg(f.svg);
-      return Object.assign(f, { dom, vb: (dom.getAttribute("viewBox") || "0 0 504 360").split(/\s+/).map(Number) });
+      const dom = cleanSvg(f.svg), vb = (dom.getAttribute("viewBox") || "0 0 504 360").split(/\s+/).map(Number);
+      pinPage(dom, vb);
+      return Object.assign(f, { dom, vb });
     });
     REFK = ref.kinds || {}; REFROLE = ref.figure || null;
   } catch (e) { REF = []; }          // a server without the examples: no reference
   $("#team").addEventListener("click", showOverview);
+  $("#help").addEventListener("click", showGuide);
   $("#cases ul").replaceChildren(...VOC.cases.map(c => h("li", { title: c.en }, c.zh)));
   document.addEventListener("keydown", onKey);
   document.addEventListener("pointerdown", () => { lastInput = Date.now(); });
@@ -1024,6 +1096,8 @@ async function boot() {
   await openFigure(first.id);
   // Debugging aid: ?keys=Digit1,Digit1,Space replays key codes after loading.
   const replay = new URLSearchParams(location.search).get("keys");
+  // the guide opens by itself the first time (not when keys are replayed)
+  if (!replay && !store.get("wb-guide")) { showGuide(); store.set("wb-guide", "1"); }
   if (replay) for (const code of replay.split(",")) {
     if (/^Zoom\d$/.test(code)) {    // clicks the pictures of the n-th option
       const t = document.querySelectorAll(".choices .opt .thumbs")[Number(code.slice(4)) - 1];
