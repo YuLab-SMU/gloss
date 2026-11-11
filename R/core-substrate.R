@@ -184,9 +184,12 @@ capture_figure <- function(x, engine, width = 7, height = 5, dense = 10000,
   withheld <- data.frame(what = character(), reason = character(), stringsAsFactors = FALSE)
   if (!is.null(eng$panels)) {
     pan <- eng$panels(state, sub)
+    # Some panels can be withheld while others are stated (a patchwork plot
+    # whose build draws random numbers, beside plots whose builds do not).
     if (!is.null(pan$withheld)) {
       withheld <- rbind(withheld, data.frame(what = "panels", reason = pan$withheld, stringsAsFactors = FALSE))
-    } else if (!is.null(pan)) {
+    }
+    if (!is.null(pan$panels)) {
       sub$panels <- pan$panels
       sub$leaves$panel <- unname(pan$leaf_panel[sub$leaves$id])
     }

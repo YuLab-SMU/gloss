@@ -145,12 +145,76 @@ test_that("heatmap cells verify by place and colour, and a wrong order fails on 
   expect_true(all(r$elements$status[!moved] == "verified"))
 })
 
-test_that("patchwork leaves are unbound: the engine states no bindings yet", {
+# Patchwork (plan Task 2b): each plot's panels are found in the gtable
+# patchwork drew, by the patch index patchwork appends to the cell names, and
+# bound with that plot's build.
+patchwork_fixture <- function() {
   skip_if_not_installed("patchwork")
-  p <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$wt, .data$mpg)) + ggplot2::geom_point()
-  b <- bind_capture(patchwork::wrap_plots(p, p))
-  expect_true(all(b$leaves$status == "unbound"))
-  expect_match(b$leaves$reason[1], "engine 'patchwork' states no bindings")
+  p1 <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$wt, .data$mpg)) + ggplot2::geom_point()
+  p2 <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(factor(.data$cyl))) + ggplot2::geom_bar() +
+    ggplot2::facet_wrap(~am)
+  p3 <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$hp, .data$qsec)) + ggplot2::geom_point(colour = "red")
+  patchwork::wrap_plots(p1, p2) / p3
+}
+
+test_that("patchwork: each plot's panels are mapped and its layer leaves bind", {
+  b <- bind_capture(patchwork_fixture())
+  pan <- b$fig$substrate$panels
+  expect_setequal(pan$id, c("plot1_panel1", "plot2_panel1", "plot2_panel2", "plot3_panel1"))
+  lv <- b$leaves[!is.na(b$leaves$table), ]
+  expect_setequal(unique(lv$table), c("plot1_built_layer1", "plot2_built_layer1", "plot3_built_layer1"))
+  expect_equal(sum(lv$failed), 0L)
+  expect_equal(sum(lv$verified[lv$table == "plot1_built_layer1"]), 32L)
+  expect_equal(sum(lv$verified[lv$table == "plot2_built_layer1"]), 6L)   # 3 bars in each of two panels
+  # plot 3: Hornet Sportabout and Pontiac Firebird share hp (175) and differ
+  # by 0.03 s in qsec: their points lie within 0.5 pt of each other, ambiguous
+  p3 <- lv[lv$table == "plot3_built_layer1", ]
+  expect_equal(c(p3$verified, p3$ambiguous), c(30L, 2L))
+  # axes, strips and backgrounds of the plots are outside the layers
+  expect_true(all(b$leaves$status[is.na(b$leaves$table)] == "outside"))
+})
+
+test_that("patchwork: a plot paired with another plot's rows fails, so the mapping is checked", {
+  x <- patchwork_fixture()
+  eng <- gl_plugin("engine", "patchwork")
+  res <- capture_figure(x, eng, context = FALSE)
+  # plots 1 and 3 both draw 32 points: with their builds swapped every
+  # count still matches, and every point must fail on its position
+  st <- res$state
+  st$built[c(1, 3)] <- st$built[c(3, 1)]
+  b <- bind_figure(res$fig, eng, st)
+  lv <- b$leaves[b$leaves$table %in% c("plot1_built_layer1", "plot3_built_layer1"), ]
+  expect_equal(nrow(lv), 2L)
+  expect_equal(lv$status, c("failed", "failed"))
+  expect_equal(sum(lv$failed), 64L)
+})
+
+test_that("patchwork: plots inside a nested composition, after a spacer, are found", {
+  skip_if_not_installed("patchwork")
+  p1 <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$wt, .data$mpg)) + ggplot2::geom_point()
+  p2 <- ggplot2::ggplot(ggplot2::economics, ggplot2::aes(.data$date, .data$unemploy)) + ggplot2::geom_line()
+  b <- bind_capture(p1 | (patchwork::plot_spacer() / p2))
+  lv <- b$leaves[!is.na(b$leaves$table), ]
+  expect_setequal(unique(lv$table), c("plot1_built_layer1", "plot3_built_layer1"))
+  expect_true(all(lv$status == "verified"))
+  expect_equal(lv$mode[lv$table == "plot3_built_layer1"], "group")
+})
+
+test_that("patchwork: a plot whose build draws random numbers is withheld alone, with the reason", {
+  skip_if_not_installed("patchwork")
+  steady <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$wt, .data$mpg)) + ggplot2::geom_point()
+  shaken <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$cyl, .data$mpg)) +
+    ggplot2::geom_point(position = ggplot2::position_jitter(width = 0.3, height = 0))
+  b <- bind_capture(patchwork::wrap_plots(steady, shaken), width = 6, height = 3)
+  expect_equal(b$fig$substrate$panels$id, "plot1_panel1")
+  w <- b$fig$status$withheld
+  expect_match(w$reason[w$what == "panels"], "plot 2: two builds")
+  lv <- b$leaves
+  expect_equal(lv$status[lv$table %in% "plot1_built_layer1"], "verified")
+  shaken_leaf <- lv[lv$status == "unbound", ]
+  expect_equal(nrow(shaken_leaf), 1L)
+  expect_match(shaken_leaf$reason, "plot 2: two builds")
+  expect_equal(shaken_leaf$n_elements, 32L)
 })
 
 test_that("a geom with one child per row pairs each child with its row (geom_label)", {

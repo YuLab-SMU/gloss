@@ -11,8 +11,10 @@ test_that("a patchwork plot whose build draws random numbers has its built table
   expect_false("plot2_built_layer1" %in% names(fig$tables))
   expect_true("plot2_raw" %in% names(fig$tables))
   w <- fig$status$withheld
-  expect_equal(w$what, "plot2_built_layer1")
+  expect_equal(w$what, c("panels", "plot2_built_layer1"))
   expect_match(w$reason, "two builds")
+  # the steady plot's panel is mapped; the shaken plot's is withheld (Task 2b)
+  expect_equal(fig$substrate$panels$id, "plot1_panel1")
 })
 
 test_that("the five key rules apply in order", {

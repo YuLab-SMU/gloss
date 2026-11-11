@@ -261,7 +261,7 @@ ggplot_describe <- function(plot) {
 # Rows are put on the device through the panel's scales (identify.R's
 # mapping); infinite positions go to the panel's edges, as ggplot2 squishes
 # them. Under coord_flip() the horizontal scale is the data's y.
-ggplot_bind <- function(built, gtable, sub) {
+ggplot_bind <- function(built, gtable, sub, prefix = "") {
   leaves <- sub$leaves
   unbound <- function(ids, reason) data.frame(leaf = ids, reason = rep(reason, length(ids)), stringsAsFactors = FALSE)
   if (is.null(gtable)) return(list(claims = list(), unbound = unbound(leaves$id, "the drawn gtable was not kept")))
@@ -330,7 +330,7 @@ ggplot_bind <- function(built, gtable, sub) {
     }
     d <- built$data[[i]]
     d$row <- seq_len(nrow(d))
-    d <- d[as.character(d$PANEL) == sub("^panel", "", pid), , drop = FALSE]
+    d <- d[as.character(d$PANEL) == sub(paste0("^", prefix, "panel"), "", pid), , drop = FALSE]
     pred <- ggplot_rows_on_device(d, prow, flip)
     if (is.null(pred)) {
       ub <- rbind(ub, unbound(lf$id, "the layer's rows carry neither x and y nor xmin, xmax, ymin and ymax"))
@@ -349,7 +349,7 @@ ggplot_bind <- function(built, gtable, sub) {
         rows <- pred$row[ceiling(j / (nk %/% nrow(pred)))]
       }
     }
-    claims[[length(claims) + 1L]] <- list(leaf = lf$id, table = sprintf("built_layer%d", i),
+    claims[[length(claims) + 1L]] <- list(leaf = lf$id, table = sprintf("%sbuilt_layer%d", prefix, i),
                                           pred = pred, groups = groups, rows = rows)
   }
   list(claims = claims, unbound = ub, outside = outside)
