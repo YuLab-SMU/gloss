@@ -249,9 +249,22 @@ check_install_log <- function() {
   }
   good
 }
-inst_ok <- tryCatch(check_install_log(), error = function(e) { cat("!! install log check:", conditionMessage(e), "\n"); FALSE })
-cat("\n== install log keeps build output:", if (inst_ok) "OK" else "FAILED", "\n")
-if (!inst_ok) ok <- FALSE
+# The install path asks Bioconductor for its repositories, which needs the
+# network: with none (GLOSS_BENCH_OFFLINE=true) the check cannot run. It is
+# then reported as skipped, with the error, and never as OK (it failed there
+# unseen while this script ended with status 0, until 2026-11-11).
+skipped <- character()
+inst_ok <- tryCatch(check_install_log(), error = function(e) {
+  cat("!! install log check:", conditionMessage(e), "\n")
+  reachable <- tryCatch({
+    con <- suppressWarnings(socketConnection("cloud.r-project.org", 80, blocking = TRUE, timeout = 5))
+    close(con); TRUE
+  }, error = function(e2) FALSE)
+  if (!reachable && grepl("no internet connection|cannot be validated", conditionMessage(e))) NA else FALSE
+})
+if (is.na(inst_ok)) skipped <- c(skipped, "install log keeps build output (no network)")
+cat("\n== install log keeps build output:", if (is.na(inst_ok)) "SKIPPED: no network" else if (inst_ok) "OK" else "FAILED", "\n")
+if (isFALSE(inst_ok)) ok <- FALSE
 
 # Part 1e: capture in the bioc environment. The synthetic figures above run in
 # cran; the bioc and heatmap strata capture with gloss loaded against the bioc
@@ -471,5 +484,6 @@ not_base <- setdiff(unique(own), ls(baseenv(), all.names = TRUE))
 cat("\n== the worker's bare names are all base's:", if (length(not_base)) paste("FAILED:", paste(not_base, collapse = " ")) else "OK", "\n")
 if (length(not_base)) ok <- FALSE
 
-cat(if (ok) "\nrunner check: OK\n" else "\nrunner check: FAILED\n")
+cat(if (ok) "\nrunner check: OK" else "\nrunner check: FAILED",
+    if (length(skipped)) sprintf("(%d skipped: %s)", length(skipped), paste(skipped, collapse = "; ")), "\n")
 if (!ok) quit(status = 1)
