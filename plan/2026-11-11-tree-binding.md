@@ -85,7 +85,7 @@
 
 **Overall progress**
 - [x] Task 1: A page over the parser's limit (tree-041)
-- [ ] Task 2: Labels in their own frame: justification and rotation (tree-011, -060, -083, -072; tree-045)
+- [~] Task 2: Labels in their own frame: justification and rotation (tree-011, -060, -083, -072; tree-045)
 - [ ] Task 3: Polar coordinates through the coord's transform (tree-025, -038, -057)
 - [ ] Task 4: Text drawn as glyph outlines (the book figures)
 - [ ] Task 5: Points in several shapes (tree-014) _(stub)_
@@ -133,7 +133,7 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 
 ### Task 2: Labels in their own frame: justification and rotation
 
-**Status:** `[ ]`
+**Status:** `[~]` (rule and tests landed; the runs pending)
 
 **Tests assumption:** 1.
 
@@ -147,10 +147,10 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 - tree-045's 6 failed elements (3 label boxes, 3 tip labels, `plot_tree(orient = "v")` of cardelino) are read before the rule changes: if they are another class, they get their own line here or in Task 6.
 
 **Checklist**
-- [ ] Read tree-045's failed elements and say what they are.
-- [ ] Tests that fail first: `geom_text()` with `hjust = -0.1, vjust = -0.5`; with `angle = 30` and `hjust = 0.3`; a label leaf with its labels permuted fails on every moved label.
-- [ ] The comparison in the label's frame; along the baseline at 0.5 pt; across it no looser than today's box.
-- [ ] Suite on the host.
+- [x] Read tree-045's failed elements and say what they are. — 3 label boxes of `geom_label()` (0.66 pt off: the box class of tree-041, Scope change of Task 1) and 3 tip labels of `plot_tree(orient = "v")`, which cardelino draws with `geom_tiplab(hjust = 0.39, vjust = 1)` under `coord_flip()`: svglite anchors them at the middle, so the old rule was off by 0.11 of each label's width (4.66 pt at most).
+- [x] Tests that fail first: `geom_text()` with `hjust = -0.1, vjust = -0.5`; with `angle = 30` and `hjust = 0.3`; a label leaf with its labels permuted fails on every moved label. — `test-bind.R`: six cases (hjust or vjust outside 0..1, both, inside but not 0/0.5/1, rotated 30°, rotated -90° and outside), each verified with max deviation under 0.05 pt and failing on all five labels when permuted; label boxes of plain `geom_label()` for hjust 0.5, 0 and 1. Before the change 14 of 24 and 3 of 6 expectations failed: justified labels `failed`, rotated ones `unbound`, 3 of 6 boxes per case `failed`.
+- [x] The comparison in the label's frame; along the baseline at 0.5 pt; across it no looser than today's box. — `R/core-bind.R`: along the baseline, row = anchor + (hjust − the anchor svglite wrote) × `textLength`, at 0.5 pt; across it, the row inside the text's box as before (−0.2 to 0.8 of the font size), moved by the part of vjust outside 0..1 times the ascent of "M", measured with `strheight()` on svglite once per font and size. On a hand drawing the model is exact to 0.005 pt over 120 cases (6 hjust × 5 vjust × 4 angles). A row with no justification is taken as justified where svglite anchored it (the old rule; base text). A polygon whose rows state hjust and vjust (a label's box) is compared by its box centre, moved by (0.5 − hjust) and (0.5 − vjust) of its size in the row's angle; other polygons keep the vertex mean. `R/engine-ggplot.R` states `hjust`, `vjust` (names read as numbers; `inward`/`outward` as NA) and `angle` with the rows.
+- [x] Suite on the host. — 9 files / 92 tests / 587 expectations / 0 failed / 0 skipped; the container the same (the rule reads svglite's output and measures fonts on the device, and Linux has other fonts).
 - [ ] Predictions, then `bind.R dev tree` and `bind.R dev` (v0) in the container; v0 compared with run `1353` leaf by leaf.
 
 **Verification**

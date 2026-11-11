@@ -18,9 +18,16 @@
 #   one per row    circle             centre at (x, y)
 #                  rect               corners at xmin..ymax, else centre at (x, y)
 #                  line               ends at (x, y) and (xend, yend)
-#                  text               anchor x at x; y inside the text's box
+#                  text               in the label's frame: along the
+#                                     baseline at (hjust - anchor) x its
+#                                     width from (x, y); across it, (x, y)
+#                                     inside the text's box, moved by the
+#                                     part of vjust outside 0..1
+#                  polygon with       centre of its box at (x, y) moved by
+#                  hjust and vjust    (0.5 - hjust) x width, (0.5 - vjust)
+#                                     x height, in the row's angle
 #                  polygon, polyline,
-#                  path               centre of its box at (x, y)
+#                  path               centre (vertex mean) at (x, y)
 #   one per group  polyline, path     vertices at the group's (x, y), in order
 #                  polygon            vertices and the group's points
 #                                     (x, y), (x, ymin), (x, ymax), (xmin, y),
@@ -243,20 +250,45 @@ row_family <- function(tag, pred) {
                 }))
   }
   if (tag == "text") {
-    # The anchor's x is the row's x (svglite writes text-anchor for the
-    # horizontal justification). Vertical justification moves the baseline
-    # by a share of the text's height, so y is checked against the text box.
+    # R's engine (GEText) places a text from its row in the text's own
+    # frame: along the baseline by (hjust - the anchor svglite writes as
+    # text-anchor) times the width R measured, which svglite writes as
+    # textLength; across it by vjust times the ascent of "M" on the device.
+    # Along the baseline the check is exact (a hand drawing, 120 cases of
+    # hjust, vjust and angle: within 0.005 pt). Across it the row must lie
+    # inside the text's box, as before: a label's text sits by its margins
+    # and descent (ggplot2's labelGrob), not by vjust alone. The part of
+    # vjust outside 0..1 moves the text off its row by that share of the
+    # ascent, so the box is moved by it (ggtree's labels, vjust = -.5:
+    # bench tree-062; plan 2026-11-11-tree-binding, Task 2). A row that
+    # states no justification is taken as justified where svglite anchored.
     return(list(need = c("x", "y"), cols = c("x", "y"),
-                element = function(e) if (any(e$rotated)) NULL else data.frame(x = e$ax, y0 = e$y0, y1 = e$y1),
-                row = at_xy,
-                dev = function(e, r) {
-                  dy <- pmax(e$y0 - r$y, r$y - e$y1, 0)
-                  pmax(abs(e$x - r$x), dy)
-                },
+                element = text_frame,
+                row = function(p) data.frame(x = p$x, y = p$y, hjust = col_or(p, "hjust", NA_real_),
+                                             vjust = col_or(p, "vjust", NA_real_)),
+                dev = text_dev,
                 count = function(e, r, tol) {
-                  # rows with the anchor's x: pairs on x alone, then the box on y
-                  pr <- pairs_within(e$x, rep(0, nrow(e)), r$x, rep(0, nrow(r)), tol)
-                  ok <- r$y[pr$q] >= e$y0[pr$p] - tol & r$y[pr$q] <= e$y1[pr$p] + tol
+                  pr <- pairs_within(e$ax, e$ay, r$x, r$y, text_reach(e, r) + tol)
+                  ok <- text_dev(e[pr$p, , drop = FALSE], r[pr$q, , drop = FALSE]) <= tol
+                  ok[is.na(ok)] <- FALSE
+                  tabulate(pr$p[ok], nbins = nrow(e))
+                }))
+  }
+  if (tag == "polygon" && has(c("hjust", "vjust"))) {
+    # A label's box (ggplot2's labelGrob): its centre is the row moved by
+    # (0.5 - hjust) of its width and (0.5 - vjust) of its height, in the
+    # row's angle. The vertex mean of a rounded rectangle is not its centre:
+    # bench tree-041 and tree-045, boxes 0.67-0.74 pt off with hjust = .5.
+    return(list(need = c("x", "y"), cols = c("x", "y"),
+                element = function(e) e,
+                row = function(p) data.frame(x = p$x, y = p$y, hjust = col_or(p, "hjust", 0.5),
+                                             vjust = col_or(p, "vjust", 0.5), angle = col_or(p, "angle", 0)),
+                dev = box_dev,
+                count = function(e, r, tol) {
+                  size <- max(e$x1 - e$x0, e$y1 - e$y0, na.rm = TRUE)
+                  off <- max(abs(c(r$hjust, r$vjust) - 0.5), 0.5, na.rm = TRUE)
+                  pr <- pairs_within((e$x0 + e$x1) / 2, (e$y0 + e$y1) / 2, r$x, r$y, (off + 0.5) * size + tol)
+                  ok <- box_dev(e[pr$p, , drop = FALSE], r[pr$q, , drop = FALSE]) <= tol
                   ok[is.na(ok)] <- FALSE
                   tabulate(pr$p[ok], nbins = nrow(e))
                 }))
@@ -277,6 +309,96 @@ row_family <- function(tag, pred) {
     return(list(need = c("x", "y"), cols = c("x", "y"), element = vmean, row = at_xy, dev = point_dev, count = point_count))
   }
   NULL
+}
+
+col_or <- function(p, col, default) {
+  v <- if (col %in% names(p)) as.double(p[[col]]) else rep(NA_real_, nrow(p))
+  v[is.na(v)] <- default
+  v
+}
+
+# A text element in its own frame: anchor (ax, ay), angle (R's, counter-
+# clockwise), the anchor svglite wrote (ha: 0, 0.5, 1), width W, font size
+# fs and the device's ascent of "M" for its font, H.
+text_frame <- function(e) {
+  data.frame(ax = e$ax, ay = e$ay, theta = e$angle, ha = e$hadj, W = e$tlen, fs = e$fsize,
+             H = text_m_ascent(e$font, e$fsize))
+}
+
+# Deviation of text element i from row i (rows in device units, y down).
+text_dev <- function(e, r) {
+  hj <- ifelse(is.na(r$hjust), e$ha, r$hjust)
+  vj <- r$vjust
+  ex <- ifelse(is.na(vj), 0, vj - pmin(pmax(vj, 0), 1))
+  shift <- ifelse(ex == 0, 0, ex * e$H)
+  th <- e$theta * pi / 180
+  dx <- r$x - e$ax
+  dy <- e$ay - r$y
+  du <- cos(th) * dx + sin(th) * dy
+  dv <- -sin(th) * dx + cos(th) * dy
+  along <- abs(du - (hj - e$ha) * e$W)
+  across <- pmax(-0.2 * e$fs + shift - dv, dv - 0.8 * e$fs - shift, 0)
+  pmax(along, across)
+}
+
+# How far from its anchor a text's row can lie and still pass.
+text_reach <- function(e, r) {
+  hj <- r$hjust[!is.na(r$hjust)]
+  vj <- r$vjust[!is.na(r$vjust)]
+  dh <- if (length(hj)) max(abs(c(hj - min(e$ha), hj - max(e$ha)))) else 0
+  ex <- if (length(vj)) max(abs(vj - pmin(pmax(vj, 0), 1))) else 0
+  max(dh * e$W + 0.8 * e$fs + ex * e$H, 0, na.rm = TRUE) + 1
+}
+
+# Deviation of a box element i from row i, in the row's angle.
+box_dev <- function(e, r) {
+  vapply(seq_len(nrow(e)), function(i) {
+    th <- r$angle[i] * pi / 180
+    v <- e$vertices[[i]]
+    if (is.null(v)) v <- cbind(c(e$x0[i], e$x1[i]), c(e$y0[i], e$y1[i]))
+    u <- cos(th) * v[, 1] - sin(th) * v[, 2]
+    w <- -sin(th) * v[, 1] - cos(th) * v[, 2]
+    ur <- cos(th) * r$x[i] - sin(th) * r$y[i]
+    wr <- -sin(th) * r$x[i] - cos(th) * r$y[i]
+    wb <- diff(range(u))
+    hb <- diff(range(w))
+    max(abs(mean(range(u)) - ur - (0.5 - r$hjust[i]) * wb), abs(mean(range(w)) - wr - (0.5 - r$vjust[i]) * hb))
+  }, 1)
+}
+
+# The ascent of "M" on svglite for a font and size: what R's engine moves a
+# one-line text by for its vertical justification (GEStrHeight). Measured on
+# the device gloss captures with, once per font and size in a session.
+m_ascent_cache <- new.env(parent = emptyenv())
+
+text_m_ascent <- function(font, size) {
+  key <- paste(font, sprintf("%.2f", size))
+  out <- rep(NA_real_, length(key))
+  for (k in unique(key[!is.na(size)])) {
+    if (is.null(m_ascent_cache[[k]])) {
+      i <- match(k, key)
+      m_ascent_cache[[k]] <- tryCatch(measure_m_ascent(font[i], size[i]), error = function(e) NA_real_)
+    }
+    out[key == k] <- m_ascent_cache[[k]]
+  }
+  out
+}
+
+measure_m_ascent <- function(font, size) {
+  part <- strsplit(font, "|", fixed = TRUE)[[1]]
+  family <- gsub("^[\"']|[\"']$", "", part[1])
+  if (is.na(family) || family == "NA") family <- ""
+  face <- 1L + identical(part[2], "bold") + 2L * identical(part[3], "italic")
+  prev <- grDevices::dev.cur()
+  svglite::svgstring(width = 2, height = 2)
+  dev <- grDevices::dev.cur()
+  on.exit({
+    grDevices::dev.off(dev)
+    if (prev > 1L && prev %in% grDevices::dev.list()) grDevices::dev.set(prev)
+  }, add = TRUE)
+  graphics::plot.new()
+  graphics::par(family = family, ps = 12)
+  graphics::strheight("M", units = "inches", cex = size / 12, font = face) * pt_per_in
 }
 
 # One element per group: element k against the k-th group, groups sorted
@@ -449,7 +571,8 @@ scene_geometry <- function(sub) {
                     x0 = el$x0, y0 = el$y0, x1 = el$x1, y1 = el$y1,
                     cx = (el$x0 + el$x1) / 2, cy = (el$y0 + el$y1) / 2,
                     lx1 = NA_real_, ly1 = NA_real_, lx2 = NA_real_, ly2 = NA_real_,
-                    ax = NA_real_, rotated = FALSE, closed = el$tag == "polygon",
+                    ax = NA_real_, ay = NA_real_, angle = 0, hadj = NA_real_, tlen = NA_real_,
+                    fsize = NA_real_, font = NA_character_, rotated = FALSE, closed = el$tag == "polygon",
                     fill = el$fill, stringsAsFactors = FALSE)
   out$vertices <- vector("list", n)
   if (!n) return(out)
@@ -476,13 +599,37 @@ scene_geometry <- function(sub) {
       out$lx2[i] <- num_attr(nd, "x2")
       out$ly2[i] <- num_attr(nd, "y2")
     } else if (t == "text") {
+      # anchor, angle and the anchor svglite wrote, the width R measured
+      # (textLength) and the font: the label's frame (row_family)
       tr <- xml2::xml_attr(nd, "transform")
-      out$rotated[i] <- !is.na(tr) & grepl("rotate", tr, fixed = TRUE)
-      out$ax[i] <- num_attr(nd, "x")
-      tx <- !is.na(tr) & !out$rotated[i] & grepl("translate", tr, fixed = TRUE)
-      if (any(tx)) {
-        out$ax[i[tx]] <- as.numeric(sub("^.*translate\\(\\s*([-0-9.eE]+).*$", "\\1", tr[tx]))
+      x <- num_attr(nd, "x")
+      y <- num_attr(nd, "y")
+      x[is.na(x)] <- 0
+      y[is.na(y)] <- 0
+      has_tr <- !is.na(tr)
+      if (any(has_tr)) {
+        tt <- regmatches(tr[has_tr], regexec("translate\\(\\s*([-0-9.eE]+)[ ,]+([-0-9.eE]+)\\s*\\)", tr[has_tr]))
+        rr <- regmatches(tr[has_tr], regexec("rotate\\(\\s*([-0-9.eE]+)", tr[has_tr]))
+        x[has_tr] <- x[has_tr] + vapply(tt, function(v) if (length(v) == 3L) as.numeric(v[2]) else 0, 1)
+        y[has_tr] <- y[has_tr] + vapply(tt, function(v) if (length(v) == 3L) as.numeric(v[3]) else 0, 1)
+        # svglite writes rotate(-rot) for R's counter-clockwise rot
+        out$angle[i[has_tr]] <- -vapply(rr, function(v) if (length(v) == 2L) as.numeric(v[2]) else 0, 1)
       }
+      out$rotated[i] <- out$angle[i] != 0
+      out$ax[i] <- x
+      out$ay[i] <- y
+      anchor <- xml2::xml_attr(nd, "text-anchor")
+      out$hadj[i] <- ifelse(is.na(anchor), 0, ifelse(anchor == "middle", 0.5, ifelse(anchor == "end", 1, 0)))
+      st <- xml2::xml_attr(nd, "style")
+      fs <- suppressWarnings(as.numeric(sub("px$", "", style_value(st, "font-size"))))
+      fs[is.na(fs)] <- 12
+      out$fsize[i] <- fs
+      out$font[i] <- paste(style_value(st, "font-family"), style_value(st, "font-weight"),
+                           style_value(st, "font-style"), sep = "|")
+      w <- num_attr(nd, "textLength")
+      # as text_boxes() estimates a width svglite did not write
+      w[is.na(w)] <- 0.6 * fs[is.na(w)] * nchar(xml2::xml_text(nd[is.na(w)]))
+      out$tlen[i] <- w
     } else if (t %in% c("polyline", "polygon")) {
       out$vertices[i] <- lapply(xml2::xml_attr(nd, "points"), parse_points)
     } else if (t == "path") {

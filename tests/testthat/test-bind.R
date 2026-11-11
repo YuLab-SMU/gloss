@@ -387,3 +387,71 @@ test_that("base: calls whose elements are not one per argument row are unbound w
   expect_match(ub$reason[1], "plotXY")
   expect_match(ub$reason[2], "heads")
 })
+
+# Labels in their own frame (plan 2026-11-11-tree-binding, Task 2). R's
+# engine places a text from its row along the baseline by (hjust - the
+# anchor svglite writes) times its width, and across it by vjust times the
+# ascent of "M"; ggtree's tip labels use hjust = -.1 (bench tree-011, -060,
+# -083: 128 rightly paired labels failed), and rotated labels were not
+# compared at all (tree-072).
+
+justified_claim <- function(p) {
+  eng <- gl_plugin("engine", "ggplot")
+  res <- suppressWarnings(capture_figure(p, eng, context = FALSE))
+  stated <- eng$bind(res$state, res$fig$substrate)
+  geo <- scene_geometry(res$fig$substrate)
+  lv <- res$fig$substrate$leaves
+  list(claims = stated$claims, geo = geo, leaves = lv)
+}
+
+test_that("text justified outside 0..1 or rotated verifies, and permuted labels fail", {
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(x = c(1, 2, 3, 4, 5), y = c(1, 3, 2, 5, 4),
+                  lab = c("bufonidae", "dendrobatidae", "hylidae", "centrolenidae", "Ab"))
+  cases <- list(
+    hjust_out = ggplot2::geom_text(hjust = -0.1),
+    vjust_out = ggplot2::geom_text(vjust = -0.5),
+    both_out = ggplot2::geom_text(hjust = 1.2, vjust = 1.5),
+    inside = ggplot2::geom_text(hjust = 0.3, vjust = 0.8),
+    rotated = ggplot2::geom_text(angle = 30, hjust = 0.3),
+    rotated_out = ggplot2::geom_text(angle = -90, hjust = -0.2, vjust = -0.4)
+  )
+  for (nm in names(cases)) {
+    p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, label = .data$lab)) + cases[[nm]] +
+      ggplot2::xlim(0, 7) + ggplot2::ylim(0, 6)
+    b <- suppressWarnings(bind_capture(p))
+    lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+    expect_equal(nrow(lv), 1L, label = nm)
+    expect_equal(lv$status, "verified", label = nm)
+    expect_lt(lv$max_dev, 0.05, label = paste(nm, "max_dev"))
+    # the same leaf with its rows permuted fails on every label it moves
+    j <- justified_claim(p)
+    cl <- j$claims[[1]]
+    perm <- c(2, 3, 4, 5, 1)
+    bad <- cl
+    bad$pred <- cl$pred[perm, ]
+    r <- check_claim(bad, j$leaves[j$leaves$id == cl$leaf, ], j$geo)
+    expect_equal(r$elements$status, rep("failed", 5L), label = paste(nm, "permuted"))
+  }
+})
+
+test_that("label boxes are placed from their row by their justification, not by their vertex mean", {
+  # Bench tree-041 and tree-045, run 2026-11-11-2224: label boxes failed by
+  # 0.67-0.74 pt for these strings with plain geom_label(hjust = .5), with or
+  # without showtext. ggplot2's labelGrob puts the box's centre at the row
+  # moved by (0.5 - hjust) of its width and (0.5 - vjust) of its height; the
+  # vertex mean of a rounded rectangle's polygon is not its centre.
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(x = 1:6, y = 1:6, lab = c("bufonidae", "dendrobatidae", "ceratophryidae",
+                                             "centrolenidae", "leptodactylidae", "hylidae"))
+  for (hj in c(0.5, 0, 1)) {
+    p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, label = .data$lab)) +
+      ggplot2::geom_label(hjust = hj, vjust = 0.2) + ggplot2::xlim(-2, 9)
+    b <- suppressWarnings(bind_capture(p))
+    lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+    sl <- b$fig$substrate$leaves
+    boxes <- lv[sl$class[match(lv$leaf, sl$id)] != "text", ]
+    expect_equal(nrow(boxes), 6L, label = paste("hjust", hj))
+    expect_true(all(boxes$status == "verified"), label = paste("hjust", hj, "boxes"))
+  }
+})

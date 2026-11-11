@@ -416,5 +416,22 @@ ggplot_rows_on_device <- function(d, prow, flip) {
   for (col in intersect(pos, names(d))) {
     out[[col]] <- if (startsWith(col, "x")) to_x(d[[col]]) else to_y(d[[col]])
   }
+  # Text and labels are placed from their row by their justification and
+  # angle; core-bind.R compares them in the label's own frame.
+  for (col in intersect(c("hjust", "vjust"), names(d))) out[[col]] <- just_value(d[[col]])
+  if ("angle" %in% names(d)) out$angle <- num(d$angle)
+  out
+}
+
+# Justification as a number: ggplot2 accepts names as well. "inward" and
+# "outward" depend on the label's position and give NA; the comparison then
+# takes the label as justified where svglite anchored it.
+just_value <- function(v) {
+  if (is.numeric(v)) return(as.double(v))
+  v <- as.character(v)
+  out <- suppressWarnings(as.double(v))
+  key <- c(left = 0, bottom = 0, center = 0.5, centre = 0.5, middle = 0.5, right = 1, top = 1)
+  hit <- is.na(out) & v %in% names(key)
+  out[hit] <- key[v[hit]]
   out
 }
