@@ -563,3 +563,10 @@ Runs `runs/2026-11-11-2300-bind-dev-tree.*` (stratum) and `runs/2026-11-11-2303-
 - **The labels:** a label stacked on the slices (`position_stack(vjust = 0.5)`) keeps the stack's `xmin`..`ymax` in its rows. The engine took any rows with those bounds, under a coord that is not linear, for rectangles, whatever was drawn. A defect of the rule as written, found by this prediction; fixed with a test that failed first (the rectangles' reason now needs polygons or paths to be drawn), and the runs made again after looking (below).
 - **The `geom_sf()` leaves:** their counts never matched (1606 paths for 1 row; 10 for 1 twice) and capture said so all along; the binder used to stop at the coord before it reached the counts. 1626 elements move from unbound to count mismatch; neither is checked.
 - Branches of a circular tree bind as `ambiguous` in one of the two segment leaves of tree-025 and -038: a fan's vertical segments at the root have zero length, so several rows meet at one point.
+
+### The runs again after the fix (written 2026-11-11, after looking at runs `2300` and `2303`)
+
+The fix (rectangles' reason only where polygons or paths are drawn) is a change made after looking at the v0 run. These runs are reported as made after looking; they test that the fix changes what it should and nothing else.
+
+76. **v0 against `2303`: one leaf changes, gallery-020's labels (L003), from unbound to verified (5 elements); every other leaf of the 7114 is unchanged.**
+77. **Stratum against `2300`: no leaf changes.** No figure of the stratum stacks labels under a coord that is not linear.
