@@ -108,3 +108,49 @@ Run: `runs/2026-11-10-1131-capture-dev.csv` (`GLOSS_BENCH_OFFLINE=true bench/doc
 
 **Not predicted, measured on the second run: a captured figure is not always the figure the code drew.** The scene equals what the code drew on svglite for heatmap 3/3, patchwork 6/6, ggplot 28/31, grid 2/3, base 1/10. Most base differences are one primitive, the background rect gridGraphics adds. exts-018, a ggbreak `ggcut` drawn by its own print method, was captured as a plain ggplot: another figure, with no error. Prediction 5 counts it as a success.
 
+
+## Held-out capture run, both routes (page-capture plan Task 8; 2026-11-11)
+
+Written by Claude on 2026-11-11, before any capture has run on a held-out figure, with the owner's go-ahead of the same day. What is known about the held-out set when this is written: its 54 ids, strata and engines (`split.csv`: 29 ggplot, 9 base, 8 patchwork, 5 grid, 3 heatmap), and that every figure reran with no network when the benchmark was frozen. The held-out figures' code has not been read for these predictions, and neither route has captured any of them.
+
+What the predictions rest on: the 55 development figures, on which the page route was built and tuned (runs `2026-11-11-0627`, `-0705`), and the hand-built fixtures. The development set is a random half of the same frozen sample, so the rates should carry over; but 55 figures say little about a failure class that occurs in fewer than about 1 figure in 20 (with 0 of 55 seen, the 95% upper bound on a rate is about 5%, that is up to 3 of 54 held-out figures), and the page route has only ever met the base functions, print methods and page layouts of those 55.
+
+### How the run is made and scored (fixed before the run)
+
+- **Runs.** Each route once: `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R heldout`, in the pinned container with no network.
+  - *Page route:* this repository at the commit that holds these predictions, clean tree (the commit is recorded in the run's JSON). `R/` is as in the development run `2026-11-11-0705` except for comments and roxygen text.
+  - *Engine route:* a clean clone at the tag `engine-route-final` (`f48c124`), with the tag's own package, harness and `run.sh` (same image digest, same package libraries in the cache). The seven vendored `data/` directories, which are not in git, are copied in; every file under `bench/figures/` in the clone has the checksum of this repository's copy. Its files are archived here as `<stamp>-capture-heldout-engine-route.*`.
+  - The first complete run of each route is the one reported. A run that stops before its last figure for a reason outside gloss and the harness (the container, the disk) is archived as it is and started again unchanged. Any change to gloss or to the harness after a held-out result has been read is reported as made after looking, and a rerun never replaces the first run.
+- **Outcome of a figure:** as written by `capture.R` at the run's commit. For the page route, a stop is a refusal only if `capture.R` labels it one (mask, no engine, device without groups, integrity check, not a static ggplot, empty page, mixed page, base page on another engine). Three stops gloss explains have no label and therefore count as **errors**: "the input closed gloss's device while drawing", "replaying the base page started a new page", "replaying display-list entry k failed". They stay errors in the score; relabelling them now, the day of the run, would be tuning the count.
+- **Verdicts** come from each route's own harness, and this is where the two runs are *not* matched:
+
+  | | Page route (this commit) | Engine route (tag) |
+  |---|---|---|
+  | Comparator | the bench's own; primitives and the clip regions in force for each | gloss's `scene_signatures()` at the tag; primitives only, blind to a lost clip |
+  | Reference for a returned object | the page the object draws alone | the page the code left (can hold more than the object) |
+  | A drawn page is handed to gloss as | `recordPlot()` | `recordPlot()` (base), `grid.grab()` (grid) |
+  | Verdicts | `equal`, `not_deterministic` (two plain drawings differ), `different` | `equal`, `known_exception` (one extra background rect; a dense leaf), `different` |
+
+  The same figures, container, package libraries and seeds; not the same judge. The engine route's judge is the more lenient on clips and has exceptions, and the stricter on a random figure and on an object that shares its page. So the comparison reported is: outcomes per route, `equal` per route under its own judge, and the figure-by-figure table of both verdicts. No difference in `equal` counts smaller than the figures affected by the judge (listed with the result) is read as a difference between routes.
+- **Scorer:** `bench/R/score-capture.R` at this commit, which now accepts a held-out file. On the development runs it prints what it printed before (`2026-11-11-0705`: byte-identical to the archived score). Predictions 5–8 above were made for the development set; the scorer prints their numbers for the held-out runs, and they are not tests of 5–8.
+- **Engine-route procedure, tried on the development set first** (made after looking, development only, not a reported number): the clone ran the development set in the container (`runs/2026-11-11-0832-capture-dev-engine-route.*`, commit `f48c124` in its JSON) and gave 51 captured, 3 refused, 1 error; 40 `equal`, 6 `known_exception`, 5 `different`; base 1 of 10 `equal`, 5 of 10 with a count mismatch. These are the counts of the engine-route run `2026-11-10-1424` (`1b22fe1`), so the clone, the copied data and the tag's harness work as the repository did.
+
+### Predictions: page route, 54 held-out figures
+
+9. **At least 50 of 54 are captured; at most 1 error; 0 timeouts.** Point guess: 52 captured, 2 refused, 0 errors. Reasoning: 54 of 55 on the development set, the one refusal an animation. The held-out set may hold what the development set did not: a mask, a page mixing base and grid, a figure that closes or switches devices, a base figure that starts a second page while replaying. Each of those is a refusal or an error by design, not a wrong capture.
+10. **No figure the bench finds `different` while gloss says `equal`** (the invariant), **and no captured figure with the bench's verdict `different` at all.** Reasoning: on a grid page gloss's self-check and the bench compare the same two things; 0 of 54 on the development set. Least sure for returned objects whose page depends on what is already on the device, and for recorded pages replayed on a device other than the one that recorded them. Confidence about 85%. *A single such figure is a failed invariant: it blocks M1 and reopens the plan.*
+11. **`equal` for at least 47 figures; `not_deterministic` for 0 to 4** (point guess 2). Reasoning: 52 and 2 of 55; random label placement and clustering inside the drawing step are the known sources.
+12. **All 9 base figures are captured and `equal`.** Reasoning: 10 of 10 on the development set, 26 of 26 fixtures. Lower confidence than 10: nine figures can call base functions the development figures did not (the development figures drew through `plotXY`, `path`, `axis`, `text`, `segments`, `box`, `polygon`, `symbols`, `rect`, `title`, `mtext`), and one that fails to replay by entry is an error under the rule above.
+13. **At most 1 of the 9 base figures has a leaf with a count mismatch.** Low confidence. Reasoning: 0 of 1469 counted leaves on the development set, but the expected counts assume one element per point, string, rect and segment; a point symbol drawn as several primitives (`pch` 3, 4, 8), an empty string, or a rect with neither border nor fill would break that. A mismatch is a leaf gloss declines to bind, not a wrong capture.
+14. **gloss's verdict agrees with the bench's on every captured figure** (plan Task 4 reading), **and is identical on all but at most 2.**
+15. **In every captured figure the only element without a leaf is the device background** (54 of 54 on the development set).
+16. **Tables or panels are withheld in at most 3 captured figures** (1 of 54 on the development set: ggbreak).
+
+### Predictions: engine route at the tag, and the two routes together
+
+17. **The engine route captures fewer figures than the page route or the same number, and at least 2 of the 54 are refused or end in an error** (development: 3 refused for a print method of their own, 1 error on a grabbed grid scene).
+18. **Under its own, more lenient judge the engine route has at least 6 fewer `equal` figures than the page route.** Reasoning: 40 against 52 on the development set; base figures alone should account for most of it.
+19. **At most 2 of the 9 base figures are `equal` on the engine route** (1 of 10 on the development set; the rest one extra background rect, or different), **and at least 3 of the 9 have a leaf with a count mismatch** (5 of 10).
+20. **No figure is `equal` on the engine route and refused, in error or `different` on the page route.** A figure `equal` on the engine route and `not_deterministic` on the page route can occur (heatmap-008 on the development set: the page route's bench draws the figure twice) and is not counted against this.
+
+**What would change the plan:** a failed invariant (10); a base figure the bench finds different (12); a figure the engine route gets right and the page route loses (20). Anything else wrong is reported as wrong and goes to the dev log.

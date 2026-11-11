@@ -2,6 +2,10 @@
 # fixed in predictions.md before the first capture run. Reads a capture CSV,
 # by default the earliest development run:
 #   Rscript bench/R/score-capture.R [bench/runs/<stamp>-capture-dev.csv]
+# A held-out run (file name with "-capture-heldout") is checked against the
+# held-out figures of split.csv and scored by the same code (page-capture
+# plan Task 8); predictions 5-8 were made for the development set and are
+# printed for a held-out run as numbers, not as tests of them.
 
 source("bench/R/common.R")
 args <- commandArgs(trailingOnly = TRUE)
@@ -9,9 +13,11 @@ runs <- sort(list.files(file.path(bench_root, "runs"), pattern = "-capture-dev[.
 file <- if (length(args)) args[1] else if (length(runs)) runs[1] else stop("no development capture run in bench/runs")
 cap <- read_csv(file)
 split <- read_csv(file.path(bench_root, "split.csv"))
-dev <- split[split$set == "dev", ]
-if (!setequal(cap$id, dev$id)) stop("the run does not cover the development set: ", nrow(cap), " of ", nrow(dev), " figures")
-cat("run:", basename(file), "|", nrow(cap), "figures\n\n")
+set <- if (grepl("-capture-heldout", basename(file), fixed = TRUE)) "heldout" else "dev"
+set_name <- if (set == "dev") "development" else "held-out"
+dev <- split[split$set == set, ]
+if (!setequal(cap$id, dev$id) || anyDuplicated(cap$id)) stop("the run does not cover the ", set_name, " set: ", nrow(cap), " of ", nrow(dev), " figures")
+cat("run:", basename(file), "|", nrow(cap), if (set == "heldout") "figures | held-out set\n\n" else "figures\n\n")
 
 # capture.R up to 803437f wrote status NA when gloss() raised an error that is
 # not a known refusal (refusal() returned NA_character_, which `%||% "error"`
@@ -35,7 +41,7 @@ reran <- cap[cap$outcome != "rerun failure", ]
 got <- cap[cap$outcome == "captured", ]
 cat("\nPrediction 5 (>= 90% capture without error)\n")
 cat("  captured / figures that rerun:", pct(sum(reran$outcome == "captured"), nrow(reran)), "\n")
-cat("  captured / all development figures:", pct(nrow(got), nrow(cap)), "\n")
+cat("  captured / all", set_name, "figures:", pct(nrow(got), nrow(cap)), "\n")
 cat("  verdict:", if (nrow(reran) && sum(reran$outcome == "captured") / nrow(reran) >= 0.9) "right" else "wrong", "\n")
 
 cat("\nPrediction 6 (grid scenes fail more often than returned objects)\n")

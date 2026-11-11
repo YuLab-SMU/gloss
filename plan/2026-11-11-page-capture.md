@@ -65,7 +65,7 @@
 - [x] Task 5: Base pages by display-list entry
 - [x] Task 6: Base on the development set; names and classification re-measured; gridGraphics out; `R CMD check`
 - [x] Task 7: Records: design §元素归属 rewritten, NEWS, dev logs
-- [ ] Task 8: Held-out predictions and run _(stub; needs the owner's go-ahead)_
+- [~] Task 8: Held-out predictions and run (owner's go-ahead 2026-11-11)
 
 ---
 
@@ -310,9 +310,24 @@
 - One correction found while rewriting: the design said a device without graphics groups falls back to colour picking. The code refuses (since M0); colour picking was never implemented. Corrected in §元素归属 and §已定事项, with a dated note.
 - The old @tbl-capture's numbers came from the research scripts' own figures, not the test fixtures, so the new table (p7) is not a row-by-row comparison with it; the matched comparison is p1 (element tables identical to the engine route on the six test inputs).
 
-### Task 8: Held-out predictions and run _(stub; owner's go-ahead)_
+### Task 8: Held-out predictions and run
 
-Predictions for the held-out capture run written into `bench/predictions.md` and committed before it. Both routes on the same 54 figures in the same container: the page route at the plan's final commit and the engine route at the tag `engine-route-final` (Task 1), so the comparison is matched. One run each, archived. Anything changed after reading the held-out results is reported as such.
+**Status:** `[~]` (owner's go-ahead: 2026-11-11)
+
+**Files**
+- Modify: `bench/predictions.md`, `bench/R/score-capture.R` (accepts a held-out file).
+- Records: `bench/runs/`, `dev_docs/design.qmd` (§评测设计), `NEWS.md`, a dev log of its own.
+
+**Intent**
+- Predictions for the held-out capture run written into `bench/predictions.md` and committed before it. Both routes on the same 54 figures in the same container: the page route at the commit that holds the predictions and the engine route at the tag `engine-route-final` (Task 1). One run each, archived. Anything changed after reading the held-out results is reported as such.
+
+**Checklist**
+- [x] Scorer accepts a held-out run; on the development runs it prints what it printed (`2026-11-11-0705`: byte-identical to the archived score)
+- [x] Engine-route procedure tried on the development set first: a clean clone at the tag with the seven vendored `data/` directories copied in (every file under `bench/figures/` has the repository's checksum). Run `2026-11-11-0832-capture-dev-engine-route`: 51 captured, 3 refused, 1 error; 40 equal, 6 known exceptions, 5 different, the counts of `2026-11-10-1424`
+- [x] Predictions 9–20 and the scoring rules in `bench/predictions.md`, committed before either held-out run; they state where the two routes' judges differ
+- [ ] Page route on the held-out set, archived with log and score
+- [ ] Engine route on the held-out set, archived with log and score
+- [ ] Predictions scored; design §评测设计, NEWS, dev log; plan closed
 
 ---
 
