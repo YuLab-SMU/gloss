@@ -395,6 +395,9 @@ os.makedirs(os.path.join(gt, "key"))
 add = lambda name: [shutil.copy(f, os.path.join(gs, os.path.basename(f).replace("ex-base", name))) for f in glob.glob(os.path.join(EX, "ex-base*"))]
 os.mkdir(gs)
 add("aa-base")
+# what a copy from macOS leaves beside each file (AppleDouble, not text) is not a sheet
+with open(os.path.join(gs, "._aa-base.csv"), "wb") as f:
+    f.write(b"\x00\x05\x16\x07\x00\x02\x00\x00Mac OS X        \xa3\xff")
 shutil.copy(os.path.join(EX, "labels", "ex-base.csv"), os.path.join(gt, "key", "aa-base.csv"))
 serve_grow = lambda: subprocess.Popen([sys.executable, os.path.join(HERE, "serve.py"), "--sheets", gs, "--examples", "", "--team", gt,
                                        "--invite", "pass", "--port", str(PORT), "--no-open"],
@@ -406,6 +409,7 @@ try:
     post("aa-base", {"labels": state_of(want["ex-base"]), "seconds": 30}, g)
     s, opened = call("/api/open/aa-base", {}, g)
     first = s == 200 and opened["peers"]["annotators"] == ["early", "key"]
+    expect("hidden files in the sheets directory are not figures", [f["id"] for f in call("/api/config", token=g)[1]["figures"]] == ["aa-base"])
 finally:
     stop(proc)
 add("zz-base")

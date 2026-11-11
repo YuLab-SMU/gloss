@@ -135,7 +135,7 @@ class Sheets:
             self.vocabulary = json.load(f)
         self.kinds = {r["role"]: [k["kind"] for k in r["kinds"]] for r in self.vocabulary["roles"]}
         ids = [f[:-4] for f in sorted(os.listdir(sheets))
-               if f.endswith(".csv") and not f.endswith("-elements.csv") and f != "index.csv"]
+               if f.endswith(".csv") and not f.endswith("-elements.csv") and f != "index.csv" and not f.startswith(".")]
         missing = [i for i in ids if not os.path.exists(os.path.join(sheets, i + ".svg"))]
         if missing:
             sys.exit("no page for %s in %s: draw the sheets first (Rscript bench/R/label-sheet.R draw <run dir> %s)"
