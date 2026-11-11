@@ -40,3 +40,12 @@ ha <- ComplexHeatmap::HeatmapAnnotation(group = rep(c("a", "b"), each = 4))
 ht <- ComplexHeatmap::Heatmap(m, name = "z", row_split = rep(1:2, each = 3), top_annotation = ha,
                               column_title = "Samples")
 write_sheet(suppressMessages(gloss(ht))$substrate, "ex-heatmap", out)
+
+# ggplot: boxplots with outliers over a band at typed values that spans the
+# panel (the two kinds the first three figures do not draw: data / box and
+# reference / reference area)
+p <- ggplot2::ggplot(d, ggplot2::aes(factor(cyl), mpg)) +
+  ggplot2::annotate("rect", xmin = -Inf, xmax = Inf, ymin = 20, ymax = 25, alpha = 0.2) +
+  ggplot2::geom_boxplot() +
+  ggplot2::labs(x = "cylinders")
+write_sheet(suppressWarnings(gloss(p))$substrate, "ex-box", out)

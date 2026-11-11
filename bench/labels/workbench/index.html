@@ -672,7 +672,7 @@ function showExamples() {
   $("#overBody").replaceChildren(
     h("button", { class: "link", style: "float: right", onclick: hideOverview }, "关闭（Esc）"),
     h("h2", {}, r ? [roleSpan(r.role), " 的各个种类，在标准示例里"] : "五种角色，在标准示例里"),
-    h("p", {}, "标准示例是细则里手工画的三张图（ggplot、base、热图），每个叶子怎么标已经定好。亮着、框出来的就是这个选项；点图可以放大。看完按 Esc，再按数字键作答。"),
+    h("p", {}, "标准示例是细则里手工画的四张图（ggplot、base、热图、箱线图加参考带），每个叶子怎么标已经定好。亮着、框出来的就是这个选项；点图可以放大。看完按 Esc，再按数字键作答。"),
     ...rows.flatMap(([key, p, hint]) => {
       const cards = exCards(p, "all", 4, true);
       return [h("h3", {}, h("kbd", {}, key), " ", roleSpan(p.role, p.kind), " · " + hint),

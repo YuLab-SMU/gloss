@@ -133,7 +133,7 @@ try:
     expect("the server starts on the examples", "label workbench" in line)
     expect("one annotator: no accounts, and the page is told so", call("/api/hello")[1]["team"] is False)
     cfg = call("/api/config")[1]
-    expect("three figures, smallest first", [f["id"] for f in cfg["figures"]] == ["ex-base", "ex-heatmap", "ex-ggplot"])
+    expect("four figures, smallest first", [f["id"] for f in cfg["figures"]] == ["ex-base", "ex-box", "ex-heatmap", "ex-ggplot"])
     for f in sorted(glob.glob(os.path.join(EX, "labels", "*.csv"))):
         fig = os.path.basename(f)[:-4]
         want = rows(f)
@@ -150,7 +150,7 @@ try:
     p = post("ex-base", {"labels": bad, "seconds": 91})
     expect("a kind of another role is not a label: the file is taken back", not p["done"] and not os.path.exists(os.path.join(out, "ex-base.csv")))
     t = rows(os.path.join(out, "time.csv"))
-    expect("time.csv lists the finished figures with their minutes", sorted((r["figure"], r["minutes"]) for r in t) == [("ex-ggplot", "1.5"), ("ex-heatmap", "1.5")])
+    expect("time.csv lists the finished figures with their minutes", sorted((r["figure"], r["minutes"]) for r in t) == [("ex-box", "1.5"), ("ex-ggplot", "1.5"), ("ex-heatmap", "1.5")])
     fig = call("/api/figure/ex-base")[1]
     expect("a figure comes with its page, leaves, elements and saved state",
            "<svg" in fig["svg"] and len(fig["leaves"]) == 15 and len(fig["elements"]) == 90 and "1" in fig["state"]["labels"])
@@ -188,15 +188,15 @@ try:
     ref = call("/api/reference")[1]
     leaf = {(f["id"], l["k"]): l for f in ref["figures"] for l in f["leaves"]}
     expect("the reference: the examples, each leaf with its decided labels and its page",
-           [(f["id"], len(f["leaves"])) for f in ref["figures"]] == [("ex-base", 15), ("ex-heatmap", 24), ("ex-ggplot", 68)]
+           [(f["id"], len(f["leaves"])) for f in ref["figures"]] == [("ex-base", 15), ("ex-box", 22), ("ex-heatmap", 24), ("ex-ggplot", 68)]
            and all("<svg" in f["svg"] for f in ref["figures"]) and ref["figure"] == "ex-ggplot"
            and leaf[("ex-base", "5")]["labels"] == [{"elements": "1", "role": "annotation", "kind": "title"}, {"elements": "2-3", "role": "guide", "kind": "axis title"}])
     with open(os.path.join(REPO, "bench", "labels", "vocabulary.json"), encoding="utf-8") as f:
         voc = json.load(f)
     named = {r["role"] + " / " + k["kind"]: k.get("examples", []) for r in voc["roles"] for k in r["kinds"]}
     labelled = lambda name, e: any(l["role"] + " / " + l["kind"] == name for l in leaf[(e["figure"], e["k"])]["labels"])
-    expect("the standard examples: 23 of the 28 kinds have some, each a leaf the examples label with that kind",
-           len(named) == 28 and sum(bool(v) for v in named.values()) == 23
+    expect("the standard examples: 25 of the 28 kinds have some (all but the three `other`), each a leaf the examples label with that kind",
+           len(named) == 28 and sum(bool(v) for v in named.values()) == 25 and sorted(k.split(" / ")[1] for k, v in named.items() if not v) == ["other"] * 3
            and {k: [(e["figure"], e["k"]) for e in v] for k, v in named.items() if v} == {k: [(e["figure"], e["k"]) for e in v] for k, v in ref["kinds"].items()}
            and all(labelled(k, e) for k, v in ref["kinds"].items() for e in v))
     part = ref["kinds"]["guide / axis line"][0]
@@ -207,7 +207,7 @@ try:
     with open(os.path.join(one, "out", ".workbench", "zz-base.json"), encoding="utf-8") as f:
         st = json.load(f)
     expect("a figure's state says which workbench made it, and where the reference was open",
-           st["workbench"] == 4 and st["labels"]["1"]["ref"] is True)
+           st["workbench"] == 5 and st["labels"]["1"]["ref"] is True)
 finally:
     stop(proc)
 # an example the vocabulary names that the examples do not label so stops the server
@@ -236,10 +236,10 @@ want = {}
 for f in sorted(glob.glob(os.path.join(EX, "labels", "*.csv"))):
     shutil.copy(f, os.path.join(root, "key"))
     want[os.path.basename(f)[:-4]] = rows(f)
-figs = ["ex-base", "ex-heatmap", "ex-ggplot"]
-# leaves with elements, counted on the sheets: 15, 24 and 68
+figs = ["ex-base", "ex-box", "ex-heatmap", "ex-ggplot"]
+# leaves with elements, counted on the sheets: 15, 22, 24 and 68
 n = {f: sum(int(r["n_elements"]) > 0 for r in rows(os.path.join(EX, f + ".csv"))) for f in figs}
-expect("the examples have 15, 24 and 68 leaves to label", [n[f] for f in figs] == [15, 24, 68])
+expect("the examples have 15, 22, 24 and 68 leaves to label", [n[f] for f in figs] == [15, 22, 24, 68])
 # the second annotator differs from the examples on one whole leaf of ex-base
 differ = next(r for r in want["ex-base"] if r["elements"] == "all" and r["role"] == "guide")
 other_rows = {f: [dict(r) for r in want[f]] for f in figs}
@@ -265,7 +265,7 @@ try:
            [call("/api/join", {"nickname": n, "invite": "pass"})[0] for n in ("小明", "Lab-Cat", "KEY")] == [400] * 3)
     accounts = open(os.path.join(root, ".team", "accounts.json"), encoding="utf-8").read()
     expect("team: tokens are not stored, only their digests", a not in accounts and b not in accounts)
-    # 小明 labels one figure as the examples do; lab-cat all three, one leaf differently
+    # 小明 labels one figure as the examples do; lab-cat all four, one leaf differently
     p = post("ex-base", {"labels": state_of(want["ex-base"]), "seconds": 60}, a)
     expect("team: each annotator's labels go to a directory of their own",
            p["done"] and rows(os.path.join(root, "小明", "ex-base.csv")) == want["ex-base"] and not os.path.exists(os.path.join(root, "lab-cat", "ex-base.csv")))
@@ -280,7 +280,7 @@ try:
            fa["peers"] is None and fb["peers"] is None and call("/api/peers/ex-base", token=a)[1]["peers"] is None
            and fa["state"]["labels"] == state_of(want["ex-base"]) and fb["state"]["labels"] == state_of(other_rows["ex-base"]))
     expect("team: progress is open to all: who labelled how much, and nothing about what",
-           [(p["who"], p["figures_done"], p["labelled"]) for p in oa["people"]] == [("小明", 1, 15), ("lab-cat", 3, 15 + 24 + 68), ("key", 3, 15 + 24 + 68)]
+           [(p["who"], p["figures_done"], p["labelled"]) for p in oa["people"]] == [("小明", 1, 15), ("lab-cat", 4, 15 + 22 + 24 + 68), ("key", 4, 15 + 22 + 24 + 68)]
            and oa["figures"] == [] and oa["pairs"] == [] and oa["disputed"] == []
            and not any(w in json.dumps(oa) for w in ("decoration", "guide", "axis")))
     expect("team: the others' labels do not open before one's whole set is labelled",
@@ -306,14 +306,14 @@ try:
     pairs = {(p["a"], p["b"]): p for p in ob["pairs"]}
     k, agree = kappa_by_hand([r for f in figs for r in want[f]], [r for f in figs for r in other_rows[f]])
     k1, agree1 = kappa_by_hand(want["ex-base"], other_rows["ex-base"])
-    expect("team: pairwise kappa on roles, leaf-weighted, is the one computed by hand (%.3f over 3 figures)" % k,
+    expect("team: pairwise kappa on roles, leaf-weighted, is the one computed by hand (%.3f over 4 figures)" % k,
            set(pairs) == {("key", "lab-cat"), ("key", "小明"), ("lab-cat", "小明")}
            and pairs[("key", "lab-cat")]["kappa"] == round(k, 3) and pairs[("key", "lab-cat")]["agreement"] == round(agree, 3)
-           and pairs[("key", "lab-cat")]["figures"] == 3 and 0.9 < k < 1
+           and pairs[("key", "lab-cat")]["figures"] == 4 and 0.9 < k < 1
            and pairs[("key", "小明")]["kappa"] == 1 and pairs[("key", "小明")]["figures"] == 1
            and pairs[("lab-cat", "小明")]["kappa"] == round(k1, 3) and pairs[("lab-cat", "小明")]["figures"] == 1)
     expect("team: per figure, the leaves all agree on; the disputed leaves, the least agreed first",
-           [(f["id"], f["annotators"], f["unanimous"], f["leaves"]) for f in ob["figures"]] == [("ex-base", 3, 14, 15), ("ex-heatmap", 2, 24, 24), ("ex-ggplot", 2, 68, 68)]
+           [(f["id"], f["annotators"], f["unanimous"], f["leaves"]) for f in ob["figures"]] == [("ex-base", 3, 14, 15), ("ex-box", 2, 22, 22), ("ex-heatmap", 2, 24, 24), ("ex-ggplot", 2, 68, 68)]
            and [(d["fig"], d["k"], d["share"]) for d in ob["disputed"]] == [("ex-base", differ["k"], 0.667)])
     rscript = shutil.which("Rscript")
     if rscript and subprocess.run([rscript, "-e", "library(jsonlite)"], capture_output=True).returncode == 0:
@@ -356,7 +356,7 @@ try:
     s, opened = call("/api/open/ex-base", {}, a)
     expect("team, --reveal figure: a finished figure opens, an unfinished one does not",
            s == 200 and opened["peers"]["annotators"] == ["小明", "lab-cat", "key"] and call("/api/open/ex-heatmap", {}, a)[0] == 403
-           and [f["locked"] for f in call("/api/config", token=a)[1]["figures"]] == [True, False, False])
+           and [f["locked"] for f in call("/api/config", token=a)[1]["figures"]] == [True, False, False, False])
 finally:
     stop(proc)
 # labels made elsewhere that do not fit the sheets stop the server, with the reason

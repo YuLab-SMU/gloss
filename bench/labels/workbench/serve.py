@@ -69,7 +69,9 @@ REPO = os.path.normpath(os.path.join(HERE, "..", "..", ".."))
 # examples, beside the option. Kept with each figure's state, so that labels can
 # be told apart by the aids they were made with. 4 (2026-11-11): a guide in the
 # page; the page drawn with a margin, so that outlines at its edge show.
-WORKBENCH = 4
+# 5 (2026-11-11): a fourth worked example (ex-box), so that data / box and
+# reference / reference area have a standard example too.
+WORKBENCH = 5
 MAX_BODY = 20 * 1024 * 1024
 MAX_ANNOTATORS = 200
 NICKNAME = re.compile(r"^[\w-]{2,16}$")

@@ -102,16 +102,17 @@ The pilot compares two annotators on the same figures, using `Rscript bench/R/sc
 
 ## Worked examples
 
-These come from three hand-built figures, not bench figures (`bench/labels/examples/make.R`). Their sheets and one annotator's labels are in `bench/labels/examples/`. `k` refers to each sheet.
+These come from four hand-built figures, not bench figures (`bench/labels/examples/make.R`). Their sheets and one annotator's labels are in `bench/labels/examples/`. `k` refers to each sheet.
 
 | Role / kind | Example |
 |---|---|
-| data / point | `ex-ggplot` 8, 26 (`geom_point`); `ex-base` 1 (`plot()` points) |
+| data / point | `ex-ggplot` 8, 26 (`geom_point`); `ex-base` 1 (`plot()` points); `ex-box` 13 (a boxplot's outliers) |
 | data / line | `ex-ggplot` 11, 14, 17 (`geom_smooth` fitted lines); 10, 13, 16 (the bands' edges, invisible) |
 | data / area | `ex-ggplot` 9, 12, 15 (confidence bands) |
 | data / bar | `ex-base` 12 (`barplot()`) |
 | data / cell | `ex-heatmap` 2, 3 (body cells), 15 (annotation track cells) |
-| data / segment | `ex-heatmap` 7–11 (dendrograms) |
+| data / segment | `ex-heatmap` 7–11 (dendrograms); `ex-box` 7, 10, 14 (a boxplot's whiskers) |
+| data / box | `ex-box` 8, 11, 15 (the boxes), 9, 12, 16 (the medians) |
 | data / text | `ex-ggplot` 36 (car names from the rows) |
 | guide / axis line | `ex-base` 2, element 1 |
 | guide / tick | `ex-ggplot` 43, 45, 48; `ex-base` 2, elements 2–5 |
@@ -124,13 +125,14 @@ These come from three hand-built figures, not bench figures (`bench/labels/examp
 | guide / strip label | `ex-ggplot` 40, 42; `ex-heatmap` 5, 6 (row slice titles) |
 | reference / grid line | `ex-ggplot` 3–6, 21–24 |
 | reference / reference line | `ex-ggplot` 7, 25 (`geom_hline(yintercept = 20)`); `ex-base` 6 (`abline(h = 20)`) |
+| reference / reference area | `ex-box` 6 (`annotate("rect", xmin = -Inf, xmax = Inf, ymin = 20, ymax = 25)`: typed values, across the panel) |
 | annotation / title | `ex-ggplot` 69 (title), 70 (caption); `ex-base` 5, element 1, and 14; `ex-heatmap` 4 (column title, columns not split) |
 | annotation / text | `ex-ggplot` 18, 37; `ex-base` 11 |
 | annotation / mark | `ex-ggplot` 19, 38 (`annotate("rect")`) |
 | decoration / background | `ex-ggplot` 1, 2, 20 (plot and panels), 39, 41 (strips), 51 (legend), 53, 58, 62 (keys); `ex-base` 7 (`legend()` box, filled); `ex-heatmap` 1 |
 | decoration / border | `ex-base` 4 (`box()`) |
 
-Not shown by the examples: `data` / `box`, `reference` / `reference area` and the three `other` kinds; nor a ggplot axis line (the default theme draws none).
+Not shown by the examples: the three `other` kinds; nor a ggplot axis line (the default theme draws none).
 
 ## Changes
 
@@ -138,3 +140,4 @@ Not shown by the examples: `data` / `box`, `reference` / `reference area` and th
 - 2026-11-11, version unchanged (1): workbench version 2. No role, kind, case or unit of agreement changed. What changed is what an annotator has in front of them: the fill and stroke of the leaf as the browser computes them ("none" told apart from white), the leaf painted, shown alone on a checkerboard, hidden, dragged aside or with everything drawn after it hidden, its place in the drawing order, and this file's worked examples of leaves of the same class, one per distinct label, with the note that the same class can have different roles. With several annotators (`serve.py --team`) each labels alone and sees the others' labels only after freezing their own; agreement is then reported for each pair, each pair as defined under *Agreement*.
 - 2026-11-11, version unchanged (1): workbench version 3 shows each role and kind as it appears in the worked examples, beside the option: for a role, each example figure with that role's leaves in the role's colour; for a kind, the first example of the table above (the others, large and beside the whole figure, on a click, on pointing at the option or with `E`). The leaves are named in `bench/labels/vocabulary.json` (`examples`), taken from the table in its order; the workbench refuses to start if one of them is not labelled with that kind. Five kinds have no example, as the table says.
 - 2026-11-11, version unchanged (1): workbench version 4 opens a guide in Chinese the first time and on request (`G`): the questions of *How to decide* in their order and the decided cases, both from `bench/labels/vocabulary.json`, and how to use the page. It states no rule this file does not. The page is drawn with a margin, so that the outline of a leaf at the page's edge shows.
+- 2026-11-11, version unchanged (1): a fourth worked example, `ex-box` (a ggplot boxplot with outliers over a band at typed values across the panel), gives `data` / `box` and `reference` / `reference area` a standard example, and a boxplot's whiskers and outliers one each; rows added to the table above, `examples` to the vocabulary, workbench version 5. No role, kind, case or unit of agreement changed: the figure is labelled by the questions of *How to decide* as they stood. It was added after annotator B (the owner) had labelled all five pilot figures, with versions 1 and 4, and after A against B had been scored; the owner had given `reference area` to two panel backgrounds and to a base `box()`. Annotators who label from version 5 on see this example, which annotator A labelled, and the pilot holds 39 boxplot leaves (patchwork-006 23–31, gallery-021 1–30): their agreement with A on those leaves is in part the example's.

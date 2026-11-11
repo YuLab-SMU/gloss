@@ -8,13 +8,13 @@
       "question": "Is its position or content computed from rows?",
       "question_zh": "位置或内容是从数据行算出来的吗？",
       "kinds": [
-        {"kind": "point", "hint": "a symbol at a row's position (scatter, jitter, outliers of a boxplot, dot plot)", "hint_zh": "落在某一行位置上的符号：散点、抖动点、箱线图离群点", "examples": [{"figure": "ex-ggplot", "k": "8"}, {"figure": "ex-base", "k": "1"}]},
+        {"kind": "point", "hint": "a symbol at a row's position (scatter, jitter, outliers of a boxplot, dot plot)", "hint_zh": "落在某一行位置上的符号：散点、抖动点、箱线图离群点", "examples": [{"figure": "ex-ggplot", "k": "8"}, {"figure": "ex-base", "k": "1"}, {"figure": "ex-box", "k": "13"}]},
         {"kind": "line", "hint": "a path through several rows (line, step, fitted line, density curve, ROC curve, the edges of a band)", "hint_zh": "穿过多行的线：折线、拟合线、密度曲线、ROC 曲线、带的边线", "examples": [{"figure": "ex-ggplot", "k": "11"}, {"figure": "ex-ggplot", "k": "14"}]},
         {"kind": "area", "hint": "a filled region drawn from rows (area, ribbon, confidence band, density fill, violin, map polygon)", "hint_zh": "由数据行画出的填充区域：面积、置信带、密度填充、小提琴、地图多边形", "examples": [{"figure": "ex-ggplot", "k": "9"}, {"figure": "ex-ggplot", "k": "12"}]},
         {"kind": "bar", "hint": "a rectangle from a baseline to a value (bar, column, histogram bin)", "hint_zh": "从基线到数值的矩形：柱、条、直方图的一格", "examples": [{"figure": "ex-base", "k": "12"}]},
         {"kind": "cell", "hint": "a rectangle or raster in a grid of them (tile, raster, heatmap body cell, heatmap annotation cell, hexagon)", "hint_zh": "网格里的一格：tile、栅格、热图格子、热图注释格子、六边形", "examples": [{"figure": "ex-heatmap", "k": "2"}, {"figure": "ex-heatmap", "k": "15"}]},
-        {"kind": "segment", "hint": "a straight piece per row or per pair of rows (segment, error bar, whisker, line range, rug, dendrogram branch, a data label's leader line, a computed comparison bracket)", "hint_zh": "每行（或每对行）一段直线：线段、误差线、箱线图的须、rug、树状图分支、数据标签的引线、算出来的比较括号", "examples": [{"figure": "ex-heatmap", "k": "7"}, {"figure": "ex-heatmap", "k": "9"}]},
-        {"kind": "box", "hint": "the box and median of a boxplot, a crossbar", "hint_zh": "箱线图的箱体和中位线、crossbar"},
+        {"kind": "segment", "hint": "a straight piece per row or per pair of rows (segment, error bar, whisker, line range, rug, dendrogram branch, a data label's leader line, a computed comparison bracket)", "hint_zh": "每行（或每对行）一段直线：线段、误差线、箱线图的须、rug、树状图分支、数据标签的引线、算出来的比较括号", "examples": [{"figure": "ex-heatmap", "k": "7"}, {"figure": "ex-heatmap", "k": "9"}, {"figure": "ex-box", "k": "7"}]},
+        {"kind": "box", "hint": "the box and median of a boxplot, a crossbar", "hint_zh": "箱线图的箱体和中位线、crossbar", "examples": [{"figure": "ex-box", "k": "8"}, {"figure": "ex-box", "k": "9"}]},
         {"kind": "text", "hint": "text whose content or position comes from rows (data labels, repelled labels, counts on bars, values in heatmap cells, computed p-values)", "hint_zh": "内容或位置来自数据行的文字：数据标签、避让标签、柱上的计数、格子里的数值、算出来的 p 值", "examples": [{"figure": "ex-ggplot", "k": "36"}]},
         {"kind": "other", "hint": "say what it is in the note", "hint_zh": "其他数据标记，在备注里写明是什么"}
       ]
@@ -43,7 +43,7 @@
       "kinds": [
         {"kind": "grid line", "hint": "a panel's grid lines (major and minor), base grid(), a map's graticule", "hint_zh": "面板的网格线（主、次）、base 的 grid()、地图经纬网", "examples": [{"figure": "ex-ggplot", "k": "3"}, {"figure": "ex-ggplot", "k": "5"}]},
         {"kind": "reference line", "hint": "a line at a typed value (geom_hline(yintercept = 0), abline(h = 20), a ROC plot's diagonal)", "hint_zh": "画在写死的值上的线：geom_hline(yintercept = 0)、abline(h = 20)、ROC 图的对角线", "examples": [{"figure": "ex-ggplot", "k": "7"}, {"figure": "ex-base", "k": "6"}]},
-        {"kind": "reference area", "hint": "a band at typed values that spans the panel", "hint_zh": "画在写死的值上、横贯面板的带"}
+        {"kind": "reference area", "hint": "a band at typed values that spans the panel", "hint_zh": "画在写死的值上、横贯面板的带", "examples": [{"figure": "ex-box", "k": "6"}]}
       ]
     },
     {

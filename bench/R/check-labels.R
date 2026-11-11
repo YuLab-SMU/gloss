@@ -40,7 +40,7 @@ fails("a kind of another role fails", mutate(function(t) { t$kind[1] <- "tick"; 
 # column title: annotation for A, guide for B). Leaf-weighted, by hand:
 # agreement (n - 1) / n; kappa from the two role distributions.
 d <- mutate(function(t) { t$role[t$k == "4"] <- "guide"; t$kind[t$k == "4"] <- "strip label"; t }, "ex-heatmap")
-for (f in c("ex-ggplot.csv", "ex-base.csv")) file.remove(file.path(d, f))
+for (f in c("ex-ggplot.csv", "ex-base.csv", "ex-box.csv")) file.remove(file.path(d, f))
 a <- utils::read.csv(file.path(labels, "ex-heatmap.csv"), stringsAsFactors = FALSE)
 a <- a[a$n_elements > 0, ]
 b <- a; b$role[b$k == 4] <- "guide"
