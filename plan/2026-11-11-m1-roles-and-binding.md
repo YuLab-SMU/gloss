@@ -71,7 +71,7 @@
 - Key numbers: development binding, rerun `2026-11-11-1231` (made after looking; scored run `1205`): ggplot layer elements checked 98.4% (verified 9050, ambiguous 15328 of 24783), failed 8, unbound 370; heatmap body cells 250 of 250 verified; patchwork, grid and base not bound yet.
 
 **Overall progress**
-- [ ] Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels _(decision 1(a): Claude labels, the owner labels the pilot)_
+- [~] Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels _(decision 1(a): Claude labels, the owner labels the pilot)_
 - [x] Task 2: Order binding for grid-page engines, verified by back-substitution (ggplot, heatmap)
 - [ ] Task 2b: Patchwork: panels of each composed plot, then its bindings _(stub; split from Task 2, see Scope changes)_
 - [ ] Task 3: Rules as plugins; coverage on the development set
@@ -87,7 +87,7 @@ Tasks 1 and 2 can run side by side: Task 1 is labelling time, Task 2 needs no la
 
 ### Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels
 
-**Status:** `[ ]`
+**Status:** `[~]` (guideline, sheets and scorer done; pilot under way)
 
 **Tests assumption:** 3 and 4.
 
@@ -99,10 +99,10 @@ Tasks 1 and 2 can run side by side: Task 1 is labelling time, Task 2 needs no la
 - The guideline decides the cases the rules will meet: is `geom_hline(yintercept = 0)` data or reference; an `annotate("rect")`; a ggrepel label and its segment; a plot title; a colour bar; a heatmap's dendrogram and annotation tracks; a base `axis` entry.
 
 **Checklist**
-- [ ] Role vocabulary: `data`, `guide`, `reference`, `decoration`, `annotation`, each with kinds (for example `guide`: axis line, tick, tick label, axis title, legend key, legend label, legend title, colour bar, strip). One page, with one worked example per kind from the hand-built figures, not the bench.
-- [ ] Label sheet per figure: the rendered page with every leaf outlined and numbered, and a CSV with one row per leaf (figure, leaf path, element index range, class, viewport, box, first text) and empty `role`, `kind`, `split` columns. The sheet shows no rule output.
-- [ ] Labels keyed by leaf path and element index, not by `L001`-style ids, so they survive renumbering; `score-labels.R` fails when a label does not resolve on the current capture.
-- [ ] Pilot: 5 development figures chosen by seed across engines, labelled independently by two annotators; κ on roles and on kinds, share of leaves split, minutes per figure.
+- [x] Role vocabulary: `data`, `guide`, `reference`, `decoration`, `annotation`, each with kinds (for example `guide`: axis line, tick, tick label, axis title, legend key, legend label, legend title, colour bar, strip). One page, with one worked example per kind from the hand-built figures, not the bench. — `bench/labels/guideline.md` v1: 5 roles, 28 kinds, a decision order, 11 decided cases; worked examples from three hand-built figures (`bench/labels/examples/make.R`, ggplot, base, ComplexHeatmap: 70 + 15 + 24 leaves, labelled in `examples/labels/`) cover 23 of the 28 kinds (not `data`/`box`, `reference`/`reference area` and the three `other` kinds).
+- [x] Label sheet per figure: the rendered page with every leaf outlined and numbered, and a CSV with one row per leaf (figure, leaf path, element index range, class, viewport, box, first text) and empty `role`, `kind`, `split` columns. The sheet shows no rule output. — `bench/R/label-sheet.R` (capture in the container, saving the substrate through the runner's new `keep` option; draw anywhere) and `bench/R/sheet.R`: `<id>.png`/`.svg` outlined and numbered, `<id>-page.png`, `<id>.csv`, `<id>-elements.csv`. One change from this item: no `split` column; a split is a leaf given in more than one row, each with an `elements` range, and `score-labels.R` derives it (a column that can disagree with the rows would need its own check).
+- [x] Labels keyed by leaf path and element index, not by `L001`-style ids, so they survive renumbering; `score-labels.R` fails when a label does not resolve on the current capture. — Key: the viewport path and grob path with grid's counters and base display-list indices dropped, plus the leaf's order among leaves with that key; a label must also match the leaf's class and element count. `Rscript bench/R/check-labels.R`: 12 of 12 checks OK (examples resolve; self-agreement κ 1; eight mutations of a label file each fail `check` with their reason; one leaf of 24 relabelled gives κ 0.920 and agreement 0.958, as computed by hand). Runner self-check on the host after the `keep` change: OK.
+- [~] Pilot: 5 development figures chosen by seed across engines, labelled independently by two annotators; κ on roles and on kinds, share of leaves split, minutes per figure. — Figures (`bench/labels/pilot/select.R`, seed 20261111, one per engine from run `1220`'s captured figures): gallery-070 (ggplot), patchwork-006, heatmap-026, gallery-052 (grid), gallery-021 (base). Predictions 28–31 committed before labelling. The criterion's unit, fixed before labelling (guideline §Agreement): κ with each leaf counted once.
 - [ ] Full development labels (54 figures) committed before any rule runs on the development set.
 
 **Verification**

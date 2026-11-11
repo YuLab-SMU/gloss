@@ -245,3 +245,14 @@ Run `runs/2026-11-11-1205-bind-dev.*` at `77c21ff` (the commit holding the predi
 #### Changes made after looking at run 2026-11-11-1205
 
 - `98ad505`: recorded plots are replayed from a deep copy (above).
+
+## Role labels: the pilot (M1 plan Task 1)
+
+Written 2026-11-11, before either annotator labelled a pilot figure, with guideline version 1 (`bench/labels/guideline.md`) and the pilot's five figures drawn by seed (`bench/labels/pilot/select.R`: gallery-070 ggplot, patchwork-006, heatmap-026, gallery-052 grid, gallery-021 base). Annotator A is Claude, B the owner; each labels independently from the sheets. Scored by `Rscript bench/R/score-labels.R agree bench/labels/pilot/claude bench/labels/pilot/owner`.
+
+28. **Roles agree with leaf-weighted Cohen's κ of at least 0.8** (point guess 0.85). Reasoning: most leaves are axes, legends, grid lines and marks, which the guideline names; the guideline's cases were written for the rest.
+29. **At least half of the disagreement (leaf-weighted) involves `decoration` or `annotation`** on one side, not `data` against `guide`. Reasoning: backgrounds, borders and typed text are where "carries no information" and "typed by the author" take judgement.
+30. **Each annotator splits at most 5% of the pilot's leaves** (more than one role in a leaf; assumption 3 of the plan). Reasoning: the only split the guideline foresees is base `title()` drawing a main title and axis titles; the base figure has one or two such leaves of 36.
+31. **Annotator A needs at most 15 minutes for each pilot figure.** Reasoning: the pilot figures hold 13 to 38 leaves.
+
+**What would change the plan:** 28 wrong (κ below 0.8): the guideline is revised and the pilot repeated before the full labels count (assumption 4). 30 wrong: roles are stored per element and rules return element masks (assumption 3). 31 wrong: label a seeded sample of leaves instead of all (Task 1's verification).
