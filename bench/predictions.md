@@ -307,3 +307,11 @@ Run `runs/2026-11-11-1339-capture-dev.*` at `c9f10b4` (clean tree; predictions c
 | 37. Base leaves without an expected count: the guide calls only, 57 (574 before) | 57 (574 before); 57 is `axis` 19 + `box` 29 + `title` 7 + `mtext` 2, which have no rule, so no data-mark leaf is left without a count | right |
 | 38. No newly counted base leaf is `count_mismatch` | 0 of 2043 base leaves `count_mismatch`; `ok` 1469 → 1986 | right |
 | 39. Every other column equals run `1220`, apart from the seconds | the columns that describe the page (verdicts, primitives, clip regions, faithful, deterministic, every count of leaves and elements) are equal on all 55 figures; three patchwork columns changed: `panels` (0 → 1, 1, 1, 2, 5 on five figures), `drawn_by` (`print()` → `the engine`, six figures) and `withheld` (`panels` on patchwork-008 and -010, the insets) | **wrong** as written: these columns record what `8f99857` set out to change, and the prediction did not except them; what it was for, that the pages stay the same, holds |
+
+## Base binding on the development set (M1 plan Task 5, second part)
+
+Written 2026-11-11, before any binding run with the base engine's bind step (each data-mark entry's elements paired with its call's arguments, through the entry's `usr` and log axes), after reading the 10 base figures' code and the leaf classes of capture run `1339` (not any binding output for base). Run: `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/bind.R dev`, scored by `bench/R/score-bind.R` (base leaves of data-mark calls: `plotXY`, `segments`, `arrows`, `rect`, `polygon`, `path`, `text`, `symbols`). The same run is Task 2b's rerun after looking at run `1319`; its patchwork numbers are reported, not predicted.
+
+40. **No base figure ends in a bind error.**
+41. **At least 80% of the elements of base data-mark leaves are verified or ambiguous** (point guess 90%); every unbound one has a reason naming its call's type, `pos`, plotmath, heads or symbol kind.
+42. **No base element fails.** The arguments are what the entry drew; a failure would mean a wrong `usr`, log axis or plot region, not a wrong pairing.
