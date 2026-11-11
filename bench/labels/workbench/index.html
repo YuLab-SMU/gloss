@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gloss 标注工作台</title>
+<!--
+  Label workbench (M1 plan Task 1). Served by serve.py; see its header.
+  One leaf at a time: the leaf is outlined on the page the figure's code
+  drew, the annotator answers the guideline's questions with the number
+  keys, and the server writes the label files. Roles, kinds, questions and
+  cases come from bench/labels/vocabulary.json. Text from figures is written
+  with textContent only.
+-->
+<style>
+  :root {
+    --bg: #f4f3ef; --panel: #ffffff; --ink: #1c1c1e; --muted: #6e6e73; --line: #e3e1da; --soft: #f7f6f2;
+    --hl: #e6007e; --ok: #0a7d4f;
+    --data: #2563eb; --guide: #0a8f66; --reference: #7c3aed; --annotation: #c76a00; --decoration: #5f6672;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  header { display: flex; align-items: center; gap: 14px; padding: 8px 16px; background: var(--panel);
+           border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+  header .brand { font-weight: 650; letter-spacing: .01em; }
+  header .who { color: var(--muted); font-size: 12px; }
+  #tabs { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+  .tab { border: 1px solid var(--line); background: var(--soft); border-radius: 999px; padding: 3px 10px 3px 6px;
+         font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--ink); }
+  .tab.on { border-color: var(--ink); background: var(--panel); }
+  .tab .ring { width: 14px; height: 14px; border-radius: 50%; background: conic-gradient(var(--ok) var(--p, 0%), #dddbd3 0); }
+  .tab.done .ring { background: var(--ok); }
+  #total { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  #total b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 470px; gap: 14px; padding: 14px 16px; align-items: start; }
+  @media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  #stage { padding: 10px; position: sticky; top: 58px; }
+  #page svg { display: block; width: 100%; height: auto; max-height: calc(100vh - 150px); background: #fff; }
+  #page, #loupe { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #fff; }
+  .wb-dim [data-gloss-leaf]:not(.wb-cur) { opacity: .42; }
+  .wb-hl rect { fill: none; vector-effect: non-scaling-stroke; pointer-events: none; }
+  .wb-hl .under { stroke: #fff; stroke-width: 4.5px; }
+  .wb-hl .over { stroke: var(--hl); stroke-width: 2px; stroke-dasharray: 6 3; }
+  details { margin-top: 8px; }
+  details > summary { cursor: pointer; color: var(--muted); font-size: 12px; user-select: none; }
+  #code pre { margin: 6px 0 0; padding: 10px; background: var(--soft); border-radius: 6px; max-height: 320px; overflow: auto;
+              font-size: 12px; line-height: 1.5; white-space: pre-wrap; }
+  #panel { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  #body { display: flex; flex-direction: column; gap: 8px; }
+  #loupe svg { display: block; width: 100%; aspect-ratio: 16 / 7; background: #fff; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .meta .where { font-weight: 650; font-variant-numeric: tabular-nums; margin-right: 2px; }
+  .chip { border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font-size: 12px; background: var(--soft); }
+  .chip.text { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; border: 1px solid rgba(0,0,0,.25); vertical-align: -1px; margin-right: 4px; }
+  .path { font-size: 11px; color: var(--muted); word-break: break-all; line-height: 1.35; }
+  .now { font-size: 13px; padding: 6px 8px; border-radius: 6px; background: var(--soft); }
+  .now b { font-weight: 650; }
+  .choices { display: grid; grid-template-columns: 1fr; gap: 5px; }
+  .choices.kinds { grid-template-columns: 1fr 1fr; }
+  .choices h3 { grid-column: 1 / -1; }
+  .choices h3 { margin: 2px 0; font-size: 12px; font-weight: 600; color: var(--muted); display: flex; justify-content: space-between; }
+  .opt { display: grid; grid-template-columns: 26px 1fr; gap: 8px; align-items: start; text-align: left; width: 100%;
+         border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 5px 8px; cursor: pointer; color: inherit; font: inherit; }
+  .opt:hover { border-color: #b9b6ab; background: var(--soft); }
+  .opt .name { font-weight: 650; }
+  .opt .hint { display: block; color: var(--muted); font-size: 11.5px; line-height: 1.3; }
+  .opt.repeat { grid-template-columns: 26px 1fr; }
+  .opt.repeat .hint { display: inline; margin-left: 8px; font-size: 12.5px; }
+  kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px;
+        border: 1px solid #c9c6bb; border-bottom-width: 2px; border-radius: 5px; background: #fff; font: 600 12px ui-monospace, Menlo, monospace; color: var(--ink); }
+  .repeat { border-style: dashed; }
+  .tools { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 12px; color: var(--muted); }
+  .tools .tool { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; background: none; border: 0; padding: 0; color: inherit; font: inherit; }
+  .tools .tool.on { color: var(--hl); font-weight: 600; }
+  #note { flex: 1; min-width: 120px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 7px; font: inherit; font-size: 12px; }
+  #dots { display: flex; flex-wrap: wrap; gap: 3px; }
+  .dot { width: 12px; height: 12px; border-radius: 3px; background: #dddbd3; cursor: pointer; border: 0; padding: 0; }
+  .dot.el { width: 7px; border-radius: 2px; }
+  .dot.cur { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .done-card { text-align: center; padding: 18px 10px; }
+  .done-card .big { font-size: 20px; font-weight: 700; color: var(--ok); }
+  .done-card p { margin: 6px 0; color: var(--muted); }
+  .btn { border: 1px solid var(--ink); background: var(--ink); color: #fff; border-radius: 8px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; }
+  #cases ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink); font-size: 12px; }
+  #cases li { margin: 3px 0; }
+  #toast { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); background: #b00020; color: #fff; padding: 8px 14px;
+           border-radius: 8px; font-size: 13px; display: none; z-index: 9; }
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">gloss 标注工作台</span>
+  <span class="who" id="who"></span>
+  <div id="tabs"></div>
+  <span id="total"></span>
+</header>
+<main>
+  <section class="card" id="stage">
+    <div id="page"></div>
+    <details id="code"><summary>这张图的代码 code.R（<kbd>C</kbd>）</summary><pre class="mono"></pre></details>
+  </section>
+  <aside class="card" id="panel">
+    <div id="loupe"></div>
+    <div id="body"></div>
+    <div id="dots"></div>
+    <details id="cases"><summary>判例：这些情况已经定好怎么标</summary><ul></ul></details>
+  </aside>
+</main>
+<div id="toast"></div>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const NS = "http://www.w3.org/2000/svg";
+function h(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "onclick") n.addEventListener("click", v);
+    else if (k === "style") n.style.cssText = v;
+    else n.setAttribute(k, v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) n.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return n;
+}
+const getJSON = async u => (await fetch(u)).json();
+
+let CFG = null, VOC = null, FIG = null, S = null;
+let items = [], cur = 0, stage = "role", role = null, last = null;
+let dim = true, finished = false, draft = { note: "", unsure: false };
+let dirty = false, saveTimer = null, lastInput = Date.now(), unsavedSeconds = 0;
+let roots = [];
+
+// ---- state ---------------------------------------------------------------
+function buildItems() {
+  items = [];
+  for (const lf of FIG.leaves) {
+    if (lf.n === 0) continue;
+    const lab = S.labels[lf.k];
+    if (lab && lab.split) for (let i = 1; i <= lf.n; i++) items.push({ k: lf.k, el: i });
+    else items.push({ k: lf.k, el: null });
+  }
+}
+function getLabel(it) {
+  const l = S.labels[it.k];
+  if (!l) return null;
+  if (it.el) return l.split ? l.split[it.el - 1] : null;
+  return l.split ? null : l;
+}
+function setLabel(it, lab) {
+  if (it.el) S.labels[it.k].split[it.el - 1] = lab; else S.labels[it.k] = lab;
+}
+function nextUnlabelled(from) {
+  for (let s = 1; s <= items.length; s++) {
+    const i = (from + s) % items.length;
+    if (!getLabel(items[i])) return i;
+  }
+  return -1;
+}
+function loadDraft() {
+  const l = items[cur] && getLabel(items[cur]);
+  draft = l ? { note: l.note || "", unsure: !!l.unsure } : { note: "", unsure: false };
+}
+function markDirty() {
+  dirty = true;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flush, 400);
+}
+async function flush() {
+  clearTimeout(saveTimer);
+  if (!dirty || !FIG) return;
+  dirty = false; unsavedSeconds = 0;
+  const id = FIG.id;
+  try {
+    const r = await fetch("/api/state/" + id, { method: "POST", headers: { "Content-Type": "application/json" },
+                                                 body: JSON.stringify({ labels: S.labels, seconds: S.seconds, cursor: cur }) });
+    const p = await r.json();
+    if (!r.ok) throw new Error(p.error || r.status);
+    const f = CFG.figures.find(x => x.id === id);
+    Object.assign(f, p);
+    if (FIG.id === id) FIG.file = p.file;
+    renderHeader();
+    if (finished && FIG.id === id) renderBody();
+  } catch (e) {
+    dirty = true;
+    toast("没有保存成功：" + e.message + "（serve.py 还在运行吗？）");
+  }
+}
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.style.display = "block";
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = "none", 6000);
+}
+
+// ---- the page --------------------------------------------------------------
+function cleanSvg(text) {
+  const svg = new DOMParser().parseFromString(text, "image/svg+xml").documentElement;
+  svg.querySelectorAll("script, foreignObject, [data-gloss-sheet]").forEach(n => n.remove());
+  svg.querySelectorAll("*").forEach(n => { for (const a of [...n.attributes]) if (/^on/i.test(a.name)) n.removeAttribute(a.name); });
+  svg.removeAttribute("width"); svg.removeAttribute("height");
+  return svg;
+}
+function mountSvg(text) {
+  const src = cleanSvg(text);
+  const main = document.importNode(src, true), loupe = document.importNode(src, true);
+  FIG.viewBox = (src.getAttribute("viewBox") || "0 0 504 360").split(/\s+/).map(Number);
+  $("#page").replaceChildren(main);
+  $("#loupe").replaceChildren(loupe);
+  roots = [main, loupe];
+}
+function boxOf(it) {
+  const b = it.el ? ((FIG.el[it.k] || [])[it.el - 1] || {}).box : FIG.byK[it.k].box;
+  return b && b.every(v => v != null) ? b : null;
+}
+function highlight() {
+  const it = items[cur], lf = FIG.byK[it.k], box = finished ? null : boxOf(it);
+  for (const root of roots) {
+    root.querySelectorAll(".wb-cur").forEach(n => n.classList.remove("wb-cur"));
+    root.querySelectorAll('[data-gloss-leaf="' + lf.leaf + '"]').forEach(n => n.classList.add("wb-cur"));
+    root.classList.toggle("wb-dim", dim && !finished && root === roots[0]);
+    let g = root.querySelector(":scope > .wb-hl");
+    if (!g) { g = document.createElementNS(NS, "g"); g.setAttribute("class", "wb-hl"); root.append(g); }
+    g.replaceChildren();
+    if (box) for (const cls of ["under", "over"]) {
+      const r = document.createElementNS(NS, "rect"), pad = 2.2;
+      r.setAttribute("class", cls);
+      r.setAttribute("x", box[0] - pad); r.setAttribute("y", box[1] - pad);
+      r.setAttribute("width", Math.max(box[2] - box[0], 0.1) + 2 * pad); r.setAttribute("height", Math.max(box[3] - box[1], 0.1) + 2 * pad);
+      r.setAttribute("rx", 1.5);
+      g.append(r);
+    }
+  }
+  const vb = FIG.viewBox;
+  let view = vb;
+  if (box) {
+    const R = 16 / 7, bw = box[2] - box[0], bh = box[3] - box[1];
+    const w = Math.max(bw * 1.5 + 16, (bh * 1.5 + 16) * R, 80);
+    if (w < vb[2]) view = [(box[0] + box[2]) / 2 - w / 2, (box[1] + box[3]) / 2 - w / R / 2, w, w / R];
+  }
+  roots[1].setAttribute("viewBox", view.join(" "));
+}
+
+// ---- rendering -------------------------------------------------------------
+const fmtTime = s => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+function renderHeader() {
+  $("#who").textContent = "标注者 " + CFG.annotator + " · 细则第 " + VOC.guideline + " 版 · 写入 " + CFG.out + "/";
+  $("#tabs").replaceChildren(...CFG.figures.map(f =>
+    h("button", { class: "tab" + (FIG && f.id === FIG.id ? " on" : "") + (f.done ? " done" : ""),
+                  onclick: () => openFigure(f.id), title: f.labelled + " / " + f.leaves },
+      h("span", { class: "ring", style: "--p:" + Math.round(100 * f.labelled / Math.max(f.leaves, 1)) + "%" }),
+      f.id + (f.done ? " ✓" : " " + f.labelled + "/" + f.leaves))));
+  const all = CFG.figures.reduce((a, f) => a + f.leaves, 0), got = CFG.figures.reduce((a, f) => a + f.labelled, 0);
+  $("#total").replaceChildren("已标 ", h("b", {}, got), " / " + all + " 个叶子 · 本图用时 ", h("b", {}, fmtTime(S ? S.seconds : 0)));
+}
+function swatch(c) { return c && c !== "none" ? h("span", { class: "sw", style: "background:" + c }) : null; }
+function roleSpan(r, k) { return h("b", { style: "color: var(--" + r + ")" }, r + (k ? " / " + k : "")); }
+function option(key, name, hint, title, fn, color, extra) {
+  return h("button", { class: "opt" + (extra || ""), onclick: fn, title: title },
+    h("kbd", {}, key), h("span", {}, h("span", { class: "name", style: color ? "color: var(--" + color + ")" : null }, name),
+                         hint ? h("span", { class: "hint" }, hint) : null));
+}
+function renderBody() {
+  const body = $("#body");
+  if (finished) {
+    const allDone = CFG.figures.every(f => f.done), f = CFG.figures.find(x => x.id === FIG.id);
+    const next = CFG.figures.find(x => !x.done && x.id !== FIG.id);
+    body.replaceChildren(h("div", { class: "done-card" },
+      h("div", { class: "big" }, allDone ? "全部标完了" : "这张标完了 ✓"),
+      h("p", {}, f.file ? "已写入 " + f.file : "正在保存…", " · 用时 " + fmtTime(S.seconds)),
+      allDone ? h("p", {}, CFG.figures.length + " 张图都已保存。回到终端，告诉 Claude“标完了”即可。")
+              : (next ? h("button", { class: "btn", onclick: () => openFigure(next.id) }, "下一张：" + next.id + "（Enter）") : null),
+      h("p", {}, "想改某一个：按 ← 回去，或点下面的小方块。")));
+    return;
+  }
+  const it = items[cur], lf = FIG.byK[it.k], el = it.el ? FIG.el[it.k][it.el - 1] : null, lab = getLabel(it);
+  const leafNo = FIG.order.indexOf(lf.k) + 1;
+  const meta = h("div", { class: "meta" },
+    h("span", { class: "where" }, "叶子 " + leafNo + " / " + FIG.order.length + (el ? " · 元素 " + it.el + " / " + lf.n : "")),
+    h("span", { class: "chip mono" }, lf.class),
+    el ? h("span", { class: "chip mono" }, "<" + el.tag + ">") : h("span", { class: "chip" }, lf.n + " 个元素 · " + lf.tags),
+    (el ? el.text : lf.text) ? h("span", { class: "chip text", title: el ? el.text : lf.text }, "“" + (el ? el.text : lf.text) + "”" + (!el && lf.n > 1 ? " …" : "")) : null,
+    (() => { const s = el || lf; return (s.fill && s.fill !== "none") || (s.stroke && s.stroke !== "none")
+      ? h("span", { class: "chip" }, swatch(s.fill), swatch(s.stroke), "颜色") : null; })());
+  const path = h("div", { class: "path mono", title: "路径只用来找到这个叶子，不决定它的角色" }, lf.path);
+  const now = lab ? h("div", { class: "now" }, "已标为 ", roleSpan(lab.role, lab.kind), lab.unsure ? " · 拿不准" : "", lab.note ? " · " + lab.note : "", "（重新选即可修改）") : null;
+  let choices;
+  if (stage === "role") {
+    choices = h("div", { class: "choices" },
+      h("h3", {}, h("span", {}, "它是什么？从上往下问，第一个“是”就选它"), h("span", {}, "按数字键")),
+      VOC.roles.map((r, i) => option(i + 1, r.role, r.question_zh, r.question, () => pickRole(i), r.role)));
+  } else {
+    const r = VOC.roles.find(x => x.role === role);
+    choices = h("div", { class: "choices kinds" },
+      h("h3", {}, h("span", {}, roleSpan(r.role), " 里的哪一种？"), h("span", {}, h("kbd", {}, "Esc"), " 返回")),
+      r.kinds.map((k, i) => option((i + 1) % 10, k.kind, k.hint_zh, k.hint, () => commit(r.role, k.kind))));
+  }
+  const rep = last ? option("␣", "和上一个一样", last.role + " / " + last.kind, "Space", () => commit(last.role, last.kind), null, " repeat") : null;
+  const note = h("input", { id: "note", placeholder: "备注（N）", value: draft.note });
+  note.addEventListener("input", () => { draft.note = note.value; const l = getLabel(items[cur]); if (l) { l.note = draft.note; markDirty(); } });
+  const tools = h("div", { class: "tools" },
+    lf.n > 1 ? h("button", { class: "tool" + (it.el ? " on" : ""), onclick: toggleSplit,
+                             title: "一个叶子里的元素不是同一种东西时（base 的坐标轴、title()），逐个元素来标" },
+                 h("kbd", {}, "S"), it.el ? "合并回整个叶子" : "拆成 " + lf.n + " 个元素分别标") : null,
+    h("button", { class: "tool" + (draft.unsure ? " on" : ""), onclick: toggleUnsure }, h("kbd", {}, "U"), "拿不准"),
+    h("button", { class: "tool" + (dim ? " on" : ""), onclick: toggleDim }, h("kbd", {}, "D"), "淡化其他"),
+    h("span", { class: "tool" }, h("kbd", {}, "←"), h("kbd", {}, "→"), "上一个 / 下一个"),
+    note);
+  body.replaceChildren(meta, path, now || "", rep || "", choices, tools);
+}
+function renderDots() {
+  $("#dots").replaceChildren(...items.map((it, i) => {
+    const l = getLabel(it);
+    return h("button", { class: "dot" + (it.el ? " el" : "") + (i === cur && !finished ? " cur" : ""),
+                         style: l ? "background: var(--" + l.role + ")" : null,
+                         title: "叶子 " + (FIG.order.indexOf(it.k) + 1) + (it.el ? " 元素 " + it.el : "") + (l ? "：" + l.role + " / " + l.kind : ""),
+                         onclick: () => go(i) });
+  }));
+}
+function render() { renderHeader(); highlight(); renderBody(); renderDots(); }
+
+// ---- actions ---------------------------------------------------------------
+function pickRole(i) { role = VOC.roles[i].role; stage = "kind"; renderBody(); }
+function commit(r, k) {
+  setLabel(items[cur], { role: r, kind: k, note: draft.note, unsure: draft.unsure });
+  last = { role: r, kind: k };
+  const f = CFG.figures.find(x => x.id === FIG.id);
+  f.labelled = FIG.order.filter(key => leafDone(key)).length;
+  dirty = true;
+  const nx = nextUnlabelled(cur);
+  stage = "role"; role = null;
+  if (nx < 0) { finished = true; flush(); } else { cur = nx; markDirty(); }
+  loadDraft(); render();
+}
+function leafDone(k) {
+  const l = S.labels[k];
+  return !!l && (l.split ? l.split.every(Boolean) : true);
+}
+function go(i) {
+  if (i < 0 || i >= items.length) return;
+  cur = i; finished = false; stage = "role"; role = null; loadDraft(); render();
+}
+function toggleSplit() {
+  const it = items[cur], lf = FIG.byK[it.k];
+  if (lf.n < 2) return;
+  const l = S.labels[it.k];
+  if (l && l.split) {
+    const a = l.split[0], same = l.split.every(x => x && a && x.role === a.role && x.kind === a.kind);
+    if (same) S.labels[it.k] = a; else delete S.labels[it.k];
+  } else S.labels[it.k] = { split: Array(lf.n).fill(null) };
+  buildItems();
+  cur = items.findIndex(x => x.k === it.k);
+  finished = false; stage = "role"; markDirty(); loadDraft(); render();
+}
+function toggleUnsure() {
+  draft.unsure = !draft.unsure;
+  const l = getLabel(items[cur]); if (l) { l.unsure = draft.unsure; markDirty(); }
+  renderBody();
+}
+function toggleDim() { dim = !dim; highlight(); renderBody(); }
+
+async function openFigure(id) {
+  await flush();
+  FIG = await getJSON("/api/figure/" + id);
+  S = FIG.state; S.labels = S.labels || {}; S.seconds = S.seconds || 0;
+  FIG.byK = Object.fromEntries(FIG.leaves.map(l => [l.k, l]));
+  FIG.order = FIG.leaves.filter(l => l.n > 0).map(l => l.k);
+  FIG.el = {};
+  for (const e of FIG.elements) (FIG.el[e.k] = FIG.el[e.k] || [])[e.index - 1] = e;
+  FIG.file = (CFG.figures.find(f => f.id === id) || {}).file;
+  mountSvg(FIG.svg);
+  $("#code pre").textContent = FIG.code || "（没有找到代码）";
+  buildItems();
+  const first = getLabel(items[0]) ? nextUnlabelled(0) : 0;
+  finished = first < 0; cur = finished ? 0 : first;
+  stage = "role"; role = null; last = null; loadDraft(); render();
+}
+
+function onKey(e) {
+  lastInput = Date.now();
+  const typing = e.target && e.target.id === "note";
+  if (typing) { if (e.key === "Enter" || e.key === "Escape") { e.target.blur(); e.preventDefault(); } return; }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const code = e.code || "";
+  const digit = /^(Digit|Numpad)(\d)$/.exec(code);
+  let used = true;
+  if (finished) {
+    if (code === "Enter") { const n = CFG.figures.find(x => !x.done && x.id !== FIG.id); if (n) openFigure(n.id); }
+    else if (code === "ArrowLeft") go(items.length - 1);
+    else used = false;
+  } else if (digit) {
+    const d = Number(digit[2]);
+    if (stage === "role") { if (d >= 1 && d <= VOC.roles.length) pickRole(d - 1); }
+    else { const ks = VOC.roles.find(x => x.role === role).kinds, i = d === 0 ? 9 : d - 1; if (ks[i]) commit(role, ks[i].kind); }
+  } else if (code === "Space") { if (last) commit(last.role, last.kind); }
+  else if (code === "Escape" || code === "Backspace") { stage = "role"; role = null; renderBody(); }
+  else if (code === "ArrowLeft") go(cur - 1);
+  else if (code === "ArrowRight") go(cur + 1);
+  else if (code === "KeyS") toggleSplit();
+  else if (code === "KeyU") toggleUnsure();
+  else if (code === "KeyD") toggleDim();
+  else if (code === "KeyC") { const d = $("#code"); d.open = !d.open; }
+  else if (code === "KeyN") { const n = $("#note"); if (n) n.focus(); }
+  else used = false;
+  if (used && e.preventDefault) e.preventDefault();
+}
+
+async function boot() {
+  CFG = await getJSON("/api/config");
+  VOC = CFG.vocabulary;
+  $("#cases ul").replaceChildren(...VOC.cases.map(c => h("li", { title: c.en }, c.zh)));
+  document.addEventListener("keydown", onKey);
+  document.addEventListener("pointerdown", () => { lastInput = Date.now(); });
+  setInterval(() => {
+    if (!FIG || finished || document.hidden || Date.now() - lastInput > 60000) return;
+    S.seconds++; unsavedSeconds++;
+    if (unsavedSeconds >= 15) markDirty();
+    renderHeader();
+  }, 1000);
+  window.addEventListener("pagehide", () => {
+    if (FIG && (dirty || unsavedSeconds)) navigator.sendBeacon("/api/state/" + FIG.id,
+      new Blob([JSON.stringify({ labels: S.labels, seconds: S.seconds, cursor: cur })], { type: "application/json" }));
+  });
+  const first = CFG.figures.find(f => !f.done) || CFG.figures[0];
+  await openFigure(first.id);
+  // Debugging aid: ?keys=Digit1,Digit1,Space replays key codes after loading.
+  const replay = new URLSearchParams(location.search).get("keys");
+  if (replay) for (const code of replay.split(",")) { onKey({ code, key: code }); await new Promise(r => setTimeout(r, 30)); }
+}
+boot().catch(e => toast("启动失败：" + e.message));
+</script>
+</body>
+</html>

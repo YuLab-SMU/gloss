@@ -88,6 +88,8 @@ A leaf normally takes one row with `elements` = `all`. When its elements need di
 
 ## Recording
 
+Labels can be made in the label workbench, which writes the files below and the time (`python3 bench/labels/workbench/serve.py --sheets <sheets> --out <your labels directory>`), or by hand:
+
 - Copy `<id>.csv` from the sheets to your labels directory (`bench/labels/pilot/<annotator>/` for the pilot, `bench/labels/dev/` for the development set). Fill in `role`, `kind` and, where needed, `note`. Do not edit the other columns: `key`, `occurrence`, `class` and `n_elements` tie the label to the leaf, and a label that no longer resolves to its leaf fails `bench/R/score-labels.R`.
 - Record the minutes you spent on each figure in `time.csv` in the same directory, with columns `figure`, `minutes`, `guideline` (this file's version) and `note`.
 
@@ -132,4 +134,4 @@ Not shown by the examples: `data` / `box`, `reference` / `reference area` and th
 
 ## Changes
 
-None yet.
+- 2026-11-11, version unchanged (1): the *Recording* section names the label workbench as a second way to make the same label files. No role, kind, case or unit of agreement changed. The workbench asks the questions of *How to decide* in their order and shows the kinds' definitions in Chinese, translated from this file (`bench/labels/vocabulary.json`, which also holds the English); where a translation and this file differ, this file holds.

@@ -59,3 +59,6 @@ bench/figures/*/data/
 # in bench/labels/pilot/sheets/.
 bench/labels/sheets/*.png
 bench/labels/sheets/*.svg
+
+# Label workbench: its session state (the finished labels are the CSV files)
+bench/labels/**/.workbench/

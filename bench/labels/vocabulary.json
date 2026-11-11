@@ -1,0 +1,83 @@
+{
+  "guideline": 1,
+  "comment": "Roles and kinds of bench/labels/guideline.md, read by bench/R/score-labels.R (roles and kinds) and by the label workbench (also the questions and hints). The guideline is the authority: change it first, with a dated entry, then this file.",
+  "roles": [
+    {
+      "role": "data",
+      "question": "Is its position or content computed from rows?",
+      "question_zh": "位置或内容是从数据行算出来的吗？",
+      "kinds": [
+        {"kind": "point", "hint": "a symbol at a row's position (scatter, jitter, outliers of a boxplot, dot plot)", "hint_zh": "落在某一行位置上的符号：散点、抖动点、箱线图离群点"},
+        {"kind": "line", "hint": "a path through several rows (line, step, fitted line, density curve, ROC curve, the edges of a band)", "hint_zh": "穿过多行的线：折线、拟合线、密度曲线、ROC 曲线、带的边线"},
+        {"kind": "area", "hint": "a filled region drawn from rows (area, ribbon, confidence band, density fill, violin, map polygon)", "hint_zh": "由数据行画出的填充区域：面积、置信带、密度填充、小提琴、地图多边形"},
+        {"kind": "bar", "hint": "a rectangle from a baseline to a value (bar, column, histogram bin)", "hint_zh": "从基线到数值的矩形：柱、条、直方图的一格"},
+        {"kind": "cell", "hint": "a rectangle or raster in a grid of them (tile, raster, heatmap body cell, heatmap annotation cell, hexagon)", "hint_zh": "网格里的一格：tile、栅格、热图格子、热图注释格子、六边形"},
+        {"kind": "segment", "hint": "a straight piece per row or per pair of rows (segment, error bar, whisker, line range, rug, dendrogram branch, a data label's leader line, a computed comparison bracket)", "hint_zh": "每行（或每对行）一段直线：线段、误差线、箱线图的须、rug、树状图分支、数据标签的引线、算出来的比较括号"},
+        {"kind": "box", "hint": "the box and median of a boxplot, a crossbar", "hint_zh": "箱线图的箱体和中位线、crossbar"},
+        {"kind": "text", "hint": "text whose content or position comes from rows (data labels, repelled labels, counts on bars, values in heatmap cells, computed p-values)", "hint_zh": "内容或位置来自数据行的文字：数据标签、避让标签、柱上的计数、格子里的数值、算出来的 p 值"},
+        {"kind": "other", "hint": "say what it is in the note", "hint_zh": "其他数据标记，在备注里写明是什么"}
+      ]
+    },
+    {
+      "role": "guide",
+      "question": "Does it tell the reader how to read the data marks?",
+      "question_zh": "它是在告诉读者怎么读数据标记吗？（坐标轴、图例、分面标签）",
+      "kinds": [
+        {"kind": "axis line", "hint": "an axis's line", "hint_zh": "坐标轴的轴线"},
+        {"kind": "tick", "hint": "an axis's tick marks", "hint_zh": "坐标轴的刻度线"},
+        {"kind": "tick label", "hint": "an axis's tick labels; a heatmap's row and column names", "hint_zh": "刻度上的文字；热图的行名、列名"},
+        {"kind": "axis title", "hint": "an axis's title; the name of a heatmap annotation track", "hint_zh": "坐标轴标题；热图注释轨道的名字"},
+        {"kind": "legend key", "hint": "the glyph of a legend entry, whatever its shape", "hint_zh": "图例条目的图样，不论是点、线、方块还是字母 a"},
+        {"kind": "legend label", "hint": "a legend entry's text", "hint_zh": "图例条目的文字"},
+        {"kind": "legend title", "hint": "a legend's title", "hint_zh": "图例的标题"},
+        {"kind": "colour bar", "hint": "a continuous legend's bar (its rectangles or raster) and its ticks", "hint_zh": "连续图例的色条（它的小矩形或栅格）和色条上的刻度线"},
+        {"kind": "strip label", "hint": "text naming a facet panel, or a slice of a split heatmap", "hint_zh": "分面面板的名字；切分热图里某一片的名字"},
+        {"kind": "other", "hint": "say what it is in the note", "hint_zh": "其他引导元素，在备注里写明是什么"}
+      ]
+    },
+    {
+      "role": "reference",
+      "question": "Is it a line or band at a typed value that helps read positions?",
+      "question_zh": "它是画在代码里写死的值上、帮人读位置的线或带吗？",
+      "kinds": [
+        {"kind": "grid line", "hint": "a panel's grid lines (major and minor), base grid(), a map's graticule", "hint_zh": "面板的网格线（主、次）、base 的 grid()、地图经纬网"},
+        {"kind": "reference line", "hint": "a line at a typed value (geom_hline(yintercept = 0), abline(h = 20), a ROC plot's diagonal)", "hint_zh": "画在写死的值上的线：geom_hline(yintercept = 0)、abline(h = 20)、ROC 图的对角线"},
+        {"kind": "reference area", "hint": "a band at typed values that spans the panel", "hint_zh": "画在写死的值上、横贯面板的带"}
+      ]
+    },
+    {
+      "role": "annotation",
+      "question": "Did the author type both its content and its position?",
+      "question_zh": "内容和位置都是作者手写的吗？",
+      "kinds": [
+        {"kind": "title", "hint": "title, subtitle, caption, tag, base main; a heatmap's column or row title when that dimension is not split", "hint_zh": "标题、副标题、caption、tag、base 的 main；热图某个维度没有切分时，它的行标题或列标题"},
+        {"kind": "text", "hint": "other typed text (annotate(\"text\"), base text() or mtext() with typed strings that are not axis titles)", "hint_zh": "其他手写的文字：annotate(\"text\")、base 的 text()/mtext() 里写死的字符串（不是坐标轴标题）"},
+        {"kind": "mark", "hint": "a typed shape (annotate(\"rect\") or annotate(\"segment\") placed by hand, a typed arrow or bracket)", "hint_zh": "手放的形状：annotate(\"rect\")、annotate(\"segment\")、手写的箭头或括号"}
+      ]
+    },
+    {
+      "role": "decoration",
+      "question": "Otherwise: it carries no information.",
+      "question_zh": "以上都不是：不带信息的背景、边框",
+      "kinds": [
+        {"kind": "background", "hint": "a filled rectangle behind other elements (plot, panel, legend, legend key, strip backgrounds; a base legend's filled box)", "hint_zh": "垫在别的元素后面的填充矩形：整图、面板、图例、图例键、分面条的背景；base 图例有填充的框"},
+        {"kind": "border", "hint": "an outline with no fill (panel border, base box(), a heatmap's border)", "hint_zh": "没有填充的外框：面板边框、base 的 box()、热图的边框"},
+        {"kind": "other", "hint": "say what it is in the note", "hint_zh": "其他装饰，在备注里写明是什么"}
+      ]
+    }
+  ],
+  "cases": [
+    {"en": "Strip or slice background: decoration / background. Its text: guide / strip label.", "zh": "分面条（或热图切片）的背景：decoration / background；上面的文字：guide / strip label。"},
+    {"en": "Legend and key backgrounds: decoration / background. Every key glyph: guide / legend key. A base legend() box: decoration, background if filled, border if only an outline.", "zh": "图例和图例键的背景：decoration / background；每个键的图样：guide / legend key。base legend() 的框：有填充是 background，只有外框是 border。"},
+    {"en": "A base axis leaf draws the axis line, the ticks and the tick labels: all guide; give the kinds by element (press S).", "zh": "base 的一个 axis 叶子同时画轴线、刻度线和刻度文字：都是 guide，按 S 逐个元素给种类。"},
+    {"en": "Base title(): main is annotation / title, the axis labels are guide / axis title. This is a split (press S).", "zh": "base 的 title()：main 是 annotation / title，xlab、ylab 是 guide / axis title，要拆开标（按 S）。"},
+    {"en": "A heatmap's column (row) title: guide / strip label when the columns (rows) are split, annotation / title when they are not.", "zh": "热图的列（行）标题：列（行）被切分时是 guide / strip label，没切分时是 annotation / title。"},
+    {"en": "Repelled labels (ggrepel) and their segments: data / text and data / segment.", "zh": "避让标签（ggrepel）和它的引线：data / text 和 data / segment。"},
+    {"en": "Rugs and marginal plots (ggExtra, ggside): data, with the kinds of their marks; their axes are guide.", "zh": "rug 和边缘图（ggExtra、ggside）：data，种类按它画的标记；它们的坐标轴是 guide。"},
+    {"en": "A line whose value comes from the data (a computed mean) is data; a value typed in the code, also inside a data frame typed in the code, is reference.", "zh": "线的取值来自数据（比如算出来的均值）是 data；取值是代码里写死的（包括写在代码里的小数据框）是 reference。"},
+    {"en": "A typed label drawn once per row (a constant label mapped over all rows) is annotation / text.", "zh": "同一个手写标签每行画一遍（常量标签映射到所有行）：annotation / text。"},
+    {"en": "Invisible elements (no stroke and no fill, zero size, clipped away) are labelled by what drew them, with 'invisible' in the note.", "zh": "看不见的元素（没有描边也没有填充、大小为零、被裁掉）：按画它的东西来标，备注写 invisible。"},
+    {"en": "Images, logos, rasters that are not data: decoration / other, with a note.", "zh": "不是数据的图片、logo、栅格：decoration / other，加备注。"},
+    {"en": "Unsure: give the role you think most likely and mark it unsure. Never leave a leaf unlabelled.", "zh": "拿不准：选你认为最可能的，再按 U 标记“拿不准”。不要留空。"}
+  ]
+}

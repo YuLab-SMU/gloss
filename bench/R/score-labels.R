@@ -15,13 +15,11 @@
 
 source("bench/R/sheet.R")
 
-vocabulary <- list(
-  data = c("point", "line", "area", "bar", "cell", "segment", "box", "text", "other"),
-  guide = c("axis line", "tick", "tick label", "axis title", "legend key", "legend label",
-            "legend title", "colour bar", "strip label", "other"),
-  reference = c("grid line", "reference line", "reference area"),
-  annotation = c("title", "text", "mark"),
-  decoration = c("background", "border", "other"))
+# Roles and their kinds: one file, shared with the label workbench.
+vocabulary <- local({
+  v <- jsonlite::read_json("bench/labels/vocabulary.json")$roles
+  stats::setNames(lapply(v, function(r) vapply(r$kinds, function(k) k$kind, "")), vapply(v, function(r) r$role, ""))
+})
 
 read_chr <- function(f) utils::read.csv(f, stringsAsFactors = FALSE, colClasses = "character", na.strings = character())
 
