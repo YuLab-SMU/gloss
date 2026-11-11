@@ -12,6 +12,14 @@ and predictions 28–31 in `bench/predictions.md` were committed before either a
 
 opens http://127.0.0.1:8765/ with the five figures, smallest first. One leaf at a time is outlined on the page; answer with the number keys (role, then kind), `Space` repeats the last label, `S` labels a leaf's elements one by one, `U` marks a label unsure, `←` goes back. Each finished figure is written to `owner/<id>.csv`, the active time to `owner/time.csv`; closing the page loses nothing. For another annotator: `--out bench/labels/pilot/<annotator>`. The workbench reads the sheets, the code and the vocabulary only, never another annotator's labels.
 
+**Several annotators: the team workbench** (2026-11-11, plan Scope changes). The same five figures, labelled by the owner and invited lab members on the lab's server:
+
+    python3 bench/labels/workbench/serve.py --team bench/labels/pilot/team --reveal set --host 0.0.0.0 --invite <code>
+
+Each annotator joins with the invite code and a nickname no one has, and labels into `team/<nickname>/` (the same files as above). No one sees another's labels before their own five figures are labelled and they open the others': that freezes their labels (`<id>.csv` from then on), and what they change afterwards goes to `team/<nickname>/revised/`. Who has labelled how much is visible at any time. Annotator A's labels sit in the team as the read-only annotator `claude`. The deployment (`~/projects/gloss-labels` on the lab's head node, `run.sh` to start and stop, port 8765) holds the workbench, the five sheets and their code, the guideline's examples and the vocabulary: no held-out figure, no rule output. To score, copy `team/` back and run `score-labels.R agree` on two directories at a time; the page's statistics use the same formula (checked in `workbench/check.py`) and are not the score.
+
+The workbench shows more than the sheets (version 3): the leaf's fill and stroke, the leaf painted, alone on a checkerboard, hidden, dragged aside, its place in the drawing order, and the guideline's worked examples beside each role and kind. Each figure's state records the version it was labelled with.
+
 **By hand**, for each figure:
 
 1. Look at `sheets/<id>-page.png` (the page), `sheets/<id>.png` or `sheets/<id>.svg` (each leaf boxed and numbered by `k`) and the code, `bench/figures/<id>/code.R`.
@@ -23,4 +31,4 @@ Then `Rscript bench/R/score-labels.R check bench/labels/pilot/<annotator> bench/
 
 Do not open the other annotator's directory before both have committed their labels.
 
-**How the two annotators worked** (recorded because it can bear on the agreement): annotator A (Claude) labelled from the sheets and the English guideline, whole figures at a time. Annotator B (the owner) uses the workbench: one leaf at a time, the other leaves dimmed, the guideline's questions and the kinds' definitions shown in Chinese.
+**How the two annotators worked** (recorded because it can bear on the agreement): annotator A (Claude) labelled from the sheets and the English guideline, whole figures at a time. Annotator B (the owner) uses the workbench: one leaf at a time, the other leaves dimmed, the guideline's questions and the kinds' definitions shown in Chinese. The owner labelled gallery-070 and heatmap-026 (and one leaf of patchwork-006) with workbench version 1, on 2026-11-11 before 09:57; everything after that, by the owner or a lab member, is made with version 3, whose examples were labelled by annotator A.

@@ -87,7 +87,7 @@ Tasks 1 and 2 can run side by side: Task 1 is labelling time, Task 2 needs no la
 
 ### Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels
 
-**Status:** `[~]` (guideline, sheets and scorer done; pilot under way)
+**Status:** `[~]` (guideline, sheets and scorer done; pilot under way, since 2026-11-11 with several annotators on the team workbench: Scope changes)
 
 **Tests assumption:** 3 and 4.
 
