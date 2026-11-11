@@ -264,3 +264,67 @@ test_that("a layer that draws nothing in a panel does not stop the layers after 
   expect_equal(lv$status, c("verified", "verified"))
   expect_equal(sum(lv$verified), 64L)
 })
+
+test_that("a layer whose rows lack a position a comparison needs is unbound with the reason, not an error", {
+  # Development run 2026-11-11-1319, patchwork-012: a boxplot's built rows
+  # carry x, ymin, lower, middle, upper and ymax but no y; comparing its
+  # polygons by vertex mean stopped the whole figure's binding with an error.
+  skip_if_not_installed("ggplot2")
+  p <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$gear, .data$disp, group = .data$gear)) +
+    ggplot2::geom_boxplot()
+  b <- bind_capture(p)
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_gt(nrow(lv), 0L)
+  expect_false(any(lv$status %in% c("verified", "ambiguous")))
+  ub <- lv[lv$status == "unbound", ]
+  expect_gt(nrow(ub), 0L)
+  expect_true(any(grepl("have no y", ub$reason)))
+})
+
+test_that("patchwork: a panel no plot owns has its layer leaves unbound and its grid outside", {
+  # Development run 2026-11-11-1319, patchwork-006: a gtable added to the
+  # composition had its panel's background and grid lines counted as
+  # unbound layer leaves.
+  skip_if_not_installed("patchwork")
+  p1 <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$wt, .data$mpg)) + ggplot2::geom_point()
+  p2 <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$hp, .data$qsec)) + ggplot2::geom_point()
+  # ggplotGrob() measures text on the open device: build it on a null one,
+  # so that no Rplots.pdf is written (the bench container's tree is read-only)
+  g2 <- local({
+    grDevices::pdf(NULL)
+    on.exit(grDevices::dev.off())
+    ggplot2::ggplotGrob(p2)
+  })
+  b <- bind_capture(p1 + g2)
+  sl <- b$fig$substrate$leaves
+  lv <- b$leaves
+  stray <- lv[lv$status == "unbound", ]
+  expect_equal(nrow(stray), 1L)
+  expect_match(stray$reason, "belongs to no plot")
+  expect_match(sl$path[sl$id == stray$leaf], "geom_point")
+  expect_equal(lv$status[lv$table %in% "plot1_built_layer1"], "verified")
+  grid_leaves <- sl$id[grepl("grill", sl$path)]
+  expect_true(all(lv$status[lv$leaf %in% grid_leaves] == "outside"))
+})
+
+test_that("binding measures on a null device of its own: no default device, no silent fallback", {
+  # Counting each layer's children draws the layers again after capture has
+  # closed its device; text geoms then opened R's default device (writing
+  # Rplots.pdf in the working directory) or, where none could be opened (the
+  # bench container's read-only tree), the count failed and the binder fell
+  # back to one child per layer without saying so.
+  skip_if_not_installed("ggplot2")
+  GeomNothing <- ggplot2::ggproto("GeomNothing", ggplot2::GeomPoint, draw_panel = function(...) NULL)
+  nothing <- ggplot2::layer(geom = GeomNothing, stat = "identity", position = "identity")
+  d <- data.frame(x = c(1, 2, 3, 4), y = c(2, 4, 1, 3), lab = c("a", "bb", "c", "dd"))
+  p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, label = .data$lab)) +
+    nothing + ggplot2::geom_label()
+  # devices earlier tests left open would hide the defect
+  grDevices::graphics.off()
+  old <- options(device = function(...) stop("a default device was opened"))
+  on.exit(options(old), add = TRUE)
+  b <- bind_capture(p)
+  lv <- b$leaves[!is.na(b$leaves$table), ]
+  expect_equal(nrow(lv), 8L)
+  expect_true(all(lv$status == "verified"))
+})

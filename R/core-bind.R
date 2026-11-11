@@ -49,6 +49,13 @@ bind_figure <- function(fig, eng, state, tol = bind_tolerance) {
   sub <- fig$substrate
   leaves <- sub$leaves
   geo <- scene_geometry(sub)
+  # An engine's bind step may draw again to measure (ggplot's layer children
+  # with text): on a null device of its own, never R's default device, which
+  # writes Rplots.pdf, or fails where it cannot (then the step would fall back
+  # without saying so).
+  grDevices::pdf(NULL)
+  null_dev <- grDevices::dev.cur()
+  on.exit(if (null_dev %in% grDevices::dev.list()) grDevices::dev.off(null_dev), add = TRUE)
   stated <- if (is.null(eng$bind)) {
     list(claims = list(), unbound = data.frame(
       leaf = leaves$id, reason = sprintf("engine '%s' states no bindings", eng$name),
@@ -173,6 +180,12 @@ check_rows <- function(g, pred, all_pred, tol) {
     k <- which(g$tag == tag)
     f <- row_family(tag, pred)
     if (is.null(f)) return(list(reason = sprintf("no comparison for <%s> elements paired one per row", tag)))
+    # a layer's rows can lack a position the comparison reads (a boxplot's
+    # rows have no y: bench run 2026-11-11-1319, patchwork-012)
+    miss <- setdiff(f$cols, names(pred))
+    if (length(miss)) {
+      return(list(reason = sprintf("the rows paired with <%s> elements have no %s", tag, paste(miss, collapse = ", "))))
+    }
     ep <- f$element(g[k, , drop = FALSE])
     if (is.null(ep)) return(list(reason = sprintf("the <%s> elements carry no geometry to compare (rotated text?)", tag)))
     rp <- f$row(pred)
@@ -189,8 +202,9 @@ check_rows <- function(g, pred, all_pred, tol) {
 }
 
 # Comparisons for one element per row. `element` gives the element's
-# geometry, `row` the rows', `dev` the deviation of element k from row k,
-# `count` how many rows pass for each element.
+# geometry, `row` the rows' (from the row columns `cols`), `dev` the
+# deviation of element k from row k, `count` how many rows pass for each
+# element.
 row_family <- function(tag, pred) {
   centre <- function(e) data.frame(x = (e$x0 + e$x1) / 2, y = (e$y0 + e$y1) / 2)
   at_xy <- function(p) data.frame(x = p$x, y = p$y)
@@ -198,12 +212,12 @@ row_family <- function(tag, pred) {
   point_count <- function(e, r, tol) near_count(e$x, e$y, r$x, r$y, tol)
   has <- function(cols) all(cols %in% names(pred)) && !all(is.na(pred[cols]))
   if (tag == "circle") {
-    return(list(need = c("x", "y"), element = function(e) data.frame(x = e$cx, y = e$cy),
+    return(list(need = c("x", "y"), cols = c("x", "y"), element = function(e) data.frame(x = e$cx, y = e$cy),
                 row = at_xy, dev = point_dev, count = point_count))
   }
   if (tag == "rect" && has(c("xmin", "xmax", "ymin", "ymax"))) {
     corners <- function(x0, x1, y0, y1) data.frame(x0 = pmin(x0, x1), x1 = pmax(x0, x1), y0 = pmin(y0, y1), y1 = pmax(y0, y1))
-    return(list(need = c("x0", "x1", "y0", "y1"),
+    return(list(need = c("x0", "x1", "y0", "y1"), cols = c("xmin", "xmax", "ymin", "ymax"),
                 element = function(e) corners(e$x0, e$x1, e$y0, e$y1),
                 row = function(p) corners(p$xmin, p$xmax, p$ymin, p$ymax),
                 dev = function(e, r) pmax(abs(e$x0 - r$x0), abs(e$x1 - r$x1), abs(e$y0 - r$y0), abs(e$y1 - r$y1)),
@@ -217,7 +231,7 @@ row_family <- function(tag, pred) {
   }
   if (tag == "line") {
     if (!has(c("xend", "yend"))) return(NULL)
-    return(list(need = c("x", "y", "xend", "yend"),
+    return(list(need = c("x", "y", "xend", "yend"), cols = c("x", "y", "xend", "yend"),
                 element = function(e) data.frame(x = e$lx1, y = e$ly1, xend = e$lx2, yend = e$ly2),
                 row = function(p) data.frame(x = p$x, y = p$y, xend = p$xend, yend = p$yend),
                 dev = function(e, r) pmax(abs(e$x - r$x), abs(e$y - r$y), abs(e$xend - r$xend), abs(e$yend - r$yend)),
@@ -232,7 +246,7 @@ row_family <- function(tag, pred) {
     # The anchor's x is the row's x (svglite writes text-anchor for the
     # horizontal justification). Vertical justification moves the baseline
     # by a share of the text's height, so y is checked against the text box.
-    return(list(need = c("x", "y"),
+    return(list(need = c("x", "y"), cols = c("x", "y"),
                 element = function(e) if (any(e$rotated)) NULL else data.frame(x = e$ax, y0 = e$y0, y1 = e$y1),
                 row = at_xy,
                 dev = function(e, r) {
@@ -248,7 +262,7 @@ row_family <- function(tag, pred) {
                 }))
   }
   if (tag == "rect") {
-    return(list(need = c("x", "y"), element = centre, row = at_xy, dev = point_dev, count = point_count))
+    return(list(need = c("x", "y"), cols = c("x", "y"), element = centre, row = at_xy, dev = point_dev, count = point_count))
   }
   if (tag %in% c("polygon", "polyline", "path")) {
     # A point symbol drawn as a polygon (a triangle) is centred on its vertex
@@ -260,7 +274,7 @@ row_family <- function(tag, pred) {
       }, numeric(2)))
       data.frame(x = m[, 1], y = m[, 2])
     }
-    return(list(need = c("x", "y"), element = vmean, row = at_xy, dev = point_dev, count = point_count))
+    return(list(need = c("x", "y"), cols = c("x", "y"), element = vmean, row = at_xy, dev = point_dev, count = point_count))
   }
   NULL
 }

@@ -126,6 +126,13 @@ last_drawn <- function(keep) {
 
 is_ggplot_panel <- function(g) inherits(g, "gTree") && grepl("^panel-[0-9]+[.]", g$name %||% "")
 
+# Every ggplot panel grob anywhere in a drawn tree.
+all_ggplot_panels <- function(g) {
+  if (is_ggplot_panel(g)) return(list(g))
+  kids <- if (inherits(g, "gtable")) g$grobs else if (inherits(g, "gTree")) g$children else list()
+  unlist(lapply(kids, all_ggplot_panels), recursive = FALSE)
+}
+
 random_reason <- function(i) {
   sprintf(paste("plot %d: two builds give different data (its build draws random numbers),",
                 "so its built data cannot be shown to be the data patchwork drew."), i)
@@ -193,9 +200,22 @@ patchwork_bind <- function(state, substrate) {
     claims <- c(claims, r$claims)
     ub <- rbind(ub, r$unbound)
   }
-  stray <- !mine & vapply(strsplit(leaves$path, "/", fixed = TRUE),
-                          function(s) any(grepl("^panel-[0-9]+[.]gTree[.][0-9]+$", s)), logical(1))
-  ub <- rbind(ub, unbound(leaves$id[stray], "the leaf lies in a ggplot panel that belongs to no plot gloss found in the composition"))
+  # A ggplot panel no plot owns (an inset, a gtable added to the
+  # composition): the leaves in its layer slots are unbound, its background,
+  # grid and foreground are outside, as in a plot's own panels (the
+  # children's order of ggplot_bind(), without panel.ontop).
+  seen <- unlist(lapply(pp, function(g) vapply(g, function(x) x$name, "")))
+  stray <- Filter(function(g) !g$name %in% seen, all_ggplot_panels(state$gtable))
+  segs <- strsplit(leaves$path, "/", fixed = TRUE)
+  for (g in stray) {
+    kids <- names(g$children)
+    layer_kids <- if (length(kids) >= 5L) kids[3:(length(kids) - 2L)] else character()
+    hit <- !mine & vapply(segs, function(s) {
+      at <- match(g$name, s)
+      !is.na(at) && at < length(s) && s[at + 1L] %in% layer_kids
+    }, logical(1))
+    ub <- rbind(ub, unbound(leaves$id[hit], "the leaf lies in a ggplot panel that belongs to no plot gloss found in the composition"))
+  }
   done <- c(vapply(claims, `[[`, "", "leaf"), ub$leaf)
   list(claims = claims, unbound = ub, outside = setdiff(leaves$id, done))
 }
