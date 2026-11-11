@@ -67,8 +67,9 @@ several engines declare the class but capture different kinds of page (a
 function can draw with base graphics or with grid), the page drawn
 chooses. Built-in engines handle ggplot2 plots, patchwork compositions,
 ComplexHeatmap heatmaps, base graphics (a \code{recordedplot} or a function that
-draws the plot, through gridGraphics) and any grid grob, function or
-recorded plot that draws with grid.
+draws the plot; the page is replayed one display-list entry at a time and
+each entry that draws is a leaf) and any grid grob, function or recorded
+plot that draws with grid.
 
 The engine's tables and panels are statements about the page drawn. Those
 it cannot show describe that page are withheld and listed with the reason

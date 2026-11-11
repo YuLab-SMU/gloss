@@ -81,7 +81,8 @@ heatmap_panels <- function(substrate) {
 }
 
 # Panels whose scales are the native scales of their viewports, as recorded
-# by the probes. Used for heatmap bodies and gridGraphics plot windows.
+# by the probes, or by the replay of a base page. Used for heatmap bodies
+# and base plot regions.
 native_panels <- function(leaves, seg, key_fun = identity) {
   vps <- unique(stats::na.omit(seg))
   if (!length(vps)) return(NULL)
