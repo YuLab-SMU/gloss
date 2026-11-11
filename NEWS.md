@@ -1,5 +1,13 @@
 # gloss 0.0.0.9000
 
+## Binding on tree figures (2026-11-11, tree binding plan)
+
+- A page with an embedded image larger than the XML parser's limit for one node (about 10 MB of base64) is captured; gloss stopped with the parser's error ("Huge input lookup"), neither capturing nor refusing it. An SVG read from outside with such a node is refused with the parser's reason; only pages gloss drew itself are parsed without the limit.
+- Text is checked in its own frame: a label moved off its row by justification (`hjust = -.1`, `vjust = -.5`, any value) or rotated by an angle is verified, along its baseline to 0.5 pt. A label's box (`geom_label()`) is checked by the centre of its box. Rotated text used to be left unbound and justified labels failed, though rightly paired.
+- Rows are put on the page through the coord's own transform, so layers under `coord_polar()` bind: points, text, and segments (drawn as paths along the coord, checked by their ends). A curve (`geom_curve()`) is checked by its ends too. Under a coord that is not linear, rectangles and lines through a group, which the coord bends, are unbound with that reason.
+- Text drawn as glyph outlines (`showtext`, which `emojifont` turns on) is reported as outlines, with the counts of paths, labels and characters, and never compared as shapes.
+- On the 29 development figures of the bench's tree stratum: 29 captured (was 28); every layer element checked in 22 of 28 ggplot figures (was 15 of 27), none left without a single checked element (was 3). On v0's 54 development figures, no element that was checked before is unchecked now.
+
 ## Patchwork panels and base expected counts (2026-11-11, M1)
 
 - A patchwork composition has the panels of each of its ggplots in `fig$substrate$panels`, named by the plot's place in the composition (`plot2_panel1`), with their scales, and its leaves lie in them. A plot whose build draws random numbers has its panels withheld with the reason, beside the other plots' panels; so do plots patchwork places as insets or gtables, which have no build. The page is drawn as before (patchwork's `print()`): on the 55 development figures every page equals the previous run's.

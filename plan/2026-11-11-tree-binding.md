@@ -227,9 +227,23 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 
 ### Task 5: Points in several shapes (tree-014)
 
-**Status:** `[ ]` _(stub; written out after Tasks 1-4)_
+**Status:** `[ ]` _(written out 2026-11-11, after Tasks 1-4)_
 
-One leaf of 8100 points in eight shapes draws 12690 elements: some shapes are several primitives. Capture's expected count per shape, then a comparison for one row drawn as several elements around one centre. Half of the stratum's layer elements, one figure.
+**Tests assumption:** a new one, written here before any of it is measured: *every primitive svglite draws for a point symbol (pch 0-25) is centred on the point*, so a row drawn as k elements can be checked element by element against one centre. A symbol whose primitives are not centred (a triangle drawn with its box off the point, as the vertex-mean rule already knows) gets the centre its own family uses; a symbol that cannot be checked this way is listed with its reason, never passed.
+
+**Files**
+- Modify: `R/core-substrate.R` (`expected_count()` for a points grob: the primitives each `pch` draws), `R/core-bind.R` (one row drawn as several elements, in drawing order), `R/engine-ggplot.R` (state `shape` with the rows if the count needs it).
+- Test: `tests/testthat/test-capture.R` (a points grob with every shape 0-25: expected count equal to what svglite draws), `tests/testthat/test-bind.R` (mixed shapes bind; permuted rows fail).
+
+**Intent**
+- tree-014's leaf of 8100 points in eight shapes draws 12690 elements and is a count mismatch: half the stratum's layer elements, and why its element-weighted share sits at 41.5% while the median figure is checked whole. v0 has the same class (design §风险与未决问题: shapes drawn with more than one primitive).
+
+**Checklist**
+- [ ] Measure on svglite, host and container, what each `pch` 0-25 draws (tags and count) and where each primitive's centre lies; written to `dev_docs/research/` and read before the rule.
+- [ ] Test that fails first: a points grob with every shape has an expected count equal to what svglite draws, and binds.
+- [ ] Expected count per shape in capture; the comparison for one row as k elements.
+- [ ] Suite on the host; container suite (capture reads what the device wrote).
+- [ ] Predictions, then `capture.R dev tree`, `bind.R dev tree`, `capture.R dev` and `bind.R dev`; compared with the runs before.
 
 ### Task 6: What remains (tree-054's repelled labels, tree-003's text leaf)
 
