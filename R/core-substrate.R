@@ -810,15 +810,56 @@ base_expected <- function(e) {
   op <- tryCatch(a[[1]]$name, error = function(err) "")
   if (!is.character(op) || length(op) != 1L) return(NA_integer_)
   ok_xy <- function(xy) !is.na(xy$x) & !is.na(xy$y) & is.finite(xy$x) & is.finite(xy$y)
-  out <- switch(op,
+  # runs of finite points: their lengths
+  runs <- function(ok) {
+    r <- rle(ok)
+    r$lengths[r$values]
+  }
+  fin <- function(...) Reduce(`&`, lapply(list(...), function(v) !is.na(v) & is.finite(v)))
+  # A call whose arguments do not have the shape a rule expects has no count
+  # (unknown), never a failed capture.
+  out <- tryCatch(switch(op,
     C_plotXY = {
       type <- a[[3]]
       ok <- ok_xy(a[[2]])
-      if (identical(type, "p")) sum(ok)
-      else if (identical(type, "l")) {
-        r <- rle(ok)
-        sum(r$values & r$lengths >= 2L)
-      } else NA
+      n <- runs(ok)
+      switch(type,
+        p = sum(ok),
+        l = , s = , S = sum(n >= 2L),
+        b = sum(ok) + sum(pmax(n - 1L, 0L)),
+        o = sum(ok) + sum(n >= 2L),
+        h = sum(ok),
+        c = sum(pmax(n - 1L, 0L)),
+        n = 0L,
+        NA)
+    },
+    # one polygon per NA-separated run of at least 2 points
+    C_polygon = sum(runs(fin(a[[2]], a[[3]])) >= 2L),
+    # polypath() draws all its subpaths as one path
+    C_path = as.integer(any(fin(a[[2]], a[[3]]))),
+    C_arrows = {
+      n <- max(lengths(a[2:5]))
+      v <- lapply(a[2:5], rep_len, length.out = n)
+      ok <- fin(v[[1]], v[[2]], v[[3]], v[[4]])
+      code <- a$code %||% a[[8]]
+      heads <- if (code %in% c(1, 2)) 1L else if (code == 3) 2L else 0L
+      # a zero-length arrow keeps its shaft and loses its heads
+      moved <- ok & (v[[1]] != v[[3]] | v[[2]] != v[[4]])
+      sum(ok) + heads * sum(moved)
+    },
+    C_abline = {
+      ab <- if (!is.null(a[[2]]) && length(a[[2]])) 1L else 0L
+      ab + sum(fin(a[[4]] %||% numeric())) + sum(fin(a[[5]] %||% numeric()))
+    },
+    # circles, squares and rectangles: one element per finite symbol; the
+    # other kinds draw several per symbol
+    C_symbols = {
+      kind <- a[[4]]
+      d <- a[[5]]
+      ok <- fin(a[[2]], a[[3]])
+      if (kind %in% c(1, 2)) sum(ok & fin(d))
+      else if (kind == 3 && is.matrix(d)) sum(ok & fin(d[, 1], d[, 2]))
+      else NA
     },
     C_text = {
       lab <- a[[3]]
@@ -829,7 +870,8 @@ base_expected <- function(e) {
     C_rect = max(lengths(a[2:5])),
     C_segments = max(lengths(a[2:5])),
     NA
-  )
+  ), error = function(err) NA)
+  if (length(out) != 1L) return(NA_integer_)
   as.integer(out)
 }
 

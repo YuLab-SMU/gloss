@@ -505,6 +505,54 @@ test_that("a base page is captured as base graphics draws it, one leaf per displ
   expect_match(pts$path, "^base/[0-9]+/plotXY$")
 })
 
+test_that("base data-mark calls without a count before M1 Task 5 have one, equal to what svglite draws", {
+  # Development set, capture 2026-11-11-1307: 574 base leaves had no expected
+  # count; among the data-mark calls, path (483), polygon (21), symbols (8)
+  # and plotXY of types other than "p" and "l" (5). The rules were measured
+  # on hand-built pages first (dev log 2026-11-11), each with NAs and the
+  # cases svglite draws nothing for.
+  x <- c(1, 2, 3, NA, 5, 6, 7, 8)
+  y <- c(2, 4, 3, 5, NA, 1, 2, 2)
+  page <- function() {
+    graphics::par(mfrow = c(2, 4))
+    for (ty in c("b", "o", "h", "s", "S", "c")) graphics::plot(x, y, type = ty)
+    graphics::plot(1:10)
+    graphics::polygon(c(1, 2, 3, NA, 5, NA, 8, 9, NA, NA, 4, 5, 6), c(1, 3, 1, NA, 5, NA, 2, 9, NA, NA, 4, 6, 4))
+    graphics::polypath(c(1, 5, 5, 1, NA, 2, 3, 3, 2), c(1, 1, 5, 5, NA, 2, 2, 3, 3))
+    suppressWarnings(graphics::arrows(c(1, 2, 3, NA), c(1, 2, 3, 1), c(4, 2, 6, 5), c(8, 2, 10, 9), code = 3))
+    graphics::arrows(1:2, 1:2, 3:4, 5:6, code = 0)
+    graphics::abline(h = c(2, 100, NA), v = 5)
+    graphics::abline(1, 1)
+    graphics::symbols(1:3, 1:3, circles = c(1, 2, NA), inches = 0.2, add = TRUE)
+    graphics::symbols(1:3, 1:3, squares = c(1, 1, 1), inches = 0.2, add = TRUE)
+    graphics::symbols(1:3, 1:3, rectangles = cbind(1:3, c(1, NA, 1)), inches = 0.3, add = TRUE)
+    graphics::plot(1:3)
+    graphics::symbols(1:3, 1:3, thermometers = cbind(1, 2, c(0.2, 0.5, 0.8)), inches = 0.3, add = TRUE)
+  }
+  # replaying the page repeats the figure's own warning about the zero-length
+  # arrow; that one is muffled, any other warning is not
+  lv <- withCallingHandlers(gloss(page, width = 9, height = 5, context = FALSE),
+                            warning = function(w) if (grepl("zero-length arrow", conditionMessage(w))) invokeRestart("muffleWarning"))$substrate$leaves
+  counted <- lv[lv$name %in% c("plotXY", "polygon", "path", "arrows", "abline", "symbols"), ]
+  thermo <- utils::tail(which(counted$name == "symbols"), 1L)
+  expect_true(is.na(counted$n_expected[thermo]))           # thermometers: no rule
+  rest <- counted[-thermo, ]
+  expect_false(anyNA(rest$n_expected))
+  expect_equal(rest$n_expected, rest$n_drawn)
+  expect_true(all(rest$status == "ok"))
+  # the drawn counts the rules were measured against: x and y leave 6 finite
+  # points in two runs of 3; "b" draws the points and a segment per adjacent
+  # pair (6 + 4), "o" the points and a polyline per run (6 + 2), "h" a line
+  # per point, "s" and "S" a polyline per run, "c" the segments only
+  xy <- rest$n_drawn[rest$name == "plotXY"][1:6]
+  expect_equal(xy, c(10L, 8L, 6L, 2L, 2L, 4L))
+  # polygon: runs of 2 or more points (3, 2, 3; not the single point);
+  # arrows with code 3: 3 finite shafts, 2 heads each but on the zero-length one;
+  # abline: h = 2 and 100 (outside the range, still drawn), v = 5; then a, b
+  expect_equal(rest$n_drawn[rest$name %in% c("polygon", "path", "arrows", "abline")], c(3L, 1L, 7L, 2L, 3L, 1L))
+  expect_equal(rest$n_drawn[rest$name == "symbols"], c(2L, 3L, 2L))
+})
+
 test_that("base text drawn as plotmath or with multibyte characters is split by entry", {
   # p5-base-fixtures: an expression label made base_expected() fail on anyNA();
   # behind it, the page was cut at byte offsets with substr(), which counts
