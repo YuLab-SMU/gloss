@@ -534,3 +534,17 @@ Runs `runs/2026-11-11-2241-bind-dev-tree.*` (stratum) and `runs/2026-11-11-2244-
 - 6 of 6. The unscored guess was low: every layer element checked in 19 of 28 ggplot figures (I forgot tree-083), at least 80% in 21 (I said 20); 40.6% of 25037 layer elements, as guessed.
 - tree-011's 76 tip labels are ambiguous, not verified: the tips sit closer together than the across-baseline window (one font size), which the rule keeps as wide as before. Along the baseline every one of them is within 0.5 pt.
 - The halo copies of shadowtext fail as predicted: drawn on purpose away from their row, rightly paired. They are a class for the plan's Task 6, not a defect of the rule.
+
+## Polar coordinates through the coord's transform (tree binding plan Task 3)
+
+Written 2026-11-11, after the ggplot engine was changed to put rows on the device through `Coord$transform()` (every coord) and the binder gained the ends rule for paths paired one per row, and before either ran on any bench figure. What was known: runs `2241` (stratum) and `2244` (v0) and their leaves; the code of tree-025, -038, -057 (circular, fan and inward circular trees from `ggtree()`; their branches drawn as one polyline per row, 29 or 38 to a leaf, their tip labels rotated); in v0, the five figures whose layer leaves were unbound for a coord: gallery-020 (a pie, `coord_polar("y")`: 5 slices, 5 labels), exts-024 (ggupset's `CoordCombMatrix`: 20 bars drawn as polygons), exts-017 (`coord_sf()`: 1 raster), patchwork-010 and -011 (`coord_sf()`: 1606 and 20 elements of `geom_sf()`).
+
+### How the runs are made and scored (fixed before the runs)
+
+- `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/bind.R dev tree`, then `... bench/R/bind.R dev`, at the commit that holds these predictions, with a clean tree; scored with `score-bind.R`, and with `compare-bind.R` against runs `2241` and `2244`.
+
+### Predictions
+
+73. **Every layer element of tree-025, -038 and -057 is verified or ambiguous** (241: 192 branch polylines by their ends, 49 rotated tip labels by the frame rule of Task 2); none fails, none is unbound.
+74. **On the stratum nothing else changes:** `compare-bind.R` against `2241` lists changed leaves in these three figures only, and no regression. Unbound 291 → 50; checked 40.6% → 41.5%; every layer element checked in 22 of 28 ggplot figures, and no figure at 0.
+75. **v0: no regression against `2244`, and changed leaves only in gallery-020, exts-017, exts-024, patchwork-010 and patchwork-011.** gallery-020's 5 labels are verified; its 5 slices and exts-024's 20 bars are unbound with the reason that rectangles are munched along the coord; the `coord_sf()` leaves stay unbound with other reasons. No element of v0 fails that did not before (failed stays 8). Cartesian panels, now mapped by `CoordCartesian$transform()` instead of the engine's own linear map, give the same statuses and counts on every leaf.
