@@ -517,3 +517,20 @@ Written 2026-11-11, after the text comparison was changed (`934af71`) and before
 72. **v0's development set: no regression against run `1353`, and no leaf changes except, at most, the two text leaves of exts-014 (`GeomRocci`, 6 failed elements), which may now verify.** v0's layer text is gallery-029's 2000 labels (ambiguous: hjust and vjust 0.5, so neither rule moves them), base text (no justification stated: the old rule) and a few leaves.
 
 Not scored: the stratum's element-weighted share rises from 40.0% to about 40.6%; per figure, every layer element checked in 18 of 28 ggplot figures (tree-011, -045 and -060 join the 15), at least 80% in 20.
+
+### Predictions 67-72 (scored 2026-11-11)
+
+Runs `runs/2026-11-11-2241-bind-dev-tree.*` (stratum) and `runs/2026-11-11-2244-bind-dev.*` (v0), both at `6d11c86` (clean tree; the predictions committed in it), container, no network.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 67. The 128 failed elements of tree-011, -060, -083 checked; none of their layer elements fails | tree-011 453 of 453 checked (its 76 labels ambiguous), tree-060 87 of 87, tree-083 76 of 76; 0 failed | right |
+| 68. Every layer element of tree-045 checked, but the leaf that drew nothing | 22 of 22; 3 boxes and 3 tip labels verified | right |
+| 69. tree-041's 4 boxes checked; its 6 aligned lines still fail | 4 boxes verified; 6 lines failed | right |
+| 70. tree-072: nothing unbound; label leaf and 6 of 16 halo leaves verified, 10 fail by under 1 pt; 14 of 34 verified, 20 failed | 7 leaves verified (14 elements), 10 failed (20 elements), deviations 0.57 to 0.81 pt; 0 unbound | right |
+| 71. Stratum: no leaf outside the six figures changes; no regression; failed 222 → 104, unbound 325 → 291 | `compare-bind.R` against `2224`: 566 of 595 leaves unchanged, the 29 changed all in tree-011, -041, -045, -060, -072, -083; 0 regressions; failed 104, unbound 291 | right |
+| 72. v0: no regression against `1353`; no leaf changes but, at most, exts-014's two Rocci text leaves | 7114 of 7114 leaves with status, counts and reason unchanged (exts-014's too) | right |
+
+- 6 of 6. The unscored guess was low: every layer element checked in 19 of 28 ggplot figures (I forgot tree-083), at least 80% in 21 (I said 20); 40.6% of 25037 layer elements, as guessed.
+- tree-011's 76 tip labels are ambiguous, not verified: the tips sit closer together than the across-baseline window (one font size), which the rule keeps as wide as before. Along the baseline every one of them is within 0.5 pt.
+- The halo copies of shadowtext fail as predicted: drawn on purpose away from their row, rightly paired. They are a class for the plan's Task 6, not a defect of the rule.

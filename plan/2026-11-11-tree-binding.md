@@ -80,12 +80,12 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 9 files, 90 tests, 557 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `c8a6e85`; the container the same); was 88 / 544 at `b02ea8c`.
-- Key numbers: stratum development half, 29 of 29 captured (run `2221`); 40.0% of 25037 layer elements checked; every layer element checked in 15 of 28 ggplot figures (run `2224`). Was 28 captured, 40.1% of 24915, 15 of 27 (runs `2110`, `2118`).
+- Suite: 9 files, 92 tests, 587 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `934af71`; the container the same); was 88 / 544 at `b02ea8c`.
+- Key numbers: stratum development half, 29 of 29 captured (run `2221`); 40.6% of 25037 layer elements checked, failed 104, unbound 291; every layer element checked in 19 of 28 ggplot figures (run `2241`). Was 28 captured, 40.1% of 24915, failed 212, unbound 308, 15 of 27 (runs `2110`, `2118`). v0 development binding unchanged against run `1353` (run `2244`).
 
 **Overall progress**
 - [x] Task 1: A page over the parser's limit (tree-041)
-- [~] Task 2: Labels in their own frame: justification and rotation (tree-011, -060, -083, -072; tree-045)
+- [x] Task 2: Labels in their own frame: justification and rotation (tree-011, -060, -083, -072; tree-045)
 - [ ] Task 3: Polar coordinates through the coord's transform (tree-025, -038, -057)
 - [ ] Task 4: Text drawn as glyph outlines (the book figures)
 - [ ] Task 5: Points in several shapes (tree-014) _(stub)_
@@ -133,7 +133,7 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 
 ### Task 2: Labels in their own frame: justification and rotation
 
-**Status:** `[~]` (rule and tests landed; the runs pending)
+**Status:** `[x]` (2026-11-11)
 
 **Tests assumption:** 1.
 
@@ -151,10 +151,15 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 - [x] Tests that fail first: `geom_text()` with `hjust = -0.1, vjust = -0.5`; with `angle = 30` and `hjust = 0.3`; a label leaf with its labels permuted fails on every moved label. — `test-bind.R`: six cases (hjust or vjust outside 0..1, both, inside but not 0/0.5/1, rotated 30°, rotated -90° and outside), each verified with max deviation under 0.05 pt and failing on all five labels when permuted; label boxes of plain `geom_label()` for hjust 0.5, 0 and 1. Before the change 14 of 24 and 3 of 6 expectations failed: justified labels `failed`, rotated ones `unbound`, 3 of 6 boxes per case `failed`.
 - [x] The comparison in the label's frame; along the baseline at 0.5 pt; across it no looser than today's box. — `R/core-bind.R`: along the baseline, row = anchor + (hjust − the anchor svglite wrote) × `textLength`, at 0.5 pt; across it, the row inside the text's box as before (−0.2 to 0.8 of the font size), moved by the part of vjust outside 0..1 times the ascent of "M", measured with `strheight()` on svglite once per font and size. On a hand drawing the model is exact to 0.005 pt over 120 cases (6 hjust × 5 vjust × 4 angles). A row with no justification is taken as justified where svglite anchored it (the old rule; base text). A polygon whose rows state hjust and vjust (a label's box) is compared by its box centre, moved by (0.5 − hjust) and (0.5 − vjust) of its size in the row's angle; other polygons keep the vertex mean. `R/engine-ggplot.R` states `hjust`, `vjust` (names read as numbers; `inward`/`outward` as NA) and `angle` with the rows.
 - [x] Suite on the host. — 9 files / 92 tests / 587 expectations / 0 failed / 0 skipped; the container the same (the rule reads svglite's output and measures fonts on the device, and Linux has other fonts).
-- [ ] Predictions, then `bind.R dev tree` and `bind.R dev` (v0) in the container; v0 compared with run `1353` leaf by leaf.
+- [x] Predictions, then `bind.R dev tree` and `bind.R dev` (v0) in the container; v0 compared with run `1353` leaf by leaf. — Predictions 67-72 at `6d11c86`; runs `2241` and `2244`: 6 of 6 right.
 
 **Verification**
 - The elements of tree-011, -060, -083 and -072 counted in the starting state: verified or ambiguous. v0: no element moves to failed or unbound.
+
+**Result** (2026-11-11, container, no network)
+- Stratum, `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/bind.R dev tree` at `6d11c86` (run `2026-11-11-2241`): 25037 layer elements, verified 9784, ambiguous 376 (40.6%), failed 104, unbound 291, count mismatch 14482 (was 40.0%, 222, 325, 14482 in run `2224`). `compare-bind.R` against `2224`: 566 of 595 leaves unchanged, 29 changed, all in tree-011, -041, -045, -060, -072 and -083; 0 regressions. tree-011, -045, -060, -083: every layer element checked (453, 22, 87, 76). tree-041: its 4 boxes verified. tree-072: 14 of 34 verified, 20 failed (halo copies, 0.57-0.81 pt; Scope change). Per figure, of 28 ggplot figures: all checked in 19 (was 15), at least 80% in 21 (was 18), none in 3.
+- v0, `... bench/R/bind.R dev` at `6d11c86` (run `2026-11-11-2244`): `compare-bind.R` against `1353`: 7114 of 7114 leaves with status, counts and reason unchanged; 0 regressions.
+- Suite: host 9 files / 92 tests / 587 expectations / 0 failed / 0 skipped; container the same.
 
 ---
 
@@ -220,7 +225,7 @@ One leaf of 8100 points in eight shapes draws 12690 elements: some shapes are se
 
 **Status:** `[ ]` _(stub)_
 
-Also, from Task 1: ggtree's segments moved by their draw-time `nudge_x` (tree-041, 6); `<image>` elements with no comparison (tree-041, 17).
+Also, from Task 1: ggtree's segments moved by their draw-time `nudge_x` (tree-041, 6); `<image>` elements with no comparison (tree-041, 17). From Task 2: shadowtext's halo copies, drawn at a fixed offset from their row (tree-072, 20 failed by 0.57-0.81 pt).
 
 ### Task 7: The stratum's held-out half, one run
 
@@ -239,6 +244,7 @@ Also, from Task 1: ggtree's segments moved by their draw-time `nudge_x` (tree-04
 _(append-only; never edit completed tasks above)_
 
 - 2026-11-11 — **Two classes found on tree-041 once it was captured; tree-045 explained in part.** **Evidence:** run `2224` and prediction 66 (`bench/predictions.md`). (1) Six dotted lines of `geom_tiplab(align = 2, offset = 2)` fail by up to 128 pt: `GeomSegmentGGtree$draw_panel()` adds its geom parameter `nudge_x` to x while drawing, and the built rows do not hold it. (2) Four of six label boxes fail by 0.67-0.74 pt; plain `geom_label(hjust = .5)` on the host, without `showtext`, gives the same deviations for the same strings, so the binder's comparison (a polygon's vertex mean at the row) does not fit a label's box. tree-045's 3 failed label boxes are this class. **Effect:** Task 2 also covers label boxes (they are placed from their text, so the same frame applies), with a fixture of plain `geom_label()`; its verification adds tree-041's 4 and tree-045's 3 boxes. Task 6 gains the draw-time `nudge_x` of ggtree's segments (6 elements) and `<image>` elements, which have no comparison (17 in tree-041). The starting table's classes stand; tree-041 adds 122 layer elements to the stratum's totals.
+- 2026-11-11 — **tree-072's criterion is restated: the label verified, its halo copies checked or failed by no more than the halo's offset.** **Evidence:** shadowtext 0.1.6's `shadowtextGrob()` (read in the container before the run): each label is drawn 17 times, 16 copies moved by 0.1 × the string height of "X" in 16 directions of the device, then the label. Prediction 70, committed before run `2241`, said 10 of the 16 copies would fail; they did, by 0.57-0.81 pt, the label itself verified. The copies are drawn away from their row on purpose and are rightly paired; the exact along-baseline check fails them, as it should, and widening it to pass them would make every label's check weaker. **Effect:** the *Done when* line on rotated labels holds for tree-072's label leaf, and its 20 halo elements are a class for Task 6 (copies of a layer's leaf drawn at a fixed offset), with the offset reported. Nothing else in the criteria changes.
 
 ## Closing notes
 
