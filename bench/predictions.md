@@ -555,7 +555,7 @@ Runs `runs/2026-11-11-2300-bind-dev-tree.*` (stratum) and `runs/2026-11-11-2303-
 
 | Prediction | Observed | Verdict |
 |---|---|---|
-| 73. Every layer element of tree-025, -038, -057 checked; none failed or unbound | 241 of 241: branch polylines 154 verified and 58 ambiguous... by leaf: tree-025 29 verified, 29 ambiguous, 15 labels verified; tree-038 the same; tree-057 38 + 38 verified, 8 + 11 labels verified. 0 failed, 0 unbound | right |
+| 73. Every layer element of tree-025, -038, -057 checked; none failed or unbound | 241 of 241: the 192 branch polylines 134 verified and 58 ambiguous, the 49 labels verified (tree-025: 29 + 29 ambiguous + 15; tree-038 the same; tree-057: 38 + 38 + 8 + 11). 0 failed, 0 unbound | right |
 | 74. Nothing else on the stratum changes; no regression; unbound 291 → 50; 41.5%; every layer element checked in 22 of 28 ggplot figures, none at 0 | `compare-bind.R` against `2241`: 585 of 595 leaves unchanged, the 10 changed all in the three figures; 0 regressions; unbound 50; 41.5%; 22 of 28; none at 0 | right |
 | 75. v0: no regression against `2244`; changes only in gallery-020, exts-017, exts-024, patchwork-010, -011; gallery-020's 5 labels verified; its slices and exts-024's bars unbound for rectangles munched along the coord; the `coord_sf()` leaves unbound with other reasons; failed stays 8 | 0 regressions, failed 8, changed leaves only in the five figures (7 of 7114). Slices and bars as predicted. **But gallery-020's 5 labels were given the rectangles' reason**, and **the three `geom_sf()` leaves of patchwork-010 and -011 are `count_mismatch`**, not unbound (exts-017's raster: unbound, no comparison for `<image>`) | **wrong** |
 
