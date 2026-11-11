@@ -28,8 +28,7 @@ See [`_template.md`](_template.md).
 
 - [2026-11-09-m0-substrate.md](2026-11-09-m0-substrate.md): M0, the substrate. Tasks 1–8 and 10 done; Task 9 (benchmark sampling, split and freeze) carried out under the bench v0 plan.
 - [2026-11-09-bench-v0.md](2026-11-09-bench-v0.md): sample and freeze the benchmark; first capture feedback on the development set.
-- [2026-11-11-page-capture.md](2026-11-11-page-capture.md): capture the page the input draws ([ADR-0006](../dev_docs/decisions/0006-capture-the-page-the-figure-draws.md)); grid pages first, base pages second, each measured on the development set. Comes before M1.
 
 ## Completed plans
 
-_(none yet)_
+- [2026-11-11-page-capture.md](done/2026-11-11-page-capture.md): capture the page the input draws ([ADR-0006](../dev_docs/decisions/0006-capture-the-page-the-figure-draws.md)). Closed 2026-11-11. Development set: 52 equal, 2 not deterministic, 1 refused of 55. Held-out set, one run: 50 equal, 2 not deterministic, 2 refused of 54; no figure captured as another one.

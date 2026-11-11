@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-11-11
 - **Deciders:** Yonghe Xia (chose option 3 of [idea/2026-11-10-page-capture.md](../../idea/2026-11-10-page-capture.md) on 2026-11-11)
-- **Related:** amends [ADR-0001](0001-capture-by-group-delimiting-and-probes.md) (what is wrapped; base figures) and [ADR-0004](0004-engine-dispatch-through-the-registry.md) (engine contract); [plan/2026-11-11-page-capture.md](../../plan/2026-11-11-page-capture.md); [dev log of the spike](../../dev_logs/2026-11-10-page-capture-spike.md); [research/capture-fidelity/](../research/capture-fidelity/README.md)
+- **Related:** amends [ADR-0001](0001-capture-by-group-delimiting-and-probes.md) (what is wrapped; base figures) and [ADR-0004](0004-engine-dispatch-through-the-registry.md) (engine contract); [plan/done/2026-11-11-page-capture.md](../../plan/done/2026-11-11-page-capture.md); [dev log of the spike](../../dev_logs/2026-11-10-page-capture-spike.md); [research/capture-fidelity/](../research/capture-fidelity/README.md)
 
 ## Context
 
@@ -86,7 +86,7 @@ Field names, the order of calls and the stored form of the verdict are settled i
 
 ### Follow-ups
 
-- [plan/2026-11-11-page-capture.md](../../plan/2026-11-11-page-capture.md): implementation in two steps, each measured on the development set with the package, not the spike.
+- [plan/done/2026-11-11-page-capture.md](../../plan/done/2026-11-11-page-capture.md): implementation in two steps, each measured on the development set with the package, not the spike.
 - The bench's comparison gains clip regions and a verdict for figures that are not deterministic.
 - Predictions committed before any held-out capture run; the engine route at its last commit is the matched baseline on the same figures.
 - Design doc §元素归属 rewritten when the grid step lands; gridGraphics removed from `Suggests` when the base step lands.

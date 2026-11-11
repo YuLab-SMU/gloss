@@ -1,11 +1,11 @@
 # Page capture: grid pages, then base pages
 
-> Status: active.
+> Status: closed 2026-11-11 (Tasks 1–8 done).
 > Date opened: 2026-11-11. Owner: Yonghe Xia.
 
-**Goal:** `gloss()` captures the page its input draws ([ADR-0006](../dev_docs/decisions/0006-capture-the-page-the-figure-draws.md)), and on the 55 development figures the package, not the spike, gives 53 equal to the page drawn, 1 reported as not deterministic, 1 refused with a reason, and no figure that differs without gloss saying so.
+**Goal:** `gloss()` captures the page its input draws ([ADR-0006](../../dev_docs/decisions/0006-capture-the-page-the-figure-draws.md)), and on the 55 development figures the package, not the spike, gives 53 equal to the page drawn, 1 reported as not deterministic, 1 refused with a reason, and no figure that differs without gloss saying so.
 
-**Why now:** The development set showed that every capture difference has one cause: gloss draws a grob the figure's code did not build ([dev log 2026-11-10](../dev_logs/2026-11-10-page-capture-spike.md), [idea note](../idea/2026-11-10-page-capture.md)). The owner chose page capture on 2026-11-11. M1 binds elements to data and must not start on captures that can be another figure.
+**Why now:** The development set showed that every capture difference has one cause: gloss draws a grob the figure's code did not build ([dev log 2026-11-10](../../dev_logs/2026-11-10-page-capture-spike.md), [idea note](../../idea/2026-11-10-page-capture.md)). The owner chose page capture on 2026-11-11. M1 binds elements to data and must not start on captures that can be another figure.
 
 **Starting state (measured):**
 - Suite at `aef42f2`, 2026-11-11: 7 files, 49 tests, 298 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`).
@@ -56,6 +56,8 @@
 - Suite: 7 files, 65 tests, 420 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, after Task 5).
 - Key numbers: development run `2026-11-11-0627` (page route for grid pages, base still through gridGraphics): 54 captured, 1 refused; grid pages 42 equal, 2 not deterministic, 0 different; base 1 equal, 5 known exceptions, 4 different; gloss's verdict and the bench's agree on 44 of 44 grid pages under the Task 4 reading.
 - Development run `2026-11-11-0705` (page route, base by entry): 52 equal, 2 not deterministic, 1 refused, 0 different, 0 errors; base 10 of 10 equal; gloss and the bench agree on 54 of 54 captured figures (Task 4 reading). `R CMD check --as-cran`: 2 NOTEs, both from the setting.
+
+- Held-out runs of 2026-11-11 (Task 8, one per route, predictions committed before): page route 52 captured, 2 refused, 0 errors; 50 equal, 2 not deterministic, 0 different; 0 failed invariants. Engine route at the tag: 53 captured, 1 refused; 40 equal, 5 known exceptions, 8 different. Suite at the close: 8 files, 67 tests, 438 expectations, 0 failed, 0 skipped, on the host and in the bench container.
 
 **Overall progress**
 - [x] Task 1: Grid pages in the core: draw, wrap in place, self-check
@@ -352,4 +354,35 @@ _(append-only; never edit completed tasks above)_
 
 ## Closing notes
 
-Filled in when the plan moves to `done/`.
+Closed 2026-11-11. Closing dev log: [2026-11-11-page-capture-heldout.md](../../dev_logs/2026-11-11-page-capture-heldout.md); Tasks 1–7 are in [2026-11-11-page-capture-execution.md](../../dev_logs/2026-11-11-page-capture-execution.md). NEWS: "Page capture (2026-11-11, ADR-0006)".
+
+**End state against starting state**
+
+| | Start (`aef42f2`) | End |
+|---|---|---|
+| Suite (`NOT_CRAN=true Rscript -e "devtools::test()"`) | 7 files / 49 tests / 298 expectations / 0 failed / 0 skipped | 8 / 67 / 438 / 0 / 0, the same in the bench container |
+| Development set, 55 figures | engine route: 51 captured, 3 refused, 1 error; 40 equal, 6 known exceptions, 5 different; base 1 of 10 equal | 54 captured, 1 refused, 0 errors; 52 equal, 2 not deterministic, 0 different; base 10 of 10 equal (runs `0705`, and `0858` after the last fix) |
+| Held-out set, 54 figures | not run | page route: 52 captured, 2 refused, 0 errors; 50 equal, 2 not deterministic, 0 different. Engine route, its own judge: 53 captured, 1 refused; 40 equal, 5 known exceptions, 8 different |
+| gloss's verdict against the bench's | no verdict in the package | agrees on 54 of 54 (development) and 52 of 52 (held-out); 0 failed invariants |
+| Time, 10^3 / 10^4 / 10^5 points | 0.08 / 0.29 / 3.11 s | 0.12 / 0.47 / 4.08 s (1.52x, 1.62x, 1.31x; limit 2x) |
+| gridGraphics | used for base figures, in Suggests | not used, not in `DESCRIPTION` |
+
+*Done when*, line by line: fixtures unchanged (Task 1, p1); grid step (Task 4, as read after its scope change); base step 52 / 2 / 1 / 0 / 0 (Task 6 scope change); gloss's verdict agrees with the bench's on every captured development figure; time within twice; every number from an archived run. All met on the development set. The held-out run was not a completion criterion; its numbers are the reported ones.
+
+**Assumptions**
+
+1. *Tables and panels still describe the page when `print(x)` draws it.* Refuted as stated: a second build put 0 of 32 jittered rows on their point. Resolved by the fallback the plan named: the ggplot engine draws its kept build, and tables are withheld elsewhere (Task 2). On the held-out set 3 of 52 captured figures have something withheld.
+2. *Wrapping in place gives what the engine-built tree gave.* Confirmed: element tables, panels and clip regions identical on the six inputs; a dense leaf is redrawn alone from the display list (Tasks 1, 3).
+3. *The self-check is cheap enough.* Confirmed: 1.31x to 1.62x.
+4. *A recorded page replayed on gloss's device captures like the page drawn there.* Confirmed for the page itself (development 54 of 54; held-out 52 of 52 captured). Not foreseen: what a recorded page carries besides the page. grid's display list keeps the grobs of an earlier page, and gloss read it as part of this one (Task 8 scope change).
+5. *A display-list entry is a usable leaf for base figures.* Confirmed: 10 of 10 and 7 of 7 captured base figures equal; 0 count mismatches on 1469 and 110 counted leaves; classification of the design's base figure unchanged (57 of 60). On the held-out base figures 137 of 247 leaves have no expected count, so "no mismatch" covers fewer than half of them.
+6. *The base route passes `R CMD check --as-cran`.* Confirmed on macOS, R 4.5.2 (2 NOTEs from the setting). Not run on Linux, Windows or R-devel.
+
+**What moved in the design and the ADRs:** §元素归属 rewritten for the page route, with the held-out paragraph; dated notes in §分类, §评测设计, §风险与未决问题, §已定事项, §与上一版的区别; the "colour picking fallback" claim corrected. ADR-0006 unchanged. AGENTS.md gained one rule (device-reading code passes the suite in the bench container; owner's decision).
+
+**What the next plan should start with**
+
+- M1 (binding) can start: the capture it binds to is the page the figure draws, on 50 of 54 held-out figures, and no figure was captured as another one.
+- The held-out set has been looked at for capture. The owner decides whether to run it once more after the mixed-page fix (reported as made after looking, beside the first run). Until then, what the fix does on bioc-019 and bioc-023 is not known.
+- Base leaves without an expected count (`axis`, `box`, `polygon`, `symbols`, `title`, `mtext`, `arrows`, `abline`): more than half the base leaves on the held-out figures. They can be captured and classified; whether they can be bound is the M1 question for base figures.
+- Before a release: the suite and the base replay on R-oldrel and R-devel (owner's decision of 2026-11-11), and `R CMD check` on Linux and Windows.
