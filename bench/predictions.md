@@ -256,3 +256,15 @@ Written 2026-11-11, before either annotator labelled a pilot figure, with guidel
 31. **Annotator A needs at most 15 minutes for each pilot figure.** Reasoning: the pilot figures hold 13 to 38 leaves.
 
 **What would change the plan:** 28 wrong (κ below 0.8): the guideline is revised and the pilot repeated before the full labels count (assumption 4). 30 wrong: roles are stored per element and rules return element masks (assumption 3). 31 wrong: label a seeded sample of leaves instead of all (Task 1's verification).
+
+## Binding patchwork compositions on the development set (M1 plan Task 2b)
+
+Written 2026-11-11 at `8f99857`, before any binding run with the patchwork engine's bind step, after reading the six figures' code (not their capture or binding output). Run: `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/bind.R dev`, scored by `bench/R/score-bind.R`. The other engines' numbers are expected to equal run `1231`'s.
+
+32. **No patchwork figure ends in a bind error, and no element of a point or bar layer fails** (a plot paired with another plot's build would fail them).
+33. **The plots `inset_element()` adds (patchwork-008's `p2`, patchwork-010's `pcol`) are not found:** their layer leaves are unbound with "belongs to no plot", not paired. Reasoning: insets are drawn in cells the engine's walk does not look for.
+34. **Every `geom_sf()` layer (patchwork-010's map, both plots of patchwork-011) is unbound:** its panel's scales cannot be mapped (`CoordSf`).
+35. **The scatter `p1` binds in full in patchwork-006, -008 and -012:** 32 of 32 points verified or ambiguous in each; the `gtable` patchwork-006 adds (`p2_table`) is unbound with "belongs to no plot".
+36. **The boxplot of patchwork-012 is not verified:** its whiskers (two segments per box) are unbound and its boxes unbound or failed. Reasoning: the binder knows no boxplot geometry; this is a gap in ggplot binding that patchwork only shows.
+
+**What would change the plan:** 32 wrong (a failed point or bar element): the plot mapping is wrong somewhere, and Task 2b is not done. 33 wrong because insets are paired and verify: good news, the walk covers them. 33 wrong because insets are paired and fail: as 32.
