@@ -328,3 +328,62 @@ test_that("binding measures on a null device of its own: no default device, no s
   expect_equal(nrow(lv), 8L)
   expect_true(all(lv$status == "verified"))
 })
+
+# Base figures (plan Task 5): each data-mark entry's elements are paired with
+# its arguments, put on the page through the entry's usr and log axes.
+
+test_that("base: points, lines, bars, segments, text and symbols bind to their calls' arguments", {
+  d <- datasets::mtcars
+  page <- function() {
+    graphics::par(mfrow = c(1, 2))
+    graphics::plot(d$wt, d$mpg, pch = 19)
+    graphics::lines(sort(d$wt), sort(d$mpg, decreasing = TRUE))
+    graphics::segments(2, 15, 5, 30)
+    graphics::text(c(3, 4), c(20, 25), c("a", "b"))
+    graphics::rect(4.5, 10, 5.2, 14)
+    graphics::symbols(3, 30, circles = 0.2, inches = FALSE, add = TRUE)
+    graphics::barplot(table(d$gear))
+  }
+  b <- bind_capture(page)
+  lv <- b$leaves[!is.na(b$leaves$table), ]
+  sl <- b$fig$substrate$leaves
+  cls <- sl$class[match(lv$leaf, sl$id)]
+  expect_setequal(unique(lv$table), c("base_plotXY", "base_segments", "base_text", "base_rect", "base_symbols"))
+  expect_true(all(lv$status %in% c("verified", "ambiguous")))
+  expect_equal(sum(lv$verified + lv$ambiguous), 32 + 1 + 1 + 2 + 1 + 1 + 3)
+  expect_equal(lv$mode[cls == "plotXY"], c("row", "group"))
+  # axes, box and titles are not data-mark calls: outside
+  expect_true(all(b$leaves$status[sl$class %in% c("axis", "box", "title")] == "outside"))
+  # the tables hold the arguments, with the entry each row came from
+  pts <- b$fig$tables[["base_plotXY"]]
+  expect_false(is.null(pts))
+})
+
+test_that("base: points on log axes bind through log10, and a wrong row order fails", {
+  x <- c(1, 10, 100, 1000)
+  y <- c(5, 50, 2, 300)
+  b <- bind_capture(function() graphics::plot(x, y, log = "xy", pch = 19))
+  lv <- b$leaves[b$leaves$table %in% "base_plotXY", ]
+  expect_equal(lv$status, "verified")
+  expect_equal(lv$verified, 4L)
+  # the same check with the rows reversed fails every point
+  eng <- gl_plugin("engine", "base")
+  res <- capture_figure(function() graphics::plot(x, y, log = "xy", pch = 19), eng, context = FALSE)
+  stated <- eng$bind(res$state, res$fig$substrate)
+  cl <- stated$claims[[1]]
+  cl$pred[, c("x", "y")] <- cl$pred[rev(seq_len(nrow(cl$pred))), c("x", "y")]
+  geo <- scene_geometry(res$fig$substrate)
+  r <- check_claim(cl, res$fig$substrate$leaves[res$fig$substrate$leaves$id == cl$leaf, ], geo)
+  expect_equal(r$leaf$status, "failed")
+})
+
+test_that("base: calls whose elements are not one per argument row are unbound with the reason", {
+  b <- suppressWarnings(bind_capture(function() {
+    graphics::plot(1:5, type = "b")
+    graphics::arrows(1, 1, 3, 4)
+  }))
+  ub <- b$leaves[b$leaves$status == "unbound", ]
+  expect_equal(nrow(ub), 2L)
+  expect_match(ub$reason[1], "plotXY")
+  expect_match(ub$reason[2], "heads")
+})

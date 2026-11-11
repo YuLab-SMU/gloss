@@ -552,7 +552,11 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
             lv$tag <- unname(tags[lv$leaf])
             desc <- vapply(b$fig$tables, function(t) t$description %||% NA_character_, "")
             d <- unname(desc[lv$table])
-            lv$geom <- ifelse(is.na(d), NA_character_, sub("^built data of layer [0-9]+ \\(([^,]+),.*$", "\\1", d))
+            # the layer's geom (ggplot and patchwork: "plot 2: built data of
+            # layer 1 (GeomPoint, ..."); for base, the call ("base_plotXY")
+            pat <- "^(plot [0-9]+: )?built data of layer [0-9]+ \\(([^,]+),.*$"
+            lv$geom <- ifelse(!is.na(d) & grepl(pat, d), sub(pat, "\\2", d),
+                              ifelse(grepl("^base_", lv$table), sub("^base_", "", lv$table), NA_character_))
             cap$bind_leaves <- lv
           }
         }

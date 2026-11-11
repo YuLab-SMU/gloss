@@ -407,6 +407,8 @@ capture_page <- function(x, engines, width, height) {
   if (is.null(cap$svg)) cap$svg <- all_pages[length(all_pages)]
   cap$engine <- eng
   cap$state <- state
+  # A base engine reads the arguments of the page's calls from the recording.
+  if (identical(page$kind, "base") && is.list(cap$state)) cap$state$recorded <- page$rp
   cap$kind <- page$kind
   cap$drawn_by <- drawn_by
   cap$pages <- as.integer(pages)

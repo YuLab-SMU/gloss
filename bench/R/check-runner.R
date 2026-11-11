@@ -371,14 +371,17 @@ cat("\n== fidelity verdicts and mismatch leaves:", if (fid_ok) "OK" else "FAILED
 if (!fid_ok) ok <- FALSE
 
 # Part 1g: binding through the worker (M1 plan Task 2). A ggplot's points
-# come back as one verified leaf of 20 elements; a base figure, whose engine
-# states no bindings, comes back with every leaf unbound and the reason.
+# come back as one verified leaf of 20 elements; a base figure's points as
+# one verified leaf of 10, paired with its call's arguments (Task 5); a grid
+# page, whose engine states no bindings, with every leaf unbound and the
+# reason.
 check_bind <- function() {
   good <- TRUE
   figs <- list(
     list(name = "ggplot", code = c("library(ggplot2)", "d <- data.frame(x=1:20,y=(1:20)^2)",
                                    "ggplot(d, aes(x,y)) + geom_point()")),
-    list(name = "base", code = c("plot(1:10, (1:10)^2)")))
+    list(name = "base", code = c("plot(1:10, (1:10)^2)")),
+    list(name = "grid", code = c("grid::grid.newpage()", "grid::grid.rect(width = 0.5)", "grid::grid.text('a')")))
   for (f in figs) {
     r <- run_script(list(setup = character(), chunks = list(f$code)),
                     file.path(tempdir(), "check-runner", "bind", f$name),
@@ -395,6 +398,9 @@ check_bind <- function() {
       pts <- lv[lv$table %in% "built_layer1", ]
       if (!identical(pts$status, "verified") || !identical(pts$verified, 20L) || !identical(pts$geom, "GeomPoint")) good <- FALSE
       if (any(is.na(lv$path)) || any(is.na(lv$tag[lv$n_elements > 0]))) good <- FALSE
+    } else if (identical(f$name, "base")) {
+      pts <- lv[lv$table %in% "base_plotXY", ]
+      if (!identical(pts$status, "verified") || !identical(pts$verified, 10L) || !identical(pts$geom, "plotXY")) good <- FALSE
     } else {
       if (!all(lv$status == "unbound") || !all(grepl("states no bindings", lv$reason))) good <- FALSE
     }
