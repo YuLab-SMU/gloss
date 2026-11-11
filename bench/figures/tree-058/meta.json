@@ -1,0 +1,61 @@
+{
+  "id": "tree-058",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "systemPipeTools",
+  "vignette": "systemPipeTools.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "systemPipeTools",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "systemPipeTools",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "systemPipeR",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "help",
+      "status": "failed",
+      "reason": "package ‘help’ is not available for this version of R"
+    },
+    {
+      "package": "BiocStyle",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 20:16:24 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 8,
+    "expr": 1,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 257747851
+}

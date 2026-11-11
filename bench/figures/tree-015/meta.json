@@ -1,0 +1,46 @@
+{
+  "id": "tree-015",
+  "stratum": "tree",
+  "kind": "topic",
+  "psu": "ggtree::ggdensitree",
+  "vignette": null,
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "ggtree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ape",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidyr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 19:47:03 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 7,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 70725506
+}

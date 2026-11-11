@@ -1,0 +1,81 @@
+{
+  "id": "tree-079",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "miaViz",
+  "vignette": "miaViz.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "miaViz",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "miaViz",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "scater",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "patchwork",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "mia",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "miaTime",
+      "status": "failed",
+      "reason": "package ‘miaTime’ is not available for this version of R"
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "remotes",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "scuttle",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 20:21:26 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 18,
+    "expr": 2,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 189920501
+}

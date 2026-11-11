@@ -1,0 +1,61 @@
+{
+  "id": "tree-085",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "tanggle",
+  "vignette": "tanggle_vignette.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "tanggle",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tanggle",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "phangorn",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "remotes",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 20:24:18 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 13,
+    "expr": 3,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 234783141
+}

@@ -1,0 +1,71 @@
+{
+  "id": "tree-039",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "ggtreeDendro",
+  "vignette": "ggtreeDendro.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "ggtreeDendro",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "yulab.utils",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtreeDendro",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "aplot",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "mdendro",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "cluster",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "pvclust",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 20:01:03 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 5,
+    "expr": 6,
+    "kind": "object",
+    "class": "patchwork",
+    "engine": "patchwork",
+    "tree": true
+  },
+  "seed": 45182326
+}

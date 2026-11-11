@@ -1,0 +1,31 @@
+{
+  "id": "tree-052",
+  "stratum": "tree",
+  "kind": "topic",
+  "psu": "ggtree::ggexpand",
+  "vignette": null,
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "ggtree",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 20:12:04 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 4,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 10575870
+}

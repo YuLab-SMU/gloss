@@ -1,0 +1,46 @@
+{
+  "id": "tree-070",
+  "stratum": "tree",
+  "kind": "topic",
+  "psu": "ggtreeExtra::position_jitterx",
+  "vignette": null,
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "ggtreeExtra",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "treeio",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 20:18:27 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 14,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 234846174
+}
