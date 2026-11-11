@@ -334,6 +334,19 @@ check_fidelity <- function() {
   cmp_lost <- tryCatch(compare_pages(unclipped, clip_ref), error = function(e) list(faithful = NA))
   cat(sprintf("  %-26s -> faithful %s (same page: %s)\n", "clip lost, prims unchanged", cmp_lost$faithful, cmp_same$faithful))
   if (!isTRUE(cmp_same$faithful) || !isFALSE(cmp_lost$faithful)) good <- FALSE
+  # The workers load a copy of gloss's source taken when the run starts, not
+  # the working tree (tree binding plan: a run discarded, 2026-11-11, R/
+  # edited while it ran): same files, same bytes, somewhere else.
+  src <- gloss_snapshot()
+  rel <- function(d) sort(list.files(file.path(d, "R")))
+  same_src <- !identical(normalizePath(src), normalizePath(".")) &&
+    all(file.exists(file.path(src, c("DESCRIPTION", "NAMESPACE")))) &&
+    identical(rel(src), rel(".")) &&
+    all(vapply(rel("."), function(f) identical(readBin(file.path(src, "R", f), "raw", 1e7),
+                                                readBin(file.path("R", f), "raw", 1e7)), logical(1))) &&
+    is.character(gloss_source$digest)
+  cat(sprintf("  %-26s -> %s (%d files)\n", "workers load a copy of R/", same_src, length(rel(src))))
+  if (!same_src) good <- FALSE
   # The comparator reads a page with a node over libxml2's 10^7-byte limit
   # (tree-041's embedded images; tree binding plan, Task 1). Before, it
   # stopped with the parser's error and the figure had no verdict.

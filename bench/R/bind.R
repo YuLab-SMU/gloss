@@ -26,6 +26,8 @@ if (reachable) stop("the network is reachable; run with GLOSS_BENCH_OFFLINE=true
 split <- read_csv(file.path(bench_root, "split.csv"))
 todo <- set_figures(split, set, stratum)
 stamp <- format(Sys.time(), "%Y-%m-%d-%H%M", tz = "UTC")
+# the gloss every worker of this run loads: a copy taken now (runner.R)
+gloss_snapshot()
 out_file <- file.path(bench_root, "runs", sprintf("%s-bind-%s.csv", stamp, run_scope(set, stratum)))
 leaf_file <- sub("\\.csv$", "-leaves.csv", out_file)
 
@@ -38,6 +40,7 @@ git_head <- function() {
   hit <- grep(paste0(" ", ref, "$"), packed, value = TRUE)
   if (length(hit)) sub(" .*$", "", hit[1]) else NA_character_
 }
+commit_at_start <- git_head()
 
 statuses <- c("verified", "ambiguous", "partly_failed", "failed", "unbound", "count_mismatch", "outside", "not_paired")
 timeout <- 900
@@ -85,7 +88,8 @@ for (k in seq_len(nrow(todo))) {
   cat(sprintf("[%d/%d] %s %s: %s | verified %s ambiguous %s failed %s %s\n", k, nrow(todo), id, todo$engine[k], status,
               row$el_verified, row$el_ambiguous, row$el_failed, substr(row$message, 1, 60)))
 }
-env <- list(set = set, stratum = stratum %||% "v0", figures = nrow(todo), started = stamp, commit = git_head(), timeout = timeout,
+env <- list(set = set, stratum = stratum %||% "v0", figures = nrow(todo), started = stamp, commit = commit_at_start, commit_at_end = git_head(),
+            gloss_source_digest = gloss_source$digest, timeout = timeout,
             tolerance_pt = 0.5, R = R.version.string,
             image = Sys.getenv("GLOSS_BENCH_IMAGE_DIGEST", NA),
             environments = lapply(bench_envs, function(e) list(

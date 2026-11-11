@@ -23,6 +23,8 @@ if (reachable) stop("the network is reachable; run with GLOSS_BENCH_OFFLINE=true
 split <- read_csv(file.path(bench_root, "split.csv"))
 todo <- set_figures(split, set, stratum)
 stamp <- format(Sys.time(), "%Y-%m-%d-%H%M", tz = "UTC")
+# the gloss every worker of this run loads: a copy taken now (runner.R)
+gloss_snapshot()
 out_file <- file.path(bench_root, "runs", sprintf("%s-capture-%s.csv", stamp, run_scope(set, stratum)))
 
 refusal <- function(msg) {
@@ -50,6 +52,7 @@ git_head <- function() {
   hit <- grep(paste0(" ", ref, "$"), packed, value = TRUE)
   if (length(hit)) sub(" .*$", "", hit[1]) else NA_character_
 }
+commit_at_start <- git_head()
 
 # Every figure of the set reran within 300 s without capture (no-network
 # pass); capture gets 900 s, and a timeout is a capture outcome of its own.
@@ -98,7 +101,8 @@ for (k in seq_len(nrow(todo))) {
   write_csv(do.call(rbind, rows), out_file)
   cat(sprintf("[%d/%d] %s %s: %s %s\n", k, nrow(todo), id, todo$engine[k], status, substr(rows[[k]]$message, 1, 70)))
 }
-env <- list(set = set, stratum = stratum %||% "v0", figures = nrow(todo), started = stamp, commit = git_head(), timeout = capture_timeout,
+env <- list(set = set, stratum = stratum %||% "v0", figures = nrow(todo), started = stamp, commit = commit_at_start, commit_at_end = git_head(),
+            gloss_source_digest = gloss_source$digest, timeout = capture_timeout,
             R = R.version.string,
             image = Sys.getenv("GLOSS_BENCH_IMAGE_DIGEST", NA),
             environments = lapply(bench_envs, function(e) list(

@@ -704,6 +704,25 @@ offline_env <- c(http_proxy = "http://127.0.0.1:9", https_proxy = "http://127.0.
                  HTTP_PROXY = "http://127.0.0.1:9", HTTPS_PROXY = "http://127.0.0.1:9",
                  ALL_PROXY = "http://127.0.0.1:9", no_proxy = "", NO_PROXY = "")
 
+# The gloss source a run's workers load: a copy of DESCRIPTION, NAMESPACE,
+# R/ and inst/ taken once, when the run starts. Each worker calls
+# pkgload::load_all() on it; on the repository itself, an edit made while a
+# run was going changed the code under the figures still to come (2026-11-11,
+# a stratum binding run discarded: R/ was edited mid-run). The digest of the
+# copied R/ files goes into the run's record.
+gloss_source <- new.env(parent = emptyenv())
+gloss_snapshot <- function(repo = ".") {
+  if (!is.null(gloss_source$dir)) return(gloss_source$dir)
+  dir <- tempfile("gloss-src-")
+  dir.create(dir)
+  for (f in c("DESCRIPTION", "NAMESPACE")) file.copy(file.path(repo, f), dir)
+  for (d in c("R", "inst")) if (dir.exists(file.path(repo, d))) file.copy(file.path(repo, d), dir, recursive = TRUE)
+  rf <- sort(list.files(file.path(dir, "R"), full.names = TRUE))
+  gloss_source$digest <- digest::digest(lapply(rf, readBin, what = "raw", n = 1e7))
+  gloss_source$dir <- normalizePath(dir)
+  gloss_source$dir
+}
+
 run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
                        recover = FALSE, capture = FALSE, device = "pdf", bind = FALSE, keep = NULL) {
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
@@ -715,7 +734,7 @@ run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
                          args = list(setup = script$setup, chunks = script$chunks, dir = normalizePath(dir),
                                      seed = seed, figure_classes = figure_classes, skip_print = outside_classes,
                                      recover = recover,
-                                     capture = capture, repo = normalizePath("."), device = device,
+                                     capture = capture, repo = gloss_snapshot(), device = device,
                                      fidelity_verdict = fidelity_verdict, compare_pages = compare_pages,
                                      bind = bind, keep = keep)),
              libpath = bench_libpaths(), env = env, timeout = timeout, show = FALSE,
