@@ -1,11 +1,11 @@
 # 2026-11-11 — Page capture executed: grid pages, base pages by entry
 
-- **Related plan:** [plan/2026-11-11-page-capture.md](../plan/2026-11-11-page-capture.md) (active; Tasks 1–6 done, 7–8 open; Task 8 waits for the owner's go-ahead).
+- **Related plan:** [plan/2026-11-11-page-capture.md](../plan/2026-11-11-page-capture.md) (active; Tasks 1–7 done; Task 8 waits for the owner's go-ahead, and the plan stays open until then).
 - **Related ADRs:** [ADR-0006](../dev_docs/decisions/0006-capture-the-page-the-figure-draws.md) (accepted; unchanged by this session).
 - **Worked on by:** Yonghe Xia, Claude
 - **Follows:** [2026-11-11-page-capture-adr-plan.md](2026-11-11-page-capture-adr-plan.md)
 
-This log is extended as the plan's remaining tasks land; Task 7 closes it.
+Covers Tasks 1–7. Task 8 gets its own log when it runs.
 
 ## What changed
 
@@ -20,10 +20,13 @@ This log is extended as the plan's remaining tasks land; Task 7 closes it.
 | `9984549` | 6 | Bench judges base pages with no known exception; leaf names per figure; Task 6 predictions, committed before the run. |
 | `692c6cc` | 6 | Development run `2026-11-11-0705`, archived. |
 | `c20e98b`, `84abf35` | 6 | gridGraphics out of `DESCRIPTION`; `Rplots*.pdf` in `.Rbuildignore`; ggExtra declared; `p6-base-classify`. |
+| `8182864` | 6 | Plan: Task 6 result. |
+| `aaec8e4` | 7 | Design doc: §元素归属 rewritten for the page route; dated notes in §分类, §评测设计, §风险与未决问题, §已定事项, §与上一版的区别; `fig-capture` corrected; `p7-six-inputs`. |
+| _this commit_ | 7 | NEWS, plan Task 7, this log. |
 
 ## Measured
 
-- Suite at the start of the session: 7 files / 49 tests / 298 expectations / 0 failed / 0 skipped (`f48c124`). After Task 5: 7 files / 65 tests / 420 expectations / 0 failed / 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`). Per-task before/after counts are in the plan.
+- Suite at the start of the session: 7 files / 49 tests / 298 expectations / 0 failed / 0 skipped (`f48c124`). At the end: 7 files / 65 tests / 420 expectations / 0 failed / 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, host; the same in the bench container). The suite leaves no `Rplots.pdf`. Per-task before/after counts are in the plan.
 - Fixtures (hand-built; mechanism, not coverage):
   - six inputs, page route against the tag: element tables, panels, tables and clip regions identical; verdict `equal` on six (`p1-fixtures-vs-engine-route.out`).
   - 26 base pages of s2: equal to the code's own page with clip regions, page route 26 of 26, gridGraphics 14 of 26; counted leaves 169 of 169 `ok`; data through `usr` within 0.007 pt (`p5-base-fixtures.out`).
@@ -48,8 +51,12 @@ This log is extended as the plan's remaining tasks land; Task 7 closes it.
 
 - **The base route failed on Linux, and only there.** The first bench-container check stopped every base capture on the integrity check: a file connection kept open and seeked again returned bytes from before svglite rewrote the closing tags of its always-valid file (2 of 8 entries of one plot; 0 on macOS, with the same svglite 2.2.2 and R 4.5.2). The host suite cannot see it; the container suite could (5 errors in `test-capture.R` before the fix, 0 after; full suite 65 / 420 / 0 there). → fixed in `254bd73`; plan Task 6 result. Lesson: a new reader of device output runs the suite in the container before it is called done. → nowhere else yet; Task 7 decides whether the container suite becomes a standing step in AGENTS.md.
 - **A test left `Rplots.pdf` behind** (ggExtra builds grobs with no device open), and `.Rbuildignore` has no rule for it. → test fixed in `03abb95`; `.Rbuildignore` rule in `c20e98b` (the tarball built from a clean export holds no PDF).
+- **The design doc claimed a fallback that never existed**: "a device without groups falls back to colour picking". The code has refused such devices since M0. Found while rewriting §元素归属. → corrected with a dated note in the design doc (§元素归属, §已定事项, §与上一版的区别).
 - **The hygiene items expected from `R CMD check` were not findings**: non-ASCII comments in four files pass (the package declares UTF-8), and the `<<-` in M0 code (closures writing their own function's locals: `context-data.R`, `core-bundle.R`, `element_boxes()`) passes "R code for possible problems". AGENTS.md forbids `<<-` all the same. → nowhere yet: a small refactor outside this plan, listed under What's next.
 
 ## What's next
 
-The development set now meets every line of *Done when* as read after the scope changes (52 / 2 / 1 / 0 / 0; agreement 54 of 54). Task 7 writes the records: design §元素归属 rewritten for the page route, the dated note on what gloss's `equal` certifies (heatmap-008), the base names of §分类 (the rule patterns change, the count does not). Task 8, the held-out run, only with the owner's go-ahead; its predictions are committed first. Outside this plan: replace the M0 `<<-` with local environments, and decide whether the container suite becomes a standing step for code that reads device output.
+- **Task 8, the held-out run, needs the owner's go-ahead.** The development set meets every line of *Done when* as read after the scope changes (52 / 2 / 1 / 0 / 0; agreement 54 of 54). Before the run: predictions in `bench/predictions.md`, committed; both routes on the same held-out figures in the same container (the page route at the plan's final commit, the engine route at the tag `engine-route-final`). The development numbers suggest what to predict, but the held-out set has its own base and grid mix, so the predictions must say how much they rest on 55 figures.
+- **For the owner, not done here:** (1) whether running the suite in the bench container becomes a standing step in AGENTS.md for code that reads device output (the Linux defect of Task 6 was invisible on the host); (2) whether to install other R versions to test recorded-plot formats (only R 4.5.2 here).
+- **Outside this plan:** replace the M0 `<<-` (closures writing their function's locals in `context-data.R`, `core-bundle.R`, `element_boxes()`) with local environments, as AGENTS.md asks; `R CMD check` passes them, so nothing forces it.
+- **M1 can start from these numbers.** The design gated M1 on the package reproducing the probe; it does. The base route gives call names and `usr` scales, so base binding (a §风险与未决问题 item) is now an M1 question about adapters, not about capture.

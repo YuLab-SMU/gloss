@@ -64,7 +64,7 @@
 - [x] Task 4: Bench on the page route; development run of the grid step
 - [x] Task 5: Base pages by display-list entry
 - [x] Task 6: Base on the development set; names and classification re-measured; gridGraphics out; `R CMD check`
-- [ ] Task 7: Records: design §元素归属 rewritten, NEWS, dev logs _(stub)_
+- [x] Task 7: Records: design §元素归属 rewritten, NEWS, dev logs
 - [ ] Task 8: Held-out predictions and run _(stub; needs the owner's go-ahead)_
 
 ---
@@ -291,9 +291,24 @@
 - `R CMD build --no-build-vignettes` and `R CMD check --as-cran --no-manual` on a clean export of the commit (R 4.5.2, macOS; `_R_CHECK_CRAN_INCOMING_REMOTE_=false`, because CRAN did not answer from here within 60 s): first 1 WARNING (ggExtra used by the tests, not declared), 2 NOTEs; after declaring ggExtra (`84abf35`) 2 NOTEs, both from the setting (development version number; "unable to verify current time"). "R code for possible problems", non-ASCII, left-over files: OK. Assumption 6 holds on this platform: reading the recorded plot and calling its entries draws no check finding. Not run: the check on Linux (the container suite passes, 65 / 420 / 0), Windows, R-devel.
 - Recorded-plot structure on other R versions: not run (`[-]`). R 4.5.2 is the only version on the host and in the bench image, and installing others is the owner's call. What a changed structure would do: an entry that is not a function and its arguments stops with "Replaying display-list entry k ... failed", and a page replayed differently fails the self-check; neither degrades silently. `replayPlot()` itself warns on a plot recorded by another R version.
 
-### Task 7: Records _(stub)_
+### Task 7: Records
 
-Design doc: §元素归属 rewritten for the page route (not only dated notes), §风险与未决问题, §已定事项, §与上一版的区别; `NEWS.md`; a dev log per session; this plan closed to `plan/done/`.
+**Status:** `[x]`
+
+**Files:** `dev_docs/design.qmd`, `dev_docs/figures/design/src/fig-capture.svg` and its PNG, `NEWS.md`, `dev_logs/2026-11-11-page-capture-execution.md`, `dev_docs/research/capture-fidelity/` (p7).
+
+**Checklist**
+- [x] Design §元素归属 rewritten for the page route (not only dated notes): input draws its own page; grid pages wrapped in place; base pages by display-list entry; self-check and what `equal` certifies; withheld tables and panels; @tbl-capture measured again on the test inputs (p7); development-set result
+- [x] Dated notes: §分类 (base call names), §评测设计 (verdicts and the 52 / 2 reading), §风险与未决问题 (two items resolved; a new one on reading device files and recorded-plot formats), §已定事项, §与上一版的区别; abstract, overview and premortem lines
+- [x] `fig-capture`: the line "vp lifted, or gridGraphics cannot find the viewport" replaced; PNG re-rendered with the command of `src/README.md`
+- [x] NEWS: `equal` and what it certifies; gridGraphics gone; the development-set numbers
+- [x] Dev log of the session
+- [-] Plan to `plan/done/`: not yet. Task 8 belongs to this plan and waits for the owner's go-ahead; the plan closes when Task 8 runs or the owner cancels it.
+
+**Result** (2026-11-11)
+- `quarto render dev_docs/design.qmd --to html`: exit 0, 0 warnings; every cross-reference resolves (`aaec8e4`).
+- One correction found while rewriting: the design said a device without graphics groups falls back to colour picking. The code refuses (since M0); colour picking was never implemented. Corrected in §元素归属 and §已定事项, with a dated note.
+- The old @tbl-capture's numbers came from the research scripts' own figures, not the test fixtures, so the new table (p7) is not a row-by-row comparison with it; the matched comparison is p1 (element tables identical to the engine route on the six test inputs).
 
 ### Task 8: Held-out predictions and run _(stub; owner's go-ahead)_
 
