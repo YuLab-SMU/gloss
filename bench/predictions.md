@@ -463,3 +463,21 @@ Run `runs/2026-11-11-2118-bind-dev-tree.*` at `0cc6e72` (clean tree; the predict
 - Per figure, of the 27 ggplot figures: every layer element checked in 15, at least 80% in 18, none in 3 (the polar ones). v0's ggplot figures: 98.4% of elements checked. Other unbound elements: 34 of rotated clade labels (tree-072), 28 connector lines of repelled labels (tree-054), 5 of a text leaf with 5 elements for 11 rows (tree-003).
 - Binding adds little time: median 0.40 s for capture and bind, 4.7 s at most.
 
+
+## The tree stratum after the parser's limit is lifted (tree binding plan Task 1)
+
+Written 2026-11-11, after gloss and the bench's comparator were changed to parse their own pages with libxml2's `HUGE` option and before either has run on any figure of the stratum since. What was known: runs `2110` (capture) and `2118` (binding) on the stratum's development figures, tree-041's code (a 6-tip tree; tip images through `geom_tiplab(geom = "image")`, `align = 2`; tip labels through `geom_tiplab(geom = "label", hjust = .5)`; one more image through `geom_image()`; the book's setup, so `emojifont` and `showtext`), and the fixture test in `test-capture.R`. Nothing of the stratum's held-out figures.
+
+### How the runs are made and scored (fixed before the runs)
+
+- `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev tree`, then `... bench/R/bind.R dev tree`, at the commit that holds these predictions, with a clean tree. Scored with `score-capture.R` and `score-bind.R` on their files, and the binding run against run `2118` with `Rscript bench/R/compare-bind.R bench/runs/2026-11-11-2118-bind-dev-tree.csv <new run>`.
+- The capture run is compared with run `2110` column by column, as the tree plan compared runs `2052` and `2110`.
+
+### Predictions
+
+63. **29 of 29 figures are captured, and tree-041's verdict is `equal` by the bench and by gloss.** On the other 28, every column of the run equals run `2110` apart from the seconds. The change lifts a size limit of the parser and nothing else.
+64. **tree-041's capture takes under 60 s, and its only unowned element is the device background.** Its page is the largest of the stratum by bytes, not by elements.
+65. **No bind error, and the 28 figures bound in run `2118` bind exactly as there:** `compare-bind.R` reports all 561 of their leaves with status, counts and reason unchanged.
+66. **tree-041 has no failed element:** its branch segments (and the dotted lines `align` draws) are all verified or ambiguous; its image leaves are unbound with the reason that no comparison exists for `<image>` elements; its tip labels' text is in count-mismatch leaves (glyph outlines, as in every book figure). So under 80% of its layer elements are checked.
+
+Not scored: the label boxes of tree-041 are verified or ambiguous (`hjust = .5`, so a box is centred on its row).
