@@ -1,5 +1,7 @@
 # Capture the page the figure draws, not a grob built from the object
 
+> → promoted to [plan/2026-11-11-page-capture.md](../plan/2026-11-11-page-capture.md) on 2026-11-11: the owner chose option 3. Decision recorded in [ADR-0006](../dev_docs/decisions/0006-capture-the-page-the-figure-draws.md). The text below is kept as written.
+
 > Status: idea, for the owner's decision before M1. Not a plan, not an ADR.
 > Date: 2026-11-10. Evidence: [`dev_docs/research/capture-fidelity/`](../dev_docs/research/capture-fidelity/README.md), [dev log](../dev_logs/2026-11-10-page-capture-spike.md).
 
