@@ -248,6 +248,59 @@ test_that("an empty page and a page mixing base and grid are refused with the re
   expect_error(gloss(mixed, context = FALSE), "base graphics and grid")
 })
 
+test_that("a base page drawn after a grid page is a base page, and a grid page after a base page a grid page", {
+  # Held-out run 2026-11-11-0837 (this test is made after looking at it): two
+  # base figures at the end of a vignette were refused as mixed pages. A new
+  # base page does not clear grid's display list, so the grobs of the page
+  # before were counted as drawn on this one. Reproduced here on a hand-built
+  # page; the device's display list for the page holds no grid operation.
+  scatter <- function() graphics::plot(mtcars$wt, mtcars$mpg, pch = 19, main = "second page")
+  two <- function() {
+    grid::grid.newpage()
+    grid::grid.rect(gp = grid::gpar(fill = "red"))
+    grid::grid.text("first page")
+    scatter()
+  }
+  rp <- local({
+    s <- svglite::svgstring(width = 5, height = 4)
+    on.exit(grDevices::dev.off())
+    grDevices::dev.control("enable")
+    two()
+    grDevices::recordPlot()
+  })
+  plain <- plain_svg(scatter, 5, 4)
+  expect_warning(drawn <- gloss(two, width = 5, height = 4, context = FALSE), "2 pages")
+  figs <- list(drawn = drawn, recorded = gloss(rp, width = 5, height = 4, context = FALSE))
+  for (nm in names(figs)) {
+    fig <- figs[[nm]]
+    expect_equal(fig$meta$engine, "base", label = nm)
+    expect_equal(fig$meta$page$kind, "base", label = nm)
+    expect_equal(fig$meta$page$verdict, "equal", label = nm)
+    expect_identical(scene_signatures(fig$substrate$scene), scene_signatures(plain), label = nm)
+    expect_identical(clip_regions(fig$substrate$scene), clip_regions(plain), label = paste(nm, "clip regions"))
+    expect_false(any(grepl("first page", fig$substrate$elements$text, fixed = TRUE)), label = nm)
+  }
+  # the other order: the base page before is gone from the device's display list
+  after_base <- function() {
+    graphics::plot(1:3)
+    grid::grid.newpage()
+    grid::grid.circle(r = 0.3, gp = grid::gpar(fill = "blue"))
+  }
+  expect_warning(fig <- gloss(after_base, width = 3, height = 3, context = FALSE), "2 pages")
+  expect_equal(fig$meta$page$kind, "grid")
+  expect_equal(fig$substrate$leaves$class, "circle")
+  # a recorded page that does mix the two is still refused
+  mixed <- local({
+    s <- svglite::svgstring(width = 5, height = 4)
+    on.exit(grDevices::dev.off())
+    grDevices::dev.control("enable")
+    graphics::plot(1:3)
+    grid::grid.text("on top", y = 0.9)
+    grDevices::recordPlot()
+  })
+  expect_error(gloss(mixed, context = FALSE), "base graphics and grid")
+})
+
 test_that("an input that draws several pages is captured as its last page, with a warning", {
   f <- function() {
     grid::grid.newpage()

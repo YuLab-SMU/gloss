@@ -461,15 +461,24 @@ draw_engine <- function(eng, state, dev) {
   list(state = if (is.null(out)) state else out)
 }
 
-# What the current page holds: base graphics operations on the device's
-# display list, grid grobs on grid's.
+# What the current page holds, read from the device's display list, which a
+# new page clears: base graphics operations and grid's drawing operations.
+# grid's own display list is not evidence of what is on a base page: a new
+# base page does not clear it, so after a grid page it still holds that
+# page's grobs (two held-out base figures at the end of a vignette were
+# refused as mixed for this, bench run 2026-11-11-0837). It is only asked
+# whether a page without base operations holds anything.
 page_kind <- function() {
   rp <- tryCatch(grDevices::recordPlot(), error = function(e) NULL)
   ops <- if (is.null(rp)) character() else vapply(rp[[1]], dl_op, "")
-  base <- any(startsWith(ops, "C_") & ops != "C_par")
+  base_ops <- sum(startsWith(ops, "C_") & ops != "C_par")
+  grid_ops <- sum(ops == "call" | startsWith(ops, "L_"))
   grobs <- length(grid::grid.ls(viewports = FALSE, recursive = FALSE, print = FALSE)$name)
-  kind <- if (base && grobs > 0L) "mixed" else if (base) "base" else if (grobs > 0L) "grid" else "empty"
-  list(kind = kind, base_ops = sum(startsWith(ops, "C_") & ops != "C_par"), grobs = grobs, rp = rp)
+  kind <- if (base_ops > 0L && grid_ops > 0L) "mixed"
+          else if (base_ops > 0L) "base"
+          else if (grobs > 0L) "grid"
+          else "empty"
+  list(kind = kind, base_ops = base_ops, grid_ops = grid_ops, grobs = grobs, rp = rp)
 }
 
 # Name of the graphics call behind a display-list entry; "call" for entries
@@ -491,7 +500,7 @@ refuse_page <- function(page, eng) {
   }
   if (identical(page$kind, "mixed")) {
     cli::cli_abort(c(
-      "The page mixes base graphics and grid ({page$base_ops} base operation{?s}, {page$grobs} grid grob{?s}); gloss cannot attribute its elements.",
+      "The page mixes base graphics and grid ({page$base_ops} base operation{?s}, {page$grid_ops} grid operation{?s}); gloss cannot attribute its elements.",
       i = "Capture a page drawn by one graphics system."
     ))
   }
