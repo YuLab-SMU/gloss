@@ -28,8 +28,9 @@ much) is visible at any time.
 
 The server reads only the label sheets (bench/R/label-sheet.R), the figures'
 code, the vocabulary and the guideline's worked examples (--examples: hand-built
-figures with their decided labels, shown as reference for leaves of the same
-class; never examples of a figure being labelled). It shows no rule output and
+figures with their decided labels, shown beside each role and kind and as
+reference for leaves of the same class; never examples of a figure being
+labelled). It shows no rule output and
 no label of another annotator before one's own are frozen, and runs no figure
 code. Python's standard library only.
 
@@ -64,9 +65,10 @@ REPO = os.path.normpath(os.path.join(HERE, "..", "..", ".."))
 # What the page offers the annotator. 1: outline, loupe, dimming. 2 (2026-11-11):
 # also fill and stroke read from the page, painting, isolating, hiding and moving
 # a leaf, its place in the drawing order, the guideline's examples of its class.
-# Kept with each figure's state, so that labels can be told apart by the aids
-# they were made with.
-WORKBENCH = 2
+# 3 (2026-11-11): also each role and kind shown in the guideline's worked
+# examples, beside the option. Kept with each figure's state, so that labels can
+# be told apart by the aids they were made with.
+WORKBENCH = 3
 MAX_BODY = 20 * 1024 * 1024
 MAX_ANNOTATORS = 200
 NICKNAME = re.compile(r"^[\w-]{2,16}$")
@@ -240,27 +242,66 @@ class Sheets:
 
 
 def reference(examples, sheets, figures, vocabulary):
-    """The guideline's worked examples, for the page to show beside a leaf of the
-    same class: each example figure's page and, per leaf, its decided labels.
-    A figure that is itself being labelled is never given as its own reference."""
+    """The guideline's worked examples, for the page: each example figure's page
+    and, per leaf, its decided labels (`figures`); per role and kind, the leaves
+    the vocabulary names as its examples (`kinds`); the figure that shows the
+    roles (`figure`). A figure that is itself being labelled is never given.
+    An example the vocabulary names that is not labelled so stops the server."""
+    empty = {"figures": [], "kinds": {}, "figure": None}
     labels = os.path.join(examples, "labels") if examples else ""
     if not os.path.isdir(labels):
-        return []
+        return empty
     ex = Sheets(examples, figures, vocabulary)
-    out = []
+    out, rows = dict(empty, figures=[], kinds={}), {}
     for fig in ex.ids:
         file = os.path.join(labels, fig + ".csv")
         if fig in sheets.ids or not os.path.exists(file):
             continue
+        rows[fig] = ex.resolve(fig, read_csv(file)[1], file)
         by_k = {}
-        for r in ex.resolve(fig, read_csv(file)[1], file):
+        for r in rows[fig]:
             by_k.setdefault(r["k"], []).append({"elements": r["elements"], "role": r["role"], "kind": r["kind"]})
         with open(os.path.join(examples, fig + ".svg"), encoding="utf-8") as f:
             svg = f.read()
-        out.append({"id": fig, "svg": svg,
-                    "leaves": [{"k": r["k"], "leaf": r["leaf"], "class": r["class"], "n": int(r["n_elements"]), "text": r["text"],
-                                "box": [num(r["x0"]), num(r["y0"]), num(r["x1"]), num(r["y1"])], "labels": by_k[r["k"]]}
-                               for r in ex.leaves(fig)]})
+        out["figures"].append({"id": fig, "svg": svg,
+                               "leaves": [{"k": r["k"], "leaf": r["leaf"], "class": r["class"], "n": int(r["n_elements"]), "text": r["text"],
+                                           "box": [num(r["x0"]), num(r["y0"]), num(r["x1"]), num(r["y1"])], "labels": by_k[r["k"]]}
+                                          for r in ex.leaves(fig)]})
+    if ex.vocabulary.get("example_figure") in rows:
+        out["figure"] = ex.vocabulary["example_figure"]
+    problems = []
+    for role in ex.vocabulary["roles"]:
+        for kind in role["kinds"]:
+            name = role["role"] + " / " + kind["kind"]
+            for e in kind.get("examples", []):
+                fig, k = e.get("figure"), str(e.get("k"))
+                if fig in sheets.ids:
+                    continue                      # being labelled: not an example here
+                leaf = next((r for r in ex.leaves(fig) if r["k"] == k), None) if fig in rows else None
+                if leaf is None:
+                    problems.append("%s: %s k %s is not a labelled leaf of the examples" % (name, fig, k))
+                    continue
+                n = int(leaf["n_elements"])
+                have = sorted(i for r in rows[fig] if r["k"] == k and r["role"] == role["role"] and r["kind"] == kind["kind"]
+                              for i in indices(r["elements"], n))
+                try:
+                    want = sorted(indices(e["elements"], n)) if e.get("elements") else have
+                except ValueError:
+                    want = []
+                if not want or not set(want) <= set(have):
+                    problems.append("%s: %s k %s%s is not labelled so in %s" % (name, fig, k, " elements " + e["elements"] if e.get("elements") else "",
+                                                                             shown(os.path.join(labels, fig + ".csv"))))
+                    continue
+                box = [num(leaf[c]) for c in ("x0", "y0", "x1", "y1")]
+                if len(want) < n:
+                    els = [x for x in read_csv(os.path.join(examples, fig + "-elements.csv"))[1] if x["k"] == k and int(x["index"]) in want]
+                    b = [[num(x[c]) for x in els] for c in ("x0", "y0", "x1", "y1")]
+                    if els and all(v is not None for c in b for v in c):
+                        box = [min(b[0]), min(b[1]), max(b[2]), max(b[3])]
+                out["kinds"].setdefault(name, []).append({"figure": fig, "k": k, "leaf": leaf["leaf"], "text": leaf["text"], "box": box,
+                                                          "index": want if len(want) < n else None})
+    if problems:
+        sys.exit("the vocabulary's examples do not fit %s:\n  %s" % (shown(examples), "\n  ".join(problems)))
     return out
 
 
@@ -397,8 +438,9 @@ def kappa(pairs):
 class Workbench:
     """Who labels where, and what each may see."""
 
-    def __init__(self, sheets, out=None, team=None, reveal="set", invite=None, examples=()):
-        self.sheets, self.reveal, self.invite, self.examples = sheets, reveal, invite, list(examples)
+    def __init__(self, sheets, out=None, team=None, reveal="set", invite=None, examples=None):
+        self.sheets, self.reveal, self.invite = sheets, reveal, invite
+        self.examples = examples or {"figures": [], "kinds": {}, "figure": None}
         self.team = team is not None
         if not self.team:
             self.single = Annotator(sheets, out, os.path.basename(os.path.normpath(out)))
@@ -633,7 +675,7 @@ def handler(wb):
             if path == "/api/config":
                 return self.send(200, wb.config(a))
             if path == "/api/reference":
-                return self.send(200, {"figures": wb.examples})
+                return self.send(200, wb.examples)
             if path == "/api/overview" and wb.team:
                 return self.send(200, wb.overview(a))
             for prefix in ("/api/figure/", "/api/peers/"):

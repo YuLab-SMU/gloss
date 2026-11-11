@@ -154,7 +154,8 @@ try:
     fig = call("/api/figure/ex-base")[1]
     expect("a figure comes with its page, leaves, elements and saved state",
            "<svg" in fig["svg"] and len(fig["leaves"]) == 15 and len(fig["elements"]) == 90 and "1" in fig["state"]["labels"])
-    expect("a figure being labelled is never its own reference", call("/api/reference")[1]["figures"] == [])
+    ref = call("/api/reference")[1]
+    expect("a figure being labelled is never its own reference, or an example of a kind", ref["figures"] == [] and ref["kinds"] == {} and ref["figure"] is None)
     expect("one annotator: nothing of others to open or to see",
            fig["peers"] is None and call("/api/open/ex-base", {})[0] == 403 and call("/api/overview")[0] == 404
            and call("/api/join", {"nickname": "someone"})[0] == 404)
@@ -174,26 +175,52 @@ proc, line = serve("--out", other)
 time.sleep(0.2)
 stop(proc)
 expect("an untouched copy of the empty sheet is replaced", "label workbench" in line and not os.path.exists(os.path.join(other, "ex-heatmap.csv")))
-# the guideline's examples as reference: every example but a figure being labelled
+# the guideline's examples beside another figure: every leaf with its decided labels, every kind's examples
 one = tempfile.mkdtemp(prefix="wb-check-")
 for f in glob.glob(os.path.join(EX, "ex-base*")):
-    shutil.copy(f, one)
-proc = subprocess.Popen([sys.executable, os.path.join(HERE, "serve.py"), "--sheets", one, "--examples", EX, "--out", os.path.join(one, "out"),
-                         "--port", str(PORT), "--no-open"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    shutil.copy(f, os.path.join(one, os.path.basename(f).replace("ex-base", "zz-base")))      # the same sheet as another figure
+serve_one = lambda *args: subprocess.Popen([sys.executable, os.path.join(HERE, "serve.py"), "--sheets", one, "--examples", EX,
+                                            "--out", os.path.join(one, "out"), "--port", str(PORT), "--no-open"] + list(args),
+                                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+proc = serve_one()
 proc.stdout.readline()
 try:
-    ref = call("/api/reference")[1]["figures"]
-    title = next(l for l in ref[0]["leaves"] if l["class"] == "text" and len(l["labels"]) == 1) if ref else None
-    expect("the reference: the other examples, each leaf with its decided labels and its page",
-           [(f["id"], len(f["leaves"])) for f in ref] == [("ex-heatmap", 24), ("ex-ggplot", 68)] and "<svg" in ref[0]["svg"]
-           and title is not None and set(title["labels"][0]) == {"elements", "role", "kind"})
-    p = post("ex-base", {"labels": {"1": {"role": "data", "kind": "point", "note": "", "unsure": False, "ref": True}}, "seconds": 5})
-    with open(os.path.join(one, "out", ".workbench", "ex-base.json"), encoding="utf-8") as f:
+    ref = call("/api/reference")[1]
+    leaf = {(f["id"], l["k"]): l for f in ref["figures"] for l in f["leaves"]}
+    expect("the reference: the examples, each leaf with its decided labels and its page",
+           [(f["id"], len(f["leaves"])) for f in ref["figures"]] == [("ex-base", 15), ("ex-heatmap", 24), ("ex-ggplot", 68)]
+           and all("<svg" in f["svg"] for f in ref["figures"]) and ref["figure"] == "ex-ggplot"
+           and leaf[("ex-base", "5")]["labels"] == [{"elements": "1", "role": "annotation", "kind": "title"}, {"elements": "2-3", "role": "guide", "kind": "axis title"}])
+    with open(os.path.join(REPO, "bench", "labels", "vocabulary.json"), encoding="utf-8") as f:
+        voc = json.load(f)
+    named = {r["role"] + " / " + k["kind"]: k.get("examples", []) for r in voc["roles"] for k in r["kinds"]}
+    labelled = lambda name, e: any(l["role"] + " / " + l["kind"] == name for l in leaf[(e["figure"], e["k"])]["labels"])
+    expect("the standard examples: 23 of the 28 kinds have some, each a leaf the examples label with that kind",
+           len(named) == 28 and sum(bool(v) for v in named.values()) == 23
+           and {k: [(e["figure"], e["k"]) for e in v] for k, v in named.items() if v} == {k: [(e["figure"], e["k"]) for e in v] for k, v in ref["kinds"].items()}
+           and all(labelled(k, e) for k, v in ref["kinds"].items() for e in v))
+    part = ref["kinds"]["guide / axis line"][0]
+    whole = ref["kinds"]["data / bar"][0]
+    expect("a standard example that is part of a leaf comes with its elements and their box",
+           part["index"] == [1] and part["box"] != leaf[("ex-base", "2")]["box"] and whole["index"] is None and whole["box"] == leaf[("ex-base", "12")]["box"])
+    p = post("zz-base", {"labels": {"1": {"role": "data", "kind": "point", "note": "", "unsure": False, "ref": True}}, "seconds": 5})
+    with open(os.path.join(one, "out", ".workbench", "zz-base.json"), encoding="utf-8") as f:
         st = json.load(f)
     expect("a figure's state says which workbench made it, and where the reference was open",
-           st["workbench"] == 2 and st["labels"]["1"]["ref"] is True)
+           st["workbench"] == 3 and st["labels"]["1"]["ref"] is True)
 finally:
     stop(proc)
+# an example the vocabulary names that the examples do not label so stops the server
+wrong = json.loads(json.dumps(voc))
+wrong["roles"][0]["kinds"][0]["examples"] = [{"figure": "ex-ggplot", "k": "2"}]          # data / point: a panel background
+with open(os.path.join(one, "vocabulary.json"), "w", encoding="utf-8") as f:
+    json.dump(wrong, f)
+proc = serve_one("--vocabulary", os.path.join(one, "vocabulary.json"))
+proc.wait(timeout=10)
+said = proc.stdout.read()
+proc.stdout.close()
+expect("an example the vocabulary names that is not labelled so stops the server, with the reason",
+       proc.returncode != 0 and "data / point: ex-ggplot k 2 is not labelled so" in said)
 shutil.rmtree(one)
 proc, line = serve("--out", other, "--host", "0.0.0.0")
 proc.wait(timeout=10)

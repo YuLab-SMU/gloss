@@ -21,6 +21,10 @@
   apart from white; painting the leaf; the leaf alone on a checkerboard;
   hiding it; hiding what was drawn after it; dragging it aside; its place in
   the drawing order; the guideline's worked examples of the same class.
+
+  Standard examples: every role and kind is shown, beside its option, as it
+  appears in the guideline's worked examples (the leaves the vocabulary names
+  for that kind); pointing at an option enlarges them, E shows them all.
 -->
 <style>
   :root {
@@ -46,7 +50,7 @@
   .tab.done .ring { background: var(--ok); }
   #total { font-size: 12px; color: var(--muted); white-space: nowrap; }
   #total b { color: var(--ink); font-variant-numeric: tabular-nums; }
-  main { display: grid; grid-template-columns: minmax(0, 1fr) 470px; gap: 14px; padding: 14px 16px; align-items: start; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 540px; gap: 14px; padding: 14px 16px; align-items: start; }
   @media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
   #stage { padding: 10px; position: sticky; top: 58px; }
@@ -112,6 +116,25 @@
   .refcard { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; font-size: 11.5px; }
   .refcard svg { display: block; width: 100%; aspect-ratio: 16 / 9; background: #fff; }
   .refcard div { padding: 3px 6px; }
+  .opt.ex { grid-template-columns: 26px 1fr auto; }
+  .thumb { display: block; width: 86px; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #fff; align-self: center; }
+  .thumb svg, .excard svg { display: block; width: 100%; aspect-ratio: 16 / 10; background: #fff; }
+  .choices:not(.kinds) .thumb { width: 100px; }
+  /* a role in the example figure: its leaves in the role's colour (svglite writes fills in the style attribute) */
+  .wb-role .wb-cur * { stroke: var(--c) !important; }
+  .wb-role .wb-cur [style*="fill: #"], .wb-role .wb-cur text { fill: var(--c) !important; fill-opacity: .6; stroke: none !important; }
+  .wb-role .wb-cur text { fill-opacity: 1; }
+  .opt.repeat .thumb { width: 60px; }
+  .thumb.none { border-style: dashed; color: var(--muted); font-size: 10.5px; text-align: center; padding: 6px 2px; line-height: 1.25; }
+  .wb-ex.wb-dim [data-gloss-leaf]:not(.wb-cur) { opacity: .18; }
+  #expreview { position: fixed; z-index: 8; width: 470px; display: none; padding: 10px 12px; box-shadow: 0 10px 34px rgba(0, 0, 0, .2); pointer-events: none; }
+  #expreview h3 { margin: 0 0 2px; font-size: 14px; }
+  #expreview p { margin: 0 0 8px; font-size: 12px; color: var(--muted); }
+  .exgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .exgrid.one { grid-template-columns: 1fr; }
+  .excard { font-size: 11.5px; color: var(--muted); }
+  .excard svg { border: 1px solid var(--line); border-radius: 6px; }
+  .excard b { color: var(--ink); }
   .btn.ghost { background: var(--panel); color: var(--ink); margin: 3px; }
   .link { background: none; border: 0; padding: 0; color: var(--data); cursor: pointer; font: inherit; text-align: left; }
   .overlay { position: fixed; inset: 0; background: rgba(28, 28, 30, .45); z-index: 20; display: none; align-items: flex-start;
@@ -163,6 +186,7 @@
     <details id="cases"><summary>判例：这些情况已经定好怎么标</summary><ul></ul></details>
   </aside>
 </main>
+<div class="card" id="expreview"></div>
 <div class="overlay" id="join"><div class="sheet" id="joinBody"></div></div>
 <div class="overlay" id="over"><div class="sheet" id="overBody"></div></div>
 <div id="toast"></div>
@@ -211,7 +235,8 @@ let dirty = false, saving = false, saveTimer = null, lastInput = Date.now(), uns
 let roots = [];
 // aids: what is shown of the current leaf (the view only)
 let paint = false, iso = false, hideCur = false, peel = false, refOpen = false, moved = null;
-let painted = [], movedNodes = [], curPaint = null, REF = [];
+let painted = [], movedNodes = [], curPaint = null, REF = [], REFK = {}, REFROLE = null;
+const thumbs = new Map();
 
 // ---- state ---------------------------------------------------------------
 function buildItems() {
@@ -510,10 +535,83 @@ function refBlock(lf) {
     h("div", { class: "hint2" }, "这是示例，不是答案：同一种图形在不同的位置可以是不同的角色。看它在这张图里起什么作用。"));
 }
 function roleSpan(r, k) { return h("b", { style: "color: var(--" + r + ")" }, r + (k ? " / " + k : "")); }
-function option(key, name, hint, title, fn, color, extra) {
-  return h("button", { class: "opt" + (extra || ""), onclick: fn, title: title },
+function option(key, name, hint, title, fn, color, extra, thumb, preview) {
+  const b = h("button", { class: "opt" + (extra || "") + (thumb ? " ex" : ""), onclick: fn, title: title },
     h("kbd", {}, key), h("span", {}, h("span", { class: "name", style: color ? "color: var(--" + color + ")" : null }, name),
-                         hint ? h("span", { class: "hint" }, hint) : null));
+                         hint ? h("span", { class: "hint" }, hint) : null), thumb || null);
+  if (preview) { b.addEventListener("mouseenter", () => showPreview(preview, b)); b.addEventListener("mouseleave", hidePreview); }
+  return b;
+}
+// ---- the standard examples: a role or a kind as the guideline's worked examples show it -----
+// A copy of an example page with the leaves `lit` says undimmed; cached, one node per place it is shown.
+function exCopy(key, ex, lit, box, index) {
+  if (thumbs.has(key)) return thumbs.get(key);
+  let node = null;
+  if (ex) {
+    node = document.importNode(ex.dom, true);
+    node.classList.add("wb-dim", "wb-ex");
+    for (const lf of ex.leaves) {
+      if (!lit(lf)) continue;
+      const g = node.querySelector('[data-gloss-leaf="' + lf.leaf + '"]');
+      if (!g) continue;
+      g.classList.add("wb-cur");
+      if (index) [...g.children].forEach((c, n) => { if (!index.includes(n + 1)) c.style.opacity = ".18"; });
+    }
+    drawBox(node, box);
+    zoom(node, ex.vb, box, 16 / 10);
+  }
+  thumbs.set(key, node);
+  return node;
+}
+function kindExample(role, kind, n, place) {
+  const spec = (REFK[role + " / " + kind] || [])[n], ex = spec && REF.find(f => f.id === spec.figure);
+  const box = spec && spec.box.every(v => v != null) ? spec.box : null;
+  return exCopy([place, role, kind, n].join("|"), ex, lf => lf.k === spec.k, box, spec && spec.index);
+}
+function roleExample(role, place) {
+  const node = exCopy([place, role].join("|"), REF.find(f => f.id === REFROLE), lf => lf.labels.some(l => l.role === role), null, null);
+  if (node) { node.classList.add("wb-role"); node.style.setProperty("--c", "var(--" + role + ")"); }
+  return node;
+}
+function thumbOf(node) {
+  if (!REF.length) return null;
+  return node ? h("span", { class: "thumb" }, node) : h("span", { class: "thumb none" }, "示例图里", h("br"), "没有这一种");
+}
+function exCard(node, caption) { return h("div", { class: "excard" }, node, h("div", {}, caption)); }
+function exCards(p, place, most) {
+  if (!p.kind) { const n = roleExample(p.role, place); return n ? [exCard(n, "标准示例 " + REFROLE + "：亮着的都是 " + p.role)] : []; }
+  return (REFK[p.role + " / " + p.kind] || []).slice(0, most).map((spec, n) =>
+    exCard(kindExample(p.role, p.kind, n, place), [spec.figure, spec.text && !spec.index ? " “" + spec.text.slice(0, 22) + "”" : "", spec.index ? " · 这个叶子里的第 " + spec.index.join("、") + " 个元素" : ""].join("")));
+}
+function showPreview(p, anchor) {
+  const card = $("#expreview"), panel = $("#panel").getBoundingClientRect();
+  if (!REF.length || window.innerWidth <= 1000 || panel.left < 490) return;
+  const r = VOC.roles.find(x => x.role === p.role), k = p.kind && r.kinds.find(x => x.kind === p.kind), cards = exCards(p, "preview", 4);
+  card.replaceChildren(h("h3", {}, roleSpan(p.role, p.kind), " 在标准示例里"), h("p", {}, k ? k.hint_zh : r.question_zh),
+    cards.length ? h("div", { class: "exgrid" + (cards.length === 1 ? " one" : "") }, cards) : h("p", {}, "细则的示例图里没有这一种。"));
+  card.style.display = "block";
+  const top = Math.min(Math.max(anchor.getBoundingClientRect().top - 60, 64), Math.max(64, window.innerHeight - card.offsetHeight - 12));
+  card.style.left = (panel.left - 482) + "px";
+  card.style.top = top + "px";
+}
+function hidePreview() { $("#expreview").style.display = "none"; }
+// E: every option of the current question, each in the standard examples
+function showExamples() {
+  if (!REF.length || finished) return;
+  hidePreview();
+  const r = stage === "kind" ? VOC.roles.find(x => x.role === role) : null;
+  const rows = r ? r.kinds.map((k, n) => [(n + 1) % 10, { role: r.role, kind: k.kind }, k.hint_zh])
+                 : VOC.roles.map((x, n) => [n + 1, { role: x.role }, x.question_zh]);
+  $("#overBody").replaceChildren(
+    h("button", { class: "link", style: "float: right", onclick: hideOverview }, "关闭（Esc）"),
+    h("h2", {}, r ? [roleSpan(r.role), " 的各个种类，在标准示例里"] : "五种角色，在标准示例里"),
+    h("p", {}, "标准示例是细则里手工画的三张图（ggplot、base、热图），每个叶子怎么标已经定好。亮着、框出来的就是这个选项；看完按 Esc，再按数字键作答。"),
+    ...rows.flatMap(([key, p, hint]) => {
+      const cards = exCards(p, "all", 3);
+      return [h("h3", {}, h("kbd", {}, key), " ", roleSpan(p.role, p.kind), " · " + hint),
+              cards.length ? h("div", { class: "exgrid" + (cards.length === 1 ? " one" : "") }, cards) : h("p", {}, "细则的示例图里没有这一种。")];
+    }));
+  $("#over").classList.add("on");
 }
 function renderBody() {
   const body = $("#body");
@@ -545,14 +643,17 @@ function renderBody() {
   if (stage === "role") {
     choices = h("div", { class: "choices" },
       h("h3", {}, h("span", {}, "它是什么？从上往下问，第一个“是”就选它"), h("span", {}, "按数字键")),
-      VOC.roles.map((r, i) => option(i + 1, r.role, r.question_zh, r.question, () => pickRole(i), r.role)));
+      VOC.roles.map((r, i) => option(i + 1, r.role, r.question_zh, r.question, () => pickRole(i), r.role, "",
+                                     thumbOf(roleExample(r.role, "option")), { role: r.role })));
   } else {
     const r = VOC.roles.find(x => x.role === role);
     choices = h("div", { class: "choices kinds" },
       h("h3", {}, h("span", {}, roleSpan(r.role), " 里的哪一种？"), h("span", {}, h("kbd", {}, "Esc"), " 返回")),
-      r.kinds.map((k, i) => option((i + 1) % 10, k.kind, k.hint_zh, k.hint, () => commit(r.role, k.kind))));
+      r.kinds.map((k, i) => option((i + 1) % 10, k.kind, k.hint_zh, k.hint, () => commit(r.role, k.kind), null, "",
+                                   thumbOf(kindExample(r.role, k.kind, 0, "option")), { role: r.role, kind: k.kind })));
   }
-  const rep = last ? option("␣", "和上一个一样", last.role + " / " + last.kind, "Space", () => commit(last.role, last.kind), null, " repeat") : null;
+  const rep = last ? option("␣", "和上一个一样", last.role + " / " + last.kind, "Space", () => commit(last.role, last.kind), null, " repeat",
+                            kindExample(last.role, last.kind, 0, "last") ? thumbOf(kindExample(last.role, last.kind, 0, "last")) : null, last) : null;
   const note = h("input", { id: "note", placeholder: "备注（N）", value: draft.note });
   note.addEventListener("input", () => { draft.note = note.value; const l = getLabel(items[cur]); if (l) { l.note = draft.note; markDirty(); } });
   const tools = h("div", { class: "tools" },
@@ -571,7 +672,8 @@ function renderBody() {
     h("button", { class: "tool" + (peel ? " on" : ""), onclick: togglePeel, title: "不画在它之后画的东西" }, h("kbd", {}, "T"), "掀掉上面的"),
     moved ? h("button", { class: "tool on", onclick: resetMove }, h("kbd", {}, "M"), "放回原处")
           : h("span", { class: "tool", title: "在图上按住框出来的这一块，拖到旁边" }, "按住可拖开"),
-    REF.length ? h("button", { class: "tool" + (refOpen ? " on" : ""), onclick: toggleRef, title: "细则的示例图里，同一种图形是怎么标的" }, h("kbd", {}, "R"), "参考示例") : null);
+    REF.length ? h("button", { class: "tool", onclick: showExamples, title: "当前这一步的每个选项，在标准示例里长什么样" }, h("kbd", {}, "E"), "各选项的标准示例") : null,
+    REF.length ? h("button", { class: "tool" + (refOpen ? " on" : ""), onclick: toggleRef, title: "细则的示例图里，同一种图形（同一个 class）是怎么标的" }, h("kbd", {}, "R"), "同类图形怎么标") : null);
   const hint = paint || iso ? h("div", { class: "hint2" },
     paint ? "涂色：实心 = 有填充；实线 = 有描边；虚线 = 原本没有描边。" : "",
     iso ? "单独看：棋盘格是灰的，所以白色看得出是白色；透明的地方会透出棋盘格。" : "") : null;
@@ -723,7 +825,7 @@ function join(hello) {
 }
 
 // ---- actions ---------------------------------------------------------------
-function pickRole(i) { role = VOC.roles[i].role; stage = "kind"; renderBody(); }
+function pickRole(i) { role = VOC.roles[i].role; stage = "kind"; hidePreview(); renderBody(); }
 function resetView() { hideCur = false; peel = false; moved = null; }
 function togglePaint() { paint = !paint; highlight(); renderBody(); }
 function toggleIso() { iso = !iso; highlight(); renderBody(); }
@@ -734,7 +836,7 @@ function toggleRef() { refOpen = !refOpen; renderBody(); }
 function commit(r, k) {
   // `ref`: the reference examples were open when this label was given
   setLabel(items[cur], Object.assign({ role: r, kind: k, note: draft.note, unsure: draft.unsure }, refOpen ? { ref: true } : {}));
-  resetView();
+  resetView(); hidePreview();
   last = { role: r, kind: k };
   const f = CFG.figures.find(x => x.id === FIG.id);
   f.labelled = FIG.order.filter(key => leafDone(key)).length;
@@ -800,7 +902,7 @@ function onKey(e) {
   const code = e.code || "";
   if ($("#join").classList.contains("on")) return;
   if ($("#over").classList.contains("on")) {
-    if (code === "Escape" || code === "KeyO") { hideOverview(); if (e.preventDefault) e.preventDefault(); }
+    if (code === "Escape" || code === "KeyO" || code === "KeyE") { hideOverview(); if (e.preventDefault) e.preventDefault(); }
     return;
   }
   if (TEAM && code === "KeyO") { showOverview(); if (e.preventDefault) e.preventDefault(); return; }
@@ -829,6 +931,7 @@ function onKey(e) {
   else if (code === "KeyT") togglePeel();
   else if (code === "KeyM") resetMove();
   else if (code === "KeyR") toggleRef();
+  else if (code === "KeyE") showExamples();
   else if (code === "KeyN") { const n = $("#note"); if (n) n.focus(); }
   else used = false;
   if (used && e.preventDefault) e.preventDefault();
@@ -848,10 +951,12 @@ async function boot() {
   } else CFG = await api("/api/config");
   VOC = CFG.vocabulary;
   try {
-    REF = (await api("/api/reference")).figures.map(f => {
+    const ref = await api("/api/reference");
+    REF = ref.figures.map(f => {
       const dom = cleanSvg(f.svg);
       return Object.assign(f, { dom, vb: (dom.getAttribute("viewBox") || "0 0 504 360").split(/\s+/).map(Number) });
     });
+    REFK = ref.kinds || {}; REFROLE = ref.figure || null;
   } catch (e) { REF = []; }          // a server without the examples: no reference
   $("#team").addEventListener("click", showOverview);
   $("#cases ul").replaceChildren(...VOC.cases.map(c => h("li", { title: c.en }, c.zh)));
@@ -872,7 +977,10 @@ async function boot() {
   // Debugging aid: ?keys=Digit1,Digit1,Space replays key codes after loading.
   const replay = new URLSearchParams(location.search).get("keys");
   if (replay) for (const code of replay.split(",")) {
-    if (code === "Drag") {          // drags the current leaf 90 px right and 60 px up, with pointer events
+    if (/^Hover\d$/.test(code)) {   // points at the n-th option
+      const b = document.querySelectorAll(".choices .opt")[Number(code.slice(5)) - 1];
+      if (b) b.dispatchEvent(new MouseEvent("mouseenter"));
+    } else if (code === "Drag") {          // drags the current leaf 90 px right and 60 px up, with pointer events
       const b = FIG.byK[items[cur].k].box, svg = roots[0];
       const c = new DOMPoint((b[0] + b[2]) / 2, (b[1] + b[3]) / 2).matrixTransform(svg.getScreenCTM());
       const ev = (type, dx, dy) => svg.dispatchEvent(new PointerEvent(type, { clientX: c.x + dx, clientY: c.y + dy, button: 0, pointerId: 7, bubbles: true }));
