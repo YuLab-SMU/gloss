@@ -67,13 +67,13 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 9 files, 78 tests, 496 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `c79312c`); was 8 / 67 / 438 at `6041c60`.
-- Key numbers: development binding, rerun `2026-11-11-1231` (made after looking; scored run `1205`): ggplot layer elements checked 98.4% (verified 9050, ambiguous 15328 of 24783), failed 8, unbound 370; heatmap body cells 250 of 250 verified; patchwork, grid and base not bound yet.
+- Suite: 9 files, 88 tests, 544 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `5ab7784`; also in the bench container, 0 errors, 0 warnings); was 8 / 67 / 438 at `6041c60`.
+- Key numbers: development binding run `2026-11-11-1353` (base scored; patchwork rerun after looking; ggplot and heatmap equal to `1231`): ggplot layer elements checked 98.4% (verified 9050, ambiguous 15328 of 24783), failed 8, unbound 370; heatmap body cells 250 of 250; base data-mark elements 98.6% (2544 + 93 of 2674), failed 0; patchwork 104 checked of 1783, failed 0, the rest unbound with reasons (`sf` 1626). Grid states no bindings. Labels: pilot labels of annotator A committed; annotator B (owner) pending.
 
 **Overall progress**
 - [~] Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels _(decision 1(a): Claude labels, the owner labels the pilot)_
 - [x] Task 2: Order binding for grid-page engines, verified by back-substitution (ggplot, heatmap)
-- [~] Task 2b: Patchwork: panels of each composed plot, then its bindings _(split from Task 2, see Scope changes)_
+- [x] Task 2b: Patchwork: panels of each composed plot, then its bindings _(split from Task 2, see Scope changes)_
 - [ ] Task 3: Rules as plugins; coverage on the development set
 - [ ] Task 4: Accuracy against the labels; consistency checks; silent errors
 - [~] Task 5: Base figures: bindings through arguments and `usr`; legend entries
@@ -152,7 +152,7 @@ Tasks 1 and 2 can run side by side: Task 1 is labelling time, Task 2 needs no la
 
 ### Task 2b: Patchwork: panels of each composed plot, then its bindings
 
-**Status:** `[~]` (built and run once; rerun after looking pending)
+**Status:** `[x]` (2026-11-11)
 
 Split from Task 2 (Scope changes). The patchwork engine maps no panels (M0 scope change of 2026-11-09), and a composition's ggplot panels sit at different depths (a plot's panel at the top level, a facetted plot's inside its own gtable), so leaves cannot yet be tied to a plot's build. Map panels per composed plot from patchwork's own assembly, then reuse `ggplot_bind()` per plot; development run, archived.
 
@@ -161,7 +161,11 @@ Split from Task 2 (Scope changes). The patchwork engine maps no panels (M0 scope
 - [x] Predictions 32–36 before the development run (`b2d971b`).
 - [x] Development run `2026-11-11-1319`, archived and scored: 2 right, 2 wrong, 1 not scorable (`bench/predictions.md`).
 - [x] Defects the run found, fixed with tests that fail before (`4cc2680`, made after looking): a boxplot's rows carry no `y` and stopped patchwork-012's binding with an error (a core defect any ggplot boxplot would hit); an unowned panel's grid counted as layer leaves. Found by the container suite on the way: binding drew text geoms on R's default device (`Rplots.pdf`, or a silent fallback where none opens); the bind step now runs on a null device.
-- [ ] Rerun after looking, archived.
+- [x] Rerun after looking, archived: run `2026-11-11-1353` at `6af0ad5`, no bind error; patchwork layer elements 1783, verified 98, ambiguous 6, failed 0, unbound 1679 (`CoordSf` 1626, layers of panels no plot owns 41, boxplot 12), each with its reason.
+
+**Result** (2026-11-11)
+- Every composed ggplot found in the six development compositions has its panels mapped and its point and bar layers verified or ambiguous; none failed, in either run. What stays unbound is unbound for reasons that are not patchwork's: `sf` coordinates (1626 of 1679 elements), a boxplot, and plots that are not in `get_patches()` as ggplots (insets, a gtable added to a composition), whose panels are found but have no build to pair with.
+- Capture unchanged: run `2026-11-11-1339` equals run `1220` on every column that describes the page, all 55 figures; patchwork's `panels`, `drawn_by` and `withheld` columns changed as intended.
 
 ---
 
@@ -232,9 +236,9 @@ Split from Task 2 (Scope changes). The patchwork engine maps no panels (M0 scope
 - Expected counts matter where binding happens. A guide entry (`axis`, `box`, `title`, `mtext`) needs no count; a data-mark entry without one cannot be bound.
 
 **Checklist**
-- [ ] Predictions committed before the development run: legend entries found; base data-mark elements verified; leaves still without a count.
+- [~] Predictions committed before the development run: legend entries found; base data-mark elements verified; leaves still without a count. — Counts (37–38) and bindings (40–42) committed and scored: all 5 right. Legend entries: not yet; they are found by rules, which run on the development set only after its labels (decision 1(a)).
 - [x] Expected counts for `polygon`, `path`, `symbols`, `arrows`, `abline`, each with a hand-built test that fails before the change. Device-reading code: the container suite too. — `da0282a`: rules measured first on hand-built pages, also for `plotXY` types `b`, `o`, `h`, `s`, `S`, `c`, `n`; thermometers, stars and boxplot symbols stay unknown. Test fails before (5 failures). Suite 9 / 85 / 532 with `4cc2680`, host and container, 0 failed, 0 errors, 0 skipped, 0 warnings; at `da0282a` alone 9 / 82 / 521 on the host.
-- [ ] Arguments table per data-mark entry (x, y and what the call gives per element), bound by order and verified through the panel's `usr`.
+- [x] Arguments table per data-mark entry (x, y and what the call gives per element), bound by order and verified through the panel's `usr`. — `5ab7784`: one table per kind of call (`base_plotXY`, …), rows with their entry; each entry's `usr` and plot region from capture, log axes from a replay on a null device. Run `2026-11-11-1353`: base data-mark elements 2674, verified 2544, ambiguous 93, failed 0, unbound 37 (`plotXY` types `h` and `o`), 98.6% checked; 0 bind errors.
 - [ ] Legend entries from the code (calls matched by order, then checked against the page: the entries' boxes must sit inside the legend's `rect`) and from the page alone; both measured against the labels of the 10 figures. An entry neither cue settles is residue.
 - [x] Measure, do not build: in how many base figures the code names the data frame columns passed to the plotting calls. — Read from the 10 development figures' code (nothing run): 2 name columns in the drawing call (`boxplot(data$value ~ data$names)`: gallery-021, -058); 1 passes a whole data frame (`plot(data)`, gallery-008); 1 passes a data frame and a column name to a package function (`choroLayer(df = , var = "pop2008")`, gallery-038); 6 name none (sf geometry, computed vectors, igraph, Rgraphviz, two Bioconductor plotting functions).
 
@@ -282,6 +286,9 @@ _(append-only; never edit completed tasks above)_
 - 2026-11-11 — **Most bindings the development set can check are ambiguous, not verified.** **Evidence:** rerun `2026-11-11-1231` (made after looking): of 24378 checked ggplot layer elements, 15328 lie within 0.5 pt of another row of the same layer (11173 in exts-022's volcano plot, 4000 in gallery-029's repeated label). Position alone cannot confirm which row such an element drew; the pairing then rests on order. **Effect:** Task 4's check "a `data` leaf is bound" counts ambiguous as bound by order, not as verified, and reports the two apart; design §绑定假设 gets a dated note (a passing back-substitution is Direct only when no other row passes). Whether the rows' colours, fills and sizes, which the elements also show, can tell overlapping rows apart (as the colour does for heatmap cells) is open: a candidate for the next slice, measured on these two figures first, not a task of this plan yet.
 
 - 2026-11-11 — **Owner's decisions: all three as recommended.** (1) Claude labels the 54 development figures from the rendered page and the leaf sheet, committed before any rule runs on the development set; the owner labels the 5 pilot figures independently. (2) Rule roles and engine bindings are derived tables of the substrate, recomputed when it is rebuilt and versioned by the plugin that made them; corrections, agent fills and human notes are records laid over them. ADR-0007 records this in Task 6 with the numbers of Tasks 2–5; nothing is exported before it. (3) `gl_reclassify()` moves to the plan that builds the record core. **Evidence:** the plan's header (who writes rules and labels; Appendix A's `structure` layer needs M2's record core). **Effect:** the plan is active; Task 1 has its annotators; design §实施计划 gets a dated note for (2) and (3). The owner also asked to close the M0 and bench v0 plans first and then start Task 2.
+
+- 2026-11-11 — **Checking colour, fill and size would not resolve the ambiguity; not built.** **Evidence:** `dev_docs/research/bind-dev/d2-ambiguity.R` (container, on the two figures holding 15173 of the 15328 ambiguous elements): in exts-022, 11159 of 11173 ambiguous points have candidate rows (median 36 within 0.5 pt) that all have the same colour, fill, size and shape; of the 14 others, none matches exactly one candidate by colour. In gallery-029 the 2000 ambiguous label boxes have identical candidate rows; its 2000 label texts were not measured properly (the script finds text candidates by box centre, not as the text comparison does). **Effect:** the candidate slice of the earlier scope change is dropped: these elements are marks drawn identically on top of each other, and no check on the page can tell which row each one is. They stay ambiguous, bound by order and reported apart (Task 4).
+- 2026-11-11 — **Base bindings are to the calls' arguments.** **Evidence:** run `1353` (above); 2 of the 10 base development figures name data frame columns in the drawing call (Task 5 checklist). **Effect:** none on the tasks; Task 6's binding query states base bindings as bindings to argument tables, and linking them to a user's data frame stays out of scope, as written.
 
 ## Closing notes
 

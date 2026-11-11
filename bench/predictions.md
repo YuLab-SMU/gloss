@@ -315,3 +315,18 @@ Written 2026-11-11, before any binding run with the base engine's bind step (eac
 40. **No base figure ends in a bind error.**
 41. **At least 80% of the elements of base data-mark leaves are verified or ambiguous** (point guess 90%); every unbound one has a reason naming its call's type, `pos`, plotmath, heads or symbol kind.
 42. **No base element fails.** The arguments are what the entry drew; a failure would mean a wrong `usr`, log axis or plot region, not a wrong pairing.
+
+### Predictions 40–42 on the development set (scored 2026-11-11)
+
+Run `runs/2026-11-11-1353-bind-dev.*` at `6af0ad5` (clean tree; no file was edited during the run), scored by `bench/R/score-bind.R`.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 40. No base figure ends in a bind error | 0 bind errors on all 54 captured figures | right |
+| 41. ≥ 80% of the elements of base data-mark leaves verified or ambiguous (point guess 90%); each unbound one with a reason naming its type, `pos`, plotmath, heads or symbol kind | 2637 of 2674 = 98.6% (verified 2544, ambiguous 93); unbound 37, all `plotXY` of type `h` (19, bioc-004 and bioc-009) or `o` (18, bioc-004), with that reason | right |
+| 42. No base element fails | 0 | right |
+
+- By call: `path` 483 of 483 verified (the sf maps of gallery-013 and gallery-038), `plotXY` 1981 (1888 verified, 93 ambiguous: overplotted points in gallery-008's scatterplot matrix), `polygon` 21, `rect` 14, `segments` 57, `symbols` 17, `text` 64, all verified. 57 guide leaves (`axis`, `box`, `title`, `mtext`) are outside.
+- These bindings are to the calls' arguments, not to a data frame: the arguments are vectors the call received.
+
+**Patchwork, rerun after looking at run `1319`** (same run, not predicted): no bind error; 1783 layer elements, verified 98, ambiguous 6, failed 0, unbound 1679: `CoordSf` 1626, layers of panels no plot owns 41 (patchwork-006's gtable, the insets of -008 and -010), patchwork-012's boxplot 12 (whiskers: two segments per box; medians: no comparison for one line per row; boxes: rows without `y`). Every point and bar of the composed ggplots is verified or ambiguous.

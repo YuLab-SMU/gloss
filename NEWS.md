@@ -1,5 +1,10 @@
 # gloss 0.0.0.9000
 
+## Patchwork panels and base expected counts (2026-11-11, M1)
+
+- A patchwork composition has the panels of each of its ggplots in `fig$substrate$panels`, named by the plot's place in the composition (`plot2_panel1`), with their scales, and its leaves lie in them. A plot whose build draws random numbers has its panels withheld with the reason, beside the other plots' panels; so do plots patchwork places as insets or gtables, which have no build. The page is drawn as before (patchwork's `print()`): on the 55 development figures every page equals the previous run's.
+- More base leaves have an expected count, so a base leaf that draws more or fewer elements than its call asks for is caught: `polygon()`, `polypath()`, `arrows()`, `abline()`, `symbols()` (circles, squares, rectangles) and `plot()`/`lines()` of types `"b"`, `"o"`, `"h"`, `"s"`, `"S"`, `"c"` and `"n"`. On the 10 base development figures, leaves without a count fell from 574 to 57, the axes, boxes and titles, and none is a count mismatch.
+
 ## Fixes found by the first binding run (2026-11-11)
 
 - `gloss()` no longer changes a recorded plot it is given. Capturing a recorded grid page wrapped the leaves of grid's display list in place, and that list is the one inside the recording, so a second `gloss()` of the same object stopped with "Capture integrity check failed: 0 probes drew". gloss now replays a deep copy. Captures are otherwise unchanged: on the 55 development figures every column of the capture run equals the previous run's, apart from the times.
