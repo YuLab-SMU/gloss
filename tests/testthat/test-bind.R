@@ -152,3 +152,51 @@ test_that("patchwork leaves are unbound: the engine states no bindings yet", {
   expect_true(all(b$leaves$status == "unbound"))
   expect_match(b$leaves$reason[1], "engine 'patchwork' states no bindings")
 })
+
+test_that("a geom with one child per row pairs each child with its row (geom_label)", {
+  # Development run 2026-11-11-1205, gallery-029: geom_label() draws one
+  # child per row; pairing each child with its group failed all 2000 boxes.
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(x = c(1, 2, 3, 4), y = c(2, 4, 1, 3), lab = c("a", "bb", "c", "dd"))
+  b <- bind_capture(ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, label = .data$lab)) + ggplot2::geom_label())
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_equal(nrow(lv), 8L)                      # a box and a text per label
+  expect_true(all(lv$status == "verified"))
+  el <- b$elements[b$elements$leaf %in% lv$leaf, ]
+  expect_setequal(el$row, 1:4)
+  expect_true(all(table(el$row) == 2L))
+})
+
+test_that("an area's outline is checked through ymax, the line it draws", {
+  # Development run 2026-11-11-1205, gallery-024: 30 outlines of stacked
+  # areas compared with y failed; the outline runs along ymax.
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(x = rep(1:5, 2), y = c(1, 2, 3, 2, 1, 2, 2, 2, 2, 2), g = rep(c("a", "b"), each = 5))
+  b <- bind_capture(ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, fill = .data$g)) + ggplot2::geom_area())
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_equal(sum(lv$mode == "group"), 4L)       # a polygon and an outline per group
+  expect_equal(sum(lv$failed), 0L)
+  geo <- scene_geometry(b$fig$substrate)
+  tag <- geo$tag[match(lv$leaf, geo$leaf)]
+  expect_true(all(lv$status[tag == "polygon"] == "verified"))
+  # Stacked areas share a boundary: the lower area's outline (its ymax) is
+  # the upper area's ymin, so another group's line passes as well. That
+  # outline is ambiguous, not verified; the top area's outline is verified.
+  expect_equal(sort(lv$status[tag == "polyline"]), c("ambiguous", "verified"))
+})
+
+test_that("a layer that draws nothing in a panel does not stop the layers after it from pairing", {
+  # Development run 2026-11-11-1205, exts-022: a ggrepel layer with nothing
+  # to label drew NULL, the panel held one child fewer than background +
+  # layers + foreground, and none of its 12275 elements was paired.
+  skip_if_not_installed("ggplot2")
+  GeomNothing <- ggplot2::ggproto("GeomNothing", ggplot2::GeomPoint, draw_panel = function(...) NULL)
+  nothing <- ggplot2::layer(geom = GeomNothing, stat = "identity", position = "identity")
+  p <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$wt, .data$mpg)) +
+    ggplot2::geom_point() + nothing + ggplot2::geom_point(ggplot2::aes(y = .data$mpg + 5), colour = "red")
+  b <- bind_capture(p)
+  lv <- b$leaves[!is.na(b$leaves$table), ]
+  expect_equal(lv$table, c("built_layer1", "built_layer3"))
+  expect_equal(lv$status, c("verified", "verified"))
+  expect_equal(sum(lv$verified), 64L)
+})

@@ -243,13 +243,20 @@ ggplot_describe <- function(plot) {
 # Which layer drew a leaf is read from the gtable the engine drew, by
 # construction (ggplot2 4.x, Facet$draw_panel_content and Coord$draw_panel):
 # a panel grob's children are the coord's background, the facet's
-# background, one grob per layer in layer order, the facet's foreground and
-# the coord's foreground; with theme(panel.ontop = TRUE) both coord grobs come
-# last. A panel whose children do not number layers + 4 is not paired. A
-# layer grob built by Geom$draw_panel's default holds its groups' grobs in
-# the order of factor(group), a fixed number per group; when its children
-# divide evenly among the panel's groups, each leaf below child j is paired
-# with group ceiling(j / (children / groups)) only.
+# background, what each layer draws in that panel in layer order, the
+# facet's foreground and the coord's foreground; with
+# theme(panel.ontop = TRUE) both coord grobs come last. A layer adds no child
+# where it draws NULL, and several where it draws a gList (bench exts-022:
+# a ggrepel layer with nothing to label in its panel); how many, each
+# layer's own draw_geom() says. A panel whose children do not add up is not
+# paired.
+#
+# Below a layer's grob: with ggplot2's default Geom$draw_panel, its children
+# are its groups' grobs in the order of factor(group), a fixed number per
+# group, and each leaf below child j is paired with that group only. A geom
+# with a draw_panel of its own that draws a fixed number of children per row
+# (geom_label: bench gallery-029) has each leaf paired with that row only.
+# Otherwise the leaf is paired with all the layer's rows in the panel.
 #
 # Rows are put on the device through the panel's scales (identify.R's
 # mapping); infinite positions go to the panel's edges, as ggplot2 squishes
@@ -259,26 +266,32 @@ ggplot_bind <- function(built, gtable, sub) {
   unbound <- function(ids, reason) data.frame(leaf = ids, reason = rep(reason, length(ids)), stringsAsFactors = FALSE)
   if (is.null(gtable)) return(list(claims = list(), unbound = unbound(leaves$id, "the drawn gtable was not kept")))
   n_layers <- length(built$data)
+  layers <- built$plot$layers
   ontop <- isTRUE(built$plot$theme$panel.ontop %||% ggplot2::theme_get()$panel.ontop)
+  drawn_counts <- ggplot_layer_children(built)
+  default_panel <- vapply(layers, function(l) ggplot_default_draw_panel(l$geom), logical(1))
   pan_rows <- grep("^panel", gtable$layout$name)
   layer_of <- list()      # layer grob name -> layer index
-  group_of <- list()      # layer grob name -> named child index (draw_group children)
+  kids_of <- list()       # layer grob name -> its children's names
   panel_names <- character()
   bad_panels <- character()
   for (j in pan_rows) {
     g <- gtable$grobs[[j]]
     kids <- g$children
     panel_names <- c(panel_names, g$name)
-    if (length(kids) != n_layers + 4L) {
+    k <- suppressWarnings(as.integer(sub("^panel-([0-9]+)[.].*$", "\\1", g$name)))
+    n_i <- if (is.null(drawn_counts) || is.na(k)) rep(1L, n_layers) else vapply(drawn_counts, function(cn) cn[k], 1L)
+    if (anyNA(n_i) || length(kids) != sum(n_i) + 4L) {
       bad_panels <- c(bad_panels, g$name)
       next
     }
-    at <- (if (ontop) 1L else 2L) + seq_len(n_layers)
+    pos <- (if (ontop) 1L else 2L) + cumsum(c(0L, n_i))[seq_len(n_layers)]
     for (i in seq_len(n_layers)) {
-      lg <- kids[[at[i]]]
-      layer_of[[lg$name]] <- i
-      if (inherits(lg, "gTree") && length(lg$children)) {
-        group_of[[lg$name]] <- stats::setNames(seq_along(lg$children), names(lg$children))
+      for (c in seq_len(n_i[i])) {
+        lg <- kids[[pos[i] + c]]
+        layer_of[[lg$name]] <- i
+        # a layer that draws a gList adds several children: no groups below them
+        if (n_i[i] == 1L && inherits(lg, "gTree") && length(lg$children)) kids_of[[lg$name]] <- names(lg$children)
       }
     }
   }
@@ -296,8 +309,7 @@ ggplot_bind <- function(built, gtable, sub) {
       next
     }
     if (seg[at] %in% bad_panels) {
-      ub <- rbind(ub, unbound(lf$id, sprintf("the panel holds other grobs than background, %d layer%s and foreground",
-                                             n_layers, plural(n_layers))))
+      ub <- rbind(ub, unbound(lf$id, "the panel's children are not background, what each layer draws, and foreground"))
       next
     }
     child <- if (at < length(seg)) seg[at + 1L] else NA_character_
@@ -325,19 +337,44 @@ ggplot_bind <- function(built, gtable, sub) {
       next
     }
     groups <- NULL
-    gmap <- group_of[[child]]
-    if (!is.null(gmap) && at + 2L <= length(seg) && seg[at + 2L] %in% names(gmap)) {
+    rows <- NULL
+    kn <- kids_of[[child]]
+    if (!is.null(kn) && at + 2L <= length(seg) && seg[at + 2L] %in% kn) {
+      j <- match(seg[at + 2L], kn)
+      nk <- length(kn)
       gs <- sort(unique(pred$group))
-      nk <- length(gmap)
-      if (length(gs) && nk %% length(gs) == 0L) {
-        per <- nk %/% length(gs)
-        groups <- gs[ceiling(gmap[[seg[at + 2L]]] / per)]
+      if (default_panel[i] && length(gs) && nk %% length(gs) == 0L) {
+        groups <- gs[ceiling(j / (nk %/% length(gs)))]
+      } else if (!default_panel[i] && nrow(pred) && nk %% nrow(pred) == 0L) {
+        rows <- pred$row[ceiling(j / (nk %/% nrow(pred)))]
       }
     }
     claims[[length(claims) + 1L]] <- list(leaf = lf$id, table = sprintf("built_layer%d", i),
-                                          pred = pred, groups = groups)
+                                          pred = pred, groups = groups, rows = rows)
   }
   list(claims = claims, unbound = ub, outside = outside)
+}
+
+# For each layer, how many children it adds to each panel: 0 where it draws
+# NULL, the length of a gList, else 1. NULL when a layer cannot be drawn
+# again outside ggplot_gtable(); the binder then expects one child per layer.
+ggplot_layer_children <- function(built) {
+  out <- lapply(seq_along(built$plot$layers), function(i) {
+    l <- built$plot$layers[[i]]
+    gr <- tryCatch(suppressWarnings(suppressMessages(l$draw_geom(built$data[[i]], built$layout))),
+                   error = function(e) NULL)
+    if (is.null(gr)) return(NULL)
+    vapply(gr, function(x) if (is.null(x)) 0L else if (inherits(x, "gList")) length(x) else 1L, 1L)
+  })
+  if (any(vapply(out, is.null, logical(1)))) NULL else out
+}
+
+# Whether a geom draws its panel with ggplot2's default Geom$draw_panel (one
+# grob per group, from draw_group).
+ggplot_default_draw_panel <- function(geom) {
+  f <- tryCatch(environment(geom$draw_panel)$f, error = function(e) NULL)
+  d <- tryCatch(environment(ggplot2::Geom$draw_panel)$f, error = function(e) NULL)
+  !is.null(f) && !is.null(d) && identical(f, d)
 }
 
 `%|NA|%` <- function(a, b) if (length(a) != 1L || is.na(a)) b else a
@@ -373,6 +410,9 @@ ggplot_rows_on_device <- function(d, prow, flip) {
     out
   }
   out <- data.frame(row = d$row, group = if ("group" %in% names(d)) d$group else rep(1L, nrow(d)))
+  # stat_align()'s padding rows close an area's polygon; its outline leaves
+  # them out (GeomRibbon$draw_group)
+  if ("align_padding" %in% names(d)) out$pad <- d$align_padding %in% TRUE
   for (col in intersect(pos, names(d))) {
     out[[col]] <- if (startsWith(col, "x")) to_x(d[[col]]) else to_y(d[[col]])
   }

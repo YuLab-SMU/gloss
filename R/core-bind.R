@@ -116,7 +116,9 @@ check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
   ids <- ids[order(geo$ordinal[match(ids, geo$id)])]
   g <- geo[match(ids, geo$id), , drop = FALSE]
   all_pred <- cl$pred
-  pred <- if (is.null(cl$groups)) all_pred else all_pred[all_pred$group %in% cl$groups, , drop = FALSE]
+  pred <- if (!is.null(cl$rows)) all_pred[all_pred$row %in% cl$rows, , drop = FALSE]
+          else if (!is.null(cl$groups)) all_pred[all_pred$group %in% cl$groups, , drop = FALSE]
+          else all_pred
   n_el <- length(ids)
   n_rows <- nrow(pred)
   groups <- sort(unique(pred$group))
@@ -303,13 +305,29 @@ check_groups <- function(g, pred, groups, all_pred, all_groups, tol) {
   list(pass = pass, dev = dev, n_pass = n_pass)
 }
 
-# Ordered vertices against the group's (x, y) rows, after dropping rows
-# with a missing position.
+# Ordered vertices against the group's rows, after dropping rows with a
+# missing position: the line through (x, y), or, for a ribbon or an area,
+# its outline through (x, ymax) or (x, ymin) (bench gallery-024: an area's
+# outline runs along ymax, which a stacked area's y is not); the smallest
+# deviation of the lines the rows define. Rows the engine marks as padding
+# (`pad`) may be left out of an outline, as ggplot2 leaves them out.
 path_dev <- function(v, b) {
-  ok <- !is.na(b$x) & !is.na(b$y)
-  b <- b[ok, , drop = FALSE]
-  if (nrow(v) != nrow(b)) return(Inf)
-  max(abs(v[, 1] - b$x), abs(v[, 2] - b$y))
+  lines <- list(c("x", "y"), c("x", "ymax"), c("x", "ymin"), c("xmax", "y"), c("xmin", "y"))
+  pad <- if (is.null(b$pad)) NULL else b$pad
+  one <- function(xs, ys, keep) {
+    ok <- keep & !is.na(xs) & !is.na(ys)
+    if (nrow(v) != sum(ok)) return(Inf)
+    max(abs(v[, 1] - xs[ok]), abs(v[, 2] - ys[ok]))
+  }
+  devs <- vapply(lines, function(cols) {
+    if (!all(cols %in% names(b))) return(Inf)
+    xs <- b[[cols[1]]]
+    ys <- b[[cols[2]]]
+    d <- one(xs, ys, rep(TRUE, length(xs)))
+    if (!is.null(pad) && any(pad)) d <- min(d, one(xs, ys, !pad))
+    d
+  }, 1)
+  min(devs)
 }
 
 # Polygon vertices and the group's points within tolerance of each other,
