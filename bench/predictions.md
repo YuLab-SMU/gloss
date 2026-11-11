@@ -268,3 +268,32 @@ Written 2026-11-11 at `8f99857`, before any binding run with the patchwork engin
 36. **The boxplot of patchwork-012 is not verified:** its whiskers (two segments per box) are unbound and its boxes unbound or failed. Reasoning: the binder knows no boxplot geometry; this is a gap in ggplot binding that patchwork only shows.
 
 **What would change the plan:** 32 wrong (a failed point or bar element): the plot mapping is wrong somewhere, and Task 2b is not done. 33 wrong because insets are paired and verify: good news, the walk covers them. 33 wrong because insets are paired and fail: as 32.
+
+### Predictions 32–36 on the development set (scored 2026-11-11)
+
+Run `runs/2026-11-11-1319-bind-dev.*`, started at `b2d971b` (the commit holding the predictions). The working tree did not stay clean: while the run was going, `base_expected()` in `R/core-substrate.R` was edited (expected counts for more base calls, M1 Task 5), and the container reads the live tree, so figures captured after the edit used it. Binding does not read base expected counts (base leaves are all unbound, "states no bindings", before any count is consulted), and ggplot and heatmap numbers equal run `1231`'s in every column, so no number below depends on the edit. Scored by `bench/R/score-bind.R` at `b2d971b`.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 32. No patchwork bind error; no point or bar element fails | patchwork-012 ends in a bind error ("arguments imply differing number of rows: 1, 0"); 0 failed elements in the other five | **wrong** |
+| 33. Inset plots not found; their layer leaves unbound, "belongs to no plot" | patchwork-008's `p2` and patchwork-010's `pcol`: unbound with that reason | right |
+| 34. Every `geom_sf()` layer unbound, `CoordSf` | patchwork-010's map (1606 elements) and patchwork-011's two plots (20) | right |
+| 35. `p1` binds in full in patchwork-006, -008, -012; `p2_table` unbound | 006 and 008: 30 verified, 2 ambiguous (Mazda RX4 and RX4 Wag share mpg and disp); 012: bind error; `p2_table` unbound with "belongs to no plot" | **wrong** (012) |
+| 36. patchwork-012's boxplot not verified | not scorable: the figure's binding stopped with the error | — |
+
+- **32 and 35 are wrong for one defect in the core's comparisons, not in patchwork.** A boxplot's built rows carry no `y`; comparing its box polygons by vertex mean built a table from `y` and stopped. Any ggplot boxplot would have hit it; the 31 ggplot development figures draw none. The plot mapping itself held: no element failed.
+- **Not foreseen:** a panel no plot owns had its background and grid lines counted with its layer leaves as unbound (patchwork-006 and -008: 14 leaves, 34 elements each, of which 9 leaves are layers).
+- Patchwork layer elements in this run: 1775; verified 60, ambiguous 4, failed 0, unbound 1711 (sf 1626, panels no plot owns 85).
+
+#### Changes made after looking at run 2026-11-11-1319
+
+- Each comparison declares the row columns it reads; a layer missing one is unbound with the reason ("the rows paired with <polygon> elements have no y").
+- A panel no plot owns: only the leaves in its layer slots are unbound; its background, grid and foreground are outside.
+
+## Base expected counts and capture after Task 2b (M1 plan Task 5, first part)
+
+Written 2026-11-11, before any capture run with the new expected counts (`base_expected()` for `polygon`, `path`, `symbols`, `arrows`, `abline` and `plotXY` types other than `p` and `l`) or with the patchwork engine's own drawing step (`8f99857`). Run: `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R dev`, compared with run `2026-11-11-1220` and its scorer.
+
+37. **The base leaves of the development set left without an expected count are the guide calls only:** `axis` 19, `box` 29, `title` 7 and `mtext` 2, 57 leaves (574 before); no data-mark call is left without one.
+38. **None of the newly counted base leaves is `count_mismatch`.**
+39. **Every other column of the capture run equals run `1220`, figure by figure, apart from the seconds**, patchwork figures included: the patchwork engine's drawing step prints the composition as before, so its pages are the same.
