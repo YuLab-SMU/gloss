@@ -294,13 +294,23 @@ function markDirty() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(flush, 400);
 }
-async function flush() {
+// One save at a time: each names the revision of the labels this page holds
+// (S.rev, as loaded or as the save before returned it). The server refuses a
+// save from a page that holds an older one, so a page left open elsewhere cannot
+// write its old labels over newer ones; this page then loads the newer ones.
+let saves = Promise.resolve();
+function flush() {
   clearTimeout(saveTimer);
+  saves = saves.then(saveNow);
+  return saves;
+}
+async function saveNow() {
   if (!dirty || !FIG) return;
   dirty = false; unsavedSeconds = 0; saving = true;
-  const id = FIG.id;
+  const id = FIG.id, st = S;
   try {
-    const p = await api("/api/state/" + id, { labels: S.labels, seconds: S.seconds, cursor: cur });
+    const p = await api("/api/state/" + id, { labels: st.labels, seconds: st.seconds, cursor: cur, rev: st.rev || 0 });
+    st.rev = p.rev;
     const f = CFG.figures.find(x => x.id === id);
     Object.assign(f, p);
     saving = false;
@@ -308,7 +318,13 @@ async function flush() {
     renderHeader();
     if (finished && FIG.id === id) renderBody();
   } catch (e) {
-    dirty = true; saving = false;
+    saving = false;
+    if (e.status === 409) {
+      toast("这张图在别的页面（或别的设备）上改过，这个页面里的是旧的：已经载入最新的标注，刚才那一步请再做一次。");
+      try { if (FIG && FIG.id === id) await loadFigure(id); } catch (e2) { toast("没有载入成功：" + e2.message + "（请刷新页面）"); }
+      return;
+    }
+    dirty = true;
     toast("没有保存成功：" + e.message + (TEAM ? "（网络断了吗？恢复后再按任意一个键会重新保存）" : "（serve.py 还在运行吗？）"));
   }
 }
@@ -994,6 +1010,9 @@ function toggleDim() { dim = !dim; highlight(); renderBody(); }
 
 async function openFigure(id) {
   await flush();
+  await loadFigure(id);
+}
+async function loadFigure(id) {
   FIG = await api("/api/figure/" + id);
   indexPeers();
   S = FIG.state; S.labels = S.labels || {}; S.seconds = S.seconds || 0;
@@ -1090,7 +1109,7 @@ async function boot() {
   }, 1000);
   window.addEventListener("pagehide", () => {
     if (FIG && (dirty || unsavedSeconds)) fetch("/api/state/" + FIG.id, { method: "POST", keepalive: true, headers: headers(true),
-      body: JSON.stringify({ labels: S.labels, seconds: S.seconds, cursor: cur }) });
+      body: JSON.stringify({ labels: S.labels, seconds: S.seconds, cursor: cur, rev: S.rev || 0 }) });
   });
   const first = CFG.figures.find(f => !f.done) || CFG.figures[0];
   await openFigure(first.id);

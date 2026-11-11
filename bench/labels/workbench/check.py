@@ -92,6 +92,9 @@ def call(path, body=None, token=None):
 
 
 def post(fig, state, token=None):
+    """Save as a page that has just loaded the figure does: with the revision the server holds."""
+    if "rev" not in state:
+        state = dict(state, rev=call("/api/figure/" + fig, token=token)[1]["state"].get("rev", 0))
     return call("/api/state/" + fig, state, token)[1]
 
 
@@ -156,6 +159,18 @@ try:
            "<svg" in fig["svg"] and len(fig["leaves"]) == 15 and len(fig["elements"]) == 90 and "1" in fig["state"]["labels"])
     ref = call("/api/reference")[1]
     expect("a figure being labelled is never its own reference, or an example of a kind", ref["figures"] == [] and ref["kinds"] == {} and ref["figure"] is None)
+    # a page that loaded the figure before another page saved it holds old labels: its save is refused
+    held = call("/api/figure/ex-box")[1]["state"]
+    full = held["labels"]
+    newer = dict(full, **{"1": {"role": "decoration", "kind": "other", "note": "changed in another page", "unsure": False}})
+    s1, p1 = call("/api/state/ex-box", {"labels": newer, "seconds": 90, "rev": held.get("rev", 0)})
+    s2, p2 = call("/api/state/ex-box", {"labels": dict(list(full.items())[:1]), "seconds": 90, "rev": held.get("rev", 0)})
+    after = call("/api/figure/ex-box")[1]["state"]
+    expect("a save from a page that holds an older revision is refused (409) and changes nothing",
+           s1 == 200 and s2 == 409 and after["labels"] == newer and after.get("rev") == p1.get("rev") == held.get("rev", 0) + 1
+           and len(rows(os.path.join(out, "ex-box.csv"))) == 22)
+    expect("a save that names no revision is refused too",
+           call("/api/state/ex-box", {"labels": full, "seconds": 90})[0] == 409 and call("/api/figure/ex-box")[1]["state"]["labels"] == newer)
     expect("one annotator: nothing of others to open or to see",
            fig["peers"] is None and call("/api/open/ex-base", {})[0] == 403 and call("/api/overview")[0] == 404
            and call("/api/join", {"nickname": "someone"})[0] == 404)

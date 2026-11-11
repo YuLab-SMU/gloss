@@ -391,14 +391,20 @@ class Annotator:
             raise ValueError("labels for leaves the sheet does not have: %s" % sorted(set(labels) - known)[:5])
         with LOCK:
             st = self.state(fig)
+            # A page sends all the labels it holds. One that loaded the figure before
+            # another page saved it would write its older ones over the newer: each
+            # save names the revision the page holds, and only the latest is taken.
+            rev = int(st.get("rev") or 0)
+            if posted.get("rev") != rev:
+                raise Stale("这张图在别的页面（或别的设备）上改过，这个页面里的是旧的")
             st.update(figure=fig, guideline=self.sheets.vocabulary["guideline"], workbench=WORKBENCH, labels=labels,
-                      cursor=posted.get("cursor"))
+                      cursor=posted.get("cursor"), rev=rev + 1)
             # the timer stops once the labels are frozen: time.csv is the time to label
             if "independent" not in st:
                 st["seconds"] = max(int(posted.get("seconds") or 0), int(st.get("seconds") or 0))
             self.write_state(fig, st)
             file = self.write_outputs(fig, st)
-        return dict(self.progress(fig, st), file=file)
+        return dict(self.progress(fig, st), file=file, rev=st["rev"])
 
     def lock(self, figs):
         """Freeze the labels of finished figures as the independent ones."""
@@ -422,6 +428,10 @@ class Annotator:
                     w.writerow([fig, "%.1f" % (p["seconds"] / 60), self.sheets.vocabulary["guideline"],
                                 "label workbench %s timer: %d s active (tab hidden or idle over 60 s not counted)"
                                 % (p["workbench"], p["seconds"])])
+
+
+class Stale(Exception):
+    """A save from a page that did not load the figure's latest labels."""
 
 
 def kappa(pairs):
@@ -714,6 +724,8 @@ def handler(wb):
                 self.send(404, {"error": "not found"})
             except PermissionError as e:
                 self.send(403, {"error": str(e)})
+            except Stale as e:
+                self.send(409, {"error": str(e)})
             except (ValueError, KeyError, TypeError, AttributeError) as e:
                 self.send(400, {"error": str(e)})
     return Handler
