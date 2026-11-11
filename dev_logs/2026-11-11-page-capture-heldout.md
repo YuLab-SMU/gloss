@@ -34,7 +34,8 @@ The owner answered the four open questions of the last log: run the held-out set
 - Mixed-page defect, hand-built page (a grid page, then a base page, drawn by a function and as a recorded plot): before the fix refused with "7 base operations, 2 grid grobs"; the device's display list for the page holds 7 base operations and 0 grid operations. After: captured as a base page, `equal`, the same primitives and clip regions as the base plot drawn alone. A page that mixes the two (1 grid operation on the device's list) is refused before and after, also as a recorded plot. `Rscript bench/R/check-runner.R`: OK.
 - Development set after the fix, run `2026-11-11-0858` at `21988ee`: every column of every row equals run `0705` except the seconds; 52 equal, 2 not deterministic, 1 refused.
 - `quarto render dev_docs/design.qmd --to html`: exit 0, no warnings.
-- Not run: the held-out set after the fix; whether bioc-023's refusal has the same cause as bioc-019's; `R CMD check` after this session's changes (last run at `84abf35`, 2 NOTEs); anything on R versions other than 4.5.2.
+- `R CMD build --no-build-vignettes .` and `R CMD check --as-cran --no-manual` on a clean export of `4364d75` (R 4.5.2, macOS, `_R_CHECK_CRAN_INCOMING_REMOTE_=false`): 2 NOTEs, the two of the last log (incoming feasibility; future file timestamps); tests and "R code for possible problems" OK.
+- Not run: the held-out set after the fix; whether bioc-023's refusal has the same cause as bioc-019's; `R CMD check` on Linux or Windows; anything on R versions other than 4.5.2.
 
 ## Surprises
 
@@ -50,5 +51,5 @@ The owner answered the four open questions of the last log: run the held-out set
 
 - **For the owner:** whether to run the held-out set once more on the fixed code. It would show what the fix does on bioc-019 and bioc-023, and it would be a second look: reported beside the first run as made after looking, never in its place. Not running it keeps the first run the only one, with the two figures' state unknown.
 - **M1 can start** from the closed plan's numbers; the next plan is drafted from `plan/_template.md`. Its first questions for base figures: binding through the call's arguments and `usr`, and what to do with leaves that have no expected count.
-- **Before a release:** the suite and the base replay on R-oldrel and R-devel; `R CMD check --as-cran` on Linux and Windows, and again on macOS after this session's changes.
+- **Before a release:** the suite and the base replay on R-oldrel and R-devel; `R CMD check --as-cran` on Linux and Windows.
 - `bench/R/runner.R` still uses `<<-` in two places. It is not package code and no rule covers it; left as it is.
