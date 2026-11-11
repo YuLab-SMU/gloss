@@ -591,3 +591,17 @@ Written 2026-11-11, after the binder was changed to name a text leaf whose eleme
 78. **Each of the 67 leaves has a reason naming glyph outlines; the 11 that matched their counts are unbound, the 56 others stay count mismatches.** Failed 104 → 67, unbound 50 → 87; count mismatch (14482) and the checked share (41.5%) do not move, and no element moves out of verified or ambiguous.
 79. **No other leaf changes:** on the stratum, the changed leaves are these 67; on v0, none of the 7114.
 80. **In at least 54 of the 67 leaves (80%), the number of paths equals the number of the labels' characters other than spaces,** as the reason reports them: `showtext` draws one outline per glyph and nothing for a space, so most leaves could be grouped into labels by count. Leaves where they differ would be labels drawn through plotmath or glyphs that draw no outline.
+
+### Predictions 78-80 (scored 2026-11-11)
+
+Runs `runs/2026-11-11-2344-bind-dev-tree.*` (stratum) and `runs/2026-11-11-2347-bind-dev.*` (v0), both at `57fc97b` (clean tree; the predictions committed in it), container, no network. The first runs whose workers load a copy of gloss's source taken at the start: the stratum run's record holds the commit at its start and at its end (both `57fc97b`) and the copy's digest.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 78. The 67 leaves name glyph outlines; 11 unbound, 56 count mismatches; failed 104 → 67, unbound 50 → 87; count mismatch and checked share unchanged; nothing leaves verified or ambiguous | 67 of 67 with the reason; 11 unbound, 56 count mismatch, 0 failed among them; failed 67, unbound 87, count mismatch 14482, 41.5%; 0 regressions | right |
+| 79. Only these 67 leaves change on the stratum; none on v0 | stratum: 528 of 595 unchanged, the 67 changed are these; v0: 7114 of 7114 unchanged | right |
+| 80. Paths equal the labels' characters other than spaces in at least 54 of the 67 leaves | 23 of 67 | **wrong** |
+
+- 2 right of 3.
+- **Why 80 is wrong:** 41 of the 67 leaves are tree-054's repelled labels. Each leaf draws one label's two or three glyphs, but the binder pairs it with all 126 rows of its group, and those rows reached the reason without their labels, so there is nothing to count against. Of the other 26 leaves, 23 match. The three that do not are in tree-014: a leaf of 90 tip labels drawing 1444 paths for 2344 characters, and two labels of 9 characters drawn as one path each. Neither was read further.
+- **The number the plan asked for:** grouping glyph paths into labels by count would reach 291 of the 1829 elements drawn as outlines (16%). The later step (binding outlines label by label) is not worth taking in this plan; text drawn as outlines stays unchecked, with its reason.
