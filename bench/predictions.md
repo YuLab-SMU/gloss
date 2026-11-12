@@ -972,3 +972,24 @@ Written 2026-11-12, before `bench/R/bundle.R` exists or has run. What I have see
 133. **On figures read back, `gl_propose()` accepts at least 95% of the pairings tried,** and what it does not accept it refuses with a reason (polar and `sf` panels, base and heatmap figures); it rejects none. A rejection would mean the figure read back does not check as the one captured.
 
 **What would change the plan:** more than 15 figures that cannot be written: then storing a figure is not something to patch case by case, and what a table may hold has to be decided once (keep what the codec stores, leave the rest out with a reason in the figure's status), before M5. A rejection under 133: found before any agent is served a bundle.
+
+## The pilot's arms with a model: raw material and a sandbox (A) against the substrate's tools (B) (agent-path plan Task 5)
+
+Written 2026-11-12, while the models are down: before the rehearsal on a hand-built figure and before any run of either arm with a model. What I have seen: Task 1's run (60 of 60 on a two-panel scatter plot, with the harness's own tools); the dry run (both tool sets reach all 30 answers when a script drives them); the two runs of the arm without a model (after the layer check only the answer is accepted, on all 30). I have not seen a model use `run_r`, `submit`, or `gl_tools()` on these figures. I know the questions: 9 ask about bars or rectangles of bar-like layers (bioc-016, whose panel is flipped; gallery-029; exts-030), 3 about tiles (exts-027) and 18 about points.
+
+### How the runs are made and scored (fixed before the runs; the plan's Task 5 has the rule in full)
+
+- 30 questions, 3 models, 2 arms, 3 runs each: 540 runs, temperature 0, at most 16 model turns, 180 s a model request, 120 s a sandbox call. A run that ends in a request error is made once more; a second failure stands as no answer.
+- Right, arm A: the last submission names the answer's table and row. Right, arm B: `propose` accepted the answer for the element asked about and accepted nothing else for it.
+- Archived run by run; scored with `bench/agent/score-pilot.R` after the last run.
+
+### Predictions
+
+134. **Arm B is right in at least 80% of its 270 runs; arm A in at most 65% of its.** Point guesses: B 88%, A 45%.
+135. **By figure, B's share of right runs is above A's on at least 6 of the 10 figures, and A's is above B's on at most 2.** The mean over figures differs by at least 0.15.
+136. **B is weakest on the bars** (the 9 questions on bioc-016, gallery-029 and exts-030): `find_rows` looks for a row's x and y, which for a bar is the middle of its top, and a question gives the middle of its box. Under 75% of B's runs on those questions are right, against at least 90% on the other 21. A first proposal is rejected in at least 20 of B's 270 runs, and at least half of those runs end right.
+137. **No wrong acceptance in arm B:** `propose` accepts nothing but the answer for the element asked about, in any run.
+138. **Arm A ends with no answer in at least 10% of its runs** (the turns run out, or the model stops without submitting), **arm B in under 5%.**
+139. **A run of arm A takes at least 3 times as long as one of arm B at the median, and uses at least twice the tokens.**
+
+**What would change the plan:** A within 10 points of B, or above it: then on this question the substrate's tools save a model nothing that a sandbox does not give it, and the claim has to be tested where code cannot hand over the answer's parts (a leaf the engine could not bind, a claim about the figure). B under 60%: the tools are in the model's way, and their transcripts are read before M5 is sized. A wrong acceptance: `propose` still lets a wrong pairing through, and nothing is reported until that is closed.
