@@ -80,8 +80,9 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 9 files, 102 tests, 733 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `5c0a3cd`; the container the same); was 88 / 544 at `b02ea8c`.
-- Key numbers: stratum development half, 29 of 29 captured (run `2026-11-12-0924`); 92.2% of 25037 layer elements checked, failed 67, unbound 87, count mismatch 1792 (text drawn as glyph outlines); every layer element checked in 22 of 28 ggplot figures, at least 80% in 25, none at 0 (run `2026-11-12-0927`). Was 28 captured, 40.1% of 24915, failed 212, unbound 308, 15 of 27 (runs `2110`, `2118`). v0 development binding: 0 regressions against run `1353`; gallery-020's 5 labels and exts-014's 12 symbol parts gained (runs `2315`, `2026-11-12-0936`).
+- Suite: 9 files, 109 tests, 807 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `752bb73`; the container the same); was 88 / 544 at `b02ea8c`.
+- Key numbers: stratum development half, 29 of 29 captured (run `2026-11-12-1105`); 92.3% of 25037 layer elements checked (verified 14212, ambiguous 8907), failed 0, unbound 126, count mismatch 1792 (text drawn as glyph outlines); every layer element checked in 23 of 28 ggplot figures, at least 80% in 25, none at 0 (run `2026-11-12-1107`). After Task 5: 92.2%, failed 67, unbound 87, 22 of 28 (run `2026-11-12-0927`). Was 28 captured, 40.1% of 24915, failed 212, unbound 308, 15 of 27 (runs `2110`, `2118`). v0 development binding: 0 regressions against run `1353`; gallery-020's 5 labels and exts-014's 12 symbol parts gained (runs `2315`, `2026-11-12-0936`); against run `0936`, 0 regressions, failed 8 to 6, two rasters verified (run `2026-11-12-1116`).
+- Direction (2026-11-12, Scope changes): the owner stopped rule-writing for what remains; the binder is frozen at `752bb73` for Task 7.
 
 **Overall progress**
 - [x] Task 1: A page over the parser's limit (tree-041)
@@ -89,7 +90,7 @@
 - [x] Task 3: Polar coordinates through the coord's transform (tree-025, -038, -057)
 - [x] Task 4: Text drawn as glyph outlines (the book figures)
 - [x] Task 5: Points in several shapes (tree-014)
-- [ ] Task 6: What remains: repelled labels (tree-054), tree-003's text leaf _(stub)_
+- [x] Task 6: What remains: repelled labels (tree-054), tree-003's text leaf; with tree-041's nudged lines and images, tree-072's copies, and base points by symbol
 - [ ] Task 7: The stratum's held-out half, one run _(stub; decision 1: (a), once at the end of this plan)_
 - [ ] Task 8: Records: design notes, NEWS, dev log, closing notes
 
@@ -341,6 +342,8 @@ _(append-only; never edit completed tasks above)_
 - 2026-11-11 — **A bench run loads gloss from the working tree, figure by figure.** **Evidence:** a stratum run at `9f448a1` (`2323`) was going while R/ was edited for Task 4; `run_worker()` calls `pkgload::load_all()` on the repository when each figure starts. The run was discarded unscored and made again on a clean tree (`2327`). **Effect:** before Task 4's runs, the bench copies gloss's source once when a run starts and every worker loads the copy; the copy's digest goes into the run's record.
 
 - 2026-11-12 — **Base points are counted and paired by symbol too.** **Evidence:** Task 5 counted grid points by symbol; the base route's `base_expected()` still expects one element per point for `plot()` and `points()` (`C_plotXY` of type `"p"`), so a base page with `pch = 3` is a count mismatch. No development figure has one (no base leaf is a count mismatch in run `0930`). **Effect:** Task 6 gains a first item, at the owner's word ("把还没做的两项做完"): the same symbol table for base points, measured on the recorded arguments, with a fixture test; on the bench it is expected to change nothing.
+
+- 2026-11-12 — **The owner stops rule-writing for what remains; the binder is frozen as it stands for Task 7.** **Evidence:** Task 6's Result above, read with what it cost: 374 lines added to `R/` and `tests/` (`git diff --shortstat c8081de..752bb73 -- R tests`) for 28 more checked elements (92.2% to 92.3%), 12 of them through rules read or measured from two packages (ggtree's nudge, ggimage's justification); of the 67 failed elements cleared, 6 are bound and 61 are unbound with a reason; four defects in those rules were found before the runs. Tasks 1-5, which state what R's engine, grid and ggplot2 themselves do, had taken the share from 40.1% to 92.2% for 955 lines (`b02ea8c..d13ecfd`). The owner's words on reading it: "现在像是program 式的绑定，和一开始想的agentic 式似乎相差甚远", then "残留修复是没有止境的 ... 我们前期不能做太多规则的东西，不然整个系统的规则依赖会非常严重". [ADR-0009](../dev_docs/decisions/0009-package-behaviour-enters-as-a-checked-proposal.md) (proposed) draws the line. **Effect:** (1) No task of this plan adds a binding rule. What is unchecked on the development half stays, each with its reason: 1829 elements of text drawn as outlines, 69 of repelled labels, 20 copies (run `1107`). On v0, exts-014's two `geom_rocci()` leaves are not read further. (2) Task 7 keeps its procedure (decision 1 (a)). The binder it runs is the one measured on the development half, frozen at `752bb73`, the last commit that touches `R/`; the three rules ADR-0009 names as outside the line stay in it. Its predictions also say how many held-out layer elements are expected unchecked for a reason no development figure gave. No rule is written in this plan in answer to what the run shows; a new class is listed in [the idea note](../idea/2026-11-12-binding-proposals.md). (3) Task 8's closing notes report the residue by reason beside the checked share. The *Done when* lines and *Out of scope* stand.
 
 ## Closing notes
 
