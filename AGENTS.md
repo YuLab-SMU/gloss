@@ -21,7 +21,7 @@
 - `plan/` — Plans for the next slice of work that can be finished and measured, with task-by-task tracking. **Not part of the build.**
 - `idea/` — Exploration not yet promoted to a plan. **Not part of the build.**
 
-Directories that don't exist yet are created when first needed.
+This is the intended layout. Files and directories that don't exist yet are created when first needed; `ls R/` says what exists.
 
 ## Build, Test, Document
 
@@ -49,7 +49,9 @@ Development runs on feedback. Plans and the design doc say what we expect; tests
 
 **Work in slices that end in something observable:** a test that could have failed, or a number measured on figures that were not picked to pass (the bench development set, once it exists). Do first the slice whose result could change the most of the plan.
 
-**Done means measured.** Mark `[x]` only with the command and what it showed: counts, numbers, and the figure set it ran on. "Tests pass" without numbers is not a result. A result on hand-built fixtures is reported as such; it shows a mechanism works, not how much it covers.
+**Done means measured.** Mark `[x]` only with the command and what it showed: counts, numbers, and the figure set it ran on. "Tests pass" without numbers is not a result. A result on hand-built fixtures is reported as such; it shows a mechanism works, not how much it covers. A share over elements is reported with its per-figure counts, and `verified` apart from `ambiguous`: one or two figures decide an element-weighted share.
+
+**Record what a task cost beside what it moved** (lines added under `R/` and `tests/`, runs made). When a kind of task moves the plan's key number little for much, stop and raise it before opening the next of its kind. In the tree binding plan, Tasks 1-5 added 955 lines for 13107 more checked elements and Task 6 added 374 lines for 28; the owner stopped it there ([ADR-0009](dev_docs/decisions/0009-package-behaviour-enters-as-a-checked-proposal.md)).
 
 **When the evidence disagrees with the plan or the design,** write it under *Surprises* in the dev log the same session, then route it:
 
@@ -60,7 +62,7 @@ Development runs on feedback. Plans and the design doc say what we expect; tests
 
 Don't weaken a test, widen a tolerance, or drop a figure from a set to make a result match the plan. If an expectation was wrong, say why in the dev log, with the evidence, and then change it.
 
-**Milestones are a map, not a contract.** M0–M5 and their completion criteria in design §实施计划 are the current best guess. When a plan closes, plan the next slice from what was measured: milestones may be split, merged or reordered, and criteria rewritten, with the evidence recorded. Two things do not move with progress:
+**Milestones are a map, not a contract.** M0–M5 and their completion criteria in design §实施计划 are the current best guess. When a plan closes, plan the next slice from what was measured: milestones may be split, merged or reordered, and criteria rewritten, with the evidence recorded. Riskiest first holds across plans as it does inside one: a plan names the clause of the research card (design §研究卡片) it gives evidence for, and a clause with no data at all outranks refining one that has some. Two things do not move with progress:
 
 - the invariants under *Design Principles* and the rules under *Safety and CRAN Hygiene*;
 - evaluation integrity: rules, prompts and thresholds are tuned only on the development set; the held-out set only produces reported numbers, every run on it is archived in `bench/`, and any change made after looking at its results is reported as such; predictions are committed before the runs they predict (design §评测设计). These are what make the measurements worth trusting.

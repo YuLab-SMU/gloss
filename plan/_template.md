@@ -7,6 +7,8 @@
 
 **Why now:** The evidence that set this scope: a dev log's surprises or next steps, a failing test, a measurement, an ADR follow-up. Link it.
 
+**Research-card clause:** Which clause of design §研究卡片 this plan gives evidence for, and whether that clause has any data today. If the plan is infrastructure for a later clause, say which and why it cannot be thinner.
+
 **Starting state (measured):** Suite counts on the opening date (files, tests, expectations, failures, skips) and any number this plan means to move, each with the command that produced it.
 
 **Assumptions to test:** What this plan believes that could turn out wrong, riskiest first. For each: the task that tests it, and the result that would change the plan.
@@ -70,7 +72,7 @@
 - Expected result, and the result that would change the plan.
 
 **Result** _(filled in when done)_
-- Command and observed output. Anything surprising also goes to the dev log, and to `Scope changes` if it changes the plan.
+- Command and observed output. What it cost beside what it moved (lines added under `R/` and `tests/`, runs made). Anything surprising also goes to the dev log, and to `Scope changes` if it changes the plan.
 
 ---
 
