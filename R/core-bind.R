@@ -116,7 +116,55 @@ bind_figure <- function(fig, eng, state, tol = bind_tolerance) {
   rownames(lv) <- NULL
   el <- if (length(per_el)) do.call(rbind, unname(per_el)) else element_rows(character(), character())
   rownames(el) <- NULL
-  list(leaves = lv, elements = el)
+  mark_copies(list(leaves = lv, elements = el), leaves, geo, sub$elements)
+}
+
+# A failed leaf whose elements are those of a passing sibling (same parent,
+# same table, the same tags and texts in the same order), all moved by one
+# offset, is a copy drawn off its rows on purpose: a halo or a shadow
+# (shadowtext draws 16 copies of each label: bench tree-072). It is unbound
+# with the offset, not failed: its elements are its sibling's rows. Plan
+# 2026-11-11-tree-binding, Task 6.
+mark_copies <- function(b, leaves, geo, elements, tol = 0.05) {
+  lv <- b$leaves
+  bad <- which(lv$status %in% c("failed", "partly_failed"))
+  if (!length(bad)) return(b)
+  good <- which(lv$status %in% c("verified", "ambiguous"))
+  parent <- sub("/[^/]*$", "", leaves$path[match(lv$leaf, leaves$id)])
+  shape <- function(id) {
+    k <- geo$leaf %in% id
+    g <- geo[k, , drop = FALSE]
+    g <- g[order(g$ordinal), , drop = FALSE]
+    g$text <- elements$text[match(g$id, elements$id)]
+    g
+  }
+  for (i in bad) {
+    sib <- good[parent[good] == parent[i] & lv$table[good] %in% lv$table[i] & lv$n_elements[good] == lv$n_elements[i]]
+    if (!length(sib)) next
+    a <- shape(lv$leaf[i])
+    best <- NULL
+    for (j in sib) {
+      o <- shape(lv$leaf[j])
+      if (nrow(o) != nrow(a) || !identical(a$tag, o$tag) || !identical(a$text %in% NA, o$text %in% NA) ||
+          !all(a$text == o$text, na.rm = TRUE)) next
+      dx <- c(a$x0 - o$x0, a$x1 - o$x1)
+      dy <- c(a$y0 - o$y0, a$y1 - o$y1)
+      if (anyNA(c(dx, dy)) || diff(range(dx)) > tol || diff(range(dy)) > tol) next
+      off <- c(mean(dx), mean(dy))
+      if (is.null(best) || sum(off^2) < sum(best$off^2)) best <- list(leaf = lv$leaf[j], off = off)
+    }
+    if (is.null(best)) next
+    lv$status[i] <- "unbound"
+    lv$reason[i] <- sprintf("a copy of %s moved by (%.2f, %.2f) pt, element for element (a halo or a shadow?): drawn off its rows",
+                            best$leaf, best$off[1], best$off[2])
+    lv[i, c("verified", "ambiguous", "failed")] <- 0L
+    lv$max_dev[i] <- NA_real_
+    k <- b$elements$leaf == lv$leaf[i]
+    b$elements$status[k] <- "unbound"
+    b$elements$dev[k] <- NA_real_
+  }
+  b$leaves <- lv
+  b
 }
 
 leaf_row <- function(leaf, status, reason = NA_character_, table = NA_character_, mode = NA_character_,
@@ -140,6 +188,24 @@ element_rows <- function(ids, leaf, table = NA_character_, row = NA_integer_, n_
 # ---- one claim --------------------------------------------------------------
 
 check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
+  r <- check_claim_rows(cl, leaf, geo, tol)
+  # a leaf the engine could pair only with all the layer's rows, because it
+  # was made when its layer's grob was drawn, is unbound with the engine's
+  # reason when that pairing does not pass (plan 2026-11-11-tree-binding,
+  # Task 6)
+  if (!is.null(cl$made_reason) && !r$leaf$status %in% c("verified", "ambiguous")) {
+    r$leaf$status <- "unbound"
+    r$leaf$reason <- cl$made_reason
+    r$leaf[c("verified", "ambiguous", "failed")] <- 0L
+    r$leaf$max_dev <- NA_real_
+    r$elements$status <- "unbound"
+    r$elements$row <- NA_integer_
+    r$elements$dev <- NA_real_
+  }
+  r
+}
+
+check_claim_rows <- function(cl, leaf, geo, tol = bind_tolerance) {
   ids <- geo$id[geo$leaf %in% cl$leaf]
   ids <- ids[order(geo$ordinal[match(ids, geo$id)])]
   g <- geo[match(ids, geo$id), , drop = FALSE]

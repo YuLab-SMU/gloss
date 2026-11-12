@@ -786,3 +786,56 @@ test_that("images bind: one per row by their box, one raster per group by its ce
   r <- check_claim(bad, j$leaves[j$leaves$id == cl$leaf, ], j$geo)
   expect_equal(r$leaf$status, "failed")
 })
+
+test_that("leaves a layer's grob makes only when drawn are unbound with that reason, never failed", {
+  # Bench tree-054 (geom_label_repel()): the layer's grob has no children in
+  # the built gtable; ggrepel makes the boxes, connectors and texts when it
+  # is drawn (makeContent), placed away from their rows. Each leaf was
+  # paired with all the layer's rows: 41 boxes failed, 28 connectors and 41
+  # texts unbound or count mismatches.
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("ggrepel")
+  set.seed(5)
+  d <- data.frame(x = c(1, 1.02, 1.04, 1.06, 2), y = c(1, 1.01, 1.02, 1.03, 2), lab = c("alpha", "beta", "gamma", "delta", "eps"))
+  for (geom in c("label", "text")) {
+    layer <- if (geom == "label") ggrepel::geom_label_repel(seed = 1, min.segment.length = 0) else ggrepel::geom_text_repel(seed = 1, min.segment.length = 0)
+    p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, label = .data$lab)) + ggplot2::geom_point() + layer
+    b <- suppressWarnings(bind_capture(p))
+    lv <- b$leaves[b$leaves$leaf %in% b$fig$substrate$leaves$id[grepl("repeltree", b$fig$substrate$leaves$path)], ]
+    expect_gt(nrow(lv), 5L)
+    expect_true(all(lv$status == "unbound"), label = paste(geom, paste(unique(lv$status), collapse = ",")))
+    expect_true(all(grepl("makes what it draws when it is drawn", lv$reason)), label = geom)
+    expect_true(all(b$elements$status[b$elements$leaf %in% lv$leaf] == "unbound"))
+    expect_equal(sum(b$leaves$failed), 0L, label = geom)
+    # the points of the same plot still bind
+    expect_equal(b$leaves$status[b$leaves$table %in% "built_layer1"], "verified", label = geom)
+  }
+})
+
+test_that("a failed leaf that is a passing sibling moved by one offset is unbound as a copy", {
+  # Bench tree-072 (shadowtext): each label is drawn 17 times, 16 copies
+  # moved 0.1 x the height of "X" in 16 directions, then the label; 10 copy
+  # leaves failed by 0.57-0.81 pt, rightly paired.
+  skip_if_not_installed("ggplot2")
+  GeomHalo <- ggplot2::ggproto("GeomHalo", ggplot2::Geom, required_aes = c("x", "y", "label"),
+    draw_panel = function(data, panel_params, coord) {
+      co <- coord$transform(data, panel_params)
+      at <- function(dx, dy, lab = co$label) grid::textGrob(lab, x = grid::unit(co$x, "npc") + grid::unit(dx, "bigpts"),
+                                                            y = grid::unit(co$y, "npc") + grid::unit(dy, "bigpts"))
+      grid::gTree(children = grid::gList(at(1.5, 0), at(-1.5, 0), at(0, 0.3), at(1.5, 0, rev(co$label)), at(0, 0)))
+    })
+  d <- data.frame(x = c(1, 2, 3), y = c(1, 3, 2), lab = c("ab", "cde", "f"))
+  p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, label = .data$lab)) +
+    ggplot2::layer(geom = GeomHalo, stat = "identity", position = "identity") + ggplot2::xlim(0, 4) + ggplot2::ylim(0, 4)
+  b <- suppressWarnings(bind_capture(p))
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_equal(nrow(lv), 5L)
+  # the label and the copy moved within its row's box pass
+  expect_equal(lv$status[c(3, 5)], c("verified", "verified"))
+  # the copies moved 1.5 pt along the baseline: copies of the label, not failed
+  expect_equal(lv$status[1:2], c("unbound", "unbound"))
+  expect_match(lv$reason[1], "copy of L[0-9]+ moved by \\(1\\.50, 0\\.00\\) pt")
+  expect_match(lv$reason[2], "copy of L[0-9]+ moved by \\(-1\\.50, 0\\.00\\) pt")
+  # the copy with its labels in another order is not a copy: still failed
+  expect_equal(lv$status[4], "failed")
+})

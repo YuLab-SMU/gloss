@@ -279,6 +279,7 @@ ggplot_bind <- function(built, gtable, sub, prefix = "") {
   pan_rows <- grep("^panel", gtable$layout$name)
   layer_of <- list()      # layer grob name -> layer index
   kids_of <- list()       # layer grob name -> its children's names
+  built_kids <- list()    # layer grob name -> its children in the gtable, before drawing
   panel_names <- character()
   bad_panels <- character()
   for (j in pan_rows) {
@@ -298,6 +299,10 @@ ggplot_bind <- function(built, gtable, sub, prefix = "") {
         layer_of[[lg$name]] <- i
         # a layer that draws a gList adds several children: no groups below them
         if (n_i[i] == 1L && inherits(lg, "gTree") && length(lg$children)) kids_of[[lg$name]] <- names(lg$children)
+        if (n_i[i] == 1L) {
+          built_kids[[lg$name]] <- list(names = if (inherits(lg, "gTree")) names(lg$children) else character(),
+                                        class = class(lg)[1])
+        }
       }
     }
   }
@@ -322,6 +327,18 @@ ggplot_bind <- function(built, gtable, sub, prefix = "") {
     if (is.null(i)) {
       outside <- c(outside, lf$id)
       next
+    }
+    # A leaf below the layer's grob that is not one of that grob's children
+    # in the built gtable was made when the grob was drawn (makeContent).
+    # Which rows it draws is not stated anywhere the engine can read: it is
+    # paired with the layer's rows, and if that does not pass, it is
+    # unbound with this reason, not failed (ggrepel's labels, boxes and
+    # connectors, placed away from their rows: bench tree-054; a curve,
+    # geom_curve(), draws its rows in order and passes).
+    bk <- built_kids[[child]]
+    made <- if (!is.null(bk) && at + 2L <= length(seg) && !seg[at + 2L] %in% bk$names) {
+      sprintf("the layer's grob (%s) makes what it draws when it is drawn: %s is not among its children before drawing, and the layer's rows do not pass for it",
+              bk$class, seg[at + 2L])
     }
     pid <- lf$panel
     prow <- sub$panels[sub$panels$id %in% pid, , drop = FALSE]
@@ -368,7 +385,8 @@ ggplot_bind <- function(built, gtable, sub, prefix = "") {
     }
     claims[[length(claims) + 1L]] <- list(leaf = lf$id, table = sprintf("%sbuilt_layer%d", prefix, i),
                                           pred = pred, groups = groups, rows = rows,
-                                          linear = linear, coord = coord, rect_reason = rect_reason)
+                                          linear = linear, coord = coord, rect_reason = rect_reason,
+                                          made_reason = made)
   }
   list(claims = claims, unbound = ub, outside = outside)
 }
