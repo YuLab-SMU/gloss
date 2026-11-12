@@ -697,3 +697,37 @@ Runs `runs/2026-11-12-1105-capture-dev-tree.*`, `-1107-bind-dev-tree.*` (stratum
 - 5 right of 6.
 - **Why 91 is wrong:** an arithmetic slip in writing it. The two rasters leave unbound (−2), and gallery-059's box and text join it (+2), so unbound does not move. Every leaf-level claim of 91 is right.
 - **The totals in 89 and 91 were computed by leaf status** (the elements of leaves whose status is verified, ambiguous, ...). `compare-bind.R` and `score-bind.R` count by element, so a verified leaf's ambiguous elements count as ambiguous. Both give the same checked total. Later predictions quote element counts.
+
+## The tree stratum's held-out half, one run (tree binding plan Task 7)
+
+Written by Claude on 2026-11-12, before gloss has captured or bound any figure of the stratum's held-out half, on the owner's word of the same day ("按建议跑 Task 7"; the plan's decision 1 (a)).
+
+What is known about the 28 held-out figures when this is written: their ids and engines (`split.csv`: 24 ggplot, 4 patchwork), the PSU each came from, by kind and by name (`sample.csv`: 17 help topics, all ggplot; 9 vignettes, 7 ggplot and 2 patchwork; 2 book chapters, both patchwork), and that each reran with no network when the stratum was frozen. Not read: the held-out figures' code and `meta.json`, any page they draw, and any output of gloss on them.
+
+What the predictions rest on: the development half, on which the binder was built and tuned. Runs `2026-11-12-1105` and `-1107`: 29 of 29 captured, 28 `equal` and 1 `not_deterministic`; every layer element checked in 23 of 28 ggplot figures. By the kind of PSU: 16 of 17 topic figures, 6 of 6 vignette figures, 1 of 5 book figures. Before this plan's changes the topics and vignettes stood at 14 of 23 (run `2026-11-11-2118`). Eight of them were brought in by rules that state what R's engine and ggplot2 do (labels in their own frame, the coord's transform, dropped NA rows); those should carry over. What a held-out figure's package does when it draws is what the development half cannot tell.
+
+The binder is frozen. `git diff --quiet 752bb73 HEAD -- R tests inst` finds no difference at this commit, and the container suite at `40bbe77` gave 9 files / 109 tests / 807 expectations / 0 failed / 0 errors / 0 skipped / 0 warnings. The runs' `gloss_source_digest` must be `b5307a6245018bf13fa55f8860f3c767`, the digest of the development runs `1105` to `1116`; a run with another digest is not the frozen binder's and is not reported as Task 7's.
+
+### How the runs are made and scored (fixed before the runs)
+
+- **Runs.** Once each, in this order: `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/capture.R heldout tree`, then the same with `bench/R/bind.R heldout tree`; in the pinned container with no network, at the commit that holds these predictions, with no tracked file modified. The first complete run of each is the one reported. A run that stops before its last figure for a reason outside gloss and the harness is archived as it is and started again unchanged. Both runs are committed before any score is written down.
+- **Nothing is changed in answer to the result.** The plan's Scope change of 2026-11-12: no rule is written in this plan for what the run shows. Whatever is changed later is reported as made after looking, and a later run never replaces this one.
+- **Scorers,** as they stand at this commit: `bench/R/score-capture.R`; `bench/R/score-bind.R` (layer elements, verified, ambiguous, failed, unbound, count mismatch, and the share per ggplot figure, as it defines them; counts by element); `bench/R/score-residue.R`, new at this commit, which on the development runs `1107` and `1116` gives what `dev_docs/research/bind-dev/d3-residue.out` gives (5232 elements, 18 classes).
+- **"A reason no development figure gave"** is a class of `score-residue.R` that occurs in neither `2026-11-12-1107-bind-dev-tree-leaves.csv` nor `2026-11-12-1116-bind-dev-leaves.csv` (`--against` both). A failed element's class is its geom's; the development sets' only failed class is `GeomRocci`. The count against the tree development half alone is printed too and is not scored.
+- The numbers are those of the stratum's held-out half. They are reported apart from v0 and are not added to any number of v0.
+
+### Predictions
+
+93. **Every figure is captured or refused with a reason: no error, no timeout. At least 26 of 28 are captured;** point guess 28. Development: 29 of 29, after one page that stopped the parser was fixed in Task 1. A page of that kind, one in 29, is what could make this wrong; my confidence that none errs is about 80%.
+94. **No captured figure is `different` by the bench while gloss says `equal`, and none is `different` at all; gloss's verdict agrees with the bench's on every captured figure.** 0 of 29 on the development half, 0 of 109 on v0.
+95. **`equal` for at least 24 figures; `not_deterministic` for 0 to 4,** point guess 2: tree-070, whose topic is a jitter position, and one figure with repelled labels.
+96. **No captured figure ends in a bind error, and no leaf carries "the engine's bind step failed".** Development: 0 of 29; v0: 0 of 54.
+97. **Of the ggplot figures, every layer element is checked in 14 to 22; point guess 18 of 24. At least 80% is checked in at least 19; nothing is checked in at most 1.** The development half has 23 of 28, but its topics and vignettes were tuned from 14 of 23 to 22 of 23, and the held-out half's ggplot figures are all topics and vignettes.
+98. **At least 13 of the 17 topic figures have every layer element checked; at most 5 of the 7 vignette figures that are ggplot do.** A help topic's example is ggtree's own geoms on a small tree; a vignette is another package drawing with its own.
+99. **At least one layer element fails, in at most 4 figures;** point guess 40 elements in 2 figures. The development half has none after tuning and had 212 before. A geom that draws its rows somewhere the built rows do not say is rightly paired and fails; nothing on the development half bounds how many such geoms 28 other figures hold. Confidence in "at least one": about 60%.
+100. **At least one class of residue is a reason no development figure gave;** point guess 3 classes holding 80 elements, and fewer than 600 elements. This is the number the Scope change of 2026-11-12 asks for.
+101. **Both book figures (tree-020, tree-049) have text drawn as outlines: each has a leaf with that reason, and none of their elements fails. No other figure has such a leaf.** The book's setup loads `emojifont`, which turns `showtext` on; topics and vignettes do not go through it.
+
+A point guess that is not scored, because one or two figures can hold most of the elements: about 88% of the layer elements checked.
+
+**What would change the plan or the ADR:** a failed invariant (94); an error that is not a refusal (93, 96), which is a defect against "refuse and say why" and is recorded for a later plan, not fixed in this one; fewer than 14 ggplot figures fully checked (97), which would mean the rules that state the drawing system's own behaviour do not carry over as ADR-0009's evidence assumes; more than 600 elements in new classes (100).
