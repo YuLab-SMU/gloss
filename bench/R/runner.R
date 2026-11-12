@@ -324,7 +324,7 @@ launch_worker <- function(worker, args) {
 # Runs inside a fresh R process. Self-contained: callr ships only this function.
 run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, recover, capture, repo,
                        device = "pdf", fidelity_verdict = NULL, compare_pages = NULL, bind = FALSE,
-                       keep = NULL, alone = FALSE) {
+                       keep = NULL, recheck = FALSE) {
   setwd(dir)
   set.seed(seed)
   # The device the code draws on. "svg" (capture runs) is gloss's own device,
@@ -626,7 +626,8 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
         # Rows placed from the figure alone (agent-path plan Task 2): the
         # engine's claims checked with its own positions and with the table's
         # columns put through the panel's scales. One row per claimed leaf.
-        if (isTRUE(alone)) {
+        # (`alone` is taken in this function: the figure drawn alone, above)
+        if (isTRUE(recheck)) {
           t3 <- Sys.time()
           a <- tryCatch(suppressWarnings(gloss:::alone_capture(fig)), error = function(e) e)
           cap$alone_seconds <- as.numeric(difftime(Sys.time(), t3, units = "secs"))
@@ -755,7 +756,7 @@ gloss_snapshot <- function(repo = ".") {
 
 run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
                        recover = FALSE, capture = FALSE, device = "pdf", bind = FALSE, keep = NULL,
-                       alone = FALSE) {
+                       recheck = FALSE) {
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   env <- c(callr::rcmd_safe_env(), R_LIBS_USER = paste(bench_libpaths(), collapse = .Platform$path.sep))
   if (offline) env <- c(env, offline_env)
@@ -767,7 +768,7 @@ run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
                                      recover = recover,
                                      capture = capture, repo = gloss_snapshot(), device = device,
                                      fidelity_verdict = fidelity_verdict, compare_pages = compare_pages,
-                                     bind = bind, keep = keep, alone = alone)),
+                                     bind = bind, keep = keep, recheck = recheck)),
              libpath = bench_libpaths(), env = env, timeout = timeout, show = FALSE,
              package = FALSE),
     error = function(e) e)

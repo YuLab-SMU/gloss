@@ -46,7 +46,7 @@ leaf_rows <- list()
 for (k in seq_len(nrow(todo))) {
   id <- todo$id[k]
   dir <- file.path(bench_root, "figures", id)
-  e <- check_eligibility(dir, todo$engine[k], timeout = timeout, capture = TRUE, alone = TRUE)
+  e <- check_eligibility(dir, todo$engine[k], timeout = timeout, capture = TRUE, recheck = TRUE)
   cap <- e$run$capture
   status <- if (!is.null(e$run$error)) {
               if (identical(e$run$error$stage, "timeout")) "timeout" else paste("rerun:", e$run$error$stage)
@@ -57,6 +57,7 @@ for (k in seq_len(nrow(todo))) {
             else if (!is.null(cap$alone_error)) "alone error"
             else "rechecked"
   lv <- cap$alone_leaves
+  if (identical(status, "rechecked") && is.null(lv)) status <- "recheck did not run"
   tot <- function(col) if (is.null(lv)) NA_integer_ else sum(lv[[col]], na.rm = TRUE)
   row <- data.frame(
     id = id, stratum = todo$stratum[k], engine = todo$engine[k], status = status,
