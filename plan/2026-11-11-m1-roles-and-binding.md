@@ -45,12 +45,12 @@
 - Time for classification and binding reported at 10^3, 10^4 and 10^5 points; Task 6 decides from it whether they run at capture or on demand.
 - Each number from a run archived in `bench/runs/`; predictions committed before the first run of each task; the suite passes with its counts at every commit that touches `R/` or `tests/`.
 
-**Decisions (the owner's; 1 to 3 settled 2026-11-11 as recommended, see Scope changes; 4 and 5 open since 2026-11-12):**
+**Decisions (the owner's; 1 to 3 settled 2026-11-11 and 4 and 5 on 2026-11-12, all as recommended, see Scope changes):**
 1. *Who labels the development set.* (a) Claude labels all 54 figures from the rendered page and the leaf sheet, committed before any rule runs on the development set; the owner labels the 5 pilot figures independently for κ. (b) The owner labels all 54. (c) The owner and a second person label all 54, which is the protocol the held-out set needs anyway. Recommended: (a). The development set is for tuning; the held-out labels, which give the reported numbers, need two people whatever is chosen here. The cost of (a): the labeller also writes the rules, so a cue that misleads both (a base legend's `rect` read as data) can agree with itself. The pilot and the blind order (labels before rules) are the guard.
 2. *Where rule roles and engine bindings live.* Appendix A has `gl_classify()` write into the `structure` layer and tbl-layers lists rules as a source of `structure` records, which needs M2's record core. Alternative: roles and bindings are derived tables of the substrate, recomputed whenever it is rebuilt and versioned by the plugin that made them, like leaves and panels; only what code cannot derive (corrections, agent fills, human notes) is a record, and queries lay records over the derived tables. Recommended: the second (principle 2: what code determines is recomputed, not stored as a claim; principle 4: a rebuilt substrate needs no rebase for its own derived facts). Settled by ADR-0007 in Task 6; until then nothing is exported.
 3. *Corrections in M1 or M2.* The milestone puts the correction interface in M1. Recommended: move `gl_reclassify()` to the plan that builds the record core, and say so in design §实施计划 with a dated note; this slice gives the residue list and the flags it will correct.
-4. *Open, 2026-11-12: whether the full development labels wait for the lab.* Task 1's last item, and through it Tasks 3 and 4, wait for lab members to label the fifteen figures; none has. (a) Annotator A labels the 54 figures now, on the pilot as it stands (A against the owner, κ 0.822 on 121 leaves, interval 0.737 to 0.901); the lab's labels are scored against predictions 43-52 when they come, and if they put A's median κ below 0.8 the guideline is revised and the development labels redone. (b) Wait. **Recommended: (a).** Development labels tune rules and report nothing; the held-out labels, which do, are governed by ADR-0008 whichever is chosen. The cost of (a): labels and rules redone if the lab disagrees with A.
-5. *Open, 2026-11-12: whether bindings reach the figure and the API before the role tasks.* Task 6 waits for Tasks 2 to 5 and covers roles and bindings together. Bindings are measured on three sets; roles on none. (a) Split it: 6a now, ADR-0007 for derived tables with bindings as the first one, stored in the figure and queried through one exported function; 6b after Task 4, roles in the same place. (b) Keep Task 6 whole, after Task 4. **Recommended: (a).** Nothing a user or an agent can ask of gloss today returns a binding, and every step toward an agent needs that.
+4. *Whether the full development labels wait for the lab (settled 2026-11-12: they do not).* Task 1's last item, and through it Tasks 3 and 4, wait for lab members to label the fifteen figures; none has. (a) Annotator A labels the 54 figures now, on the pilot as it stands (A against the owner, κ 0.822 on 121 leaves, interval 0.737 to 0.901); the lab's labels are scored against predictions 43-52 when they come, and if they put A's median κ below 0.8 the guideline is revised and the development labels redone. (b) Wait. **Recommended: (a).** Development labels tune rules and report nothing; the held-out labels, which do, are governed by ADR-0008 whichever is chosen. The cost of (a): labels and rules redone if the lab disagrees with A.
+5. *Whether bindings reach the figure and the API before the role tasks (settled 2026-11-12: they do).* Task 6 waits for Tasks 2 to 5 and covers roles and bindings together. Bindings are measured on three sets; roles on none. (a) Split it: 6a now, ADR-0007 for derived tables with bindings as the first one, stored in the figure and queried through one exported function; 6b after Task 4, roles in the same place. (b) Keep Task 6 whole, after Task 4. **Recommended: (a).** Nothing a user or an agent can ask of gloss today returns a binding, and every step toward an agent needs that.
 
 ---
 
@@ -81,7 +81,8 @@
 - [ ] Task 3: Rules as plugins; coverage on the development set
 - [ ] Task 4: Accuracy against the labels; consistency checks; silent errors
 - [~] Task 5: Base figures: bindings through arguments and `usr`; legend entries
-- [ ] Task 6: Where roles and bindings live (ADR-0007); public API _(stub; written out after Tasks 2–5)_
+- [ ] Task 6a: Bindings in the figure and the API (ADR-0007) _(split from Task 6 on 2026-11-12, decision 5)_
+- [ ] Task 6b: Roles in the same place _(stub; after Task 4)_
 - [ ] Task 7: Structure tree, data tree and their mapping _(stub)_
 - [ ] Task 8: Records: design notes, NEWS, dev log, closing notes
 
@@ -254,7 +255,7 @@ Split from Task 2 (Scope changes). The patchwork engine maps no panels (M0 scope
 
 ---
 
-### Task 6: Where roles and bindings live (ADR-0007); public API
+### Task 6 (6a and 6b): Where roles and bindings live (ADR-0007); public API
 
 **Status:** `[ ]` _(stub)_
 
@@ -307,6 +308,8 @@ _(append-only; never edit completed tasks above)_
   - No line under *Done when* changes: each already allows "unbound with a reason" or "residue with a reason". No binding rule is added in this plan to clear v0's unchecked elements. The 1898 that lack a count or a comparison the drawing system itself defines (`sf` paths, heatmap tracks and dendrograms, base types `'h'` and `'o'`) are code's own work under ADR-0009 and wait for a later slice, chosen by the figures they affect.
 
 - 2026-11-12 — **Review at the close of the tree binding plan: the bindings half of this plan is measured, the roles half has not started, and two decisions are open.** **Evidence:** the tree binding plan's [closing notes](done/2026-11-11-tree-binding.md#closing-notes) and the [retrospective](../dev_logs/2026-11-12-retrospective.md); this plan's task list (Tasks 2 and 2b done on 2026-11-11, nothing closed since); `bench/labels/` (A's labels on 15 figures, the owner's on 5, no lab member's; no `bench/labels/dev/`). The work of 2026-11-11 and -12 went to the tree stratum, which changed the binder this plan's Task 2 built and reran this plan's development set after each change (0 regressions; run `2026-11-12-1116` is now the reference, not `1353`). **Effect:** *Current state* rewritten from the latest runs; Task 5's status line agrees with the index; decisions 4 and 5 added above, open, each with a recommendation. No task's content or criterion changes until the owner decides them.
+
+- 2026-11-12 — **The owner settles decisions 4 and 5, both as recommended.** **Evidence:** the owner's words after the review: "实验室搜集数据先用已有的，不过结论很明确，人标注的远没有Claude 的准。绑定可以进api。" What exists of people's labels is the owner's on the pilot's five figures (κ on roles 0.822 against A; of the 15 leaves that differ the guideline's text decides 14 for A); no lab member's labels are in the repository. **Effect:** (4) Annotator A labels the 54 development figures without waiting; the agreement reported for the development set is A against the owner on the pilot's five. Predictions 43-52, written for the lab's labels, stay unscored unless such labels arrive. This settles the development set only: for the held-out set [ADR-0008](../dev_docs/decisions/0008-held-out-role-labels-by-one-labeller-and-an-independent-sample.md) asks for people's independent labels on a sample because they are the one part A did not make, not because they label better, and it stands until an ADR replaces it. (5) Task 6 is split. Task 6a comes now: ADR-0007 for derived tables, with bindings as the first one, stored in the figure and the bundle and read through one exported function. Task 6b puts roles in the same place after Task 4. Order of what is open: 6a, then the plan for the agent path (not this plan's), with Task 1's labels and Tasks 3 and 4 after it.
 
 ## Closing notes
 
