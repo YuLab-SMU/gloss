@@ -899,3 +899,11 @@ Written 2026-11-12, before any run of `bench/agent/drive-gl-tools.R` with a mode
 **What would change the plan:** a model under 8 of 10 with the package's tools where the harness's gave 10: the tools' descriptions or answers differ in a way that matters, and the transcripts are read before the pilot uses them.
 
 **A launch that measured nothing (2026-11-12, between 18:15 and 18:30 UTC).** The first launch of `bench/agent/drive-gl-tools.R` was stopped by me during its second run: the first had ended after 120.3 s with an error and no tool call. Asked for one word without any tool, the gateway answered 502 for all three models (the models' upstream closed the connection). No model produced any output, no archive was written, and nothing above was changed. The run is made when the models answer again.
+
+## The binder after the fix for a leaf verified on no result (M1 plan, scope change of 2026-11-12)
+
+Written 2026-11-12, before rerunning `bench/R/bind.R` on the two development sets with the binder of `a5de050`. What I have seen: the archived development runs `2026-11-12-1116-bind-dev` and `-1107-bind-dev-tree` (binder of `fd0401b`), in which no leaf is verified with zero verified elements; the fix's two tests; the suite.
+
+124. **No leaf changes on either development set:** `bench/R/compare-bind.R` against the two archived runs reports no leaf with a different status or different counts of verified, ambiguous and failed elements, on v0's 55 figures and on the tree stratum's 29. The fix can only move a leaf whose comparison did not decide every element, and the archives show none.
+
+**What would change the plan:** a leaf that moves. Then some comparison returns short or undecided results on development figures without anyone having seen it, and each such leaf is read before anything else is built on the bindings.
