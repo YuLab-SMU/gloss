@@ -1,0 +1,48 @@
+2026-11-12-2008 | 12 runs (12 attempts archived, 0 ended in a request error) | models: glm-5.3-flash, deepseek-v4.1-flash, Qwen3.8-27B | gloss 2f0a3a2 | loop: bench/agent/pilot.R tool_loop()
+
+runs by arm: correct, answered wrongly, no answer
+ group runs correct wrong no_answer request_error
+     A    6       6     0         0             0
+     B    6       6     0         0             0
+
+by model and arm
+                 group runs correct wrong no_answer request_error
+ deepseek-v4.1-flash A    2       2     0         0             0
+ deepseek-v4.1-flash B    2       2     0         0             0
+       glm-5.3-flash A    2       2     0         0             0
+       glm-5.3-flash B    2       2     0         0             0
+         Qwen3.8-27B A    2       2     0         0             0
+         Qwen3.8-27B B    2       2     0         0             0
+
+by figure: correct runs of runs, each arm, all models; then each model
+     figure questions   A   B glm-5.3- A glm-5.3- B deepseek A deepseek B
+ hand-built         2 6/6 6/6        2/2        2/2        2/2        2/2
+ Qwen3.8- A Qwen3.8- B
+        2/2        2/2
+
+questions (2), by the share of their runs that are right: B above A in 0, A above B in 0, equal in 2 (both all right: 2, both all wrong: 0)
+figures (1), by the same share: B above A in 0, A above B in 0, equal in 1; mean over figures A 1.000, B 1.000
+
+arm B, 6 runs: first proposal accepted 6; no proposal at all in 0
+  runs with a rejected proposal: 0, of which 0 ended right; proposals refused: 0 in 0 runs
+  wrong acceptances (accepted for the element asked about, and not the answer): 0 in 0 runs; accepted for another element: 0 in 0 runs
+
+arm A, 6 runs: submissions in a run 1 5, 3 1; wrong answers 0 (another table: 0; the table, another row: 0)
+
+how the runs ended: stop 12
+what the runs used (median; the limit on requests to the model is 16)
+               model arm runs calls failed_calls steps at_step_limit seconds
+ deepseek-v4.1-flash   A    2   8.5            0   9.5             0    21.7
+ deepseek-v4.1-flash   B    2   9.5            0   8.0             0    12.9
+       glm-5.3-flash   A    2  13.0            1  14.0             1   121.6
+       glm-5.3-flash   B    2   5.5            0   6.5             0    23.5
+         Qwen3.8-27B   A    2  12.5            3  11.5             0    60.4
+         Qwen3.8-27B   B    2   4.0            0   4.0             0     7.0
+ seconds_max tokens
+        24.1  40203
+        17.9  21115
+       147.2  83550
+        26.8  10488
+        87.4  74872
+         7.9   8998
+total time of the runs: 8.2 min (A 6.8, B 1.4)
