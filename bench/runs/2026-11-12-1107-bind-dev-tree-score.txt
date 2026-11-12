@@ -1,0 +1,373 @@
+== figures
+           
+            bound
+  ggplot       28
+  patchwork     1
+
+== layer elements by engine (leaves attributed to a layer, body or track)
+          figures leaves elements verified ambiguous failed unbound
+ggplot         28    294    24911    14112      8907      0     100
+patchwork       1      6      126      100         0      0      26
+          count_mismatch checked
+ggplot              1792   92.4%
+patchwork              0   79.4%
+all: 25037 elements; verified 14212, ambiguous 8907 (verified or ambiguous 92.3%); failed 0; unbound 126; count_mismatch 1792
+
+== ggplot layer elements by stratum
+     figures leaves elements verified ambiguous failed unbound count_mismatch
+tree      28    294    24911    14112      8907      0     100           1792
+     checked
+tree   92.4%
+
+== engines that state no bindings (leaves, elements)
+
+== paired leaves by geom and tag (ggplot), elements
+                                     figures leaves elements verified ambiguous
+GeomPoint / circle+line+polygon+rect       1      1    12690     4323      8367
+GeomSegment / line                        25     65     5106     5086        20
+GeomPoint / path                           1      1     3785     3344       441
+GeomTextGGtree / path                      2      8     1596        0         0
+GeomPointGGtree / circle                   7      9      471      471         0
+GeomTextGGtree / text                     14     19      279      225        54
+GeomCol / rect                             1      1      230      230         0
+GeomSegment / polyline                     3      6      192      186         6
+GeomLabelRepel / path                      1     41       92        0         0
+GeomPath / polyline                        1      1       90       82         8
+GeomLabelGGtree / path                     1      6       71        0         0
+NewGeomTile / rect                         1      1       50       50         0
+GeomText / path                            2     10       44        0         0
+GeomLabelRepel / polygon                   1     41       41        0         0
+GeomShadowText / text                      1     17       34       14         0
+NewGeomSegment / line                      1      2       32       32         0
+GeomPoint / circle                         1      1       30       30         0
+GeomLabelRepel / line                      1     28       28        0         0
+GeomImage / image                          1     17       17        6        11
+NewGeomTextGGtree / text                   1      1       10       10         0
+GeomLabelGGtree / polygon                  1      6        6        6         0
+GeomSegmentGGtree / line                   1      1        6        6         0
+GeomLabel / polygon                        1      5        5        5         0
+GeomLabel / text                           1      4        4        4         0
+GeomHilightRect / rect                     1      1        2        2         0
+GeomLabel / NA                             1      1        0        0         0
+                                     failed unbound count_mismatch
+GeomPoint / circle+line+polygon+rect      0       0              0
+GeomSegment / line                        0       0              0
+GeomPoint / path                          0       0              0
+GeomTextGGtree / path                     0       3           1593
+GeomPointGGtree / circle                  0       0              0
+GeomTextGGtree / text                     0       0              0
+GeomCol / rect                            0       0              0
+GeomSegment / polyline                    0       0              0
+GeomLabelRepel / path                     0       0             92
+GeomPath / polyline                       0       0              0
+GeomLabelGGtree / path                    0       0             71
+NewGeomTile / rect                        0       0              0
+GeomText / path                           0       8             36
+GeomLabelRepel / polygon                  0      41              0
+GeomShadowText / text                     0      20              0
+NewGeomSegment / line                     0       0              0
+GeomPoint / circle                        0       0              0
+GeomLabelRepel / line                     0      28              0
+GeomImage / image                         0       0              0
+NewGeomTextGGtree / text                  0       0              0
+GeomLabelGGtree / polygon                 0       0              0
+GeomSegmentGGtree / line                  0       0              0
+GeomLabel / polygon                       0       0              0
+GeomLabel / text                          0       0              0
+GeomHilightRect / rect                    0       0              0
+GeomLabel / NA                            0       0              0
+
+== unbound reasons (leaves, elements), layer leaves
+   engine   
+82 patchwork
+80 ggplot   
+83 ggplot   
+1  ggplot   
+2  ggplot   
+3  ggplot   
+4  ggplot   
+5  ggplot   
+6  ggplot   
+7  ggplot   
+8  ggplot   
+9  ggplot   
+10 ggplot   
+81 ggplot   
+11 ggplot   
+12 ggplot   
+13 ggplot   
+14 ggplot   
+15 ggplot   
+16 ggplot   
+17 ggplot   
+18 ggplot   
+19 ggplot   
+20 ggplot   
+21 ggplot   
+22 ggplot   
+23 ggplot   
+24 ggplot   
+25 ggplot   
+26 ggplot   
+27 ggplot   
+28 ggplot   
+29 ggplot   
+30 ggplot   
+31 ggplot   
+32 ggplot   
+33 ggplot   
+34 ggplot   
+35 ggplot   
+36 ggplot   
+37 ggplot   
+38 ggplot   
+39 ggplot   
+40 ggplot   
+41 ggplot   
+42 ggplot   
+43 ggplot   
+44 ggplot   
+45 ggplot   
+46 ggplot   
+47 ggplot   
+48 ggplot   
+49 ggplot   
+50 ggplot   
+51 ggplot   
+52 ggplot   
+53 ggplot   
+54 ggplot   
+55 ggplot   
+56 ggplot   
+57 ggplot   
+58 ggplot   
+59 ggplot   
+60 ggplot   
+61 ggplot   
+62 ggplot   
+63 ggplot   
+64 ggplot   
+65 ggplot   
+66 ggplot   
+67 ggplot   
+68 ggplot   
+69 ggplot   
+70 ggplot   
+71 ggplot   
+72 ggplot   
+73 ggplot   
+74 ggplot   
+75 ggplot   
+76 ggplot   
+77 ggplot   
+78 ggplot   
+79 ggplot   
+   why                                                                                                                                                                         
+82 the text was drawn as glyph outlines (showtext?): 13 paths for 13 labels with 13 characters other than spaces; no comparison for outlines                                   
+80 the text was drawn as glyph outlines (showtext?): 1 path for 1 label with 1 character other than spaces; no comparison for outlines                                         
+83 the text was drawn as glyph outlines (showtext?): 2 paths for 2 labels with 2 characters other than spaces; no comparison for outlines                                      
+1  a copy of L005 moved by (-0.18, -0.26) pt, element for element (a halo or a shadow?): drawn off its rows                                                                    
+2  a copy of L005 moved by (-0.44, -0.44) pt, element for element (a halo or a shadow?): drawn off its rows                                                                    
+3  a copy of L011 moved by (0.18, -0.26) pt, element for element (a halo or a shadow?): drawn off its rows                                                                     
+4  a copy of L011 moved by (0.44, -0.44) pt, element for element (a halo or a shadow?): drawn off its rows                                                                     
+5  a copy of L013 moved by (0.18, 0.26) pt, element for element (a halo or a shadow?): drawn off its rows                                                                      
+6  a copy of L013 moved by (0.44, 0.43) pt, element for element (a halo or a shadow?): drawn off its rows                                                                      
+7  a copy of L019 moved by (-0.18, 0.26) pt, element for element (a halo or a shadow?): drawn off its rows                                                                     
+8  a copy of L019 moved by (-0.44, 0.43) pt, element for element (a halo or a shadow?): drawn off its rows                                                                     
+9  a copy of L021 moved by (0.00, -0.80) pt, element for element (a halo or a shadow?): drawn off its rows                                                                     
+10 a copy of L021 moved by (0.00, 0.80) pt, element for element (a halo or a shadow?): drawn off its rows                                                                      
+81 the text was drawn as glyph outlines (showtext?): 1 path for 1 label with 9 characters other than spaces; no comparison for outlines                                        
+11 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob1 is not among its children before drawing, and the layer's rows do not pass for it    
+12 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob10 is not among its children before drawing, and the layer's rows do not pass for it   
+13 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob11 is not among its children before drawing, and the layer's rows do not pass for it   
+14 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob12 is not among its children before drawing, and the layer's rows do not pass for it   
+15 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob13 is not among its children before drawing, and the layer's rows do not pass for it   
+16 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob14 is not among its children before drawing, and the layer's rows do not pass for it   
+17 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob15 is not among its children before drawing, and the layer's rows do not pass for it   
+18 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob16 is not among its children before drawing, and the layer's rows do not pass for it   
+19 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob17 is not among its children before drawing, and the layer's rows do not pass for it   
+20 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob18 is not among its children before drawing, and the layer's rows do not pass for it   
+21 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob19 is not among its children before drawing, and the layer's rows do not pass for it   
+22 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob2 is not among its children before drawing, and the layer's rows do not pass for it    
+23 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob20 is not among its children before drawing, and the layer's rows do not pass for it   
+24 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob24 is not among its children before drawing, and the layer's rows do not pass for it   
+25 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob3 is not among its children before drawing, and the layer's rows do not pass for it    
+26 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob34 is not among its children before drawing, and the layer's rows do not pass for it   
+27 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob35 is not among its children before drawing, and the layer's rows do not pass for it   
+28 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob4 is not among its children before drawing, and the layer's rows do not pass for it    
+29 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob40 is not among its children before drawing, and the layer's rows do not pass for it   
+30 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob41 is not among its children before drawing, and the layer's rows do not pass for it   
+31 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob42 is not among its children before drawing, and the layer's rows do not pass for it   
+32 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob46 is not among its children before drawing, and the layer's rows do not pass for it   
+33 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob47 is not among its children before drawing, and the layer's rows do not pass for it   
+34 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob48 is not among its children before drawing, and the layer's rows do not pass for it   
+35 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob49 is not among its children before drawing, and the layer's rows do not pass for it   
+36 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob5 is not among its children before drawing, and the layer's rows do not pass for it    
+37 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob50 is not among its children before drawing, and the layer's rows do not pass for it   
+38 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob51 is not among its children before drawing, and the layer's rows do not pass for it   
+39 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob52 is not among its children before drawing, and the layer's rows do not pass for it   
+40 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob53 is not among its children before drawing, and the layer's rows do not pass for it   
+41 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob54 is not among its children before drawing, and the layer's rows do not pass for it   
+42 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob55 is not among its children before drawing, and the layer's rows do not pass for it   
+43 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob56 is not among its children before drawing, and the layer's rows do not pass for it   
+44 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob57 is not among its children before drawing, and the layer's rows do not pass for it   
+45 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob58 is not among its children before drawing, and the layer's rows do not pass for it   
+46 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob59 is not among its children before drawing, and the layer's rows do not pass for it   
+47 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob6 is not among its children before drawing, and the layer's rows do not pass for it    
+48 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob60 is not among its children before drawing, and the layer's rows do not pass for it   
+49 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob61 is not among its children before drawing, and the layer's rows do not pass for it   
+50 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob8 is not among its children before drawing, and the layer's rows do not pass for it    
+51 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob9 is not among its children before drawing, and the layer's rows do not pass for it    
+52 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob10 is not among its children before drawing, and the layer's rows do not pass for it
+53 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob11 is not among its children before drawing, and the layer's rows do not pass for it
+54 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob13 is not among its children before drawing, and the layer's rows do not pass for it
+55 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob14 is not among its children before drawing, and the layer's rows do not pass for it
+56 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob15 is not among its children before drawing, and the layer's rows do not pass for it
+57 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob16 is not among its children before drawing, and the layer's rows do not pass for it
+58 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob17 is not among its children before drawing, and the layer's rows do not pass for it
+59 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob18 is not among its children before drawing, and the layer's rows do not pass for it
+60 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob3 is not among its children before drawing, and the layer's rows do not pass for it 
+61 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob34 is not among its children before drawing, and the layer's rows do not pass for it
+62 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob35 is not among its children before drawing, and the layer's rows do not pass for it
+63 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob4 is not among its children before drawing, and the layer's rows do not pass for it 
+64 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob41 is not among its children before drawing, and the layer's rows do not pass for it
+65 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob46 is not among its children before drawing, and the layer's rows do not pass for it
+66 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob47 is not among its children before drawing, and the layer's rows do not pass for it
+67 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob48 is not among its children before drawing, and the layer's rows do not pass for it
+68 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob5 is not among its children before drawing, and the layer's rows do not pass for it 
+69 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob50 is not among its children before drawing, and the layer's rows do not pass for it
+70 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob51 is not among its children before drawing, and the layer's rows do not pass for it
+71 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob52 is not among its children before drawing, and the layer's rows do not pass for it
+72 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob53 is not among its children before drawing, and the layer's rows do not pass for it
+73 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob55 is not among its children before drawing, and the layer's rows do not pass for it
+74 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob56 is not among its children before drawing, and the layer's rows do not pass for it
+75 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob6 is not among its children before drawing, and the layer's rows do not pass for it 
+76 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob60 is not among its children before drawing, and the layer's rows do not pass for it
+77 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob61 is not among its children before drawing, and the layer's rows do not pass for it
+78 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob8 is not among its children before drawing, and the layer's rows do not pass for it 
+79 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob9 is not among its children before drawing, and the layer's rows do not pass for it 
+   leaves elements
+82 2      26      
+80 5       5      
+83 2       4      
+1  1       2      
+2  1       2      
+3  1       2      
+4  1       2      
+5  1       2      
+6  1       2      
+7  1       2      
+8  1       2      
+9  1       2      
+10 1       2      
+81 2       2      
+11 1       1      
+12 1       1      
+13 1       1      
+14 1       1      
+15 1       1      
+16 1       1      
+17 1       1      
+18 1       1      
+19 1       1      
+20 1       1      
+21 1       1      
+22 1       1      
+23 1       1      
+24 1       1      
+25 1       1      
+26 1       1      
+27 1       1      
+28 1       1      
+29 1       1      
+30 1       1      
+31 1       1      
+32 1       1      
+33 1       1      
+34 1       1      
+35 1       1      
+36 1       1      
+37 1       1      
+38 1       1      
+39 1       1      
+40 1       1      
+41 1       1      
+42 1       1      
+43 1       1      
+44 1       1      
+45 1       1      
+46 1       1      
+47 1       1      
+48 1       1      
+49 1       1      
+50 1       1      
+51 1       1      
+52 1       1      
+53 1       1      
+54 1       1      
+55 1       1      
+56 1       1      
+57 1       1      
+58 1       1      
+59 1       1      
+60 1       1      
+61 1       1      
+62 1       1      
+63 1       1      
+64 1       1      
+65 1       1      
+66 1       1      
+67 1       1      
+68 1       1      
+69 1       1      
+70 1       1      
+71 1       1      
+72 1       1      
+73 1       1      
+74 1       1      
+75 1       1      
+76 1       1      
+77 1       1      
+78 1       1      
+79 1       1      
+
+== failed elements by figure, geom and tag
+none
+
+== checked share per figure (ggplot): the element-weighted share is dominated by the largest figures
+figures 28; median share 1.000; share >= 0.8 in 25; share 0 in 0; largest two figures hold 19832 of 24911 elements
+       id stratum elements checked failed share
+ tree-062    tree      191      59      0 0.309
+ tree-041    tree      122      51      0 0.418
+ tree-054    tree      413     252      0 0.610
+ tree-072    tree      154     134      0 0.870
+ tree-014    tree    14669   13161      0 0.897
+ tree-061    tree     5163    5163      0 1.000
+ tree-079    tree     2149    2149      0 1.000
+ tree-011    tree      453     453      0 1.000
+ tree-037    tree      240     240      0 1.000
+ tree-068    tree      178     178      0 1.000
+ tree-074    tree      148     148      0 1.000
+ tree-066    tree      145     145      0 1.000
+ tree-057    tree       95      95      0 1.000
+ tree-060    tree       87      87      0 1.000
+ tree-083    tree       76      76      0 1.000
+ tree-008    tree       73      73      0 1.000
+ tree-017    tree       73      73      0 1.000
+ tree-025    tree       73      73      0 1.000
+ tree-038    tree       73      73      0 1.000
+ tree-069    tree       60      60      0 1.000
+ tree-077    tree       54      54      0 1.000
+ tree-012    tree       39      39      0 1.000
+ tree-010    tree       38      38      0 1.000
+ tree-021    tree       38      38      0 1.000
+ tree-050    tree       38      38      0 1.000
+ tree-003    tree       33      33      0 1.000
+ tree-045    tree       22      22      0 1.000
+ tree-032    tree       14      14      0 1.000
+
+== ambiguous elements: in dense leaves / elsewhere
+8367 / 540
+
+== time: binding (a second capture plus the bind step) against capture, per figure
+median capture 0.20 s, median capture + bind 0.42 s, maximum capture + bind 5.98 s

@@ -1,0 +1,264 @@
+== figures
+           
+            bound not captured
+  base         10            0
+  ggplot       31            1
+  grid          4            0
+  heatmap       3            0
+  patchwork     6            0
+
+== layer elements by engine (leaves attributed to a layer, body or track)
+          figures leaves elements verified ambiguous failed unbound
+base           10   1986     2674     2544        93      0      37
+ggplot         31   4161    24783     9069     15328      6     365
+heatmap         3     32      406      250         0      0     156
+patchwork       5     39     1783       98         6      0      53
+          count_mismatch checked
+base                   0   98.6%
+ggplot                15   98.4%
+heatmap                0   61.6%
+patchwork           1626    5.8%
+all: 29646 elements; verified 11961, ambiguous 15427 (verified or ambiguous 92.4%); failed 6; unbound 611; count_mismatch 1641
+
+== ggplot layer elements by stratum
+        figures leaves elements verified ambiguous failed unbound
+bioc          2      3       22       22         0      0       0
+exts         12     59    18532     7036     11173      6     302
+gallery      17   4099     6229     2011      4155      0      63
+        count_mismatch checked
+bioc                 0  100.0%
+exts                15   98.3%
+gallery              0   99.0%
+
+== engines that state no bindings (leaves, elements)
+  engine leaves elements
+1   grid    234     1056
+
+== paired leaves by geom and tag (ggplot), elements
+                               figures leaves elements verified ambiguous
+GeomPoint / circle                   8      8    13208     2033     11175
+GeomTile / rect                      2      2     5628     5628         0
+GeomLabel / polygon                  1   2000     2000        0      2000
+GeomLabel / text                     1   2000     2000        0      2000
+GeomHex / polygon                    1      1      551      551         0
+GeomEpicurve / rect                  1      1      270      270         0
+GeomCircle / polygon                 1      1      252      248         4
+GeomPoint / circle+polygon           1      1      150       90        60
+GeomPoint / rect                     1      1      150       90        60
+GeomBar / rect                       3      4       76       76         0
+GeomTextcurve / text                 1      1       73        0         0
+GeomLabeldensity2d / text            1      8       31        0         0
+GeomArea / polygon                   1     30       30       30         0
+GeomArea / polyline                  1     30       30        1        29
+GeomBar / polygon                    2      2       25        0         0
+GeomRoc / circle                     1      2       20        0         0
+GeomRoc / text                       1      2       20        0         0
+GeomLabeldensity2d / polyline        1      1       16        0         0
+GeomText / text                      3      3       14       14         0
+GeomRocci / line                     1      2       12       12         0
+GeomErrorStat / polyline             1      1        9        0         0
+GeomLabeldensity2d / polygon         1      8        8        0         0
+GeomSegment / line                   1      1        8        8         0
+GeomLine / polyline                  2      3        7        7         0
+GeomRocci / rect                     1      2        6        6         0
+GeomRocci / text                     1      2        6        0         0
+GeomTextcurve / polyline             1      1        6        0         0
+GeomRoc / polyline                   1      2        2        2         0
+GeomAbline / line                    1      1        1        0         0
+GeomLabelRepel / line                1      1        1        0         0
+GeomLabelRepel / polygon             1      1        1        0         0
+GeomLabelRepel / text                1      1        1        0         0
+GeomPath / polyline                  1      1        1        1         0
+GeomRaster / image                   1      1        1        1         0
+GeomTerraSpatRasterRGB / image       1      1        1        1         0
+                               failed unbound count_mismatch
+GeomPoint / circle                  0       0              0
+GeomTile / rect                     0       0              0
+GeomLabel / polygon                 0       0              0
+GeomLabel / text                    0       0              0
+GeomHex / polygon                   0       0              0
+GeomEpicurve / rect                 0       0              0
+GeomCircle / polygon                0       0              0
+GeomPoint / circle+polygon          0       0              0
+GeomPoint / rect                    0       0              0
+GeomBar / rect                      0       0              0
+GeomTextcurve / text                0      73              0
+GeomLabeldensity2d / text           0      31              0
+GeomArea / polygon                  0       0              0
+GeomArea / polyline                 0       0              0
+GeomBar / polygon                   0      25              0
+GeomRoc / circle                    0      20              0
+GeomRoc / text                      0      20              0
+GeomLabeldensity2d / polyline       0      16              0
+GeomText / text                     0       0              0
+GeomRocci / line                    0       0              0
+GeomErrorStat / polyline            0       0              9
+GeomLabeldensity2d / polygon        0       8              0
+GeomSegment / line                  0       0              0
+GeomLine / polyline                 0       0              0
+GeomRocci / rect                    0       0              0
+GeomRocci / text                    6       0              0
+GeomTextcurve / polyline            0       0              6
+GeomRoc / polyline                  0       0              0
+GeomAbline / line                   0       1              0
+GeomLabelRepel / line               0       1              0
+GeomLabelRepel / polygon            0       1              0
+GeomLabelRepel / text               0       1              0
+GeomPath / polyline                 0       0              0
+GeomRaster / image                  0       0              0
+GeomTerraSpatRasterRGB / image      0       0              0
+
+== unbound reasons (leaves, elements), layer leaves
+   engine   
+8  ggplot   
+1  heatmap  
+31 ggplot   
+33 patchwork
+2  ggplot   
+9  ggplot   
+35 ggplot   
+6  base     
+7  base     
+19 ggplot   
+3  patchwork
+32 ggplot   
+10 ggplot   
+20 ggplot   
+21 ggplot   
+22 ggplot   
+23 ggplot   
+25 ggplot   
+26 ggplot   
+27 ggplot   
+5  patchwork
+24 ggplot   
+34 patchwork
+4  ggplot   
+11 ggplot   
+12 ggplot   
+13 ggplot   
+14 ggplot   
+15 ggplot   
+16 ggplot   
+17 ggplot   
+18 ggplot   
+28 ggplot   
+29 ggplot   
+30 ggplot   
+   why                                                                                                                                                                        
+8  print.ggcut draws the page, not ggplot2's print method; the built data and panels describe the plot before that method, so gloss cannot show they describe the page drawn. 
+1  annotation tracks and dendrograms are not paired yet                                                                                                                       
+31 the layer's grob (textcurve) makes what it draws when it is drawn: GRID.textpath.203 is not among its children before drawing, and the layer's rows do not pass for it     
+33 the leaf lies in a ggplot panel that belongs to no plot gloss found in the composition                                                                                     
+2  k elements for m rows in n groups: neither one per row nor one per group                                                                                                   
+9  rectangles are drawn as polygons munched along the coord (CoordCombMatrix); no comparison for them                                                                         
+35 the rows' shapes draw 1001 parts, the leaf drew 10 elements                                                                                                                
+6  plotXY of type 'h': it draws a line from the base line to each point                                                                                                       
+7  plotXY of type 'o': it draws a point and a piece of line for each point                                                                                                    
+19 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.polyline.676 is not among its children before drawing, and the layer's rows do not pass for it     
+3  k elements for m rows in n groups: neither one per row nor one per group                                                                                                   
+32 the layer's rows carry neither x and y nor xmin, xmax, ymin and ymax                                                                                                       
+10 rectangles are drawn as polygons munched along the coord (CoordPolar); no comparison for them                                                                              
+20 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.text.685 is not among its children before drawing, and the layer's rows do not pass for it         
+21 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.text.686 is not among its children before drawing, and the layer's rows do not pass for it         
+22 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.text.687 is not among its children before drawing, and the layer's rows do not pass for it         
+23 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.text.688 is not among its children before drawing, and the layer's rows do not pass for it         
+25 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.text.690 is not among its children before drawing, and the layer's rows do not pass for it         
+26 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.text.691 is not among its children before drawing, and the layer's rows do not pass for it         
+27 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.text.692 is not among its children before drawing, and the layer's rows do not pass for it         
+5  no comparison for <line> elements paired one per row                                                                                                                       
+24 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.text.689 is not among its children before drawing, and the layer's rows do not pass for it         
+34 the rows paired with <polygon> elements have no y                                                                                                                          
+4  no comparison for <line> elements paired one per group                                                                                                                     
+11 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.polygon.677 is not among its children before drawing, and the layer's rows do not pass for it      
+12 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.polygon.678 is not among its children before drawing, and the layer's rows do not pass for it      
+13 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.polygon.679 is not among its children before drawing, and the layer's rows do not pass for it      
+14 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.polygon.680 is not among its children before drawing, and the layer's rows do not pass for it      
+15 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.polygon.681 is not among its children before drawing, and the layer's rows do not pass for it      
+16 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.polygon.682 is not among its children before drawing, and the layer's rows do not pass for it      
+17 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.polygon.683 is not among its children before drawing, and the layer's rows do not pass for it      
+18 the layer's grob (labelpath) makes what it draws when it is drawn: GRID.polygon.684 is not among its children before drawing, and the layer's rows do not pass for it      
+28 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob1 is not among its children before drawing, and the layer's rows do not pass for it   
+29 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob1 is not among its children before drawing, and the layer's rows do not pass for it
+30 the layer's grob (labelrepeltree) makes what it draws when it is drawn: textrepelgrob1 is not among its children before drawing, and the layer's rows do not pass for it   
+   leaves elements
+8  29     162     
+1  27     156     
+31  1      73     
+33 21      41     
+2   2      20     
+9   1      20     
+35  2      20     
+6   3      19     
+7   2      18     
+19  1      16     
+3   3       6     
+32  5       6     
+10  1       5     
+20  1       4     
+21  1       4     
+22  1       4     
+23  1       4     
+25  1       4     
+26  1       4     
+27  1       4     
+5   3       3     
+24  1       3     
+34  3       3     
+4   1       1     
+11  1       1     
+12  1       1     
+13  1       1     
+14  1       1     
+15  1       1     
+16  1       1     
+17  1       1     
+18  1       1     
+28  1       1     
+29  1       1     
+30  1       1     
+
+== failed elements by figure, geom and tag
+       id engine      geom  tag mode leaves failed elements
+ exts-014 ggplot GeomRocci text  row      2      6        6
+
+== checked share per figure (ggplot): the element-weighted share is dominated by the largest figures
+figures 31; median share 1.000; share >= 0.8 in 22; share 0 in 5; largest two figures hold 17883 of 24783 elements
+          id stratum elements checked failed share
+    exts-018    exts      162       0      0 0.000
+    exts-013    exts       79       0      0 0.000
+ gallery-054 gallery       55       0      0 0.000
+    exts-024    exts       20       0      0 0.000
+    exts-008    exts        9       0      0 0.000
+    exts-014    exts       66      20      6 0.303
+ gallery-020 gallery       10       5      0 0.500
+    exts-001    exts        2       1      0 0.500
+ gallery-059 gallery        7       4      0 0.571
+    exts-021    exts       33      32      0 0.970
+    exts-019    exts      271     270      0 0.996
+    exts-022    exts    12258   12254      0 1.000
+    exts-027    exts     5625    5625      0 1.000
+ gallery-029 gallery     4060    4060      0 1.000
+ gallery-002 gallery      600     600      0 1.000
+ gallery-001 gallery      551     551      0 1.000
+ gallery-048 gallery      252     252      0 1.000
+ gallery-006 gallery      150     150      0 1.000
+ gallery-011 gallery      150     150      0 1.000
+ gallery-068 gallery      150     150      0 1.000
+ gallery-005 gallery      100     100      0 1.000
+ gallery-024 gallery       60      60      0 1.000
+ gallery-047 gallery       32      32      0 1.000
+ gallery-070 gallery       32      32      0 1.000
+ gallery-032 gallery       16      16      0 1.000
+    bioc-017    bioc       12      12      0 1.000
+    bioc-016    bioc       10      10      0 1.000
+    exts-030    exts        6       6      0 1.000
+ gallery-050 gallery        3       3      0 1.000
+    exts-017    exts        1       1      0 1.000
+ gallery-015 gallery        1       1      0 1.000
+
+== ambiguous elements: in dense leaves / elsewhere
+11173 / 4254
+
+== time: binding (a second capture plus the bind step) against capture, per figure
+median capture 0.22 s, median capture + bind 0.37 s, maximum capture + bind 69.71 s

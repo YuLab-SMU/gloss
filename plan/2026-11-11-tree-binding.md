@@ -258,7 +258,7 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 
 ### Task 6: What remains (tree-054's repelled labels, tree-003's text leaf)
 
-**Status:** `[ ]` _(stub; written out 2026-11-12, after Task 5, on the owner's word "把还没做的两项做完")_
+**Status:** `[x]` _(written out 2026-11-12, after Task 5, on the owner's word "把还没做的两项做完"; done the same day)_
 
 Also, from Task 1: ggtree's segments moved by their draw-time `nudge_x` (tree-041, 6); `<image>` elements with no comparison (tree-041, 17). From Task 2: shadowtext's halo copies, drawn at a fixed offset from their row (tree-072, 20 failed by 0.57-0.81 pt).
 
@@ -286,10 +286,38 @@ Also, from Task 1: ggtree's segments moved by their draw-time `nudge_x` (tree-04
 - [x] Leaves made when drawn: `geom_label_repel()` and `geom_text_repel()` leaves unbound with the reason, 0 failed; a test that fails first. — Changed from the plan: such a leaf is still paired with the layer's rows, and only when that does not pass is it unbound with the reason (`made_reason` on the claim, `check_claim()`). My first version unbound every such leaf, and `geom_curve()` (whose grob also makes its paths when drawn, in row order) went from verified to unbound in the suite. Test: ggrepel labels and texts (5 failed before), all unbound with the reason after, the points beside them verified. 2026-11-12, while writing the predictions from run `0927`: tree-054's 41 texts are count mismatches (drawn as glyph outlines), and the rule as committed would have turned them into unbound leaves with the made reason, which says the rows do not pass though they were never paired. Fixed with a test that failed first: the rule applies to failed, partly failed and unbound leaves only. Suite: host 9 / 109 / 785 / 0 failed / 0 skipped; container the same.
 - [x] Copies at one offset: a test with a layer drawing a label and its moved copies; fails first. — `mark_copies()` in `R/core-bind.R`, after all claims: a failed leaf whose elements are a passing sibling's (same parent, table, tags, texts, order) moved by one offset (within 0.05 pt) is unbound, with the nearest sibling and the offset. Test: two copies moved 1.5 pt along the baseline unbound as copies, one moved within its box verified, a copy with its labels reordered still failed.
 - [x] Suite on the host; container suite (base capture reads what the device wrote). — Host 9 files / 109 tests / 774 expectations / 0 failed / 0 skipped; container the same, 0 errors, 0 warnings.
-- [ ] Predictions, then `capture.R dev tree`, `bind.R dev tree`, `capture.R dev`, `bind.R dev`; compared with runs `0924`, `0927`, `0930`, `0936`.
+- [x] Predictions, then `capture.R dev tree`, `bind.R dev tree`, `capture.R dev`, `bind.R dev`; compared with runs `0924`, `0927`, `0930`, `0936`. — Predictions 87-92 at `dda5bf7` (one exception added to 92 at `fd0401b`, before the runs); runs `2026-11-12-1105`, `-1107`, `-1110`, `-1116` at `fd0401b`: 5 of 6 right (91 wrong in one number, an arithmetic slip).
 
 **Verification**
 - On the stratum, no element of the classes above is `failed`; each is checked or unbound with a reason that names it. v0: no element moves out of verified or ambiguous against run `0936`.
+
+**Result (2026-11-12).**
+- Stratum (`Rscript bench/R/compare-bind.R bench/runs/2026-11-12-0927-bind-dev-tree.csv bench/runs/2026-11-12-1107-bind-dev-tree.csv`; `score-bind.R` on `1107`):
+  - failed 67 → 0;
+  - verified or ambiguous 23091 → 23119 of 25037 (92.2% → 92.3%);
+  - unbound 87 → 126, every one with its reason;
+  - count mismatch 1792 (text drawn as outlines);
+  - 139 of 595 leaves changed, 0 regressions;
+  - per figure, of 28 ggplot figures: all checked 23 (was 22), at least 80% 25, none 0.
+- By class:
+
+  | Class | Before | After |
+  |---|---|---|
+  | tree-003's text | 5 unbound | verified, rows 11 → 5 |
+  | tree-041's dotted lines | 6 failed | verified, max 0.005 pt |
+  | tree-041's images | 17 unbound | 6 verified (`hjust = 0`, checked inside the box along x), 11 ambiguous (one image drawn for every row at one point) |
+  | tree-054's boxes and connectors | 41 failed, 28 unbound | unbound, made when drawn |
+  | tree-054's texts | 41 count mismatches | count mismatches, "61 labels with 130 characters" |
+  | tree-072's copies | 20 failed | unbound as copies, offsets 0.32-0.80 pt |
+
+- v0 (`compare-bind.R` against `0936`):
+  - 23 of 7114 leaves changed, 0 regressions;
+  - failed 8 → 6 (exts-014's two `geom_rocci()` label leaves, 4.07 pt, not read);
+  - the two rasters verified;
+  - 21 leaves made when drawn carry that reason;
+  - the 27 base points leaves are paired in mode `symbol` with their counts unchanged.
+- Captures on both sets: 0 cells differ.
+- Suite: host 9 files / 109 tests / 807 expectations / 0 failed / 0 skipped; container the same.
 
 ### Task 7: The stratum's held-out half, one run
 
