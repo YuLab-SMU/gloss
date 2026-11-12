@@ -17,6 +17,17 @@
 #
 # The material is made in the container by bench/agent/material.R; the rule
 # for figures and questions is in the plan and was fixed before any run.
+#
+# The loop is this script's own, the same for both arms (tool_loop() below):
+# the model is sent the conversation and the tools, its tool calls are run
+# with the arguments exactly as it wrote them, their answers are appended,
+# and that repeats until the model answers without a tool call or `max_steps`
+# requests have been made. Nothing else is sent to the model and nothing
+# decides to stop a run but those two. It is not aisdk's loop: the rehearsal
+# of 2026-11-12 showed that aisdk 1.5.0 rewrites the inside of a tool call's
+# string arguments before parsing them (`d[i, ]` reached the sandbox as
+# `d[i]`), and that its runtime makes requests and stop decisions of its own
+# (plan, scope change of 2026-11-12). aisdk still makes the tool objects.
 # The gateway's key is read from ANTHROPIC_AUTH_TOKEN and is never printed
 # or archived. Nothing a model writes runs outside the sandbox.
 
@@ -32,7 +43,7 @@ arms <- c("A", "B")
 n_repeats <- 3L
 n_questions <- 3L
 # one budget for both arms
-max_steps <- 16L          # model turns, each with at most one round of tool calls
+max_steps <- 16L          # requests to the model in a run; each may ask for several tool calls
 request_timeout <- 180    # seconds for one model request
 sandbox_timeout <- 120    # seconds for one run_r call: the slowest figure's own code takes 46 s there
 output_limit <- 4000      # characters a tool hands back (gl_tools' answers are far shorter)
@@ -222,28 +233,21 @@ score_B <- function(state, q) {
 clip <- function(x, n) if (is.character(x) && length(x) == 1L && nchar(x) > n) paste0(substr(x, 1L, n), " [...]") else x
 
 # One run of one model on one question in one arm.
-run_one <- function(model, arm, m, q) {
+run_one <- function(model_id, arm, m, q) {
   if (arm == "A") {
     sb <- sandbox_open(file.path(m$dir, "A"), m$env)
     on.exit(sandbox_close(sb), add = TRUE)
     tools <- tools_A(sb)
   } else tools <- tools_B(m$fig)
   t0 <- Sys.time()
-  res <- tryCatch(
-    aisdk::generate_text(model = model, system = if (arm == "A") system_A else system_B, prompt = question_text(q),
-                         tools = tools, max_steps = max_steps, temperature = 0),
-    error = function(e) e)
+  res <- tool_loop(model_id, if (arm == "A") system_A else system_B, question_text(q), tools)
   secs <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
-  failed <- inherits(res, "error")
   state <- if (arm == "A") state_A(tools) else gloss::gl_tool_state(tools)
   s <- if (arm == "A") score_A(state, q) else score_B(state, q)
   c(list(arm = arm, figure = q$figure, question = q$question, element = q$element, tag = q$tag,
          truth_table = q$table, truth_row = q$row, seconds = round(secs, 2),
-         error = if (failed) substr(conditionMessage(res), 1L, 300L) else NA_character_,
-         finish = if (failed) NA_character_ else as.character(res$finish_reason %||% NA),
-         steps = if (failed) NA_integer_ else as.integer(res$steps %||% NA),
-         usage = if (failed) NULL else res$usage,
-         text = if (failed) NA_character_ else substr(paste(res$text, collapse = " "), 1L, 600L)),
+         error = res$error, finish = res$finish, steps = res$requests, usage = res$usage,
+         text = if (is.na(res$text)) NA_character_ else substr(res$text, 1L, 600L)),
     s,
     list(calls = lapply(state$calls, function(c) { c$result <- clip(c$result, output_limit); c }),
          submissions = if (arm == "A") state$submissions else lapply(state$proposals, function(p) {
@@ -262,11 +266,91 @@ git_head <- function() system("git rev-parse --short HEAD", intern = TRUE)
 utc_stamp <- function() format(Sys.time(), "%Y-%m-%d-%H%M", tz = "UTC")
 short <- function(model_id) gsub("[^A-Za-z0-9.-]", "-", sub("^westlakehpc/", "", model_id))
 
-provider <- function() {
+gateway_key <- function() {
   key <- Sys.getenv("ANTHROPIC_AUTH_TOKEN")
   if (!nzchar(key)) stop("the gateway's key is not in the environment")
-  aisdk::create_openai(api_key = key, base_url = gateway, api_format = "chat", name = "magpie",
-                       total_timeout_seconds = request_timeout)
+  key
+}
+
+# One request to the gateway's chat endpoint. Returns the assistant's message
+# and the usage, or `error`. A failed request (network, 429, 5xx) is made
+# again twice, after 2 and 4 s.
+chat_request <- function(model_id, messages, tools = NULL, timeout = request_timeout) {
+  body <- list(model = model_id, messages = messages, temperature = 0)
+  if (length(tools)) body$tools <- tools
+  payload <- jsonlite::toJSON(body, auto_unbox = TRUE, null = "null", digits = NA)
+  last <- "no request made"
+  for (attempt in 1:3) {
+    h <- curl::new_handle()
+    curl::handle_setheaders(h, "Authorization" = paste("Bearer", gateway_key()), "Content-Type" = "application/json")
+    curl::handle_setopt(h, copypostfields = payload, timeout = as.integer(timeout))
+    res <- tryCatch(curl::curl_fetch_memory(paste0(gateway, "/chat/completions"), handle = h), error = function(e) e)
+    if (inherits(res, "error")) {
+      last <- paste("request failed:", conditionMessage(res))
+    } else {
+      txt <- rawToChar(res$content)
+      Encoding(txt) <- "UTF-8"
+      parsed <- tryCatch(jsonlite::fromJSON(txt, simplifyVector = FALSE), error = function(e) NULL)
+      msg <- parsed$choices[[1]]$message
+      if (res$status_code == 200L && is.list(msg)) return(list(message = msg, usage = parsed$usage, error = NULL))
+      why <- parsed$error$message %||% substr(txt, 1L, 200L)
+      # the gateway names its upstream's address in an error; that is not ours to archive
+      why <- gsub("[0-9]{1,3}(\\.[0-9]{1,3}){3}", "<address>", why)
+      last <- sprintf("HTTP %d: %s", res$status_code, substr(why, 1L, 200L))
+      if (res$status_code < 429L) break   # a request the gateway refuses is not made again
+    }
+    if (attempt < 3L) Sys.sleep(2 * attempt)
+  }
+  list(message = NULL, usage = NULL, error = last)
+}
+
+# The loop, the same for both arms. `tools` are aisdk tool objects, used for
+# their name, description, schema and function; aisdk runs nothing here.
+tool_loop <- function(model_id, system, prompt, tools) {
+  api_tools <- lapply(tools, function(t) t$to_api_format())
+  by_name <- stats::setNames(tools, vapply(tools, function(t) t$name, ""))
+  messages <- list(list(role = "system", content = system), list(role = "user", content = prompt))
+  usage <- c(prompt_tokens = 0, completion_tokens = 0, total_tokens = 0)
+  requests <- 0L
+  text <- NA_character_
+  error <- NA_character_
+  finish <- NA_character_
+  repeat {
+    if (requests >= max_steps) { finish <- "step limit"; break }
+    requests <- requests + 1L
+    r <- chat_request(model_id, messages, api_tools)
+    if (!is.null(r$error)) { error <- r$error; finish <- "request error"; break }
+    for (k in names(usage)) usage[[k]] <- usage[[k]] + as.numeric(r$usage[[k]] %||% 0)
+    msg <- r$message
+    calls <- msg$tool_calls
+    content <- if (is.character(msg$content)) msg$content else ""
+    if (!length(calls)) { text <- content; finish <- "stop"; break }
+    # the assistant's turn goes back as it came: its arguments stay the string it wrote
+    messages[[length(messages) + 1L]] <- list(role = "assistant", content = content, tool_calls = lapply(calls, function(tc) {
+      list(id = tc$id, type = "function", `function` = list(name = tc$`function`$name, arguments = tc$`function`$arguments %||% "{}"))
+    }))
+    for (tc in calls) {
+      raw <- tc$`function`$arguments %||% "{}"
+      args <- tryCatch(jsonlite::fromJSON(if (nzchar(trimws(raw))) raw else "{}", simplifyVector = FALSE), error = function(e) NULL)
+      tool <- by_name[[tc$`function`$name %||% ""]]
+      out <- if (is.null(tool)) {
+        sprintf('{"error":"no such tool; the tools are: %s"}', paste(names(by_name), collapse = ", "))
+      } else if (!is.list(args)) {
+        '{"error":"the arguments are not a JSON object"}'
+      } else {
+        tryCatch(as.character(tool$run(args)), error = function(e) {
+          as.character(jsonlite::toJSON(list(error = substr(conditionMessage(e), 1L, 300L)), auto_unbox = TRUE))
+        })
+      }
+      messages[[length(messages) + 1L]] <- list(role = "tool", tool_call_id = tc$id, content = paste(out, collapse = "\n"))
+    }
+  }
+  list(text = text, finish = finish, error = error, requests = requests, usage = as.list(usage))
+}
+
+# Does the model answer at all? One word, no tool.
+model_answers <- function(model_id) {
+  is.null(chat_request(model_id, list(list(role = "user", content = "Reply with the single word: ready")), timeout = 90)$error)
 }
 
 # ---- modes ------------------------------------------------------------------------------
@@ -315,6 +399,44 @@ if (mode == "questions") {
 if (mode == "dry") {
   qs <- read_questions()
   bad <- 0L
+  # The loop, with a scripted model in place of the gateway: a tool call's
+  # arguments reach the tool as the model wrote them (aisdk 1.5.0's own
+  # parser gives `d[2:3]` for the `d[2:3, ]` below, which is reported, not
+  # required), the tool's answer and the model's own turn go back unchanged,
+  # usage adds up, and a model that never stops calling tools is stopped at
+  # the step limit.
+  got <- NULL
+  echo <- aisdk::tool("echo", "Echo.", aisdk::z_object(code = aisdk::z_string("text")),
+                      execute = function(...) { got <<- list(...)$code; "done" })
+  code <- "d <- data.frame(a = 1:5, b = 6:10); print(d[2:3, ]); print(d[order(d$a), ])"
+  call_json <- as.character(jsonlite::toJSON(list(code = code), auto_unbox = TRUE))
+  turn <- list(message = list(content = NULL, tool_calls = list(list(id = "c1", type = "function", index = 0L,
+                                                                    `function` = list(name = "echo", arguments = call_json)))),
+               usage = list(prompt_tokens = 5, completion_tokens = 2, total_tokens = 7))
+  last <- list(message = list(content = "finished", tool_calls = NULL), usage = list(prompt_tokens = 9, completion_tokens = 1, total_tokens = 10))
+  replies <- list(turn, last)
+  sent <- list()
+  real_request <- chat_request
+  chat_request <- function(model_id, messages, tools = NULL, timeout = 0) {
+    sent[[length(sent) + 1L]] <<- messages
+    replies[[length(sent)]]
+  }
+  out <- tool_loop("scripted", "s", "p", list(echo))
+  as_written <- identical(got, code)
+  goes_back <- identical(sent[[2]][[4]], list(role = "tool", tool_call_id = "c1", content = "done")) &&
+    identical(sent[[2]][[3]]$tool_calls[[1]]$`function`$arguments, call_json)
+  ends <- identical(out$text, "finished") && identical(out$finish, "stop") && out$requests == 2L && out$usage$total_tokens == 17
+  aisdk_gives <- tryCatch(utils::getFromNamespace("parse_tool_arguments", "aisdk")(call_json)$code, error = function(e) NA_character_)
+  replies <- rep(list(turn), max_steps + 5L)
+  sent <- list()
+  out <- tool_loop("scripted", "s", "p", list(echo))
+  limited <- identical(out$finish, "step limit") && out$requests == max_steps && length(sent) == max_steps
+  chat_request <- real_request
+  cat(sprintf("the loop: arguments as written %s | answers and turns go back %s | ends on an answer %s | stops at %d requests %s\n",
+              as_written, goes_back, ends, max_steps, limited))
+  cat(sprintf("  (the same arguments through aisdk %s's parser: %s)\n", utils::packageVersion("aisdk"),
+              if (identical(aisdk_gives, code)) "unchanged" else paste("changed to:", aisdk_gives)))
+  if (!(as_written && goes_back && ends && limited)) bad <- bad + 1L
   for (id in unique(vapply(qs, function(q) q$figure, ""))) {
     m <- pilot_material(id)
     sb <- sandbox_open(file.path(m$dir, "A"), m$env)
@@ -344,7 +466,7 @@ if (mode == "dry") {
     sandbox_close(sb)
   }
   if (bad) { cat(bad, "checks failed\n"); quit(status = 1) }
-  cat(sprintf("dry run: %d questions; both tool sets reach each answer, and every figure's code runs in the sandbox\n", length(qs)))
+  cat(sprintf("dry run: the loop passes its check; %d questions; both tool sets reach each answer, and every figure's code runs in the sandbox\n", length(qs)))
 }
 
 if (mode == "enumerate") {
@@ -408,15 +530,14 @@ if (mode == "rehearse") {
                                                 cx = round(el$cx[k[i]], 2), cy = round(el$cy[k[i]], 2), table = el$table[k[i]],
                                                 row = el$row[k[i]]))
   ids <- if (length(args) > 1) args[-1] else models
-  prov <- provider()
   stamp <- utc_stamp()
   f <- file.path("bench", "runs", paste0(stamp, "-pilot-rehearsal.jsonl"))
   cat(json_line(list(meta = TRUE, stamp = stamp, script = "bench/agent/pilot.R rehearse", models = ids, gloss_commit = git_head(),
-                     aisdk = as.character(utils::packageVersion("aisdk")), max_steps = max_steps, temperature = 0,
+                     loop = "bench/agent/pilot.R tool_loop()", max_steps = max_steps, temperature = 0,
                      system_A = system_A, system_B = system_B, questions = lapply(qs, function(q) c(q, list(text = question_text(q)))))),
       "\n", file = f, sep = "")
   for (id in ids) for (q in qs) for (arm in arms) {
-    r <- c(list(model = id, rep = 1L), run_one(prov$language_model(id), arm, m, q))
+    r <- c(list(model = id, rep = 1L), run_one(id, arm, m, q))
     cat(json_line(r), "\n", file = f, append = TRUE, sep = "")
     cat(sprintf("%-22s %s q%d  %s  calls %2d  failed %d  %6.1f s  tokens %s%s\n", short(id), arm, q$question,
                 if (r$correct) "correct" else if (r$answered) "WRONG  " else "no answer", r$tool_calls, r$failed_calls, r$seconds,
@@ -444,25 +565,19 @@ if (mode == "run") {
     done[[key]] <- c(done[[key]], is.null(r$error))
   } else {
     cat(json_line(list(meta = TRUE, stamp = stamp, script = "bench/agent/pilot.R run", model = model_id, gateway = gateway,
-                       gloss_commit = git_head(), aisdk = as.character(utils::packageVersion("aisdk")), max_steps = max_steps,
+                       gloss_commit = git_head(), loop = "bench/agent/pilot.R tool_loop()", max_steps = max_steps,
                        request_timeout = request_timeout, sandbox_timeout = sandbox_timeout, output_limit = output_limit,
                        repeats = n_repeats, temperature = 0, seed = seed, system_A = system_A, system_B = system_B,
                        questions = lapply(qs, function(q) c(q, list(text = question_text(q)))))),
         "\n", file = f, sep = "")
   }
-  model <- provider()$language_model(model_id)
   # The models behind the gateway are not always up (2026-11-12: 502 for an
   # hour, then 429 for one of them). The model is asked for one word before
   # its runs and after a run that ended in a request error, and waited for.
-  answers <- function() {
-    r <- tryCatch(aisdk::generate_text(model = model, prompt = "Reply with the single word: ready", max_steps = 1, temperature = 0),
-                  error = function(e) e)
-    !inherits(r, "error")
-  }
   wait_for_model <- function(minutes = 90) {
     t0 <- Sys.time()
     repeat {
-      if (answers()) return(invisible(TRUE))
+      if (model_answers(model_id)) return(invisible(TRUE))
       if (as.numeric(difftime(Sys.time(), t0, units = "mins")) > minutes) {
         stop(sprintf("%s has not answered for %d min; run again later under the same stamp", model_id, minutes))
       }
@@ -470,6 +585,7 @@ if (mode == "run") {
     }
   }
   wait_for_model()
+  commit_now <- git_head()   # the code these runs are made with, in each run's record
   mats <- list()
   for (q in qs) for (rep in seq_len(n_repeats)) for (arm in arms) {
     key <- paste(arm, q$figure, q$question, rep)
@@ -477,7 +593,8 @@ if (mode == "run") {
     if (any(tries)) next
     if (is.null(mats[[q$figure]])) mats[[q$figure]] <- pilot_material(q$figure)
     while (length(tries) < 2L) {
-      r <- c(list(model = model_id, rep = rep, attempt = length(tries) + 1L), run_one(model, arm, mats[[q$figure]], q))
+      r <- c(list(model = model_id, rep = rep, attempt = length(tries) + 1L, gloss_commit = commit_now),
+             run_one(model_id, arm, mats[[q$figure]], q))
       cat(json_line(r), "\n", file = f, append = TRUE, sep = "")
       cat(sprintf("%-20s %s %-14s q%d r%d  %s  calls %2d  %6.1f s%s\n", short(model_id), arm, q$figure, q$question, rep,
                   if (r$correct) "correct" else if (r$answered) "WRONG  " else "no answer", r$tool_calls, r$seconds,
