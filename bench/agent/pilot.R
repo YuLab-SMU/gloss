@@ -34,7 +34,7 @@ n_questions <- 3L
 # one budget for both arms
 max_steps <- 16L          # model turns, each with at most one round of tool calls
 request_timeout <- 180    # seconds for one model request
-sandbox_timeout <- 60     # seconds for one run_r call
+sandbox_timeout <- 120    # seconds for one run_r call: the slowest figure's own code takes 46 s there
 output_limit <- 4000      # characters a tool hands back (gl_tools' answers are far shorter)
 place_tol <- 0.01         # pt: an element's place in svglite's page against gloss's scene
 
@@ -159,8 +159,8 @@ tools_A <- function(sb) {
       }
       r <- sandbox_run(sb, a$code, timeout = sandbox_timeout, limit = output_limit)
       out <- if (nzchar(r$output)) r$output else "[the code printed nothing]"
-      if (r$status != 0L && !r$timed_out) out <- paste0(out, sprintf("\n[R ended with status %d]", r$status))
-      note("run_r", a, r$status == 0L, out, seconds = r$seconds, timed_out = r$timed_out)
+      if (r$status != 0L && !r$timed_out && !r$killed) out <- paste0(out, sprintf("\n[R ended with status %d]", r$status))
+      note("run_r", a, r$status == 0L, out, seconds = r$seconds, timed_out = r$timed_out, killed = r$killed)
     })
   submit <- aisdk::tool(
     name = "submit",

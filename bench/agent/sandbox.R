@@ -54,6 +54,8 @@ sandbox_clip <- function(text, limit) {
 # Run `code` (R, as one script) in the sandbox. Returns what R printed, both
 # streams together and clipped to `limit` characters, the exit status and
 # whether the time ran out. Never raises for anything the code does.
+sandbox_memory <- "6g"   # a figure's own code must run: one vignette of the pilot needs more than 2 GB
+
 sandbox_run <- function(sb, code, timeout = 60, limit = 6000) {
   n <- length(list.files(sb$work, pattern = "^\\.call-[0-9]+\\.R$", all.files = TRUE)) + 1L
   call_file <- sprintf(".call-%03d.R", n)
@@ -61,7 +63,7 @@ sandbox_run <- function(sb, code, timeout = 60, limit = 6000) {
   cache <- sandbox_cache()
   args <- c(
     "run", "--rm", "--network", "none", "--read-only", "--tmpfs", "/tmp:rw,exec,size=512m",
-    "--memory", "2g", "--memory-swap", "2g", "--cpus", "2", "--pids-limit", "256",
+    "--memory", sandbox_memory, "--memory-swap", sandbox_memory, "--cpus", "2", "--pids-limit", "256",
     "--security-opt", "no-new-privileges",
     "-v", paste0(sb$work, ":/work"),
     "-v", paste0(file.path(cache, "lib"), ":/cache/lib:ro"),
@@ -76,11 +78,15 @@ sandbox_run <- function(sb, code, timeout = 60, limit = 6000) {
                   error = function(e) structure(conditionMessage(e), status = -1L))
   seconds <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
   status <- attr(out, "status") %||% 0L
-  timed_out <- status %in% c(124L, 137L)
+  # 124: `timeout` ended the code; 137: it was killed, by `timeout -k` after
+  # the limit or, before the limit, by the container for the memory it took
+  timed_out <- status == 124L || (status == 137L && seconds >= timeout)
+  killed <- status == 137L && !timed_out
   text <- paste(out, collapse = "\n")
   if (timed_out) text <- paste0(text, sprintf("\n[stopped: the code ran longer than %d s]", as.integer(timeout)))
+  if (killed) text <- paste0(text, sprintf("\n[stopped: the code was killed, most likely for using more memory than the sandbox has (%s)]", sandbox_memory))
   clip <- sandbox_clip(text, limit)
-  list(output = clip$text, status = as.integer(status), timed_out = timed_out, clipped = clip$clipped,
+  list(output = clip$text, status = as.integer(status), timed_out = timed_out, killed = killed, clipped = clip$clipped,
        seconds = round(seconds, 2), call = n)
 }
 
@@ -125,6 +131,8 @@ if (sys.nframe() == 0L && "--dry" %in% commandArgs(trailingOnly = TRUE)) {
   check("an error in the code is an output, not an R error here", r$status != 0L && grepl("it broke", r$output), r$output)
   r <- sandbox_run(sb, 'x <- numeric(3e9)')
   check("a call that asks for more memory than allowed fails alone", r$status != 0L, r$output)
+  r <- sandbox_run(sb, 'x <- lapply(1:200, function(i) rnorm(2e7)); cat("done")')
+  check("code that takes more memory than the sandbox has is killed, and told so", r$killed && !r$timed_out && grepl("more memory than the sandbox has", r$output), r$output)
   sb2 <- sandbox_open(material)
   r <- sandbox_run(sb2, 'cat(file.exists("mine.txt"), readLines("note.txt"))')
   check("a new sandbox starts from the material, not from the last run", identical(r$output, "FALSE the note"), r$output)
