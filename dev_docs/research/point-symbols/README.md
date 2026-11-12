@@ -48,7 +48,10 @@ The vertex mean, the rule the binder applies to one polygon per row today, is th
 
 **4. ggplot2** (section 3): the built `shape` column holds what `scale_shape_*()` mapped (integers for `values = 1:8`); a shape given by name stays a string in the built data and `GeomPoint$draw_panel()` turns it into a number with `translate_shape_string()` (exported in both versions above) just before drawing.
 
+**5. A character symbol drawn as a glyph outline** ([`glyph.R`](glyph.R), [`glyph-host.out`](glyph-host.out), [`glyph-container-bioc.out`](glyph-container-bioc.out); added the same day, after reading bench tree-061, whose `geom_point(shape = '|')` under `emojifont` draws each symbol as a path and passed the vertex-mean rule at 0.49 pt). Under `showtext`, six glyphs at sizes 1.5, 4 and 10, host and container identical: the vertex mean of the outline is off the point by up to 10.7 pt (`|` at tree-061's size: 0.48-0.49 pt, which is the 0.49 the bench reported), so that pass was luck. The outline's box is centred on the point across the baseline within 0.01 pt for every glyph, since `GESymbol()` draws a character with `GEText()` centred by its metric box and `showtext` gives that box from the outline. Along the baseline the box's centre is the point for symmetric glyphs (0.01 pt) and off by the side bearings otherwise (`j`: 0.24-1.36 pt); the point lies inside the box in every case.
+
 ## What follows for gloss
 
 - Capture can count a points grob exactly from its `pch`, positions, size and settings, when it knows the settings it inherits; the leaf grob alone does not hold a parent's `lty`. They are known where the leaf is drawn, which is where gloss's probe runs.
 - The binder can check a point drawn as k parts part by part, in drawing order, from each part's box and the fraction its symbol puts the point at, on dense leaves too, provided the rows state their shape.
+- A character symbol drawn as an outline can be checked as text is: exactly across the baseline (the box's centre), inside the box along it.

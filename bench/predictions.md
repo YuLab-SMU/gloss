@@ -605,3 +605,21 @@ Runs `runs/2026-11-11-2344-bind-dev-tree.*` (stratum) and `runs/2026-11-11-2347-
 - 2 right of 3.
 - **Why 80 is wrong:** 41 of the 67 leaves are tree-054's repelled labels. Each leaf draws one label's two or three glyphs, but the binder pairs it with all 126 rows of its group, and those rows reached the reason without their labels, so there is nothing to count against. Of the other 26 leaves, 23 match. The three that do not are in tree-014: a leaf of 90 tip labels drawing 1444 paths for 2344 characters, and two labels of 9 characters drawn as one path each. Neither was read further.
 - **The number the plan asked for:** grouping glyph paths into labels by count would reach 291 of the 1829 elements drawn as outlines (16%). The later step (binding outlines label by label) is not worth taking in this plan; text drawn as outlines stays unchecked, with its reason.
+
+## Points drawn as several elements (tree binding plan Task 5)
+
+Written 2026-11-12, after capture and the binder were changed to count and pair a points leaf symbol by symbol (`457a386`, `5c0a3cd`) and before the change ran on any bench figure. What each symbol draws: `dev_docs/research/point-symbols`. Baselines: stratum capture `2221` (at `4391fdb`) and binding `2344`; v0 capture `2104` (at `a578985`, before Task 1) and binding `2347`. From those runs: the only points leaves that are count mismatches are tree-014's L030 (8100 points in shapes 1-8, 12690 elements) and exts-014's L013 and L016 (plotROC's `geom_rocci()`, `pch = 4`, 6 elements for 3 points each). tree-061's L007 (`geom_point(shape = '|')`, drawn as glyph outlines under `emojifont`) passed the vertex-mean rule at 0.49 pt; it is now checked by the outline's box. Read before writing these: tree-014's and exts-014's code, `GeomRocci$draw_group()` and `GeomRoc`'s default shape (19), in the container; nothing of the runs to come.
+
+### How the runs are made and scored (fixed before the runs)
+
+- `capture.R dev tree`, `bind.R dev tree`, `capture.R dev`, `bind.R dev`, in the container with no network, at the commit that holds these predictions, with no tracked file modified.
+- Captures compared with their baselines cell by cell over every column but `seconds`; bindings with `compare-bind.R`.
+
+### Predictions
+
+81. **Stratum capture against `2221`: tree-014's L030 counts what it draws (12690 = 12690, `ok`), its mismatch leaves go 19 → 18, and no other cell of the 29 figures differs.** The stratum's mismatch leaves go 84 → 83.
+82. **v0 capture against `2104`: exts-014's two `geom_rocci()` leaves count what they draw (6 = 6), its mismatch leaves go 2 → 0, and no other cell of the 55 figures differs.** Mismatch leaves 59 → 57. (Run `2104` predates Task 1, so this also says Task 1 left v0's captures alone.)
+83. **Stratum binding against `2344`: tree-014's L030 is paired symbol by symbol and all 12690 elements are verified or ambiguous, none failed, maximum deviation under 0.05 pt.** Count mismatch 14482 → 1792; checked 41.5% → 92.2%; failed 67 and unbound 87 do not move.
+84. **tree-061's L007 keeps its 3785 elements verified or ambiguous, none failed, and its maximum deviation falls from 0.49 pt to under 0.05 pt.** How they split between verified and ambiguous is not predicted (the box rule's reach along the baseline differs from the vertex mean's).
+85. **No other leaf of the stratum changes status, counts or reason.** The other ten points leaves are paired in mode `symbol` with the same counts. Per figure, of the 28 ggplot figures: every layer element checked in 22 (unchanged; tree-014 keeps its text drawn as outlines), at least 80% in 25 (was 24; tree-014 at 89.7%), none at 0.
+86. **v0 binding against `2347`: exts-014's L013 and L016 go from count mismatch to verified (6 + 6); its L007 and L010 stay unbound, their reason now "the rows' shapes draw 1001 parts, the leaf drew 10 elements"; no other leaf changes status, counts or reason; no regression; failed stays 8.** ggplot count mismatch 27 → 15.
