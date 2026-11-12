@@ -258,9 +258,38 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 
 ### Task 6: What remains (tree-054's repelled labels, tree-003's text leaf)
 
-**Status:** `[ ]` _(stub)_
+**Status:** `[ ]` _(stub; written out 2026-11-12, after Task 5, on the owner's word "把还没做的两项做完")_
 
 Also, from Task 1: ggtree's segments moved by their draw-time `nudge_x` (tree-041, 6); `<image>` elements with no comparison (tree-041, 17). From Task 2: shadowtext's halo copies, drawn at a fixed offset from their row (tree-072, 20 failed by 0.57-0.81 pt).
+
+**Tests assumption:** for each class, either the rows can be put where the geom draws them by a rule ggplot2 or the geom states (so they are checked like any other row), or the binder can tell from the page and the gtable what the leaves are (so they are left unchecked with that reason). None is passed by a looser tolerance, and none of the rightly paired is left `failed`.
+
+**Classes** (run `2026-11-12-0927`; read in the container before writing this):
+
+| Class | Elements | What is drawn | Planned |
+|---|---|---|---|
+| tree-003: `geom_text2()` with NA labels at the tips | 5 unbound | `Geom$handle_na()` drops rows missing a required or non-missing aesthetic before drawing; the built rows keep them (11 rows, 5 drawn) | the engine drops those rows as ggplot2 does, when the geom keeps the default `handle_na` |
+| tree-041: ggtree's dotted lines (`GeomSegmentGGtree`) | 6 failed | `draw_panel()` takes `nudge_x` and adds it to `x` (not `xend`) before the coord's transform | a geom whose `draw_panel()` takes `nudge_x` or `nudge_y` has the layer's value added to the rows' `x` or `y` |
+| `<image>` (tree-041's 17 `ggimage` images; v0: gallery-015's `geom_raster()`, exts-017's terra raster) | 19 unbound | ggimage: a `rasterGrob()` centred at its row after `nudge_x`, `nudge_y`; a raster layer: one image over its rows' cells | an image paired one per row: its box's centre at the row, or its corners at the row's bounds; one per group: its box the bounds of the group's cells |
+| tree-054: `geom_label_repel()` | 41 failed, 28 unbound, 41 count mismatch | the layer's grob has no children in the gtable; ggrepel makes boxes, connectors and texts when drawn (`makeContent`), away from their rows | a leaf below a layer grob that had no children in the gtable is unbound with that reason |
+| tree-072: shadowtext's halo | 20 failed | 16 copies of each label moved 0.1 × the height of "X" | a failed leaf whose elements are a verified sibling's moved by one offset is unbound as a copy, with the offset |
+
+**Files**
+- Modify: `R/engine-ggplot.R` (rows dropped as `handle_na` drops them; draw-time nudges; leaves made when drawn), `R/core-bind.R` (`<image>`; copies), `R/core-substrate.R` and `R/engine-base.R` (base points, Scope change below).
+- Test: `tests/testthat/test-bind.R`, `tests/testthat/test-capture.R`.
+
+**Checklist**
+- [ ] Base points by symbol (Scope change 2026-11-12): measure the recorded `plot.xy()` arguments; a test that fails first; count and pair.
+- [ ] tree-003: rows dropped as `Geom$handle_na()` drops them; a test that fails first.
+- [ ] tree-041's nudge: a test with a geom that nudges in `draw_panel()`; fails first.
+- [ ] `<image>`: one per row and one per group; tests that fail first; permuted rows fail.
+- [ ] Leaves made when drawn: `geom_label_repel()` and `geom_text_repel()` leaves unbound with the reason, 0 failed; a test that fails first.
+- [ ] Copies at one offset: a test with a layer drawing a label and its moved copies; fails first.
+- [ ] Suite on the host; container suite (base capture reads what the device wrote).
+- [ ] Predictions, then `capture.R dev tree`, `bind.R dev tree`, `capture.R dev`, `bind.R dev`; compared with runs `0924`, `0927`, `0930`, `0936`.
+
+**Verification**
+- On the stratum, no element of the classes above is `failed`; each is checked or unbound with a reason that names it. v0: no element moves out of verified or ambiguous against run `0936`.
 
 ### Task 7: The stratum's held-out half, one run
 
@@ -282,6 +311,8 @@ _(append-only; never edit completed tasks above)_
 - 2026-11-11 — **tree-072's criterion is restated: the label verified, its halo copies checked or failed by no more than the halo's offset.** **Evidence:** shadowtext 0.1.6's `shadowtextGrob()` (read in the container before the run): each label is drawn 17 times, 16 copies moved by 0.1 × the string height of "X" in 16 directions of the device, then the label. Prediction 70, committed before run `2241`, said 10 of the 16 copies would fail; they did, by 0.57-0.81 pt, the label itself verified. The copies are drawn away from their row on purpose and are rightly paired; the exact along-baseline check fails them, as it should, and widening it to pass them would make every label's check weaker. **Effect:** the *Done when* line on rotated labels holds for tree-072's label leaf, and its 20 halo elements are a class for Task 6 (copies of a layer's leaf drawn at a fixed offset), with the offset reported. Nothing else in the criteria changes.
 - 2026-11-11 — **Rectangles under a coord that is not linear are told by what is drawn, not by the rows' columns.** **Evidence:** run `2303`, prediction 75: gallery-020's 5 labels, stacked on a pie's slices with `position_stack()`, keep the stack's `xmin`..`ymax` and were given the rectangles' reason. **Effect:** fixed in `84b60fb` with a test that failed first; runs `2315` and `2327` made after looking (predictions 76-77). No task or criterion changes.
 - 2026-11-11 — **A bench run loads gloss from the working tree, figure by figure.** **Evidence:** a stratum run at `9f448a1` (`2323`) was going while R/ was edited for Task 4; `run_worker()` calls `pkgload::load_all()` on the repository when each figure starts. The run was discarded unscored and made again on a clean tree (`2327`). **Effect:** before Task 4's runs, the bench copies gloss's source once when a run starts and every worker loads the copy; the copy's digest goes into the run's record.
+
+- 2026-11-12 — **Base points are counted and paired by symbol too.** **Evidence:** Task 5 counted grid points by symbol; the base route's `base_expected()` still expects one element per point for `plot()` and `points()` (`C_plotXY` of type `"p"`), so a base page with `pch = 3` is a count mismatch. No development figure has one (no base leaf is a count mismatch in run `0930`). **Effect:** Task 6 gains a first item, at the owner's word ("把还没做的两项做完"): the same symbol table for base points, measured on the recorded arguments, with a fixture test; on the bench it is expected to change nothing.
 
 ## Closing notes
 
