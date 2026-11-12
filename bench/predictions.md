@@ -902,6 +902,19 @@ Written 2026-11-12, before any run of `bench/agent/drive-gl-tools.R` with a mode
 
 **Before the run that counts (2026-11-12, 19:25 UTC).** Two of the models answer again and the third answers 429. One thing in the tools changed after these predictions were written: `propose` also rejects a row of another layer's table than the leaf's (`7edf4fc`). The figure of this run has one layer, so no answer to it can differ; the predictions stand as written.
 
+### Scored (2026-11-12, run `2026-11-12-1927-drive-gl-tools`, archived unscored in `b05db60`; score in `-score.txt`)
+
+60 runs, all three models (the third was waited for 1.8 min), no request error, no run made twice. The package the run used was loaded from the tree of `09a6586`.
+
+120. **Right.** 10 of 10 for each model in each variant: 60 of 60, as with the harness's own tools in Task 1.
+121. **Right.** 0 failed calls of 308.
+122. **Right.** No proposal refused, none rejected.
+123. **Right on the numbers, wrong on the reason I gave.** Median 5 calls in both variants (4 to 7). I expected `get_binding` to be called and to answer "hidden" in variant M. It was called in 3 of 60 runs: in the variant that discloses the bindings, 28 of 30 runs never asked for the binding and worked the row out through `to_data` and `find_rows`, and all were right.
+
+Beside the predictions: median 8.7 s a run (Task 1: 7.5 s), 90th percentile 45.9 s, the slowest model's median 26.8 and 39.2 s; median 10104 tokens a run (Task 1: 8380), the tool descriptions being longer. The two runs of one configuration took the same path of tools in 22 of 30 pairs.
+
+**What this says:** the package's tools do what the harness's did, on this figure. The validation again never fired (no rejection in 60 runs), so this run says nothing about what `propose` adds; and a binding checked at capture is not read by a model that can work it out, which the wording of the question ("work out the row") may have invited.
+
 ## The binder after the fix for a leaf verified on no result (M1 plan, scope change of 2026-11-12)
 
 Written 2026-11-12, before rerunning `bench/R/bind.R` on the two development sets with the binder of `a5de050`. What I have seen: the archived development runs `2026-11-12-1116-bind-dev` and `-1107-bind-dev-tree` (binder of `fd0401b`), in which no leaf is verified with zero verified elements; the fix's two tests; the suite.

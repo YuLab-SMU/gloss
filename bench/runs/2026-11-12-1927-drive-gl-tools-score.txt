@@ -1,0 +1,76 @@
+2026-11-12-1927 | 60 runs | models glm-5.3-flash, deepseek-v4.1-flash, Qwen3.8-27B | gloss e659ff2 | aisdk 1.5.0
+
+correct runs of 10, by model and variant
+                     variant
+model                  L  M
+  deepseek-v4.1-flash 10 10
+  glm-5.3-flash       10 10
+  Qwen3.8-27B         10 10
+
+runs that raised an error: 0 | runs that ended without an accepted submission: 0 
+finish reasons: stop 60 
+
+median tool calls in correct runs: L 5 | M 5 
+               model variant median_calls median_failed median_rejected
+ deepseek-v4.1-flash       L          5.0             0               0
+       glm-5.3-flash       L          5.0             0               0
+         Qwen3.8-27B       L          5.5             0               0
+ deepseek-v4.1-flash       M          5.0             0               0
+       glm-5.3-flash       M          5.0             0               0
+         Qwen3.8-27B       M          5.5             0               0
+ median_seconds
+            3.7
+           26.8
+            8.9
+            3.9
+           39.2
+            8.4
+
+failed calls: 0 of 308 (0.0%); calls aisdk recorded that no tool saw: 0
+seconds per run: median 8.7, 90th percentile 45.9, max 88.6; total 17.7 min
+variant M runs with a rejected submission followed by an accepted one: 0 of 30; runs with any rejection: L 0, M 0
+proposals refused: 0, in 0 runs; runs with a rejected proposal: 0 of 60; failed calls by model: glm-5.3-flash 0 of 93, deepseek-v4.1-flash 0 of 103, Qwen3.8-27B 0 of 112
+total tokens per run, where the gateway gave them (60 runs): median 10104, max 15510
+
+calls by tool and variant
+                variant
+tool              L  M
+  describe_table  5  3
+  find_elements  30 30
+  find_rows      28 30
+  get_binding     2  1
+  get_element    12 10
+  get_rows        3  5
+  overview       20 20
+  propose        30 30
+  to_data        23 26
+
+variant L runs that never called get_binding: 28 of 30 (correct: 28)
+variant M runs that never called to_data: 4 of 30 (correct: 4)
+range of calls in a run: L 4 to 7, M 4 to 7
+the two runs of one model, variant and question took the same path of tools in 22 of 30 pairs (temperature 0)
+
+distinct paths, with the number of runs
+ 10  L | overview > find_elements > to_data > find_rows > propose
+  7  M | overview > find_elements > to_data > find_rows > propose
+  6  L | find_elements > get_element > to_data > find_rows > propose
+  5  M | find_elements > get_element > to_data > find_rows > propose
+  4  M | find_elements > to_data > find_rows > propose
+  3  L | find_elements > overview > to_data > describe_table > find_rows > get_rows > propose
+  3  M | find_elements > overview > to_data > find_rows > propose
+  2  L | find_elements > get_element > get_binding > propose
+  2  L | find_elements > overview > find_rows > get_element > propose
+  2  L | find_elements > to_data > find_rows > propose
+  2  M | find_elements > get_element > overview > to_data > find_rows > propose
+  2  M | find_elements > overview > find_rows > describe_table > get_rows > propose
+  2  M | overview > find_elements > to_data > find_rows > get_rows > propose
+  1  L | find_elements > get_element > overview > find_rows > propose
+  1  L | find_elements > get_element > overview > to_data > find_rows > propose
+  1  L | find_elements > overview > find_rows > describe_table > propose
+  1  L | find_elements > overview > find_rows > propose
+  1  L | find_elements > overview > to_data > describe_table > find_rows > propose
+  1  M | find_elements > get_element > get_binding > to_data > find_rows > propose
+  1  M | find_elements > overview > find_rows > get_element > propose
+  1  M | find_elements > overview > find_rows > propose
+  1  M | find_elements > overview > to_data > describe_table > find_rows > get_rows > propose
+  1  M | overview > find_elements > to_data > get_element > find_rows > propose

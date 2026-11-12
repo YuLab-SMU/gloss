@@ -60,13 +60,13 @@
 **Current state** _(update as results come in)_
 - Suite: 13 files, 146 tests, 1357 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `7edf4fc`); the bench container 13 / 146 / 1351, 0 failed, 0 errors, 1 skipped (the scripted-model test: aisdk is not in the container's image).
 - Key numbers: the figure alone against the engine's positions, runs `2026-11-12-1737-alone-dev` and `-1748-alone-dev-tree` (development sets, container, after the flipped-panel change): of the elements the engine's positions verify, the figure alone verifies 99.9% on v0's ggplot figures (9063 of 9069; 24 of 26 figures agree) and 98.2% on the tree set's (13865 of 14112; 24 of 28); base 83.8% (4 of 9 figures); heatmap 0 of 250 cells; no leaf passes more from the figure alone. Before the change (Task 2's runs): 99.8% and 98.1%, 23 of 26 and 23 of 28.
-- Task 1, run `2026-11-12-1627-drive-tools` (hand-built figure, host): 60 of 60 runs correct, 10 of 10 for each of three models in each variant; 0 failed calls of 313; 0 rejected submissions; median 7.5 s and 8380 tokens a run. Conditions A and B: no number yet; the models stopped answering on 2026-11-12 before any run of them.
+- Task 1, run `2026-11-12-1627-drive-tools` (hand-built figure, host): 60 of 60 runs correct, 10 of 10 for each of three models in each variant; 0 failed calls of 313; 0 rejected submissions; median 7.5 s and 8380 tokens a run. The same questions through `gl_tools()`, run `2026-11-12-1927-drive-gl-tools`: 60 of 60, 0 failed calls of 308, median 8.7 s and 10104 tokens. Conditions A and B: no number yet.
 - The pilot's arm without a model (30 questions on 10 development figures, every row of every built table proposed): with `propose` checking place only, the answer accepted on 30 and the arm right on 23 (run `2026-11-12-1906-pilot-enumerate`); with the leaf's layer checked as well, right on 30 of 30 (run `-1913`).
 
 **Overall progress**
 - [x] Task 1: Do the free models drive tools to a validated submission?
 - [x] Task 2: A pairing checked from the figure alone, measured against the capture-time bindings
-- [~] Task 3: `gl_tools()` and a validating `propose`; the first record _(steps 1 to 3 done 2026-11-12: the flipped panel, `gl_propose()`, `gl_tools()`; the run with models open)_
+- [x] Task 3: `gl_tools()` and a validating `propose` _(done 2026-11-12: the flipped panel, `gl_propose()`, `gl_tools()`, Task 1's questions through them; no record is stored yet, see the result of step 2)_
 - [x] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(done 2026-11-12; no model has used it yet)_
 - [~] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(material, 30 questions, the dry run and the arm without a model done 2026-11-12; the arms with models wait for the models)_
 - [~] Task 5b: The bundle's round trip on the development sets _(measured and three defects closed 2026-11-12; the rerun on v0 is going)_
@@ -163,7 +163,7 @@
 
 ### Task 3: `gl_tools()` and a validating `propose`
 
-**Status:** `[~]` (written out 2026-11-12, after Task 2; step 1 done)
+**Status:** `[x]` (written out 2026-11-12, after Task 2; done the same day)
 
 **Tests assumption:** 2, on single pairings; and that what Task 1's models used is enough to answer with.
 
@@ -179,7 +179,7 @@
 - [x] Step 1: a flipped panel says so and is placed through; measured again on both development sets (Result below).
 - [x] Step 2, no model: `gl_propose(fig, proposal)` for `list(kind = "binding", element, table, row)`. Schema first (fields, types, no extras), then existence (element, table, row), then the check: the row placed by `place_rows()`, the element compared by the binder's comparison for its tag, and the other rows of the table in that panel counted as the binder counts ties. Three outcomes, never a fourth: `accepted` (with the status `verified` or `ambiguous` and the deviation), `rejected` (the check ran and failed; the reason carries the distance), `refused` (the check cannot run here; the reason says why: a panel whose scales are not ranges, a table without positions, an element that draws a group). Tests first, among them: every verified element of a facetted figure is accepted with its own row and rejected with another's; the same on the figure read back from an HTML bundle; a polar figure is refused, not rejected; an extra field or a URL in a field is a schema error.
 - [x] Step 3: `gl_tools(fig)`: `overview` (panels with their scales, tables with their columns), elements by place, rows by number and by value, `propose`; a state that keeps what was accepted, rejected and refused in the run. aisdk in `Suggests`; its internet probe switched off for the run (`options(aisdk.skip_internet_check = TRUE)`: it only asks `curl::has_internet()`, which looks up two public DNS names and, behind a proxy, fetches a captive-portal page; it sends nothing of ours). Contract tests with a scripted `aisdk::LanguageModelV1` subclass, no network.
-- [ ] Step 4: Task 1's harness run again through `gl_tools()` on its figure, as a check that the package's tools do what the harness's did (predictions first).
+- [x] Step 4: Task 1's harness run again through `gl_tools()` on its figure, as a check that the package's tools do what the harness's did (predictions first).
 
 **Verification**
 - Host and container suites with counts; the tests named above.
@@ -214,6 +214,13 @@
 - *aisdk:* in `Suggests`, with R6 for the test's scripted model. CRAN has aisdk 1.4.12 (index read 2026-11-12); the host has 1.5.0, and nothing was run against 1.4.12.
 - *Cost:* 451 lines added under `R/` and `tests/` (`R/agent-tools.R` 271, its tests 180); the host suite and the container suite once each on the final code. *Moved:* the tools from the bench harness into the package, under contract tests; no bench number.
 - *Not done:* no real model has called these tools yet (step 4); the state lives for one run and is not written into the figure (records are M2's); nothing limits how many calls a run makes, that is the loop's `max_steps`.
+
+**Result, step 4** (2026-11-12; `Rscript bench/agent/drive-gl-tools.R`, host, run `2026-11-12-1927-drive-gl-tools`; predictions 120-123, 4 right, one for another reason than I gave)
+
+- 60 of 60 runs right, 10 of 10 for each of the three models in each variant; 0 failed calls of 308; no proposal rejected or refused; median 5 calls, 8.7 s and 10104 tokens a run (Task 1 with the harness's tools: 60 of 60, 7.5 s, 8380 tokens). One hand-built figure, five questions: it shows the tools work in a model's hands, not how often an answer is right on other figures.
+- `get_binding` was called in 3 of 60 runs. Where the bindings were disclosed, 28 of 30 runs did not ask for them and worked the row out; all were right.
+- The run was made on the second launch. The first, an hour and a half earlier, met models that did not answer and measured nothing (Scope changes).
+- Cost: `bench/agent/drive-gl-tools.R` 190 lines, 9 added in the scorer; 17.7 min of model time; nothing under `R/` or `tests/`.
 
 ---
 
