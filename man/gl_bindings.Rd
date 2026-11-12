@@ -29,6 +29,9 @@ Values are matched with \code{\%in\%}.}
 \value{
 A data frame. The rows are those of the engine's tables as
 \code{\link[=gl_table]{gl_table()}} returns them (for a ggplot, the built data of a layer).
+A heatmap is the exception: its table is the matrix, and \code{row} counts
+the matrix's cells column by column, so the cell an element draws is
+\code{as.matrix(gl_table(fig, table))[row]}.
 A figure without bindings (captured with \code{bind = FALSE}, or read from a
 bundle or an SVG that holds none) is an error that says which.
 }

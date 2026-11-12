@@ -190,3 +190,24 @@ test_that("a dense leaf's bindings travel compactly", {
   gl_write(fig, f)
   expect_identical(gl_read(f)$derived, fig$derived)
 })
+
+test_that("a heatmap cell's binding counts the cells of the matrix column by column", {
+  skip_if_no("ComplexHeatmap")
+  set.seed(1)
+  m <- matrix(rnorm(80), 10, dimnames = list(paste0("g", 1:10), paste0("s", 1:8)))
+  ht <- ComplexHeatmap::Heatmap(m, name = "z")
+  fig <- gloss(ht, width = 6, height = 5, context = FALSE)
+  b <- gl_bindings(fig, where = list(status = "verified"))
+  expect_equal(nrow(b), 80L)
+  expect_setequal(b$row, 1:80)
+  tab <- as.matrix(gl_table(fig, "matrix_z"))
+  expect_equal(dim(tab), c(10L, 8L))
+  # the row is not a row of the table: it is a cell, and the element shows
+  # the colour of the value in that cell
+  el <- gl_elements(fig)
+  fill <- el$fill[match(b$element, el$id)]
+  want <- ComplexHeatmap::map_to_colors(ht@matrix_color_mapping, tab[b$row])
+  expect_true(all(same_colour(fill, want)))
+  # and not the colour of the cells in any other order
+  expect_false(all(same_colour(fill, ComplexHeatmap::map_to_colors(ht@matrix_color_mapping, t(tab)[b$row]))))
+})
