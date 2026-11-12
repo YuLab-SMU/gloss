@@ -58,12 +58,13 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 10 files, 119 tests, 885 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `f078dd9`).
-- Key numbers: Task 1, run `2026-11-12-1627-drive-tools` (hand-built figure, host): 60 of 60 runs correct, 10 of 10 for each of three models in each variant; 0 failed calls of 313; 0 rejected submissions; median 7.5 s and 8380 tokens a run. Conditions A and B: no number yet.
+- Suite: 11 files, 126 tests, 922 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `d23876d`); the bench container 11 / 125 / 917 at `29d92e4`; the one test added since came with a change to a roxygen comment only.
+- Key numbers: Task 2, runs `2026-11-12-1711-alone-dev` and `-1722-alone-dev-tree` (development sets, container): of the elements the engine's positions verify, the figure alone verifies 99.8% on v0's ggplot figures (9053 of 9069; 23 of 26 figures agree) and 98.1% on the tree set's (13843 of 14112; 23 of 28); base 83.8% (4 of 9 figures); heatmap 0 of 250 cells; no leaf passes more from the figure alone.
+- Task 1, run `2026-11-12-1627-drive-tools` (hand-built figure, host): 60 of 60 runs correct, 10 of 10 for each of three models in each variant; 0 failed calls of 313; 0 rejected submissions; median 7.5 s and 8380 tokens a run. Conditions A and B: no number yet.
 
 **Overall progress**
 - [x] Task 1: Do the free models drive tools to a validated submission?
-- [~] Task 2: A pairing checked from the figure alone, measured against the capture-time bindings
+- [x] Task 2: A pairing checked from the figure alone, measured against the capture-time bindings
 - [ ] Task 3: `gl_tools()` and a validating `propose`; the first record _(stub; after Task 2)_
 - [ ] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(stub)_
 - [ ] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(stub)_
@@ -110,7 +111,7 @@
 
 ### Task 2: A pairing checked from the figure alone
 
-**Status:** `[~]` (written out 2026-11-12, after Task 1)
+**Status:** `[x]` (2026-11-12)
 
 **Tests assumption:** 2.
 
@@ -133,7 +134,28 @@
 - The two runs above and `Rscript bench/R/score-alone.R <run>-leaves.csv`.
 - Expected: on ggplot figures with a cartesian coord the two agree. The result that would change the plan: under 80% of the elements the engine's positions verify on ggplot figures are verified from the figure alone (then row placements become a derived table made at capture, ADR-0007, before `propose` is built); any element verified from the figure alone that the engine's positions fail (a defect in one of the two, examined before anything else).
 
-**Result** _(filled in when done)_
+**Result** (2026-11-12; [dev log](../dev_logs/2026-11-12-agent-path-task2.md))
+
+- *Order kept:* tests first (`test-alone.R`, failing: the functions did not exist), then the code; predictions 108-116 and the scoring rules in `29d92e4` with the code; runs archived unscored in `3dd0f57`; scored with `Rscript bench/R/score-alone.R` (`bench/runs/2026-11-12-1711-alone-dev-score.txt`, `-1722-alone-dev-tree-score.txt`). Two earlier runs measured nothing (a shadowed option; `0c0217d`) and are not kept.
+- *Suite,* `NOT_CRAN=true Rscript -e "devtools::test()"`: host 11 files / 125 tests / 917 expectations / 0 failed / 0 skipped at `29d92e4` (was 10 / 119 / 885), container the same with 0 errors; host 11 / 126 / 922 at `d23876d`.
+- *Observed,* elements the engine's positions verify that the figure alone verifies, and figures in which every checked leaf has the same counts:
+
+  | set, engine | verified | ambiguous | figures that agree |
+  |---|---|---|---|
+  | v0, ggplot | 9053 of 9069 (99.8%) | 15328 of 15328 | 23 of 26 |
+  | tree, ggplot | 13843 of 14112 (98.1%) | 8901 of 8907 | 23 of 28 |
+  | v0, patchwork | 98 of 98 | 6 of 6 | 3 of 3 |
+  | tree, patchwork | 100 of 100 | 0 of 0 | 1 of 1 |
+  | v0, base | 2131 of 2544 (83.8%) | 93 of 93 | 4 of 9 |
+  | v0, heatmap | 0 of 250 | 0 of 0 | 0 of 3 |
+
+  Where the two agree the placements are the same to 0.0000 pt, apart from 101 base path leaves that agree by coincidence (gaps up to 0.49 pt). No leaf passes more elements from the figure alone than with the engine's positions.
+- *Assumption 2 holds where the panel's scales are linear ranges on the page, and only there.* Both sets clear the plan's 80% on ggplot figures. By figure, 3 of 26 and 5 of 28 have a leaf the figure alone does not check, and three circular trees have none it can. What it lacks, by kind, is in `bench/predictions.md` under predictions 108-116: polar and `sf` panels (not placed, with the reason), `coord_flip()` (placed elsewhere: a right pairing would be rejected), the binder's two draw-time rules, base polygons and paths (the engine pairs an element with the mean of its vertices), heatmap cells (the binding's row is a cell).
+- *Predictions:* 8 right of 9. Wrong: the tree set's share (98.1%, predicted 50% to 90%).
+- *Cost:* 284 lines under `R/` and `tests/` (`R/core-alone.R` 176, its tests 84, the heatmap test and its note in the documentation 24), 201 net under `bench/R`; two host suite runs, one container suite run, four bench runs of which two measured nothing. *Moved:* the plan's second assumption from no evidence to a number on 84 development figures; nothing a user can call.
+- *Found on the way and fixed:* `gl_bindings()` said its rows are rows of the table; for a heatmap they are cells of the matrix (`d23876d`, documentation and a test).
+- *Its limits:* the claims are the binder's own, so this measures whether a check after capture reproduces the check at capture, not whether a proposal from elsewhere is right. The recheck is slow on many leaves (222.7 s on gallery-029's 4002).
+
 
 ---
 
@@ -174,6 +196,8 @@ Design notes (§研究卡片, §评测设计, §审稿人预演, §实施计划)
 _(append-only; never edit completed tasks above)_
 
 - 2026-11-12 — **Task 1 is at ceiling, and the validation never fired.** **Evidence:** run `2026-11-12-1627-drive-tools`: 60 of 60 correct, in the masked variant too; 0 rejected submissions in 60 runs; three masked runs skipped `to_data` and worked the data values out from the scales themselves, and two lookup runs skipped the binding tool. **Effect:** (a) Assumption 3 is sharper than written: on a plain scatter plot with one layer the masked question does not separate anything, so condition A can be expected at ceiling there as well. Task 5's questions are drawn from figures where a first answer can be wrong: several layers on one panel, rows that tie in position, facets with free scales, a stat layer whose rows are not the data's, coords that are not linear, and elements code leaves unbound. The rule for choosing them is fixed before any run. (b) Task 5 reports, per condition, how many first submissions were rejected. If none is, the arms with and without validation cannot differ and the pilot says so instead of reporting a null. (c) Task 3's tools start from what the models did here: an `overview` that carries the scales (57 of 60 runs called it, 50 as their first call), element lookup by place, rows by number and by value. `to_data` and `get_binding` were skipped by models that could do without them. (d) A repeat is not a copy at temperature 0 (the same tool path in 16 of 30 pairs), so repeats per configuration are needed for the pilot's spread, as design §评测设计 has it. (e) All three models stay in; none is dropped on this evidence.
+
+- 2026-11-12 — **Task 2: `propose` rests on the figure alone where the panel says how; elsewhere it refuses, and one case has to be closed first.** **Evidence:** runs `2026-11-12-1711-alone-dev` and `-1722-alone-dev-tree`; the Result of Task 2. **Effect:** (a) Task 3's `propose` validates a pairing with `place_rows()` and the binder's comparisons. No table of placements is stored at capture now: the threshold that would have asked for one was not met on either set, and it would cost bundle size on every figure (ADR-0007's evidence on size). (b) Before `propose` is built, a flipped panel must not be placed as if it were not: under `coord_flip()` the figure alone puts rows thousands of pt away and would reject a right pairing with that distance as its reason (32 elements in 2 figures). Task 3 starts with a test that fails for this; either the panel table says which of the plot's scales is horizontal, which is ggplot2's own contract (ADR-0009), or `place_rows()` refuses such a panel with the reason. (c) Where the figure alone cannot place rows (polar and `sf` panels, 247 elements in 5 figures; base polygons and paths; heatmap cells; the two draw-time rules), `propose` refuses and says why. It never accepts unchecked. Such a refusal is not a wrong answer and not a right one: Task 5 counts it against condition B's coverage and reports it by kind. (d) Storing placements for those panels only (the plan's "second form") stays open and is decided by what the pilot shows it would buy; the three circular trees of the tree set are the case to watch, since circular trees are what the owner's lab draws. (e) The mutation used here leaves a claim unchanged for an element that draws a whole group; Task 3's test of `propose` permutes pairings between elements, not rows within one.
 
 ## Closing notes
 

@@ -1,0 +1,80 @@
+2026-11-12-1711-alone-dev-leaves.csv
+55 figures: not captured 1, rechecked 54
+          id engine       status                                                                                                                                                                             message
+ gallery-053 ggplot not captured <gganim> builds into <gganim_built>, not a built ggplot.\nℹ Its own `ggplot_build()` method changes what is drawn (an animation, for\n  example); gloss captures one static ggplot.
+6131 claimed leaves in 47 figures, 29244 elements
+
+by engine (elements; a figure agrees when every leaf the engine's positions check has the same counts from the figure alone)
+    engine figures figures_with_checked figures_all_agree engine_verified alone_verified verified_share engine_ambiguous alone_ambiguous engine_failed alone_failed
+      base       9                    9                 4            2544           2131          83.8%               93              93             0          403
+    ggplot      30                   26                23            9069           9053          99.8%            15328           15328             6           16
+   heatmap       3                    3                 0             250              0           0.0%                0               0             0            0
+ patchwork       5                    3                 3              98             98         100.0%                6               6             0            0
+
+leaves where the figure alone passes more elements than the engine's positions: 0
+
+leaves the engine's positions check: 6087; the same from the figure alone: 5666; not placed: 17; placed and different: 404
+
+leaves that differ, by engine and reason
+  engine                                                                               why leaves figures elements_checked_by_engine             coords                           geoms
+    base                                                placed elsewhere (gap over 0.5 pt)    403       5                        403                                       path+polygon
+ heatmap                                   the rows are not all in the table '..' (n rows)      3       2                        200                                                   
+ heatmap                                            the table '..' has no position columns      2       1                         50                                                   
+  ggplot                                                placed elsewhere (gap over 0.5 pt)      1       1                         10          CoordFlip                         GeomBar
+    base                                             the leaf lies in no panel with scales     10       1                         10                                               text
+  ggplot the panel's scales are not given as ranges on the page (unsupported, unsupported)      2       2                          6 CoordPolar+CoordSf GeomTerraSpatRasterRGB+GeomText
+
+gap between the two placements, leaves that agree: median 0.0000 pt, max 0.4862 pt
+rows shifted by one: elements whose place moves by more than 0.5 pt 21997; still passing with the engine's positions 21; with the figure's own 20 (of 21741 moved in leaves it places)
+
+per figure
+            id    engine leaves engine_verified alone_verified engine_ambiguous alone_ambiguous alone_failed not_placed
+      bioc-004      base     13              14             14                0               0            0          0
+      bioc-013      base     65              65             65                0               0            0          0
+      bioc-016    ggplot      1              10              0                0               0           10          0
+      bioc-017    ggplot      2              12             12                0               0            0          0
+      exts-001    ggplot      1               1              1                0               0            0          0
+      exts-008    ggplot      1               0              0                0               0            0          0
+      exts-013    ggplot      2               0              0                0               0            0          0
+      exts-014    ggplot     12              20             20                0               0            6          0
+      exts-017    ggplot      1               1              0                0               0            0          1
+      exts-019    ggplot      1             270            270                0               0            0          0
+      exts-021    ggplot      2              32             32                0               0            0          0
+      exts-022    ggplot      1            1081           1081            11173           11173            0          0
+      exts-024    ggplot      1               0              0                0               0            0          1
+      exts-027    ggplot      1            5625           5625                0               0            0          0
+      exts-030    ggplot      2               6              6                0               0            0          0
+   gallery-001    ggplot      1             551            551                0               0            0          0
+   gallery-002    ggplot      1             600            600                0               0            0          0
+   gallery-005    ggplot      1             100            100                0               0            0          0
+   gallery-006    ggplot      1              90             90               60              60            0          0
+   gallery-008      base     25             552            552               93              93            0          0
+   gallery-011    ggplot      1              90             90               60              60            0          0
+   gallery-013      base    129             129             78                0               0           51          0
+   gallery-015    ggplot      1               1              1                0               0            0          0
+   gallery-020    ggplot      2               5              0                0               0            0          2
+   gallery-021      base     32              46             34                0               0           12          0
+   gallery-023      base   1296            1296           1296                0               0            0          0
+   gallery-024    ggplot     60              31             31               29              29            0          0
+   gallery-029    ggplot   4002              60             60             4000            4000            0          0
+   gallery-032    ggplot      2              16             16                0               0            0          0
+   gallery-038      base    376             376             45                0               0          331          0
+   gallery-040      base     25              38             27                0               0            1         10
+   gallery-047    ggplot      1              30             30                2               2            0          0
+   gallery-048    ggplot      1             248            248                4               4            0          0
+   gallery-050    ggplot      1               3              3                0               0            0          0
+   gallery-054    ggplot     17               0              0                0               0            0          0
+   gallery-058      base     20              28             20                0               0            8          0
+   gallery-059    ggplot      5               4              4                0               0            0          0
+   gallery-068    ggplot      1             150            150                0               0            0          0
+   gallery-070    ggplot      1              32             32                0               0            0          0
+   heatmap-008   heatmap      2             100              0                0               0            0          2
+   heatmap-026   heatmap      2              50              0                0               0            0          2
+   heatmap-036   heatmap      1             100              0                0               0            0          1
+ patchwork-006 patchwork      1              30             30                2               2            0          0
+ patchwork-008 patchwork      1              30             30                2               2            0          0
+ patchwork-010 patchwork      1               0              0                0               0            0          1
+ patchwork-011 patchwork      2               0              0                0               0            0          2
+ patchwork-012 patchwork     13              38             38                2               2            0          0
+
+seconds for the recheck (its own capture included): median 0.44, max 222.7 (gallery-029)

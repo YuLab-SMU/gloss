@@ -822,3 +822,31 @@ Written 2026-11-12, before any run of `bench/R/alone.R`. What I have seen: hand-
 116. **No figure times out or errors in the recheck** that is captured in the bind runs.
 
 **What would change the plan:** under 80% on either set (108, 110): the figure alone is not enough for `propose`, and what it lacks is stored at capture as a derived table (ADR-0007), for every row or only for panels whose scales are not linear ranges, decided from the reasons this run gives. 111 wrong: a defect, examined first. If v0 clears 80% and the tree set does not, the decision is the second form: placements stored only where the figure alone cannot give them.
+
+### Predictions 108-116 (scored 2026-11-12)
+
+Runs `runs/2026-11-12-1711-alone-dev.*` (55 figures: 54 rechecked, 1 not captured, the animation) and `-1722-alone-dev-tree.*` (29 rechecked), each once to its last figure, container, no network, at `0c0217d` from start to end. Archived unscored in `3dd0f57`, then scored with `bench/R/score-alone.R` (`-score.txt`). Two earlier runs at `d23876d` measured nothing: the worker already had a local `alone`, which overwrote my new argument of that name, so the recheck was skipped, every count was NA and no leaf table was written. I saw no result in them; the option was renamed (`0c0217d`), the script now says "recheck did not run" in that case, and their files are not kept. The predictions were not touched in between.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 108. v0 ggplot: at least 85% of the verified elements verified from the figure alone, at least 85% of the ambiguous ones ambiguous (point guess 93%, 97%) | verified 9053 of 9069 (99.8%); ambiguous 15328 of 15328 | right; both guesses too low |
+| 109. v0 ggplot: at least 15 figures agree (point guess 19) | 23 of the 26 figures with a checked element. Not: bioc-016 (`coord_flip()`, 10 bars placed elsewhere), exts-017 (`coord_sf()`, 1 raster not placed), gallery-020 (`coord_polar()`, 5 labels not placed) | right. Neither draw-time rule I named occurs on v0 |
+| 110. **Tree ggplot: between 50% and 90% of the verified elements,** and fewer figures agree than on v0 in proportion (point guess 70%, 16 of 28) | **13843 of 14112 (98.1%)**; ambiguous 8901 of 8907. 23 of 28 figures agree (82%; v0 88%) | **wrong** on the share; right on the proportion of figures |
+| 111. No leaf passes more elements from the figure alone than with the engine's positions | 0 leaves on either set | right |
+| 112. Base: at least 70% of the verified elements, and at least one figure does not agree (point guess 85%, 3 figures) | 2131 of 2544 (83.8%); 5 of 9 figures do not agree | right; no log axis occurs, see below |
+| 113. Heatmap: no cell placed, because the rows are not in the table | 0 of 250 cells in 3 figures. "The rows are not all in the table" for 200; "the table has no position columns" for 50 (heatmap-026, whose cell numbers happen to fit the table) | right on the count; the reason is another for 50 cells |
+| 114. Patchwork: at least 90% of the checked elements have the same status | 104 of 104 (98 verified, 6 ambiguous), in 3 figures | right |
+| 115. Rows shifted by one, leaves that agree: as many still pass from the figure alone as with the engine's positions, fewer than the ambiguous elements | v0 20 and 20 of 21725 moved (ambiguous 15427); tree 13 and 13 of 22499 (ambiguous 8907) | right |
+| 116. No timeout or error in the recheck | none; the longest recheck is 222.7 s (gallery-029, 4002 claimed leaves) | right |
+
+- 8 right of 9.
+- **Why 110 is wrong.** I took circular layouts to be common and heavy. Of the 28 ggplot tree figures 3 are polar and 1 is flipped, and together they hold 263 of the 23019 elements the engine's positions check. Three rectangular figures (tree-014, -061, -079) hold 11637 of the 14112 verified ones. The share by element says little here, as on every set so far; by figure, 5 of 28 have a leaf the figure alone does not check, and the three circular trees (tree-025, -038, -057) have none it can.
+- **What the figure alone lacks, by kind** (elements the engine's positions check, v0 and tree together):
+  - *Not placed, with the reason:* panels whose scales are not ranges on the page. `coord_polar()` 246 elements in 4 figures, `coord_sf()` 1.
+  - *Placed elsewhere under `coord_flip()`:* 32 elements in 2 figures (bioc-016, tree-045). The panel gives the horizontal range, which is the plot's y, and nothing in the figure says so. A right pairing would be rejected, with a distance of thousands of pt as the reason.
+  - *Placed elsewhere under the binder's two draw-time rules:* 12 elements of tree-041 (the nudge of ggtree's segments, the justification of ggimage's images). The rows do not hold them.
+  - *Base polygons and paths:* 403 leaves in 5 figures. The engine pairs such an element with the mean of its vertices; the table's rows are the vertices. Another 101 base path leaves agree only because their first vertex lies within 0.5 pt of that mean (gaps up to 0.49 pt).
+  - *Base text outside a panel:* 10 leaves of gallery-040.
+  - *Heatmap cells:* 250. The binding's row is a cell of the matrix and the table has no positions.
+- **The mutation says less than I wrote.** For an element drawn for a whole group and compared as a set (an area's polygon, a raster), giving every row the next row's place is the same claim: 19 such leaves on v0 "still pass" and prove nothing. Where one element draws one row, 1 of about 21700 moved elements still passes on v0 and 13 of about 22500 on the tree set, all in leaves that are already ambiguous (labels closer than a label's height in tree-011, glyph outlines in tree-061).
+- **Everything above is on development figures,** with the binder's own claims: it says whether a check made after capture reproduces the check made at capture, not whether a proposal from elsewhere is right.
