@@ -62,3 +62,10 @@ bench/labels/sheets/*.svg
 
 # Label workbench: its session state (the finished labels are the CSV files)
 bench/labels/**/.workbench/
+
+# Local state of other tools (Rho, WorkBuddy)
+.rho/
+.workbuddy/
+
+# The demo tour's outputs are rebuilt by dev_docs/demo/gloss-tour.R
+dev_docs/demo/mtcars-*
