@@ -911,3 +911,21 @@ Written 2026-11-12, before rerunning `bench/R/bind.R` on the two development set
 ### Scored (2026-11-12, runs `2026-11-12-1840-bind-dev` and `-1848-bind-dev-tree`, archived unscored in `a90d661`)
 
 124. **Right.** `bench/R/compare-bind.R` (outputs archived beside the runs as `-compare.txt`): v0, 54 captured figures and 7114 leaves in both runs, 0 with a changed status, count or reason; tree, 29 figures and 595 leaves, 0 changed. Elements by class are the same in both pairs (v0: 11961 verified, 15427 ambiguous, 6 failed; tree: 14212, 8907, 0). The scores differ from the archived ones only in their timing line, and the host ran other work during the reruns (sandbox containers, the suite), so the times are not a measurement: median capture and bind 0.42 s against 0.37 s on v0, 0.46 s against 0.42 s on the tree stratum. The v0 run's commit at its end is not the one at its start: another session committed figures and a dev log (`18e9557`) while it ran; both runs loaded the same gloss source (digest `710e9913`).
+
+## The pilot's arm without a model: every row tried through the check (agent-path plan Task 5)
+
+Written 2026-11-12, before the pilot's material was read on the host, before its questions were drawn and before any run of `bench/agent/pilot.R enumerate`. What I have seen: the sample of 10 figures with their counts of leaves, tables and elements (`bench/agent/pilot-figures.csv`, from the archived bind runs); Task 2's runs, in which every circle and rectangle of these figures that capture verified is also verified from the figure alone; the code of `check_proposal()`, which I wrote: it checks that the row lands where the element is and does not ask which layer drew the element.
+
+### How it is scored (fixed before the run)
+
+- For each question, every row of every built table of the figure is proposed for the element. Right: the answer is accepted and nothing else is. The answer is the binding made at capture.
+- Archived before scoring; scored with `bench/agent/score-pilot.R`.
+
+### Predictions
+
+125. **The answer is accepted for every question.** Task 2 says so for these leaves; the bundle read on the host is the new part.
+126. **No other row of the answer's own table is accepted,** on any question: the elements asked about were verified at capture, not ambiguous.
+127. **On at least 6 questions a row of another table is accepted as well,** so the arm is right on at most 80% of the questions. Point guess: every question on the three tree figures (a tree's points sit on its nodes, and the layers that draw the branches have a row for each node with the same x and y), and none on the single-layer figures. A wrong acceptance here is the check's, not a model's: place alone does not say which layer drew an element.
+128. **No question has all its proposals refused,** and the answer's table is never refused.
+
+**What would change the plan:** 127 right. Then `propose` as built accepts a wrong table whenever two layers draw at one place, an agent in arm B can be accepted with a wrong answer, and before the arms with models run either the check has to say which layer an element belongs to, where the figure knows it, or the tools have to show it. 125 wrong: the bundle read on another platform does not check as the capture did, and nothing in arm B stands until that is understood.
