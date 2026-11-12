@@ -67,3 +67,26 @@ if (nrow(wrong)) {
   cat("\nruns not correct\n")
   print(wrong, row.names = FALSE)
 }
+
+# ---- which tools, in what order ------------------------------------------------
+path <- vapply(runs, function(r) paste(vapply(r$calls, function(c) c$tool, ""), collapse = " > "), "")
+used <- function(tool) vapply(runs, function(r) any(vapply(r$calls, function(c) identical(c$tool, tool), logical(1))), logical(1))
+cat("\ncalls by tool and variant\n")
+print(table(tool = unlist(lapply(runs, function(r) vapply(r$calls, function(c) c$tool, ""))),
+            variant = rep(d$variant, d$tool_calls)))
+cat(sprintf("\nvariant L runs that never called get_binding: %d of %d (correct: %d)\n",
+            sum(d$variant == "L" & !used("get_binding")), sum(d$variant == "L"),
+            sum(d$variant == "L" & !used("get_binding") & d$correct)))
+cat(sprintf("variant M runs that never called to_data: %d of %d (correct: %d)\n",
+            sum(d$variant == "M" & !used("to_data")), sum(d$variant == "M"),
+            sum(d$variant == "M" & !used("to_data") & d$correct)))
+cat(sprintf("range of calls in a run: L %d to %d, M %d to %d\n",
+            min(d$tool_calls[d$variant == "L"]), max(d$tool_calls[d$variant == "L"]),
+            min(d$tool_calls[d$variant == "M"]), max(d$tool_calls[d$variant == "M"])))
+key <- paste(d$model, d$variant, d$question)
+same <- vapply(split(path, key), function(p) length(unique(p)) == 1L, logical(1))
+cat(sprintf("the two runs of one model, variant and question took the same path of tools in %d of %d pairs (temperature %s)\n",
+            sum(same), length(same), format(a$meta$temperature)))
+cat("\ndistinct paths, with the number of runs\n")
+t <- sort(table(paste(d$variant, "|", path)), decreasing = TRUE)
+for (i in seq_along(t)) cat(sprintf("%3d  %s\n", t[i], names(t)[i]))

@@ -59,10 +59,10 @@
 
 **Current state** _(update as results come in)_
 - Suite: 10 files, 119 tests, 885 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `f078dd9`).
-- Key numbers: none yet.
+- Key numbers: Task 1, run `2026-11-12-1627-drive-tools` (hand-built figure, host): 60 of 60 runs correct, 10 of 10 for each of three models in each variant; 0 failed calls of 313; 0 rejected submissions; median 7.5 s and 8380 tokens a run. Conditions A and B: no number yet.
 
 **Overall progress**
-- [ ] Task 1: Do the free models drive tools to a validated submission?
+- [x] Task 1: Do the free models drive tools to a validated submission?
 - [ ] Task 2: A pairing checked from the figure alone, measured against the capture-time bindings _(stub; written out after Task 1)_
 - [ ] Task 3: `gl_tools()` and a validating `propose`; the first record _(stub; after Task 2)_
 - [ ] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(stub)_
@@ -73,7 +73,7 @@
 
 ### Task 1: Do the free models drive tools to a validated submission?
 
-**Status:** `[ ]`
+**Status:** `[x]` (2026-11-12)
 
 **Tests assumption:** 1.
 
@@ -97,7 +97,14 @@
 - `Rscript bench/agent/drive-tools.R` on the host, with the gateway up.
 - Expected: at least two models correct in 8 of 10 runs of variant L. The result that would change the plan: fewer than two (stop, ask the owner for models); variant M under 5 of 10 for every model (the tools of Task 3 are redesigned before the pilot, starting from what the transcripts show).
 
-**Result** _(filled in when done)_
+**Result** (2026-11-12; [dev log](../dev_logs/2026-11-12-agent-path-task1.md))
+
+- *Order kept:* predictions 102-107 and the harness committed in `cce1bab`; `Rscript bench/agent/drive-tools.R --dry` (no model) reached the checked row for all five questions in both variants and had a wrong row rejected each time; then `Rscript bench/agent/drive-tools.R` once, 60 runs, archived unscored in `dca7905` (`bench/runs/2026-11-12-1627-drive-tools.json`, `.csv`); then `Rscript bench/agent/score-drive-tools.R bench/runs/2026-11-12-1627-drive-tools.json` (`-score.txt`).
+- *Observed:* correct runs of 10, variant L then M: glm-5.3-flash 10 and 10, deepseek-v4.1-flash 10 and 10, Qwen3.8-27B 10 and 10. No run raised an error; all ended with `stop`. Failed calls 0 of 313. Rejected submissions 0. Median tool calls 4.5 in L (3 to 8) and 6 in M (5 to 6). Seconds a run: median 7.5, 90th percentile 16.3, longest 28.5; by model, medians 4.7 to 5.1 (deepseek), 6.7 to 8.2 (Qwen), 9.7 to 16.0 (glm). Tokens a run: median 8380, most 14035; 504923 in all, 9.2 minutes.
+- *Assumption 1 holds on this task:* all three models drive the loop to an accepted submission every time. The result that would have stopped the plan did not occur.
+- *Predictions:* 4 right of 6 (`bench/predictions.md`). Wrong: the models make more calls than the answer needs (`overview` in 57 of 60 runs; `get_rows` after `get_binding` in 13 of 30), and no submission was ever rejected.
+- *Cost:* 362 lines under `bench/agent/` (harness 270, scorer 92), none under `R/` or `tests/`; one run with models. *Moved:* model-driven runs from 0 to 60; the plan's first assumption from one call to a measured rate.
+- *Its limits:* one figure, `mtcars`, five questions. It measures the loop.
 
 ---
 
@@ -144,6 +151,8 @@ Design notes (§研究卡片, §评测设计, §审稿人预演, §实施计划)
 ## Scope changes
 
 _(append-only; never edit completed tasks above)_
+
+- 2026-11-12 — **Task 1 is at ceiling, and the validation never fired.** **Evidence:** run `2026-11-12-1627-drive-tools`: 60 of 60 correct, in the masked variant too; 0 rejected submissions in 60 runs; three masked runs skipped `to_data` and worked the data values out from the scales themselves, and two lookup runs skipped the binding tool. **Effect:** (a) Assumption 3 is sharper than written: on a plain scatter plot with one layer the masked question does not separate anything, so condition A can be expected at ceiling there as well. Task 5's questions are drawn from figures where a first answer can be wrong: several layers on one panel, rows that tie in position, facets with free scales, a stat layer whose rows are not the data's, coords that are not linear, and elements code leaves unbound. The rule for choosing them is fixed before any run. (b) Task 5 reports, per condition, how many first submissions were rejected. If none is, the arms with and without validation cannot differ and the pilot says so instead of reporting a null. (c) Task 3's tools start from what the models did here: an `overview` that carries the scales (57 of 60 runs called it, 50 as their first call), element lookup by place, rows by number and by value. `to_data` and `get_binding` were skipped by models that could do without them. (d) A repeat is not a copy at temperature 0 (the same tool path in 16 of 30 pairs), so repeats per configuration are needed for the pilot's spread, as design §评测设计 has it. (e) All three models stay in; none is dropped on this evidence.
 
 ## Closing notes
 

@@ -778,3 +778,22 @@ Written 2026-11-12, before any run of `bench/agent/drive-tools.R` with a model. 
 107. **In variant M at least one run has a rejected submission followed by an accepted one:** the reason a rejection gives is used. Point guess 3 of the 30 runs.
 
 **What would change the plan:** fewer than two models at 8 of 10 in variant L (102 wrong that way): the plan stops before any tool enters the package and the owner is asked for other models. Variant M under 5 of 10 for every model: Task 3's tools are redesigned from the transcripts before the pilot. A run correct in variant M only after rejections says the validation is doing work, which is what conditions "B" and "B without validation" will have to separate.
+
+### Predictions 102-107 (scored 2026-11-12)
+
+Run `runs/2026-11-12-1627-drive-tools.*`: 60 runs at `cce1bab` (the commit that holds the predictions), host, through the gateway, aisdk 1.5.0, 9.2 minutes, 504923 tokens. Archived unscored in `dca7905`, then scored with `Rscript bench/agent/score-drive-tools.R` (`-score.txt`). Two changes after the run, neither to what a run does: the archive's two files were renamed from the Asia/Shanghai stamp the script gave them (`2026-11-13-0027`, still in `meta.stamp`) to UTC, as every other run here, and the script now stamps in UTC; the scorer gained a summary of the tool paths.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 102. Variant L: each model correct in at least 8 of 10 (point guess 10, 10, 8) | 10, 10 and 10 | right |
+| 103. Variant M: at least two models correct in at least 7 of 10 (point guess 8, 9, 5) | 10, 10 and 10 | right; all three guesses too low |
+| 104. **Median tool calls in correct runs at most 4 in variant L,** at most 7 in variant M | **L 4.5** (range 3 to 8); M 6 (range 5 to 6) | **wrong** on L, right on M |
+| 105. Failed calls under 10% of all calls | 0 of 313; no call that aisdk recorded and no tool saw | right |
+| 106. Median run under 30 s, none at the 180 s timeout | median 7.5 s, 90th percentile 16.3 s, longest 28.5 s | right |
+| 107. **In variant M at least one run has a rejected submission followed by an accepted one** (point guess 3 of 30) | **0 of 30. No submission was rejected in any of the 60 runs** | **wrong** |
+
+- 4 right of 6. No run raised an error; all 60 ended with `stop`.
+- **Why 104 is wrong.** I counted the calls the answer needs. The models call `overview` in 57 of 60 runs (it is the first call in 50) and, in variant L, call `get_rows` after `get_binding` in 13 of 30 before submitting. glm alone has a median of 4.
+- **Why 107 is wrong, and what it means.** I expected the smaller models to submit a near miss and use the reason. None did: every first submission was the checked row. So the validation did no work on these questions, and nothing in this run says what a rejection is worth. On a task this easy, "B" and "B without validation" could not differ.
+- **Not predicted.** Two variant L runs never called `get_binding` and three variant M runs never called `to_data`, and all five were correct: In one, glm read rows 1 to 10 and submitted row 5. In another, Qwen asked `find_rows` for the rows near x = 3.44, y = 18.7, values it had not been given (the circle is at (129.26, 170.69) pt, and the panel's scales in `overview` give those values), read rows 5 and 10, which share that x, and submitted row 5. At temperature 0 the two runs of one model, variant and question took the same path of tools in 16 of 30 pairs: a repeat is not a copy.
+- **What the run cannot say.** The figure is `mtcars`, which every model has seen; five questions on one scatter plot measure whether the loop works, not whether a model can bind. The plan's Task 5 has to ask harder questions on figures that were not picked.
