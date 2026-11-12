@@ -900,6 +900,8 @@ Written 2026-11-12, before any run of `bench/agent/drive-gl-tools.R` with a mode
 
 **A launch that measured nothing (2026-11-12, between 18:15 and 18:30 UTC).** The first launch of `bench/agent/drive-gl-tools.R` was stopped by me during its second run: the first had ended after 120.3 s with an error and no tool call. Asked for one word without any tool, the gateway answered 502 for all three models (the models' upstream closed the connection). No model produced any output, no archive was written, and nothing above was changed. The run is made when the models answer again.
 
+**Before the run that counts (2026-11-12, 19:25 UTC).** Two of the models answer again and the third answers 429. One thing in the tools changed after these predictions were written: `propose` also rejects a row of another layer's table than the leaf's (`7edf4fc`). The figure of this run has one layer, so no answer to it can differ; the predictions stand as written.
+
 ## The binder after the fix for a leaf verified on no result (M1 plan, scope change of 2026-11-12)
 
 Written 2026-11-12, before rerunning `bench/R/bind.R` on the two development sets with the binder of `a5de050`. What I have seen: the archived development runs `2026-11-12-1116-bind-dev` and `-1107-bind-dev-tree` (binder of `fd0401b`), in which no leaf is verified with zero verified elements; the fix's two tests; the suite.
