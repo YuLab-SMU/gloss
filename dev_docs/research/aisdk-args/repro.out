@@ -1,0 +1,41 @@
+aisdk 1.5.0 
+
+a data frame's rows
+  sent     : print(d[2:3, ])
+  received : print(d[2:3])
+  CHANGED (jsonlite alone gives the text back unchanged: TRUE)
+
+an empty column index
+  sent     : m <- x[order(x$a), ]
+  received : m <- x[order(x$a)]
+  CHANGED (jsonlite alone gives the text back unchanged: TRUE)
+
+a trailing comma before a brace, as in text or JSON inside a string
+  sent     : the set {a, b, } is written so
+  received : the set {a, b} is written so
+  CHANGED (jsonlite alone gives the text back unchanged: TRUE)
+
+a single-quoted name before a colon
+  sent     : x <- c('a': 1)
+  received : x <- c('a': 1)
+  unchanged
+
+a name after a comma, before a colon
+  sent     : f(x, y: z)
+  received : f(x, y: z)
+  unchanged
+
+plain text
+  sent     : which row does the circle draw?
+  received : which row does the circle draw?
+  unchanged
+
+an element id
+  sent     : e28
+  received : e28
+  unchanged
+
+4 of 7 valid arguments reach the tool unchanged
+
+the step that changes them (aisdk:::repair_json_string), on the first:
+  {"code":"print(d[2:3])"} 
