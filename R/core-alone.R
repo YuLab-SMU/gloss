@@ -67,9 +67,20 @@ alone_claim <- function(fig, cl) {
   leaves <- fig$substrate$leaves
   lf <- leaves[match(cl$leaf, leaves$id), , drop = FALSE]
   rows <- cl$pred$row
-  placed <- place_rows(fig, cl$table, rows, lf$panel)
+  pred <- placed_rows(fig, cl$table, rows, lf$panel)
+  if (is.character(pred)) return(pred)
+  list(leaf = cl$leaf, table = cl$table, pred = pred, groups = cl$groups, rows = cl$rows,
+       linear = TRUE, made_reason = cl$made_reason)
+}
+
+# Rows as the binder's comparisons read them (core-bind.R): placed by
+# place_rows(), with their groups and what a comparison reads beside
+# positions (justification, angle, label, shape), all from the table. Or the
+# reason they cannot be placed.
+placed_rows <- function(fig, table, rows, panel) {
+  placed <- place_rows(fig, table, rows, panel)
   if (is.character(placed)) return(placed)
-  t <- fig$tables[[cl$table]]$data
+  t <- fig$tables[[table]]$data
   pred <- data.frame(row = rows, group = if ("group" %in% names(t)) t$group[rows] else rep(1L, length(rows)))
   if ("align_padding" %in% names(t)) pred$pad <- t$align_padding[rows] %in% TRUE
   for (col in setdiff(names(placed), "row")) pred[[col]] <- placed[[col]]
@@ -77,8 +88,7 @@ alone_claim <- function(fig, cl) {
   if ("angle" %in% names(t)) pred$angle <- suppressWarnings(as.double(t$angle[rows]))
   if ("label" %in% names(t)) pred$label <- as.character(t$label[rows])
   if ("shape" %in% names(t)) pred$shape <- t$shape[rows]
-  list(leaf = cl$leaf, table = cl$table, pred = pred, groups = cl$groups, rows = cl$rows,
-       linear = TRUE, made_reason = cl$made_reason)
+  pred
 }
 
 # The largest distance, in pt, between two placements of the same rows.

@@ -58,14 +58,14 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 11 files, 128 tests, 933 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `b48c373`); the bench container the same, 0 errors.
+- Suite: 12 files, 135 tests, 1233 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, Task 3 step 2); the bench container the same, 0 errors.
 - Key numbers: the figure alone against the engine's positions, runs `2026-11-12-1737-alone-dev` and `-1748-alone-dev-tree` (development sets, container, after the flipped-panel change): of the elements the engine's positions verify, the figure alone verifies 99.9% on v0's ggplot figures (9063 of 9069; 24 of 26 figures agree) and 98.2% on the tree set's (13865 of 14112; 24 of 28); base 83.8% (4 of 9 figures); heatmap 0 of 250 cells; no leaf passes more from the figure alone. Before the change (Task 2's runs): 99.8% and 98.1%, 23 of 26 and 23 of 28.
 - Task 1, run `2026-11-12-1627-drive-tools` (hand-built figure, host): 60 of 60 runs correct, 10 of 10 for each of three models in each variant; 0 failed calls of 313; 0 rejected submissions; median 7.5 s and 8380 tokens a run. Conditions A and B: no number yet.
 
 **Overall progress**
 - [x] Task 1: Do the free models drive tools to a validated submission?
 - [x] Task 2: A pairing checked from the figure alone, measured against the capture-time bindings
-- [~] Task 3: `gl_tools()` and a validating `propose`; the first record _(step 1, the flipped panel, done 2026-11-12)_
+- [~] Task 3: `gl_tools()` and a validating `propose`; the first record _(steps 1 and 2 done 2026-11-12: the flipped panel, `gl_propose()`; the tools open)_
 - [ ] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(stub)_
 - [ ] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(stub)_
 - [ ] Task 6: Records: design notes, NEWS, dev log, closing notes
@@ -175,7 +175,7 @@
 
 **Checklist**
 - [x] Step 1: a flipped panel says so and is placed through; measured again on both development sets (Result below).
-- [ ] Step 2, no model: `gl_propose(fig, proposal)` for `list(kind = "binding", element, table, row)`. Schema first (fields, types, no extras), then existence (element, table, row), then the check: the row placed by `place_rows()`, the element compared by the binder's comparison for its tag, and the other rows of the table in that panel counted as the binder counts ties. Three outcomes, never a fourth: `accepted` (with the status `verified` or `ambiguous` and the deviation), `rejected` (the check ran and failed; the reason carries the distance), `refused` (the check cannot run here; the reason says why: a panel whose scales are not ranges, a table without positions, an element that draws a group). Tests first, among them: every verified element of a facetted figure is accepted with its own row and rejected with another's; the same on the figure read back from an HTML bundle; a polar figure is refused, not rejected; an extra field or a URL in a field is a schema error.
+- [x] Step 2, no model: `gl_propose(fig, proposal)` for `list(kind = "binding", element, table, row)`. Schema first (fields, types, no extras), then existence (element, table, row), then the check: the row placed by `place_rows()`, the element compared by the binder's comparison for its tag, and the other rows of the table in that panel counted as the binder counts ties. Three outcomes, never a fourth: `accepted` (with the status `verified` or `ambiguous` and the deviation), `rejected` (the check ran and failed; the reason carries the distance), `refused` (the check cannot run here; the reason says why: a panel whose scales are not ranges, a table without positions, an element that draws a group). Tests first, among them: every verified element of a facetted figure is accepted with its own row and rejected with another's; the same on the figure read back from an HTML bundle; a polar figure is refused, not rejected; an extra field or a URL in a field is a schema error.
 - [ ] Step 3: `gl_tools(fig)`: `overview` (panels with their scales, tables with their columns), elements by place, rows by number and by value, `propose`; a state that keeps what was accepted, rejected and refused in the run. aisdk in `Suggests`; its internet probe switched off for the run (`options(aisdk.skip_internet_check = TRUE)`: it only asks `curl::has_internet()`, which looks up two public DNS names and, behind a proxy, fetches a captive-portal page; it sends nothing of ours). Contract tests with a scripted `aisdk::LanguageModelV1` subclass, no network.
 - [ ] Step 4: Task 1's harness run again through `gl_tools()` on its figure, as a check that the package's tools do what the harness's did (predictions first).
 
@@ -189,6 +189,18 @@
 - Suite, `NOT_CRAN=true Rscript -e "devtools::test()"`: host 11 files / 128 tests / 933 expectations / 0 failed / 0 skipped (was 11 / 126 / 922); container the same, 0 errors.
 - Measured again, predictions 117-119 first (3 right of 3): runs `2026-11-12-1737-alone-dev` and `-1748-alone-dev-tree`. Exactly two figures change, bioc-016 (10 bars) and tree-045 (22 elements), from failed to verified; nothing under the engine's positions changes. v0 ggplot 9063 of 9069 verified from the figure alone, 24 of 26 figures agree; tree ggplot 13865 of 14112, 24 of 28.
 - Cost: 51 net lines under `R/` and `tests/` (68 added, 17 removed), 36 under `bench/R`; one host and one container suite run, two bench runs. Moved: 32 elements in 2 figures, and a false rejection that `propose` would have given.
+
+---
+
+**Result, step 2** (2026-11-12)
+
+- *What landed:* `gl_propose(fig, proposal)`, exported, with `print()`; internal `propose_context()` (the scene parsed once) and `check_proposal()`. Three outcomes with a `stage` (`schema`, `exists`, `check`); an accepted proposal carries its record (element, leaf, table, row, status, deviation, tolerance, `basis = "figure"`). The record is returned, not stored: where records live is the tools' state for a run (step 3) and M2's record core after that.
+- *Tests first* (`tests/testthat/test-propose.R`, 7 tests, 300 expectations, failing before the code): every element of a facetted figure that the binder verified or left ambiguous with one row is accepted with its own row and the binder's status, and rejected with another's; the same answers on the figure read back from an HTML bundle and on one captured with `bind = FALSE`; seven malformed proposals and four that name what is not there are rejected before any check; a row of another panel with the same values is rejected; legend keys are rejected; a polar panel, an element that draws a group and a base figure are refused; a flipped panel and a dense leaf of 12000 points are checked.
+- *Narrower than the plan's step said, on purpose:* ggplot and patchwork figures only. Task 2 measured two ways a right pairing would be rejected on base figures (a log axis, which the panel does not state; a polygon paired with the mean of its vertices) and none of a heatmap's cells can be placed, so both are refused with that reason instead of checked wrongly. Only built tables are placed: a raw table's columns named `x` and `y` are not positions by any contract.
+- *Suite,* `NOT_CRAN=true Rscript -e "devtools::test()"`: host 12 files / 135 tests / 1233 expectations / 0 failed / 0 skipped (was 11 / 128 / 933); the bench container the same, 0 errors.
+- *Speed:* on a 32-point figure the context takes 0.002 s and 32 checks 0.029 s (host, one run).
+- *Cost:* 363 lines added under `R/` and `tests/` (`R/propose.R` 194, its tests 155, 14 in a helper shared with `core-alone.R`); one host suite run, one container run. *Moved:* the validating entry point from design to an exported function tested on a bundle-restored figure; no bench number.
+- *Not done:* a model has not called it; no proposal for a group of rows; no record is stored anywhere.
 
 ---
 

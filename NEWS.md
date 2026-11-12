@@ -1,5 +1,13 @@
 # gloss 0.0.0.9000
 
+## Proposals checked from the figure alone (2026-11-12, agent-path plan Tasks 2 and 3)
+
+- `gl_propose()` is new: a pairing given as data (`list(kind = "binding", element, table, row)`) is checked against the figure and comes back `accepted` (with its status, `verified` or `ambiguous`), `rejected` (not valid data, naming what is not in the figure, or checked and not holding; the reason carries the distance) or `refused` (this figure does not let it be checked; the reason says why). Nothing is accepted unchecked, and the figure is not changed. It needs neither the object that was drawn nor the bindings made at capture, so it answers the same on a figure read back from a bundle.
+- What it checks so far: one element for one row, on ggplot and patchwork figures, in panels whose scales are ranges on the page. Refused with the reason: `coord_polar()` and `coord_sf()` panels, base and heatmap figures, an element that draws a whole group of rows, a table that is not a layer's built data.
+- `gl_panels()` has a column `flipped`: `TRUE` for a ggplot panel under `coord_flip()`, where the horizontal scale is the one the tables call `y`.
+- `gl_bindings()` says what `row` is for a heatmap: a cell of the matrix, counted column by column.
+- Measured on the development sets, with the binder's own pairings: of the elements verified at capture, the figure alone verifies 9063 of 9069 on v0's ggplot figures (24 of 26 figures in full) and 13865 of 14112 on the tree stratum's (24 of 28); 2131 of 2544 on base figures and none of 250 heatmap cells, which is why those two are refused for now.
+
 ## Bindings in the figure and the API (2026-11-12, M1 Task 6a)
 
 - `gl_bindings()` is new: which rows of which table the drawn elements show, as checked against the page. `by = "element"` gives one row per element with its table, row, status (`verified`, `ambiguous`, `failed`, `unbound`, `count_mismatch`) and deviation in pt; `by = "leaf"` one row per leaf with its mode, counts and, where nothing could be checked, the reason; `by = "row"` every row an element draws, a line's or an area's whole group included. `where` filters any of them. Until now the bind step was internal and only the bench read it.
