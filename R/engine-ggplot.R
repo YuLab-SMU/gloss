@@ -333,6 +333,7 @@ ggplot_bind <- function(built, gtable, sub, prefix = "") {
     d$row <- seq_len(nrow(d))
     panel_k <- sub(paste0("^", prefix, "panel"), "", pid)
     d <- d[as.character(d$PANEL) == panel_k, , drop = FALSE]
+    d <- ggplot_rows_drawn(d, layers[[i]])
     pp <- built$layout$panel_params[[as.integer(panel_k)]]
     pred <- tryCatch(ggplot_rows_on_device(d, prow, built$layout$coord, pp),
                      error = function(e) sprintf("the coord's transform failed (%s): %s", coord, conditionMessage(e)))
@@ -384,6 +385,34 @@ ggplot_layer_children <- function(built) {
     vapply(gr, function(x) if (is.null(x)) 0L else if (inherits(x, "gList")) length(x) else 1L, 1L)
   })
   if (any(vapply(out, is.null, logical(1)))) NULL else out
+}
+
+# The rows a layer draws, as its geom gets them (plan 2026-11-11-tree-binding,
+# Task 6):
+# - a geom with ggplot2's default Geom$handle_na() drops rows missing a
+#   required or non-missing aesthetic before drawing (bench tree-003: NA
+#   labels at a tree's tips), as remove_missing() does;
+# - a geom whose draw_panel() takes nudge_x or nudge_y adds the layer's
+#   value to x or y before the coord's transform (bench tree-041: ggtree's
+#   GeomSegmentGGtree adds nudge_x to x, not xend; ggimage's GeomImage both).
+#   The rows do not hold it; the binder checks the moved rows like any other.
+ggplot_rows_drawn <- function(d, layer) {
+  geom <- layer$geom
+  inner <- function(m) tryCatch(environment(m)$f, error = function(e) NULL)
+  if (identical(inner(geom$handle_na), inner(ggplot2::Geom$handle_na))) {
+    vars <- intersect(c(geom$required_aes, geom$non_missing_aes), names(d))
+    if (length(vars)) d <- d[stats::complete.cases(d[vars]), , drop = FALSE]
+  }
+  args <- names(formals(inner(geom$draw_panel) %||% function() NULL))
+  params <- layer$computed_geom_params %||% layer$geom_params %||% list()
+  for (ax in c("x", "y")) {
+    nm <- paste0("nudge_", ax)
+    v <- params[[nm]]
+    if (nm %in% args && is.numeric(v) && length(v) && ax %in% names(d)) {
+      d[[ax]] <- suppressWarnings(as.double(d[[ax]])) + v
+    }
+  }
+  d
 }
 
 # Whether a geom draws its panel with ggplot2's default Geom$draw_panel (one

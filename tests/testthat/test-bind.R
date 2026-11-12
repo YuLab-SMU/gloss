@@ -704,3 +704,41 @@ test_that("base points in several symbols bind part by part, and reversed rows f
   expect_equal(r$leaf$status, "failed")
   expect_equal(r$leaf$failed, 15L)
 })
+
+# What remains on the tree stratum (plan 2026-11-11-tree-binding, Task 6).
+
+test_that("rows ggplot2 drops before drawing are not paired (NA labels)", {
+  # Bench tree-003: geom_text2() labels the inner nodes; the tips' labels are
+  # NA, which Geom$handle_na() drops before drawing, while the built rows
+  # keep them (11 rows, 5 drawn: unbound, "neither one per row nor one per
+  # group").
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(x = 1:5, y = c(2, 4, 1, 3, 5), lab = c("a", NA, "ccc", NA, "e"))
+  p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, label = .data$lab)) + ggplot2::geom_text(na.rm = TRUE)
+  b <- suppressWarnings(bind_capture(p))
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_equal(lv$status, "verified", label = lv$reason)
+  expect_equal(c(lv$n_elements, lv$n_rows), c(3L, 3L))
+  expect_equal(b$elements$row[b$elements$leaf == lv$leaf], c(1L, 3L, 5L))
+})
+
+test_that("a geom that moves x by its nudge_x when drawing is checked at the moved place", {
+  # Bench tree-041: ggtree's GeomSegmentGGtree$draw_panel() adds its
+  # parameter nudge_x to x (not xend) before the coord's transform; the built
+  # rows do not hold it (6 dotted lines failed by up to 128 pt). ggimage's
+  # GeomImage does the same with nudge_x and nudge_y.
+  skip_if_not_installed("ggplot2")
+  GeomNudged <- ggplot2::ggproto("GeomNudged", ggplot2::GeomSegment,
+    draw_panel = function(self, data, panel_params, coord, nudge_x = 0, lineend = "butt") {
+      data$x <- data$x + nudge_x
+      ggplot2::GeomSegment$draw_panel(data, panel_params, coord, lineend = lineend)
+    })
+  d <- data.frame(x = c(1, 2, 3), y = c(1, 3, 2), xend = c(5, 5, 5), yend = c(1, 3, 2))
+  p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, xend = .data$xend, yend = .data$yend)) +
+    ggplot2::layer(geom = GeomNudged, stat = "identity", position = "identity", params = list(nudge_x = 0.5)) +
+    ggplot2::xlim(0, 6)
+  b <- suppressWarnings(bind_capture(p))
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_equal(lv$status, "verified", label = paste(lv$status, lv$max_dev))
+  expect_lt(lv$max_dev, 0.05)
+})
