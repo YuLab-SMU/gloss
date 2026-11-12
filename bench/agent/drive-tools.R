@@ -225,7 +225,7 @@ key <- Sys.getenv("ANTHROPIC_AUTH_TOKEN")
 if (!nzchar(key)) stop("the gateway's key is not in the environment")
 provider <- aisdk::create_openai(api_key = key, base_url = gateway, api_format = "chat", name = "magpie",
                                  total_timeout_seconds = 180)
-stamp <- format(Sys.time(), "%Y-%m-%d-%H%M", tz = "Asia/Shanghai")
+stamp <- format(Sys.time(), "%Y-%m-%d-%H%M", tz = "UTC")  # as the other runs in bench/runs
 out_base <- file.path("bench", "runs", paste0(stamp, "-drive-tools"))
 runs <- list()
 for (model_id in models) {
