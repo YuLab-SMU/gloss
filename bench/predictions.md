@@ -929,3 +929,14 @@ Written 2026-11-12, before the pilot's material was read on the host, before its
 128. **No question has all its proposals refused,** and the answer's table is never refused.
 
 **What would change the plan:** 127 right. Then `propose` as built accepts a wrong table whenever two layers draw at one place, an agent in arm B can be accepted with a wrong answer, and before the arms with models run either the check has to say which layer an element belongs to, where the figure knows it, or the tools have to show it. 125 wrong: the bundle read on another platform does not check as the capture did, and nothing in arm B stands until that is understood.
+
+### Scored (2026-11-12, run `2026-11-12-1906-pilot-enumerate`, archived unscored in `d7b2651`; score in `-score.txt`)
+
+30 questions on 10 figures (exts-021's bundle could not be written; exts-030 stands in by the rule). 26265 proposals, 34 s.
+
+125. **Right.** The answer is accepted on 30 of 30, on figures written in the Linux container and read back on the macOS host.
+126. **Right.** No other row of the answer's own table is accepted (0 of the 10 other rows accepted).
+127. **Right in what it says, wrong in its point guess.** On 7 of 30 questions a row of another table is accepted too (10 rows), so the arm is right on 23 of 30, by figure 3, 3, 0, 3, 3, 3, 3, 2, 3, 0 of 3. Not "every tree question and no other": tree-077 3 of 3 and tree-062 1 of 3 (the branches' layer has rows at the node, accepted as ambiguous; on tree-077 once a fifth layer's row, verified), tree-068 0 of 3, and all 3 of exts-030, where a second layer draws the same rectangles and its row is accepted as verified. I took exts-030 for a single-layer figure because the sample's table counts only the layers whose elements are bound one for one row.
+128. **Right.** No question has all its proposals refused; 6 proposals are refused in all, 2 on each question of tree-068, none of them the answer's table.
+
+**What this changes:** as written above under 127. `propose` as built accepts a row of the wrong layer when two layers draw at one place: 3 of 10 figures, 7 of 30 questions. The figure knows which layer drew a leaf (the engine reads it from the plot's own structure at capture), so the check is to use it before any model is asked (plan, scope change of 2026-11-12).

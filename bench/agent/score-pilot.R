@@ -9,7 +9,33 @@
 # per model before any pooled number.
 
 args <- commandArgs(trailingOnly = TRUE)
-if (!length(args)) stop("usage: Rscript bench/agent/score-pilot.R <stamp> [enumerate.csv]")
+if (!length(args)) stop("usage: Rscript bench/agent/score-pilot.R <stamp> [enumerate.csv]  |  score-pilot.R <enumerate.csv>")
+score_enumeration <- function(file) {
+  s <- utils::read.csv(file, stringsAsFactors = FALSE)
+  cat(sprintf("\narm S (no model), %s: %d questions; right (the answer accepted and nothing else) %d; the answer accepted %d; questions with another row accepted %d; with a refusal %d; rows tried %d, median %.1f s a question\n",
+              basename(file), nrow(s), sum(s$correct), sum(s$truth_accepted), sum(s$wrong_accepted > 0), sum(s$refused > 0),
+              sum(s$tried), stats::median(s$seconds)))
+  print(do.call(rbind, lapply(split(s, s$figure), function(x) {
+    data.frame(figure = x$figure[1], questions = nrow(x), right = sum(x$correct), answer_accepted = sum(x$truth_accepted),
+               others_accepted = sum(x$wrong_accepted), refused = sum(x$refused), tried = sum(x$tried))
+  })), row.names = FALSE)
+  # where the other accepted rows are: the answer's own table, or another
+  own <- vapply(seq_len(nrow(s)), function(i) {
+    t <- sub(":.*$", "", strsplit(s$accepted_list[i], " ")[[1]])
+    sum(t == s$truth_table[i]) - as.integer(s$truth_accepted[i])
+  }, 1L)
+  cat(sprintf("other rows accepted: %d in all, %d of them in the answer's own table\n", sum(s$wrong_accepted), sum(own)))
+  more <- s[s$wrong_accepted > 0 | s$refused > 0, c("figure", "question", "element", "truth_table", "truth_row", "refused", "accepted_list")]
+  if (nrow(more)) {
+    cat("\nquestions with another row accepted or a refusal (table:row:status of what was accepted)\n")
+    print(more, row.names = FALSE)
+  }
+}
+
+if (grepl("\\.csv$", args[1])) {   # the arm without a model, alone
+  score_enumeration(args[1])
+  quit(status = 0)
+}
 stamp <- args[1]
 files <- Sys.glob(file.path("bench", "runs", paste0(stamp, "-pilot-*.jsonl")))
 if (!length(files)) stop("no archive bench/runs/", stamp, "-pilot-*.jsonl")
@@ -127,13 +153,4 @@ if (nrow(bad)) {
   print(bad[order(bad$figure, bad$question, bad$arm, bad$model), ], row.names = FALSE)
 }
 
-if (length(args) > 1) {
-  s <- utils::read.csv(args[2], stringsAsFactors = FALSE)
-  cat(sprintf("\narm S (no model), %s: %d questions; right (the answer accepted and nothing else) %d; the answer accepted %d; questions with another row accepted %d; with a refusal %d; rows tried %d, median %.1f s a question\n",
-              basename(args[2]), nrow(s), sum(s$correct), sum(s$truth_accepted), sum(s$wrong_accepted > 0), sum(s$refused > 0),
-              sum(s$tried), stats::median(s$seconds)))
-  print(do.call(rbind, lapply(split(s, s$figure), function(x) {
-    data.frame(figure = x$figure[1], questions = nrow(x), right = sum(x$correct), answer_accepted = sum(x$truth_accepted),
-               others_accepted = sum(x$wrong_accepted), refused = sum(x$refused), tried = sum(x$tried))
-  })), row.names = FALSE)
-}
+if (length(args) > 1) score_enumeration(args[2])

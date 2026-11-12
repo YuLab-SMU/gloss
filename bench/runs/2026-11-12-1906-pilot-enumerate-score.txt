@@ -1,0 +1,38 @@
+
+arm S (no model), 2026-11-12-1906-pilot-enumerate.csv: 30 questions; right (the answer accepted and nothing else) 23; the answer accepted 30; questions with another row accepted 7; with a refusal 3; rows tried 26265, median 0.1 s a question
+        figure questions right answer_accepted others_accepted refused tried
+      bioc-016         3     3               3               0       0    30
+      exts-027         3     3               3               0       0 16875
+      exts-030         3     0               3               3       0    18
+   gallery-002         3     3               3               0       0  1800
+   gallery-005         3     3               3               0       0   300
+   gallery-029         3     3               3               0       0  6180
+ patchwork-006         3     3               3               0       0    96
+      tree-062         3     2               3               2       0   264
+      tree-068         3     3               3               0       6   540
+      tree-077         3     0               3               5       0   162
+other rows accepted: 10 in all, 0 of them in the answer's own table
+
+questions with another row accepted or a refusal (table:row:status of what was accepted)
+   figure question element  truth_table truth_row refused
+ exts-030        1      e4 built_layer1         1       0
+ exts-030        2      e6 built_layer1         3       0
+ exts-030        3      e5 built_layer1         2       0
+ tree-062        2     e47 built_layer3         6       0
+ tree-068        1    e162 built_layer4        10       2
+ tree-068        2    e164 built_layer4        12       2
+ tree-068        3    e173 built_layer4        21       2
+ tree-077        1     e52 built_layer4        11       0
+ tree-077        2     e45 built_layer4         4       0
+ tree-077        3     e54 built_layer4        13       0
+                                                               accepted_list
+                             built_layer1:1:verified built_layer2:1:verified
+                             built_layer1:3:verified built_layer2:3:verified
+                             built_layer1:2:verified built_layer2:2:verified
+  built_layer2:5:ambiguous built_layer2:17:ambiguous built_layer3:6:verified
+                                                    built_layer4:10:verified
+                                                    built_layer4:12:verified
+                                                    built_layer4:21:verified
+ built_layer2:5:ambiguous built_layer2:12:ambiguous built_layer4:11:verified
+                             built_layer4:4:verified built_layer5:1:verified
+ built_layer2:1:ambiguous built_layer2:14:ambiguous built_layer4:13:verified
