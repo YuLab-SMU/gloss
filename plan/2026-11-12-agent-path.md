@@ -58,7 +58,7 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 13 files, 146 tests, 1357 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `7edf4fc`); the bench container 13 / 146 / 1351, 0 failed, 0 errors, 1 skipped (the scripted-model test: aisdk is not in the container's image).
+- Suite: 13 files, 150 tests, 1422 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `68a6fe9`); the bench container 13 / 150 / 1416, 0 failed, 0 errors, 1 skipped (the scripted-model test: aisdk is not in the container's image).
 - Key numbers: the figure alone against the engine's positions, runs `2026-11-12-1737-alone-dev` and `-1748-alone-dev-tree` (development sets, container, after the flipped-panel change): of the elements the engine's positions verify, the figure alone verifies 99.9% on v0's ggplot figures (9063 of 9069; 24 of 26 figures agree) and 98.2% on the tree set's (13865 of 14112; 24 of 28); base 83.8% (4 of 9 figures); heatmap 0 of 250 cells; no leaf passes more from the figure alone. Before the change (Task 2's runs): 99.8% and 98.1%, 23 of 26 and 23 of 28.
 - Task 1, run `2026-11-12-1627-drive-tools` (hand-built figure, host): 60 of 60 runs correct, 10 of 10 for each of three models in each variant; 0 failed calls of 313; 0 rejected submissions; median 7.5 s and 8380 tokens a run. The same questions through `gl_tools()`, run `2026-11-12-1927-drive-gl-tools`: 60 of 60, 0 failed calls of 308, median 8.7 s and 10104 tokens. Conditions A and B: no number yet.
 - The pilot's arm without a model (30 questions on 10 development figures, every row of every built table proposed): with `propose` checking place only, the answer accepted on 30 and the arm right on 23 (run `2026-11-12-1906-pilot-enumerate`); with the leaf's layer checked as well, right on 30 of 30 (run `-1913`).
@@ -69,7 +69,7 @@
 - [x] Task 3: `gl_tools()` and a validating `propose` _(done 2026-11-12: the flipped panel, `gl_propose()`, `gl_tools()`, Task 1's questions through them; no record is stored yet, see the result of step 2)_
 - [x] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(done 2026-11-12; no model has used it yet)_
 - [~] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(material, 30 questions, the dry run and the arm without a model done 2026-11-12; the arms with models wait for the models)_
-- [~] Task 5b: The bundle's round trip on the development sets _(measured and three defects closed 2026-11-12; the rerun on v0 is going)_
+- [x] Task 5b: The bundle's round trip on the development sets _(done 2026-11-12: all 83 captured figures written and read back; four defects closed)_
 - [ ] Task 6: Records: design notes, NEWS, dev log, closing notes
 
 ---
@@ -303,7 +303,7 @@
 
 ### Task 5b: The bundle's round trip on the development sets
 
-**Status:** `[~]` (added 2026-11-12)
+**Status:** `[x]` (added 2026-11-12, done the same day)
 
 For every captured development figure, in the container: write the bundle, read it back, compare elements, tables and bindings with the figure written, and have one verified binding checked by `gl_propose()` on the figure read back. Reported per figure with the reason for each one that does not come back whole. Prediction first. What it decides: whether arm B can be served on every figure the bench captures, and what the codec must store, or leave out with a reason, before M5.
 
@@ -323,8 +323,9 @@ For every captured development figure, in the container: write the bundle, read 
 - *Why 5 are not written:* a table holds something the codec has no case for: a `terms` attribute of type language, a list column of lists, a column of `SpatRaster`, `sf` geometries (two figures). The codec said which type and stopped the whole figure.
 - *`gl_propose()` on the figure read back* (default embedding; up to 5 pairings a figure, verified at capture, one element for one row): ggplot and patchwork, 50 figures, 250 pairings: 222 accepted, 27 refused, 1 rejected; 44 figures with all accepted. Refused: four figures with polar or `sf` panels (20) and segments paired one per row (7). Rejected: one row on tree-014 that its geom moves while drawing, the gap Task 2 counted. Base and heatmap, 11 figures, 55 pairings: 47 refused and 8 rejected, the 8 being a heatmap's cell number answered as "outside the table" before the engine was refused.
 - *Closed, each with a test that failed first* (`0296183`): a table is written without what the codec cannot store, with a warning that names each column or attribute, and comes back `partial_data` with `not_stored`; a figure without tables reads back identical; `propose` refuses another engine's figure before it looks at the row. Suite after: host 13 files / 148 tests / 1393 expectations / 0 failed / 0 skipped; container 13 / 148 / 1387 / 0 failed / 1 skipped.
-- *What it decides:* arm B can be served every figure the bench captures once the rerun below confirms it; its coverage on ggplot and patchwork figures is what `propose` can check there, 222 of 250 sampled pairings, and the rest is refused with a reason. The bundle is lossless for what the codec stores and says what it left out.
-- Cost: 140 lines added and 9 removed under `R/`, `tests/` and `man/` for the three fixes (`R/core-bundle.R` 57, `R/propose.R` 14 moved, tests 69, documentation 9), 177 under `bench/R/` (`bundle.R` 135, `score-bundle.R` 42); one host and one container suite run, two bench runs and a rerun.
+- *Reruns on v0,* a prediction before each: run `-1938` (predictions 140-141: one wrong, one right): 52 of 54 written; the two `sf` compositions still stopped the writer, because `[` on an `sf` table keeps its geometry column whatever columns are asked for. Closed with two tests first (`68a6fe9`: such a table is stored as a plain data frame and says so; host 13 files / 150 tests / 1422 expectations / 0 failed / 0 skipped, container 13 / 150 / 1416 / 0 failed / 1 skipped). Run `-1957` (prediction 142: right): 54 of 54 written under both embeddings; 49 identical with everything embedded and 5 differing in their partial tables and the status that lists them; all 54 identical in substrate and derived tables under the default embedding; the 8 false rejections on heatmaps are refusals.
+- *Where it stands:* all 83 captured development figures can be written and read back, 78 identical in every part and 5 without what the codec cannot store, each naming it. Arm B can be served every figure the bench captures; its coverage on ggplot and patchwork figures is what `propose` can check there, 222 of 250 sampled pairings on the first run, the rest refused with a reason. The bundle is lossless for what the codec stores and says what it left out.
+- Cost: 225 lines added under `R/`, `tests/` and `man/` for the four fixes (140 in `0296183`, 85 in `68a6fe9`), 177 under `bench/R/` (`bundle.R` 135, `score-bundle.R` 42); two host and two container suite runs, four bench runs. Two of my five predictions about the writer were wrong, both about what `[` or an empty list does.
 
 ---
 

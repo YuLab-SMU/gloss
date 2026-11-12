@@ -1043,3 +1043,9 @@ Written 2026-11-12, after `without_columns()` and its tests, before rerunning `b
 142. **All 54 captured figures are written under both embeddings.** patchwork-010 and patchwork-011 come back differing in their partial tables and in the status, as the other three do; every other figure's row is the same as in run `-1938` in every stage and count. The two add no accepted pairing: what they draw from `sf` tables lies in panels whose scales are not ranges, so pairings there are refused, and pairings on their other plots, if any are sampled, are accepted.
 
 **What would change the plan:** a figure still not written. Then I stop patching the writer and the codec's rule is decided in one place (an ADR): what a table may hold, and what the writer does with everything else.
+
+### Scored (2026-11-12, run `2026-11-12-1957-bundle-dev`, archived unscored in `cfbbdc7`; score in `-score.txt`)
+
+142. **Right.** All 54 captured figures are written under both embeddings. With everything embedded, 49 come back identical and 5 differ in their partial tables and the status that lists them (gallery-048, exts-017, exts-021, patchwork-010, patchwork-011); under the default embedding all 54 are identical in substrate and derived tables. Against run `-1938`, 53 of the 55 rows are the same in every stage and count; the two that changed are the two `sf` compositions, and neither has a pairing to try.
+
+With the tree stratum's run `-1926` (29 of 29 identical): every one of the 83 captured development figures can be written and read back; 78 identical in every part, 5 without what the codec cannot store, each naming it.
