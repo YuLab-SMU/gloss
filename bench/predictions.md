@@ -897,3 +897,5 @@ Written 2026-11-12, before any run of `bench/agent/drive-gl-tools.R` with a mode
 123. **Median tool calls in correct runs: at most 6 in variant L and at most 8 in variant M.** More tools on offer, and in M a `get_binding` that answers "hidden" before the model works the row out.
 
 **What would change the plan:** a model under 8 of 10 with the package's tools where the harness's gave 10: the tools' descriptions or answers differ in a way that matters, and the transcripts are read before the pilot uses them.
+
+**A launch that measured nothing (2026-11-12, between 18:15 and 18:30 UTC).** The first launch of `bench/agent/drive-gl-tools.R` was stopped by me during its second run: the first had ended after 120.3 s with an error and no tool call. Asked for one word without any tool, the gateway answered 502 for all three models (the models' upstream closed the connection). No model produced any output, no archive was written, and nothing above was changed. The run is made when the models answer again.
