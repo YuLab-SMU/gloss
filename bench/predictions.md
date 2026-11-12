@@ -1006,3 +1006,12 @@ Written 2026-11-12, while the models are down: before the rehearsal on a hand-bu
 139. **A run of arm A takes at least 3 times as long as one of arm B at the median, and uses at least twice the tokens.**
 
 **What would change the plan:** A within 10 points of B, or above it: then on this question the substrate's tools save a model nothing that a sandbox does not give it, and the claim has to be tested where code cannot hand over the answer's parts (a leaf the engine could not bind, a claim about the figure). B under 60%: the tools are in the model's way, and their transcripts are read before M5 is sized. A wrong acceptance: `propose` still lets a wrong pairing through, and nothing is reported until that is closed.
+
+## The bundle's round trip on v0's development set again, after the three fixes (agent-path plan, Task 5b)
+
+Written 2026-11-12, after the changes to `R/core-bundle.R` and `R/propose.R` and their tests, before rerunning `bench/R/bundle.R dev`. What I have seen: both runs above in full; the new tests on hand-built figures. The tree stratum is not rerun: all 29 of its figures came back identical, and none of the three changes touches a figure that was written and had tables.
+
+140. **All 54 captured figures are written, under both embeddings.** With everything embedded, 49 come back identical (the 44 of before and the 5 without tables) and the 5 that could not be written come back differing in `tables` only, each with a table marked `partial_data`. With the default embedding all 54 come back identical in substrate and derived tables.
+141. **On the two heatmaps the 8 rejections become refusals;** no other count of accepted, rejected and refused pairings changes on the 49 figures written before. The 5 figures written for the first time add pairings: on the two `sf` compositions and the raster figure I expect refusals, on exts-021 and gallery-048 acceptances.
+
+**What would change the plan:** a figure still not written: something the codec stops on that is neither a column nor an attribute of a table (a table's metadata, the context), and it is found by reading that figure, not by widening the rule.
