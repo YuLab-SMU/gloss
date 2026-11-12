@@ -74,10 +74,14 @@ keep <- unlist(lapply(split(seq_len(nrow(d)), key), function(i) {
 d <- d[sort(keep), ]
 max_steps <- metas[[1]]$max_steps
 
-cat(sprintf("%s | %d runs (%d attempts archived, %d ended in a request error) | models: %s | gloss %s | aisdk %s\n\n", stamp, nrow(d),
+# the loop the runs went through: aisdk's (the first rehearsal) or the harness's own
+loop_of <- function(m) if (!is.null(m$loop)) m$loop else paste("aisdk", m$aisdk %||% "?", "generate_text()")
+`%||%` <- function(a, b) if (is.null(a) || !length(a)) b else a
+commits <- unique(c(vapply(metas, function(m) m$gloss_commit %||% NA_character_, ""),
+                    unlist(lapply(runs, function(r) r$gloss_commit))))
+cat(sprintf("%s | %d runs (%d attempts archived, %d ended in a request error) | models: %s | gloss %s | loop: %s\n\n", stamp, nrow(d),
             all_attempts, request_errors, paste(unique(d$model), collapse = ", "),
-            paste(unique(vapply(metas, function(m) m$gloss_commit, "")), collapse = ", "),
-            paste(unique(vapply(metas, function(m) m$aisdk, "")), collapse = ", ")))
+            paste(commits[!is.na(commits)], collapse = ", "), paste(unique(vapply(metas, loop_of, "")), collapse = ", ")))
 frac <- function(k, n) sprintf("%d/%d", k, n)
 tab <- function(by) {
   g <- split(d, by, drop = TRUE)
@@ -135,7 +139,8 @@ if (nrow(a)) {
               sum(wrong$answer_table != wrong$truth_table), sum(wrong$answer_table == wrong$truth_table)))
 }
 
-cat(sprintf("\nwhat the runs used (median; the limit on steps is %s)\n", format(max_steps)))
+cat(sprintf("\nhow the runs ended: %s\n", paste(names(table(d$finish, useNA = "ifany")), table(d$finish, useNA = "ifany"), collapse = ", ")))
+cat(sprintf("what the runs used (median; the limit on requests to the model is %s)\n", format(max_steps)))
 used <- do.call(rbind, lapply(split(d, paste(d$model, d$arm)), function(x) {
   data.frame(model = x$model[1], arm = x$arm[1], runs = nrow(x), calls = stats::median(x$tool_calls),
              failed_calls = sum(x$failed_calls), steps = stats::median(x$steps, na.rm = TRUE),
