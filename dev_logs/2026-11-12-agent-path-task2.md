@@ -47,3 +47,21 @@
 - **Task 3,** from the Scope change: first the flipped panel, test-first; then `gl_tools()` and `propose` on `place_rows()` and the binder's comparisons, with aisdk in `Suggests` and contract tests on a scripted model. What aisdk requests when it "tests for internet connectivity" is read before it enters `DESCRIPTION`.
 - **Then** Task 4 (condition A's sandbox) and Task 5 (the pilot, on figures where a first answer can be wrong; refusals of `propose` counted against coverage).
 - **Waiting on the owner:** pull request 1; the branch `feat/agent-path` is not pushed (10 commits).
+
+## Later the same session: the flipped panel (Task 3, step 1)
+
+Added after the log above was committed; nothing above is changed.
+
+- **What changed:** `b48c373` (panels say whether they are flipped; `place_rows()` goes through a flipped panel and refuses one that does not say; `bench/R/compare-alone.R`; predictions 117-119), `3a6dad0` (the reruns, archived unscored), and this commit (their scores, the predictions scored, Task 3 written out with step 1's result, a note in the M1 plan).
+- **Measured:** suite, host 11 files / 126 tests / 922 expectations before, 11 / 128 / 933 / 0 failed / 0 skipped after; the bench container 11 / 128 / 933 / 0 failed / 0 errors. Reruns `2026-11-12-1737-alone-dev` and `-1748-alone-dev-tree` against `-1711` and `-1722` (`Rscript bench/R/compare-alone.R`): exactly two figures change, bioc-016 (10 bars) and tree-045 (22 elements), from failed to verified from the figure alone; no count under the engine's positions changes. v0 ggplot 9063 of 9069 (24 of 26 figures agree), tree ggplot 13865 of 14112 (24 of 28). Predictions 117-119: 3 right of 3. Not run: `R CMD check`.
+- **What aisdk's internet probe does** (read from its code and curl's, not run under a monitor): before a streamed request it calls `curl::has_internet()`, which looks up `dns.google.com` and `time.cloudflare.com` and, when a proxy variable is set, fetches `http://captive.apple.com/hotspot-detect.html` through it. It sends nothing of ours, goes on when the probe fails (its default mode warns), and is switched off by `options(aisdk.skip_internet_check = TRUE)`. → plan, Task 3 step 3: off for runs against the local gateway.
+
+### Surprises
+
+- **Another session committed on this branch during a run.** While the tree rerun was going, `34f13b0` appeared: a status audit by another agent, at the owner's request, one new dev log and no code. The run recorded a different commit at its end than at its start. The source digest both reruns loaded is the same, so the run stands, and the archive's commit says what happened. → nowhere in the code; raised with the owner, since two sessions committing to one branch can also collide on files.
+- **The audit found a leaf that is "verified" with no verified element,** on a held-out figure (tree-070, L022). I confirmed it from the archive: the only such leaf in three bind runs. A check that returns no result per element passes, because `all()` of nothing is true. I wrote that check. → M1 plan, Scope change of 2026-11-12: a defect, to be fixed test-first on a hand-built figure and reported as made after looking at the held-out run.
+- **`chartr()` on a column name.** Swapping x and y that way turned `xmax` into `ymay`; the flipped scatter passed and the flipped bars did not. The bars were in the test because the bench figure that failed was a bar chart. → fixed before the commit; nowhere else.
+
+### What's next
+
+Task 3, step 2: `gl_propose()` with no model, tests first, including a figure read back from a bundle. Then the tools, then Task 1's harness through them.

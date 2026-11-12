@@ -866,3 +866,16 @@ Written 2026-11-12, after looking at runs `2026-11-12-1711-alone-dev` and `-1722
 119. **No leaf passes more elements from the figure alone than with the engine's positions.**
 
 **What would change the plan:** a third figure that moves (118 wrong): the change did more than it says, and it is read before anything is built on it. A flipped leaf still placed elsewhere (117 wrong): a flipped coord with something else on top, which `place_rows()` must refuse until it is understood.
+
+### Predictions 117-119 (scored 2026-11-12)
+
+Runs `runs/2026-11-12-1737-alone-dev.*` and `-1748-alone-dev-tree.*`, each once, container, no network, both loading the same gloss source (digest `74a3fc8b`), archived unscored in `3a6dad0`; scored with `score-alone.R` (`-score.txt`) and `compare-alone.R` against runs `-1711` and `-1722`. The first ran at `b48c373` from start to end. During the second another session committed a status audit (`34f13b0`: one new dev log, no code), so its `commit_at_end` differs from its start; nothing it loads changed.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 117. bioc-016's 10 bars and tree-045's 22 elements agree; figures that agree 24 of 26 (v0 ggplot) and 24 of 28 (tree ggplot); verified from the figure alone 9063 of 9069 and 13865 of 14112 | bioc-016: 10 verified, 0 failed (was 0 and 10); tree-045: 22 verified, 0 failed (was 0 and 22). 24 of 26 and 24 of 28. 9063 of 9069 (99.9%) and 13865 of 14112 (98.2%) | right |
+| 118. No other figure's counts change, and no count under the engine's positions changes | exactly these two figures differ; 0 figures differ under the engine's positions, on both sets | right |
+| 119. No leaf passes more from the figure alone than with the engine's positions | 0 on both sets | right |
+
+- 3 right of 3. This is a change made after looking at the two development runs, checked on the same figures: it shows the change does what it says there and nothing else, not that flipped panels in general are handled.
+- What the figure alone still does not reproduce is unchanged: polar and `sf` panels (247 elements in 5 figures, not placed), the two draw-time rules (12 elements of tree-041), base polygons and paths, base text outside a panel, heatmap cells.
