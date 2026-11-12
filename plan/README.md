@@ -27,6 +27,7 @@ See [`_template.md`](_template.md).
 ## Active plans
 
 - [2026-11-11-m1-roles-and-binding.md](2026-11-11-m1-roles-and-binding.md): M1, first slice: roles and bindings on the development set. Opened 2026-11-11; the owner's three decisions settled. Scope change of 2026-11-12: few rules, with the open tasks read under ADR-0009 (accepted 2026-11-12).
+- [2026-11-12-agent-path.md](2026-11-12-agent-path.md): the thinnest agent path and a pilot of the decisive comparison (research-card clause: the substrate with a model against the same model with the raw material; no data yet). Opened 2026-11-12. Task 1 first: whether the owner's free models drive tools to a validated submission.
 
 ## Completed plans
 

@@ -1,0 +1,150 @@
+# The thinnest agent path, and a pilot of the decisive comparison
+
+> Status: active.
+> Date opened: 2026-11-12. Owner: Yonghe Xia. Opened by Claude on the owner's word of 2026-11-12 ("我们使用自己部署的模型，magpie 中的westlakeHPC 模型都是免费的。其他你来决定就行"), as recommended in [the retrospective](../dev_logs/2026-11-12-retrospective.md).
+
+**Goal:** A model that works only through read-only tools over a gloss figure and one `propose` that validates on submit answers binding questions on development figures, and a pilot compares it with the same model given the raw material and a read-only R sandbox, so that we know whether the main claim has an effect to measure and what a run costs.
+
+**Why now:** [The retrospective](../dev_logs/2026-11-12-retrospective.md), first surprise: five plans ordered their own tasks by risk and none tested the clause the paper rests on. Of the nine clauses of the research card three have data, all on capture. `gl_bindings()` exists since [Task 6a of the M1 plan](2026-11-11-m1-roles-and-binding.md), so an agent has something exported to read.
+
+**Research-card clause:** "底座加同一模型，比同样原始材料加同一模型更准，覆盖率不降" (design @tbl-claims, the concept claim; the main claim of design §研究卡片, point 2). It has no data and no code today. This plan gives it a pilot on development figures, on the binding layer only. A pilot is not a reported number: it runs on the development set, with free models that are not the latest, and it exists to size the experiment of M5 and to find out early if there is nothing to measure.
+
+**Starting state (measured):**
+- Suite: 10 files, 119 tests, 885 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `f078dd9`); the bench container the same.
+- Agent code under `R/`: none (`ls R/agent-*.R`: no such file). Tools over the substrate: none. `propose`: none. Records: none.
+- Model access (checked 2026-11-12): the owner's magpie gateway at `http://127.0.0.1:3425/v1`, OpenAI-compatible; `westlakehpc/glm-5.3-flash`, `westlakehpc/deepseek-v4.1-flash`, `westlakehpc/Qwen3.8-27B`. One call with one tool through aisdk 1.5.0 (`create_openai(base_url = )`, `generate_text(tools = , max_steps = )`) ran the tool once and answered in 2.9 s. aisdk is installed on the host and is not in `DESCRIPTION`.
+- Model-driven runs so far: 0. Numbers on conditions A or B: none.
+
+**Assumptions to test (riskiest first):**
+1. *The owner's free models drive a tool loop to a validated submission, through aisdk and the gateway, often enough to run an experiment.* Evidence: one call with one tool. Tested in Task 1 on a hand-built figure. If fewer than two of the three models finish the lookup variant correctly in 8 of 10 runs, the plan stops before any tool is built into the package and the owner is asked for other models.
+2. *A pairing proposed after capture can be checked from the figure alone:* the element's geometry, the table's row and the panel's scales, with no engine state. `propose` must validate on a figure read from a bundle, because model calls are made on the host and third-party figure code runs only in the container. Evidence: none; today's check takes device positions from the engine while its state is at hand. Tested in Task 2 without a model, on the development sets: the share of verified elements whose own row passes the figure-alone check and whose permuted row fails. If it is under 80% of the verified elements of ggplot figures, the placements of rows on the device become a derived table made at capture (ADR-0007) before `propose` is built on them.
+3. *The question has room between the two conditions.* Design §评测设计 expects the gap to be small on plain scatter plots, since condition A can compute the answer in its sandbox. If A is right on 95% or more of the pilot's questions, the pilot says so and the figures or the layer asked about change before M5 is sized.
+4. *Condition A can be given a sandbox that is read-only, offline and held to the same budget.* The bench container runs with no network; a tool call from the host would start R in it. Tested in Task 4. If a call costs more than about 10 s of start-up, the budget in calls is not comparable and the sandbox needs a session that stays up.
+5. *Code alone does not already answer the pilot's questions.* The rival of [the idea note on proposals](../idea/2026-11-12-binding-proposals.md): an enumeration over tables and rows, checked by the same validation, needs no model. The pilot reports it as its own arm. If it answers everything, the binding layer is the wrong place to look for the model's contribution and the pilot moves to a layer code cannot enumerate.
+
+**Architecture:** Agent code is new files `R/agent-*.R` and depends on aisdk through `Suggests`; the core and the store keep working without it. Tools are closures over one figure, made by a factory, all read-only except `propose`. `propose` takes schema-validated data only, checks it with code and returns either an accepted proposal or the list of what failed; an accepted proposal is the first record laid over a derived table (ADR-0007, point 1). gloss owns no agent loop: the loop is aisdk's. Harness code for the pilot (question sampling, the two conditions, scoring, archives) lives under `bench/`, not in the package. Nothing in capture or in the binder changes.
+
+**Out of scope:**
+- Roles, relations, claims: no rules, no check primitives and no labels to score them against yet.
+- The held-out sets. Every run here is on hand-built figures or the development sets.
+- Reported numbers, the latest closed model, five repeats per configuration with intervals over figures: that is M5, sized from this pilot.
+- The record core of M2 (anchors with several selectors, layers, rebase). The pilot needs one kind of record, kept in memory for the run.
+- Staged agents, `gl_annotate()`, caching, disclosure levels other than the one the pilot uses.
+- Speeding up the bind step (ADR-0007, follow-up).
+
+**Tech stack:** R 4.5.2; aisdk 1.5.0 (Suggests, when agent code lands under `R/`); the magpie gateway and the westlakeHPC models, called from the host; the bench container for anything that runs figure code; jsonlite. The gateway's key is read from the environment and is never printed, logged or archived.
+
+**Done when:**
+- Task 1's numbers are recorded for the three models, with the predictions committed before the runs.
+- The figure-alone check is measured on both development sets against the capture-time bindings (Task 2), and `propose` rests on whichever of the two the measurement supports.
+- `gl_tools()` passes contract tests with a scripted model (no network), and a test shows that `propose` rejects a wrong pairing with a reason and accepts the right one.
+- The pilot has run on about ten development figures in conditions A and B and the enumeration arm, each run archived under `bench/runs/` with its inputs, tool calls, outputs and model id, with predictions committed first; accuracy, coverage, calls and time are reported per figure and per condition, and the report says plainly that it is a pilot.
+- The closing notes say what M5 should be, given the pilot: which layer, how many figures and repeats, which models, and the cost of one run.
+
+---
+
+## Progress tracking
+
+**Status legend**
+- `[ ]` Not started
+- `[~]` In progress
+- `[x]` Completed
+- `[!]` Blocked
+- `[-]` Cancelled
+
+**Plan maintenance rules**
+- Update when a task lands, in the same commit as the code.
+- When marking `[x]`, record the command and the observed result (counts, numbers, figure set).
+- When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
+
+**Current state** _(update as results come in)_
+- Suite: 10 files, 119 tests, 885 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `f078dd9`).
+- Key numbers: none yet.
+
+**Overall progress**
+- [ ] Task 1: Do the free models drive tools to a validated submission?
+- [ ] Task 2: A pairing checked from the figure alone, measured against the capture-time bindings _(stub; written out after Task 1)_
+- [ ] Task 3: `gl_tools()` and a validating `propose`; the first record _(stub; after Task 2)_
+- [ ] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(stub)_
+- [ ] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(stub)_
+- [ ] Task 6: Records: design notes, NEWS, dev log, closing notes
+
+---
+
+### Task 1: Do the free models drive tools to a validated submission?
+
+**Status:** `[ ]`
+
+**Tests assumption:** 1.
+
+**Files**
+- Create: `bench/agent/drive-tools.R` (the harness: figure, tools, questions, runs, scoring), `bench/runs/<stamp>-drive-tools.*` (archive).
+- Modify: `bench/predictions.md` (predictions 102 onward, committed before the first run).
+- Test: none under `tests/`; nothing under `R/` changes.
+
+**Intent**
+- Everything after this task assumes a model that calls tools in a loop and ends by submitting. If the free models cannot, tools built into the package would be tested by nothing. The task is a harness outside the package so that no API is fixed before it is known to be usable.
+
+**Checklist**
+- [ ] One hand-built figure on the host: `mtcars`, weight against mpg, coloured by cylinders, facetted by transmission (32 points in 2 panels, every binding verified). Five questions, the elements drawn with a fixed seed: "the circle centred at (cx, cy) pt: which row of `built_layer1` does it draw?"
+- [ ] Variant L (lookup): tools `overview`, `find_elements` (by device point), `get_binding` (the element's row, from `gl_bindings()`), `get_rows`, `submit`. The answer is two calls away; this measures the loop.
+- [ ] Variant M (masked): no `get_binding`. Tools `overview`, `find_elements`, `to_data` (device point to data values in a panel), `find_rows` (rows of a table near given values), `get_rows`, `submit`. The model has to work the pairing out.
+- [ ] `submit(element, table, row)` validates on submit: the element and the row exist, and the pairing is the checked one. A rejection returns the reason and the run goes on. A run is correct when it ends with an accepted submission for the element asked about; the harness asserts that no accepted submission is wrong.
+- [ ] Three models, two variants, five questions, two runs each: 60 runs, `temperature = 0`, at most 12 steps. Per run: finished, correct, tool calls, calls aisdk reports as failed, rejected submissions, seconds, tokens when the gateway gives them.
+- [ ] Predictions committed, then the runs, archived before scoring.
+
+**Verification**
+- `Rscript bench/agent/drive-tools.R` on the host, with the gateway up.
+- Expected: at least two models correct in 8 of 10 runs of variant L. The result that would change the plan: fewer than two (stop, ask the owner for models); variant M under 5 of 10 for every model (the tools of Task 3 are redesigned before the pilot, starting from what the transcripts show).
+
+**Result** _(filled in when done)_
+
+---
+
+### Task 2: A pairing checked from the figure alone
+
+**Status:** `[ ]` _(stub; written out after Task 1)_
+
+An internal check of one pairing (element, table, row) from the substrate, the tables and the panel's scales, reusing the binder's comparisons by tag. Measured in the container on both development sets, with no model: of the elements `gl_bindings()` has as verified, the share whose own row passes and the share for which a permuted row fails, by engine and by coord. Decides whether `propose` can rest on the figure alone or needs row placements stored at capture.
+
+---
+
+### Task 3: `gl_tools()` and a validating `propose`
+
+**Status:** `[ ]` _(stub; after Task 2)_
+
+The tool factory of design §工具, cut to what the pilot asks, from what Task 1's transcripts show the models use; `propose` with a JSON schema; the accepted proposal as a record kept beside the derived table. aisdk enters `Suggests`. Contract tests with a scripted `aisdk::LanguageModelV1` subclass.
+
+---
+
+### Task 4: Condition A
+
+**Status:** `[ ]` _(stub)_
+
+The raw material as design §研究卡片 lists it (code, raw data, built data, grob tree as text, the svglite SVG) and one tool that runs R in the bench container with no network and the repository read-only; the same budget in calls, tokens and time as condition B; direct submission.
+
+---
+
+### Task 5: The pilot
+
+**Status:** `[ ]` _(stub)_
+
+About ten development figures chosen by a rule fixed before any run (by engine and layer kind, seeded), questions drawn from their verified bindings with the answers hidden, conditions A and B and the enumeration arm, predictions first, every run archived. Reported per figure.
+
+---
+
+### Task 6: Records
+
+**Status:** `[ ]`
+
+Design notes (§研究卡片, §评测设计, §审稿人预演, §实施计划), `NEWS.md` if anything exported changes, the dev log, closing notes with what M5 should be.
+
+---
+
+## Scope changes
+
+_(append-only; never edit completed tasks above)_
+
+## Closing notes
+
+Filled in when the plan moves to `done/`.

@@ -754,3 +754,27 @@ Runs `runs/2026-11-12-1422-capture-heldout-tree.*` and `-1427-bind-heldout-tree.
 - **The residue** (`-residue.txt`): 3564 elements in 86 leaves of 8 figures, 9 classes. Text drawn as outlines 2492; rectangles munched along a coord 600 (bars and columns under `coord_polar()`, tree-009 and tree-026); no panel with scales 341; the `GeomText` count mismatch 50; made when drawn 31; a boxplot's pieces 30 in three classes (tree-070); the caught transform error 10. Against the tree development half alone, 7 classes and 1041 elements are new, the munched rectangles among them (known from v0's development set).
 - **What the four new classes are not.** By their reasons none is a package placing its marks in its own way: they are a composition whose panels were withheld, a count, an error in placing rows under a polar coord, and a boxplot's rows. They were not read leaf by leaf, and the scorer's `lacks` column puts a count mismatch under `package` by default; an empty label, which R draws as nothing, would make tree-043's the drawing system's own.
 - **For a later plan, not changed here:** the transform error on tree-027 is reported as its R message, which says that placing the rows stopped, not what the leaves are.
+
+## Do the free models drive tools? (agent-path plan Task 1)
+
+Written 2026-11-12, before any run of `bench/agent/drive-tools.R` with a model. What I have seen: one call with one tool through aisdk and the gateway (`westlakehpc/glm-5.3-flash` added two numbers with the tool and answered, 2.9 s), a one-tool call answered by each of the three models earlier today, and the harness's dry run, which uses no model. I have not seen any of the three models run a loop of several tools.
+
+### How the runs are made and scored (fixed before the runs)
+
+- One hand-built figure on the host: `mtcars`, weight against mpg, coloured by cylinders, facetted by transmission; 32 points in two panels, every binding verified. Five questions, the elements drawn with seed 20261112: "the circle centred at (cx, cy) pt: which row of `built_layer1` does it draw?"
+- Variant L has a tool that returns the element's checked binding. Variant M does not: the model has the element's place, a tool from a point of the page to data values, and a tool for the rows nearest to given values.
+- Three models (`westlakehpc/glm-5.3-flash`, `westlakehpc/deepseek-v4.1-flash`, `westlakehpc/Qwen3.8-27B`), two variants, five questions, two runs each: 60 runs, `temperature = 0`, at most 12 steps, one system prompt for all.
+- A run is **correct** when it ends with a submission that `submit` accepted for the element asked about. `submit` accepts only the checked pairing; the harness stops if an accepted submission is not the truth, so "accepted and wrong" is asserted, not predicted. A run that errors or runs out of steps is not correct.
+- A **failed call** is one whose arguments the tool's guard refuses. Calls that aisdk records and the tool never sees are counted from the two logs and reported beside them.
+- The runs are archived (`bench/runs/<stamp>-drive-tools.json` and `.csv`) and committed before they are scored. If the script is changed after a run with a model, the change and the reason are written here and the earlier archive stays.
+
+### Predictions
+
+102. **Variant L: each of the three models is correct in at least 8 of its 10 runs.** Point guess 10, 10 and 8 for glm, deepseek and Qwen. The answer is two calls away and all three have returned a native tool call.
+103. **Variant M: at least two of the three models are correct in at least 7 of 10.** Point guess 8, 9 and 5. The chain is four calls with a panel id and two numbers carried between them; the smallest model is the one I expect to lose the thread.
+104. **Median tool calls in correct runs: at most 4 in variant L, at most 7 in variant M.**
+105. **Failed calls are under 10% of all calls over the 60 runs.**
+106. **The median run takes under 30 s and none reaches the 180 s timeout.**
+107. **In variant M at least one run has a rejected submission followed by an accepted one:** the reason a rejection gives is used. Point guess 3 of the 30 runs.
+
+**What would change the plan:** fewer than two models at 8 of 10 in variant L (102 wrong that way): the plan stops before any tool enters the package and the owner is asked for other models. Variant M under 5 of 10 for every model: Task 3's tools are redesigned from the transcripts before the pilot. A run correct in variant M only after rejections says the validation is doing work, which is what conditions "B" and "B without validation" will have to separate.
