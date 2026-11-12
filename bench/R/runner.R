@@ -324,7 +324,7 @@ launch_worker <- function(worker, args) {
 # Runs inside a fresh R process. Self-contained: callr ships only this function.
 run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, recover, capture, repo,
                        device = "pdf", fidelity_verdict = NULL, compare_pages = NULL, bind = FALSE,
-                       keep = NULL, recheck = FALSE) {
+                       keep = NULL, recheck = FALSE, export = NULL, export_fun = NULL) {
   setwd(dir)
   set.seed(seed)
   # The device the code draws on. "svg" (capture runs) is gloss's own device,
@@ -652,6 +652,20 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
             cap$alone_leaves <- lv
           }
         }
+        # The pilot's material (agent-path plan Task 4): the figure and its
+        # page drawn alone, handed to the writer the caller passed
+        # (bench/agent/material-writer.R), which writes under `export`.
+        if (!is.null(export) && is.function(export_fun)) {
+          ex <- tryCatch({
+            if (is.na(alone[1])) stop("the figure could not be drawn alone on svglite")
+            export_fun(fig, alone[1], export)
+          }, error = function(e) conditionMessage(e))
+          if (is.list(ex)) {
+            cap$export <- TRUE
+            cap$export_answers <- ex$answers
+            cap$export_tables <- ex$tables
+          } else cap$export <- ex
+        }
       }
       result$capture <- cap
     }
@@ -756,7 +770,7 @@ gloss_snapshot <- function(repo = ".") {
 
 run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
                        recover = FALSE, capture = FALSE, device = "pdf", bind = FALSE, keep = NULL,
-                       recheck = FALSE) {
+                       recheck = FALSE, export = NULL) {
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   env <- c(callr::rcmd_safe_env(), R_LIBS_USER = paste(bench_libpaths(), collapse = .Platform$path.sep))
   if (offline) env <- c(env, offline_env)
@@ -768,7 +782,8 @@ run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
                                      recover = recover,
                                      capture = capture, repo = gloss_snapshot(), device = device,
                                      fidelity_verdict = fidelity_verdict, compare_pages = compare_pages,
-                                     bind = bind, keep = keep, recheck = recheck)),
+                                     bind = bind, keep = keep, recheck = recheck, export = export,
+                                     export_fun = if (!is.null(export)) get0("write_material", envir = globalenv()))),
              libpath = bench_libpaths(), env = env, timeout = timeout, show = FALSE,
              package = FALSE),
     error = function(e) e)

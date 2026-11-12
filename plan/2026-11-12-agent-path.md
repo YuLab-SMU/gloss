@@ -66,8 +66,8 @@
 - [x] Task 1: Do the free models drive tools to a validated submission?
 - [x] Task 2: A pairing checked from the figure alone, measured against the capture-time bindings
 - [~] Task 3: `gl_tools()` and a validating `propose`; the first record _(steps 1 to 3 done 2026-11-12: the flipped panel, `gl_propose()`, `gl_tools()`; the run with models open)_
-- [ ] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(stub)_
-- [ ] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(stub)_
+- [~] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(step 1 done 2026-11-12: the sandbox)_
+- [ ] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(rule fixed 2026-11-12; not run)_
 - [ ] Task 6: Records: design notes, NEWS, dev log, closing notes
 
 ---
@@ -217,17 +217,55 @@
 
 ### Task 4: Condition A
 
-**Status:** `[ ]` _(stub)_
+**Status:** `[~]` (written out 2026-11-12, after Task 3 step 3)
 
-The raw material as design §研究卡片 lists it (code, raw data, built data, grob tree as text, the svglite SVG) and one tool that runs R in the bench container with no network and the repository read-only; the same budget in calls, tokens and time as condition B; direct submission.
+**Tests assumption:** 4 (a sandbox that is read-only, offline and held to the same budget), before any model is asked.
+
+**Files**
+- Create: `bench/agent/sandbox.R` (R code run in the bench container), `bench/agent/material.R` (the material of chosen development figures, made in the container).
+- Modify: `bench/R/runner.R`, `bench/R/harvest.R` (the worker writes a figure's material when asked).
+
+**Intent**
+- Condition A as design §研究卡片 has it: the model gets the figure's code, its raw data, the built data, the grob tree as text and the SVG svglite wrote, and can run R on them. Nothing of gloss is in its hands. The tables are the ones gloss holds, written out, so both conditions name rows the same way; the SVG is the figure drawn alone on svglite, not gloss's scene.
+- The sandbox is the bench container: no network, a read-only root, the figure's package library read-only, none of the host's environment, not the repository; limits on time, memory and processes. Each run works on a fresh copy of the material, which is thrown away. Third-party figure code and code a model wrote run nowhere else.
+
+**Checklist**
+- [x] Step 1: `bench/agent/sandbox.R` with a self-check (`--dry`) of what it can and cannot do.
+- [ ] Step 2: `bench/agent/material.R`, development figures only: per figure, the bundle gloss writes (for condition B and the enumeration, read on the host with `gl_read()`), the bindings made at capture (the answers, kept apart), and condition A's directory: `code.R` and its `data/`, `tables/<name>.csv` and `tables.rds`, `grob_tree.txt`, `figure.svg`. A check that every element a question can ask about has the same place in `figure.svg` as in gloss's scene.
+- [ ] Step 3: the harness's two tool sets: A has `run_r(code)` and `submit(table, row)`, which records and says nothing more; B has `gl_tools()` with every binding hidden. One budget for both: the same limit on steps and on time, the same cap on what a tool hands back. A no-model check drives both to a right answer on one figure.
+
+**Verification**
+- The self-check's output; the material's counts per figure; the no-model check.
+- The result that would change the plan: an element whose place in svglite's own page differs from gloss's scene by more than 0.01 pt (the two conditions would be asked about different things, and the question has to name the element another way).
+
+**Result, step 1** (2026-11-12)
+
+- `Rscript bench/agent/sandbox.R --dry`: 13 checks, all pass. The sandbox reads its material, loads the bench's packages and builds a plot (0.9 s for that call, container start included); has no network; sees no key, token or proxy of the host, no repository and no sources; cannot write outside `/work` and `/tmp`; keeps its own files from one call to the next and leaves the material unchanged; stops code after its time limit and says so; clips a long output to head and tail; an error or a call for too much memory ends that call only; a new sandbox starts from the material; closing removes it.
+- *Assumption 4's threshold:* a call costs about 1 s with the container's start, far under the 10 s that would have asked for a session that stays up. One container a call is kept.
+- Cost: 136 lines under `bench/agent/`, none under `R/` or `tests/`.
 
 ---
 
 ### Task 5: The pilot
 
-**Status:** `[ ]` _(stub)_
+**Status:** `[ ]` (written out 2026-11-12; the rule below is fixed before any model run)
 
-About ten development figures chosen by a rule fixed before any run (by engine and layer kind, seeded), questions drawn from their verified bindings with the answers hidden, conditions A and B and the enumeration arm, predictions first, every run archived. Reported per figure.
+**Tests assumption:** 3 and 5: with the same model, material and budget, are answers through the substrate's tools and a validating `propose` right more often than answers worked out in a sandbox? And is a model needed at all where code can try every row?
+
+**Which figures, which questions** (fixed here, before any run; seed 20261113)
+- *Population:* the development figures of both sets whose engine is ggplot or patchwork and which have, in the bindings made at capture, circles or rectangles verified one for one row. In the archived development runs (`2026-11-12-1116-bind-dev`, `-1107-bind-dev-tree`) that is 29 of 66 such figures: bioc 2, exts 6, gallery 8, patchwork 3, tree 10. Circles and rectangles only, because both conditions read their place the same way (the centre of the box); text, lines and polygons wait. Elements code left unbound have no answer to score against and are not asked about here.
+- *Sample:* 10 figures, by stratum in proportion (bioc 1, exts 2, gallery 3, patchwork 1, tree 3), drawn with the seed from the population in the order of their ids. Not chosen by what they hold. The scope change after Task 1 asked for figures where a first answer can be wrong; the archives show that 24 of the 29 have such elements in one layer only, so a rule that kept only figures with several such layers would leave five. The pilot therefore samples the population as it is and reports, per figure, what it holds (layers, panels, rows that tie).
+- *Questions:* up to 3 elements a figure, drawn with the seed: first one element from each of up to 3 leaves, then further elements if the figure has fewer than 3 such leaves. The question gives the element's tag and the centre of its box in pt and asks for the table and the row. The answer is the binding made at capture (`verified`), which neither condition is shown.
+- *Arms:* A (Task 4), B (`gl_tools()` with bindings hidden), and S, no model: every row of every built table tried through `gl_propose()` for the element.
+- *Runs:* the three westlakeHPC models, each arm with a model 3 times a question, temperature 0; the same limit on steps and time. Predictions committed first; every run archived before it is scored.
+
+**Scored** (per figure, then over figures; never one pooled share alone)
+- A: the last submission names the answer's table and row. B: `propose` accepted the answer's table and row for the element. An accepted proposal that is not the answer is counted as a wrong acceptance, never as right. S: the answer is accepted and nothing else is; more than one accepted is reported as such.
+- Beside each: runs with no answer, proposals refused (against B's coverage), first submissions rejected and what followed, calls, tokens and seconds used.
+
+**Verification**
+- The archive and its score; predictions scored.
+- The results that would change the plan, each way: A as right as B (the tools are a convenience for this question, and M5's decisive comparison has to be asked on claims or on repair, not on single pairings); S as right as B (binding one element is a search, and the model's work lies elsewhere); a wrong acceptance (the check alone does not carry a proposal, and `propose` needs more than a place).
 
 ---
 
