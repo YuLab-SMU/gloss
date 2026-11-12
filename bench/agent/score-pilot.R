@@ -174,6 +174,36 @@ if (nrow(a)) {
               sum(wrong$answer_table != wrong$truth_table), sum(wrong$answer_table == wrong$truth_table)))
 }
 
+# The calls that failed, by what the tool answered: read before the shares
+# above are believed. A harness that alters what a model sent shows up here
+# as one message repeated across runs and models (the first rehearsal's
+# "undefined columns selected"), and in the scores as a weak arm.
+kept <- runs[sort(keep)]
+failure <- function(cl) {
+  if (isTRUE(cl$timed_out)) return("stopped: ran longer than the limit")
+  if (isTRUE(cl$killed)) return("stopped: killed, most likely for memory")
+  res <- paste(as.character(unlist(cl$result)), collapse = " ")
+  m <- regmatches(res, regexpr("Error[^\n]*(\n[^\n]*)?", res))
+  msg <- gsub("\\s+", " ", if (length(m)) m else res)
+  msg <- sub("^Error in .*? : ", "Error: ", msg, perl = TRUE)
+  msg <- sub(" (Calls:|Execution halted).*$", "", msg)   # where R was, not what went wrong
+  msg <- gsub("'[^']*'|\"[^\"]*\"|`[^`]*`|‘[^’]*’", "<name>", msg)
+  substr(gsub("[0-9]+", "<n>", msg), 1L, 78L)
+}
+for (a in sort(unique(d$arm))) {
+  runs_a <- kept[d$arm == a]
+  bad_calls <- unlist(lapply(runs_a, function(r) Filter(function(cl) !isTRUE(cl$ok), r$calls)), recursive = FALSE)
+  n_calls <- sum(vapply(runs_a, function(r) length(r$calls), 1L))
+  cat(sprintf("\narm %s: %d of %d tool calls failed, in %d of %d runs\n", a, length(bad_calls), n_calls,
+              sum(vapply(runs_a, function(r) any(!vapply(r$calls, function(cl) isTRUE(cl$ok), logical(1))), logical(1))), length(runs_a)))
+  if (length(bad_calls)) {
+    k <- sort(table(paste(vapply(bad_calls, function(cl) as.character(cl$tool), ""), vapply(bad_calls, failure, ""), sep = ": ")), decreasing = TRUE)
+    shown <- utils::head(k, 12L)
+    cat(sprintf("  %4d  %s\n", as.integer(shown), names(shown)), sep = "")
+    if (length(k) > 12L) cat(sprintf("  %4d  in %d other kinds\n", sum(k) - sum(shown), length(k) - 12L))
+  }
+}
+
 cat(sprintf("\nhow the runs ended: %s\n", paste(names(table(d$finish, useNA = "ifany")), table(d$finish, useNA = "ifany"), collapse = ", ")))
 cat(sprintf("what the runs used (median; the limit on requests to the model is %s)\n", format(max_steps)))
 used <- do.call(rbind, lapply(split(d, paste(d$model, d$arm)), function(x) {
