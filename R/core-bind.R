@@ -16,7 +16,7 @@
 # colour says which value.
 #
 #   one per row    circle             centre at (x, y)
-#                  rect               corners at xmin..ymax, else centre at (x, y)
+#                  rect, image        corners at xmin..ymax, else centre at (x, y)
 #                  line               ends at (x, y) and (xend, yend)
 #                  text               in the label's frame: along the
 #                                     baseline at (hjust - anchor) x its
@@ -37,6 +37,8 @@
 #                                     it (the centre; 2/3 or 1/3 down a
 #                                     triangle); boxes only, so dense
 #                                     leaves bind too
+#   one per group  image              its box the bounds of the group's
+#                                     cells (a raster over its cells)
 #   one per group  polyline, path     vertices at the group's (x, y), in order
 #                  polygon            vertices and the group's points
 #                                     (x, y), (x, ymin), (x, ymax), (xmin, y),
@@ -323,7 +325,9 @@ row_family <- function(tag, pred) {
     return(list(need = c("x", "y"), cols = c("x", "y"), element = function(e) data.frame(x = e$cx, y = e$cy),
                 row = at_xy, dev = point_dev, count = point_count))
   }
-  if (tag == "rect" && has(c("xmin", "xmax", "ymin", "ymax"))) {
+  # an <image> is placed by its box as a rect is (ggimage's rasterGrob,
+  # centred on its row; a raster over a cell's bounds)
+  if (tag %in% c("rect", "image") && has(c("xmin", "xmax", "ymin", "ymax"))) {
     corners <- function(x0, x1, y0, y1) data.frame(x0 = pmin(x0, x1), x1 = pmax(x0, x1), y0 = pmin(y0, y1), y1 = pmax(y0, y1))
     return(list(need = c("x0", "x1", "y0", "y1"), cols = c("xmin", "xmax", "ymin", "ymax"),
                 element = function(e) corners(e$x0, e$x1, e$y0, e$y1),
@@ -394,7 +398,7 @@ row_family <- function(tag, pred) {
                   tabulate(pr$p[ok], nbins = nrow(e))
                 }))
   }
-  if (tag == "rect") {
+  if (tag %in% c("rect", "image")) {
     return(list(need = c("x", "y"), cols = c("x", "y"), element = centre, row = at_xy, dev = point_dev, count = point_count))
   }
   if (tag %in% c("polyline", "path") && has(c("xend", "yend"))) {
@@ -527,6 +531,7 @@ measure_m_ascent <- function(font, size) {
 # as ggplot2 and grid draw them (factor order of the group ids); ambiguity
 # against every group of the layer in this panel.
 check_groups <- function(g, pred, groups, all_pred, all_groups, tol) {
+  if (nrow(g) && all(g$tag == "image")) return(check_image_groups(g, pred, groups, all_pred, all_groups, tol))
   n <- nrow(g)
   verts <- g$vertices
   if (any(!g$tag %in% c("polyline", "polygon", "path"))) {
@@ -560,6 +565,25 @@ check_groups <- function(g, pred, groups, all_pred, all_groups, tol) {
     others <- setdiff(unique(cand[[i]]), self_at[i])
     1L + sum(vapply(others, function(j) isTRUE(cmp_rows(i, by_group[[j]]) <= tol), logical(1)))
   }, 1L)
+  list(pass = pass, dev = dev, n_pass = n_pass)
+}
+
+# One image per group (geom_raster(): one raster over all its cells): the
+# image's box is the bounds of the group's cells (plan
+# 2026-11-11-tree-binding, Task 6; v0 gallery-015).
+check_image_groups <- function(g, pred, groups, all_pred, all_groups, tol) {
+  b <- c("xmin", "xmax", "ymin", "ymax")
+  if (!all(b %in% names(pred)) || all(is.na(pred[b]))) {
+    return(list(reason = "an <image> paired one per group is compared with its rows' cell bounds (xmin, xmax, ymin, ymax), which the rows do not have"))
+  }
+  bounds <- function(d) c(min(d$xmin, d$xmax, na.rm = TRUE), max(d$xmin, d$xmax, na.rm = TRUE),
+                          min(d$ymin, d$ymax, na.rm = TRUE), max(d$ymin, d$ymax, na.rm = TRUE))
+  box_dev <- function(i, bb) max(abs(c(g$x0[i], g$x1[i], g$y0[i], g$y1[i]) - bb))
+  own <- lapply(groups, function(k) bounds(pred[pred$group == k, , drop = FALSE]))
+  every <- lapply(all_groups, function(k) bounds(all_pred[all_pred$group == k, , drop = FALSE]))
+  dev <- vapply(seq_len(nrow(g)), function(i) box_dev(i, own[[i]]), 1)
+  pass <- !is.na(dev) & dev <= tol
+  n_pass <- vapply(seq_len(nrow(g)), function(i) sum(vapply(every, function(bb) isTRUE(box_dev(i, bb) <= tol), logical(1))), 1L)
   list(pass = pass, dev = dev, n_pass = n_pass)
 }
 

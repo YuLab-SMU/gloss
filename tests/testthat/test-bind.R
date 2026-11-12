@@ -742,3 +742,47 @@ test_that("a geom that moves x by its nudge_x when drawing is checked at the mov
   expect_equal(lv$status, "verified", label = paste(lv$status, lv$max_dev))
   expect_lt(lv$max_dev, 0.05)
 })
+
+test_that("images bind: one per row by their box, one raster per group by its cells' bounds", {
+  # Bench tree-041 (ggimage: a rasterGrob centred on each row) and v0's
+  # gallery-015 (geom_raster(): one image over all its cells) were unbound,
+  # "no comparison for <image> elements".
+  skip_if_not_installed("ggplot2")
+  img <- matrix(c("red", "blue", "green", "white"), 2)
+  GeomPic <- ggplot2::ggproto("GeomPic", ggplot2::Geom, required_aes = c("x", "y"),
+    draw_panel = function(data, panel_params, coord) {
+      co <- coord$transform(data, panel_params)
+      kids <- lapply(seq_len(nrow(co)), function(i) grid::rasterGrob(img, x = co$x[i], y = co$y[i], height = grid::unit(0.1, "npc")))
+      grid::gTree(children = do.call(grid::gList, kids))
+    })
+  d <- data.frame(x = c(1, 3, 2, 5), y = c(2, 1, 4, 3))
+  p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y)) +
+    ggplot2::layer(geom = GeomPic, stat = "identity", position = "identity") + ggplot2::xlim(0, 6) + ggplot2::ylim(0, 5)
+  b <- suppressWarnings(bind_capture(p))
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_equal(nrow(lv), 4L)
+  expect_true(all(lv$status == "verified"), label = paste(lv$status, lv$reason, collapse = "; "))
+  # each image against another row fails
+  j <- justified_claim(p)
+  for (cl in j$claims) {
+    bad <- cl
+    bad$pred[, c("x", "y")] <- cl$pred[c(2:4, 1), c("x", "y")]
+    r <- check_claim(bad, j$leaves[j$leaves$id == cl$leaf, ], j$geo)
+    expect_equal(r$leaf$status, "failed")
+  }
+  # a raster over a grid of cells
+  g <- expand.grid(x = 1:4, y = 1:3)
+  g$z <- seq_len(nrow(g))
+  p <- ggplot2::ggplot(g, ggplot2::aes(.data$x, .data$y, fill = .data$z)) + ggplot2::geom_raster()
+  b <- suppressWarnings(bind_capture(p))
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_equal(c(lv$mode, lv$status), c("group", "verified"), label = lv$reason)
+  # the rows' cells one column narrower than what was drawn: failed
+  j <- justified_claim(p)
+  cl <- j$claims[[1]]
+  bad <- cl
+  w <- (max(cl$pred$xmax) - min(cl$pred$xmin)) / 4
+  bad$pred$xmax <- cl$pred$xmax - w * (cl$pred$xmax == max(cl$pred$xmax))
+  r <- check_claim(bad, j$leaves[j$leaves$id == cl$leaf, ], j$geo)
+  expect_equal(r$leaf$status, "failed")
+})
