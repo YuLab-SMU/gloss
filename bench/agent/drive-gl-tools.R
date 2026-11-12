@@ -4,6 +4,14 @@
 #
 #   Rscript bench/agent/drive-gl-tools.R --dry    # no model: a script drives gl_tools()
 #   Rscript bench/agent/drive-gl-tools.R          # 3 models x 2 variants x 5 questions x 2 runs
+#   Rscript bench/agent/drive-gl-tools.R <model>  # the same for the models named
+#
+# The models behind the gateway are not always up (2026-11-12: 502 for hours,
+# then 429 for one of them). Before a model's runs the script asks it for one
+# word and waits until it answers, up to `wait_minutes`; a model that never
+# does is skipped and named in the archive. A run that ends in a request
+# error is made once more after the model answers again; both attempts are
+# counted in the archive (`attempts`), the last one is the run.
 #
 # Same figure, same five elements (seed 20261112) and same models as
 # bench/agent/drive-tools.R. The tools are gloss::gl_tools(fig): variant L
@@ -22,6 +30,8 @@ args <- commandArgs(trailingOnly = TRUE)
 dry <- "--dry" %in% args
 gateway <- "http://127.0.0.1:3425/v1"
 models <- c("westlakehpc/glm-5.3-flash", "westlakehpc/deepseek-v4.1-flash", "westlakehpc/Qwen3.8-27B")
+if (length(setdiff(args, "--dry"))) models <- intersect(models, setdiff(args, "--dry"))
+wait_minutes <- 90
 variants <- c("L", "M")
 n_questions <- 5L
 n_repeats <- 2L
@@ -103,24 +113,54 @@ provider <- aisdk::create_openai(api_key = key, base_url = gateway, api_format =
                                  total_timeout_seconds = 180)
 stamp <- format(Sys.time(), "%Y-%m-%d-%H%M", tz = "UTC")
 out_base <- file.path("bench", "runs", paste0(stamp, "-drive-gl-tools"))
+# Does the model answer at all? One word, no tool.
+answers <- function(model) {
+  r <- tryCatch(aisdk::generate_text(model = model, prompt = "Reply with the single word: ready", max_steps = 1, temperature = 0),
+                error = function(e) e)
+  !inherits(r, "error")
+}
+# Minutes waited until the model answered, or NA when it did not within the limit.
+wait_for <- function(model) {
+  t0 <- Sys.time()
+  repeat {
+    if (answers(model)) return(round(as.numeric(difftime(Sys.time(), t0, units = "mins")), 1))
+    if (as.numeric(difftime(Sys.time(), t0, units = "mins")) > wait_minutes) return(NA_real_)
+    Sys.sleep(60)
+  }
+}
 runs <- list()
+waited <- list()
+skipped <- character()
 for (model_id in models) {
   model <- provider$language_model(model_id)
+  waited[[model_id]] <- wait_for(model)
+  if (is.na(waited[[model_id]])) {
+    skipped <- c(skipped, model_id)
+    cat(sprintf("%s did not answer within %d min: skipped\n", model_id, wait_minutes))
+    next
+  }
   for (v in variants) for (qi in seq_along(questions)) for (rep in seq_len(n_repeats)) {
     q <- questions[[qi]]
-    tools <- tools_for(v)
-    t0 <- Sys.time()
-    res <- tryCatch(
-      aisdk::generate_text(model = model, system = system_prompt, prompt = q$text, tools = tools,
-                           max_steps = max_steps, temperature = 0),
-      error = function(e) e)
-    secs <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+    attempts <- 0L
+    repeat {
+      attempts <- attempts + 1L
+      tools <- tools_for(v)
+      t0 <- Sys.time()
+      res <- tryCatch(
+        aisdk::generate_text(model = model, system = system_prompt, prompt = q$text, tools = tools,
+                             max_steps = max_steps, temperature = 0),
+        error = function(e) e)
+      secs <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+      if (!inherits(res, "error") || attempts >= 2L) break
+      cat(sprintf("%-32s %s q%d r%d  request error, waiting for the model\n", model_id, v, qi, rep))
+      if (is.na(wait_for(model))) break
+    }
     state <- gloss::gl_tool_state(tools)
     s <- score(state, q)
     failed <- inherits(res, "error")
     runs[[length(runs) + 1L]] <- c(
       list(model = model_id, variant = v, question = qi, element = q$element, row = q$row, rep = rep,
-           seconds = round(secs, 2),
+           attempts = attempts, seconds = round(secs, 2),
            error = if (failed) substr(conditionMessage(res), 1L, 300L) else NA_character_,
            finish = if (failed) NA_character_ else as.character(res$finish_reason %||% NA),
            steps = if (failed) NA_integer_ else as.integer(res$steps %||% NA),
@@ -133,7 +173,8 @@ for (model_id in models) {
                 s$failed_calls, secs, if (failed) "  (error)" else ""))
   }
 }
-meta <- list(stamp = stamp, script = "bench/agent/drive-gl-tools.R", gateway = gateway, models = models,
+meta <- list(stamp = stamp, script = "bench/agent/drive-gl-tools.R", gateway = gateway, models = setdiff(models, skipped),
+             skipped = as.list(skipped), minutes_waited = waited,
              aisdk = as.character(utils::packageVersion("aisdk")),
              gloss_commit = system("git rev-parse --short HEAD", intern = TRUE),
              max_steps = max_steps, temperature = 0, system_prompt = system_prompt,
@@ -141,7 +182,7 @@ meta <- list(stamp = stamp, script = "bench/agent/drive-gl-tools.R", gateway = g
 writeLines(jsonlite::toJSON(list(meta = meta, runs = runs), auto_unbox = TRUE, pretty = TRUE, null = "null", na = "null"),
            paste0(out_base, ".json"))
 flat <- do.call(rbind, lapply(runs, function(r) {
-  as.data.frame(r[c("model", "variant", "question", "element", "row", "rep", "seconds", "error", "finish", "steps",
+  as.data.frame(r[c("model", "variant", "question", "element", "row", "rep", "attempts", "seconds", "error", "finish", "steps",
                     "calls_seen_by_aisdk", "correct", "tool_calls", "failed_calls", "rejected", "refused")],
                 stringsAsFactors = FALSE)
 }))
