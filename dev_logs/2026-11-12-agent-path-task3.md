@@ -147,3 +147,61 @@ The pilot's 540 runs were started at 20:19 UTC from a clean tree at `83b398b`, t
 - `R CMD build --no-build-vignettes .` and `R CMD check --no-manual` on the tarball (host; the package's files are those of `68a6fe9`, `git diff --stat 68a6fe9 HEAD -- R tests man inst DESCRIPTION NAMESPACE` is empty): Status OK, no error, warning or note.
 - The scorer's additions, no model. On a synthetic archive of 3 figures, 2 models and known answers the printed differences (+0.00, +0.50, +0.75; mean +0.417, sd 0.382; by model +0.333 and +0.500) are the ones computed apart from the scorer. On the two rehearsal archives the failed calls come out as they were counted by hand: `-1942` (aisdk's loop) arm A 28 of 83, 21 of them "undefined columns selected"; `-2008` (the harness's loop) 4 of 68, four different messages; arm B none in either. No line of the saved score of `-2008` changes.
 - **Not run:** the suite (nothing it tests changed); the scorer on the pilot's own archives, which are scored once, after they are complete and committed.
+
+## The pilot's result, and the plan closed
+
+The agent-path plan is closed and moved to [`plan/done/2026-11-12-agent-path.md`](../plan/done/2026-11-12-agent-path.md); this section is its closing log. The header of this file gives the plan's old path and state, as they were when the file was opened.
+
+### What changed
+
+| Commit | What |
+|---|---|
+| `fe14fb4`, `bd868f0` | the pilot's three archives, 180 runs each, committed unscored |
+| `63d89bc` | `bench/agent/show-run.R` (60 lines): the transcript of archived runs, by model, arm, figure, question and outcome |
+| `7827849` | `bench/runs/2026-11-12-2019-pilot-score.txt`; predictions 134-139 scored |
+| this commit | the plan's result for Tasks 5 and 6, a scope change, closing notes, and the move to `plan/done/`; `plan/README.md`; the design doc; this section |
+
+Design doc: a new subsection for the pilot (§评测设计, `#sec-pilot`) with its table and what it cannot show; a dated note under the research card; three bullets in the paragraph on models and budgets (the harness's own loop, reporting against the budget used, reading transcripts before believing a score); seven rows of the reviewer table rewritten and one added; two risk items; a dated note under the milestones; a change-list entry. The notes this plan had appended by date were folded into their sections as the current state: the status paragraph, the paragraph on proposals, the tools (with a table of the nine that exist) and the bundle's round trip. Nothing under `R/`, `tests/` or `man/` changed in this part of the session.
+
+### Measured
+
+**Suite** (`NOT_CRAN=true Rscript -e "devtools::test()"`, host): 13 files / 150 tests / 1422 expectations / 0 failed / 0 skipped at the end of the session, as at `68a6fe9`, the last change under `R/` or `tests/`. The container suite was last run at `68a6fe9` (13 / 150 / 1416 / 0 failed / 0 errors / 1 skipped), and nothing it loads has changed since. Session, start to end: 12 files / 135 tests / 1233 expectations to 13 / 150 / 1422.
+
+**The pilot** (stamp `2026-11-12-2019`; 10 development figures, 30 questions, 3 models, 2 arms, 3 repeats; temperature 0; 16 requests a run; a pilot, not a reported number). Made 20:19 to 22:13 UTC, two models at a time; no request error, no run made twice. Scored once, after all three archives were committed: `Rscript bench/agent/score-pilot.R 2026-11-12-2019 bench/runs/2026-11-12-1913-pilot-enumerate.csv`.
+
+| Arm | Runs | Right | Wrong | No answer | Median run |
+|---|---|---|---|---|---|
+| A: raw material and a sandbox | 270 | 246 (91.1%) | 6 | 18 | 9 calls, 28.0 s, 44094 tokens |
+| B: `gl_tools()`, bindings hidden | 270 | 269 (99.6%) | 0 | 1 | 7 calls, 9.4 s, 14108 tokens |
+| S: no model | 30 questions | 30 | 0 | 0 | 26265 rows tried, 29.7 s in all |
+
+- By figure (right runs of 27, A then B): bioc-016 27, 27; exts-027 18, 27; exts-030 27, 27; gallery-002 26, 26; gallery-005 24, 27; gallery-029 21, 27; patchwork-006 26, 27; tree-062 23, 27; tree-068 27, 27; tree-077 27, 27. B above A on 5 figures, A above B on none. B minus A over figures: +0.085, sd 0.117, +0.022 to +0.159 when the figures are drawn again.
+- By model (right of 90, A then B): Qwen3.8-27B 89, 90; deepseek-v4.1-flash 83, 90; glm-5.3-flash 74, 89. The difference over figures is +0.011, +0.078 and +0.167.
+- By the tool call at which the answer was in (A, B, of 270): by the 8th 104, 236; the 10th 165, 267; the 16th 244, 269.
+- Arm B's proposals: 275; 270 accepted, each the answer for the element asked about; 5 rejected; 0 refused; 0 wrong acceptances.
+- Cost: 211 minutes of model time; 17.8 million tokens (A 13.7, B 4.1), 94% of them prompt tokens. A's median run is 3.0 times B's in seconds and 3.1 times in tokens.
+- Predictions 134-139: 1 right, 2 half right, 3 wrong.
+
+**Read before the shares were believed** (`show-run.R`, the scorer's list of failed calls, and scripts kept outside the repository). Arm A: 161 of 2701 calls failed, none a timeout or a kill (2361 sandbox calls, median 0.44 s, at most 2.05 s); 296 calls reached the sandbox with a comma before `]`, so the loop hands code over as written. Arm B: 3 failed calls of 1847; 168 runs asked for the binding and each was told it is hidden; no tool's answer held a binding. All 18 of A's runs without an answer ended at the 16th request with nothing submitted. Each of A's 6 wrong answers was one submission, in the answer's own table.
+
+**The design doc.** `quarto render dev_docs/design.qmd --to html`: exit 0, no unresolved reference. `fact_diff.py` between the doc before and after: three facts had dropped out in the folding (the dates of the first probe runs, a token count, a run's name) and were put back; what is still missing is a pointer to predictions 140-141, one count that the text now gives as its complement, and the earlier of two runs with the tools, each replaced by the later state and all still in the plan. `tell_scan.py` on the added lines: no strong or medium candidate.
+
+**Not run:** the container suite (see above); the two missing arms of the 2 by 2; arm A with a larger budget; any held-out figure; any model newer than the three free ones.
+
+### Surprises
+
+- **Condition A was far stronger than I predicted, three times.** I wrote 45%, then 60% after the first rehearsal; it is 91.1%, and 98.9% for one model. My picture of A came from a rehearsal that a faulty loop had spoiled and from doubting that these models could find one rectangle in a 1.9 MB SVG within 16 requests; they could, in 21 of 27 runs on that figure. Three of six predictions were wrong, all in this direction. → `bench/predictions.md`; the plan's scope change of 2026-11-12 (the pilot); design `#sec-pilot`, the note under the research card, a risk item.
+- **The size of the gap is set by the budget and the model, not only by the condition.** By the 8th call A has 104 answers in and B 236; at the limit 244 and 269, and A is still rising. One model shows a difference of one run in 90. A single number at one limit would have been read as a property of the substrate. → design §评测设计 (report against the budget used); closing notes (A again at twice the requests).
+- **What I predicted for B's bars happened and did not matter.** `find_rows` put the bar's row 7.26 pt from the place asked about; the models proposed the nearest row and it was accepted. → `bench/predictions.md`; nothing changes in the tools.
+- **The only run of B that failed never looked the element up by its place.** It read elements one id at a time until its requests ran out, after one rejected proposal for the wrong element. → nowhere yet: one run in 270, and changing a tool's description after seeing which runs fail is tuning on the result.
+- **A model gave a row's name for its number.** One figure's built tables keep row names that are not 1 to n; `tables.rds` has no `row` column while the CSV files do, as the prompt says. 16 failed calls asked for that column and 3 of A's 6 wrong answers are on that figure. An ambiguity of ours in the baseline's material. → closing notes (fixed before any reported run); design `#sec-pilot` under what the pilot cannot show.
+- **One model kept opening a file the material does not hold.** The frozen code's header comment says "see meta.json"; 21 calls of one model tried to read it. A request lost in each of those runs. → closing notes, with the material's other fix: the header line is left out of condition A's copy of the code.
+- **The third model's runs record another commit.** I committed the scorer and two documents while the first lane ran, and the second lane's next process read `HEAD` when it started. Nothing a run loads differs between the two commits (checked with `git diff --stat` on those paths), but the archive could not have shown that by itself. → what's next: the harness records a digest of the files it loads, as the bench's workers do since `57fc97b`, and nothing is committed while a run is being made.
+
+### What's next
+
+- **For the owner to decide:** the next plan toward the main claim. Recommended in the closing notes: the thinnest path for claims (a few check primitives, a `propose` for claims, a pilot with this harness), before M5 is sized; the alternative is the record core of M2. Whether the research card's main claim is reworded for bindings (a dated note is under it; the card's text is unchanged).
+- **Before any reported run with models:** the two missing arms of the 2 by 2; the material for condition A says a row's number the same way in both kinds of file and drops the header line that names a file it does not hold; a population that includes pairings `propose` refuses; a digest of what the harness loads in each archive.
+- **aisdk 1.5.0:** the reproduction is in `dev_docs/research/aisdk-args/`; reporting it upstream is the owner's call.
+- **Still waiting on the owner:** pull request 1; reading ADR-0007; when to push `feat/agent-path` (not on the remote); how two sessions share the branch.
+- **The M1 plan** is the one active plan: labels by annotator A, then Tasks 3, 4, 6b, 7 and 8.

@@ -1,11 +1,11 @@
 # The thinnest agent path, and a pilot of the decisive comparison
 
-> Status: active.
-> Date opened: 2026-11-12. Owner: Yonghe Xia. Opened by Claude on the owner's word of 2026-11-12 ("我们使用自己部署的模型，magpie 中的westlakeHPC 模型都是免费的。其他你来决定就行"), as recommended in [the retrospective](../dev_logs/2026-11-12-retrospective.md).
+> Status: closed 2026-11-12 (Tasks 1-6 and 5b done; the pilot ran; closing notes at the end).
+> Date opened: 2026-11-12. Owner: Yonghe Xia. Opened by Claude on the owner's word of 2026-11-12 ("我们使用自己部署的模型，magpie 中的westlakeHPC 模型都是免费的。其他你来决定就行"), as recommended in [the retrospective](../../dev_logs/2026-11-12-retrospective.md).
 
 **Goal:** A model that works only through read-only tools over a gloss figure and one `propose` that validates on submit answers binding questions on development figures, and a pilot compares it with the same model given the raw material and a read-only R sandbox, so that we know whether the main claim has an effect to measure and what a run costs.
 
-**Why now:** [The retrospective](../dev_logs/2026-11-12-retrospective.md), first surprise: five plans ordered their own tasks by risk and none tested the clause the paper rests on. Of the nine clauses of the research card three have data, all on capture. `gl_bindings()` exists since [Task 6a of the M1 plan](2026-11-11-m1-roles-and-binding.md), so an agent has something exported to read.
+**Why now:** [The retrospective](../../dev_logs/2026-11-12-retrospective.md), first surprise: five plans ordered their own tasks by risk and none tested the clause the paper rests on. Of the nine clauses of the research card three have data, all on capture. `gl_bindings()` exists since [Task 6a of the M1 plan](../2026-11-11-m1-roles-and-binding.md), so an agent has something exported to read.
 
 **Research-card clause:** "底座加同一模型，比同样原始材料加同一模型更准，覆盖率不降" (design @tbl-claims, the concept claim; the main claim of design §研究卡片, point 2). It has no data and no code today. This plan gives it a pilot on development figures, on the binding layer only. A pilot is not a reported number: it runs on the development set, with free models that are not the latest, and it exists to size the experiment of M5 and to find out early if there is nothing to measure.
 
@@ -20,7 +20,7 @@
 2. *A pairing proposed after capture can be checked from the figure alone:* the element's geometry, the table's row and the panel's scales, with no engine state. `propose` must validate on a figure read from a bundle, because model calls are made on the host and third-party figure code runs only in the container. Evidence: none; today's check takes device positions from the engine while its state is at hand. Tested in Task 2 without a model, on the development sets: the share of verified elements whose own row passes the figure-alone check and whose permuted row fails. If it is under 80% of the verified elements of ggplot figures, the placements of rows on the device become a derived table made at capture (ADR-0007) before `propose` is built on them.
 3. *The question has room between the two conditions.* Design §评测设计 expects the gap to be small on plain scatter plots, since condition A can compute the answer in its sandbox. If A is right on 95% or more of the pilot's questions, the pilot says so and the figures or the layer asked about change before M5 is sized.
 4. *Condition A can be given a sandbox that is read-only, offline and held to the same budget.* The bench container runs with no network; a tool call from the host would start R in it. Tested in Task 4. If a call costs more than about 10 s of start-up, the budget in calls is not comparable and the sandbox needs a session that stays up.
-5. *Code alone does not already answer the pilot's questions.* The rival of [the idea note on proposals](../idea/2026-11-12-binding-proposals.md): an enumeration over tables and rows, checked by the same validation, needs no model. The pilot reports it as its own arm. If it answers everything, the binding layer is the wrong place to look for the model's contribution and the pilot moves to a layer code cannot enumerate.
+5. *Code alone does not already answer the pilot's questions.* The rival of [the idea note on proposals](../../idea/2026-11-12-binding-proposals.md): an enumeration over tables and rows, checked by the same validation, needs no model. The pilot reports it as its own arm. If it answers everything, the binding layer is the wrong place to look for the model's contribution and the pilot moves to a layer code cannot enumerate.
 
 **Architecture:** Agent code is new files `R/agent-*.R` and depends on aisdk through `Suggests`; the core and the store keep working without it. Tools are closures over one figure, made by a factory, all read-only except `propose`. `propose` takes schema-validated data only, checks it with code and returns either an accepted proposal or the list of what failed; an accepted proposal is the first record laid over a derived table (ADR-0007, point 1). gloss owns no agent loop: the loop is aisdk's. Harness code for the pilot (question sampling, the two conditions, scoring, archives) lives under `bench/`, not in the package. Nothing in capture or in the binder changes.
 
@@ -62,15 +62,16 @@
 - Key numbers: the figure alone against the engine's positions, runs `2026-11-12-1737-alone-dev` and `-1748-alone-dev-tree` (development sets, container, after the flipped-panel change): of the elements the engine's positions verify, the figure alone verifies 99.9% on v0's ggplot figures (9063 of 9069; 24 of 26 figures agree) and 98.2% on the tree set's (13865 of 14112; 24 of 28); base 83.8% (4 of 9 figures); heatmap 0 of 250 cells; no leaf passes more from the figure alone. Before the change (Task 2's runs): 99.8% and 98.1%, 23 of 26 and 23 of 28.
 - Task 1, run `2026-11-12-1627-drive-tools` (hand-built figure, host): 60 of 60 runs correct, 10 of 10 for each of three models in each variant; 0 failed calls of 313; 0 rejected submissions; median 7.5 s and 8380 tokens a run. The same questions through `gl_tools()`, run `2026-11-12-1927-drive-gl-tools`: 60 of 60, 0 failed calls of 308, median 8.7 s and 10104 tokens. Conditions A and B: no number yet.
 - The pilot's arm without a model (30 questions on 10 development figures, every row of every built table proposed): with `propose` checking place only, the answer accepted on 30 and the arm right on 23 (run `2026-11-12-1906-pilot-enumerate`); with the leaf's layer checked as well, right on 30 of 30 (run `-1913`).
+- The pilot's arms with a model (the same 30 questions, 3 models, 3 repeats, 540 runs, stamp `2026-11-12-2019`): condition A right in 246 of 270 runs, condition B in 269 of 270; by figure B above A on 5 of 10 and A above B on none, B minus A +0.085 (+0.022 to +0.159 when the figures are drawn again); by model A is 89, 83 and 74 of 90. A median run of A takes 28.0 s and 44094 tokens, of B 9.4 s and 14108. No wrong acceptance in 275 proposals.
 
 **Overall progress**
 - [x] Task 1: Do the free models drive tools to a validated submission?
 - [x] Task 2: A pairing checked from the figure alone, measured against the capture-time bindings
 - [x] Task 3: `gl_tools()` and a validating `propose` _(done 2026-11-12: the flipped panel, `gl_propose()`, `gl_tools()`, Task 1's questions through them; no record is stored yet, see the result of step 2)_
 - [x] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(done 2026-11-12; no model has used it yet)_
-- [~] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(material, 30 questions, the dry run and the arm without a model done 2026-11-12; the arms with models wait for the models)_
+- [x] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(done 2026-11-12: 540 runs with a model and the arm without one, archived, scored, predictions scored)_
 - [x] Task 5b: The bundle's round trip on the development sets _(done 2026-11-12: all 83 captured figures written and read back; four defects closed)_
-- [ ] Task 6: Records: design notes, NEWS, dev log, closing notes
+- [x] Task 6: Records: design notes, NEWS, dev log, closing notes _(done 2026-11-12)_
 
 ---
 
@@ -100,7 +101,7 @@
 - `Rscript bench/agent/drive-tools.R` on the host, with the gateway up.
 - Expected: at least two models correct in 8 of 10 runs of variant L. The result that would change the plan: fewer than two (stop, ask the owner for models); variant M under 5 of 10 for every model (the tools of Task 3 are redesigned before the pilot, starting from what the transcripts show).
 
-**Result** (2026-11-12; [dev log](../dev_logs/2026-11-12-agent-path-task1.md))
+**Result** (2026-11-12; [dev log](../../dev_logs/2026-11-12-agent-path-task1.md))
 
 - *Order kept:* predictions 102-107 and the harness committed in `cce1bab`; `Rscript bench/agent/drive-tools.R --dry` (no model) reached the checked row for all five questions in both variants and had a wrong row rejected each time; then `Rscript bench/agent/drive-tools.R` once, 60 runs, archived unscored in `dca7905` (`bench/runs/2026-11-12-1627-drive-tools.json`, `.csv`); then `Rscript bench/agent/score-drive-tools.R bench/runs/2026-11-12-1627-drive-tools.json` (`-score.txt`).
 - *Observed:* correct runs of 10, variant L then M: glm-5.3-flash 10 and 10, deepseek-v4.1-flash 10 and 10, Qwen3.8-27B 10 and 10. No run raised an error; all ended with `stop`. Failed calls 0 of 313. Rejected submissions 0. Median tool calls 4.5 in L (3 to 8) and 6 in M (5 to 6). Seconds a run: median 7.5, 90th percentile 16.3, longest 28.5; by model, medians 4.7 to 5.1 (deepseek), 6.7 to 8.2 (Qwen), 9.7 to 16.0 (glm). Tokens a run: median 8380, most 14035; 504923 in all, 9.2 minutes.
@@ -136,7 +137,7 @@
 - The two runs above and `Rscript bench/R/score-alone.R <run>-leaves.csv`.
 - Expected: on ggplot figures with a cartesian coord the two agree. The result that would change the plan: under 80% of the elements the engine's positions verify on ggplot figures are verified from the figure alone (then row placements become a derived table made at capture, ADR-0007, before `propose` is built); any element verified from the figure alone that the engine's positions fail (a defect in one of the two, examined before anything else).
 
-**Result** (2026-11-12; [dev log](../dev_logs/2026-11-12-agent-path-task2.md))
+**Result** (2026-11-12; [dev log](../../dev_logs/2026-11-12-agent-path-task2.md))
 
 - *Order kept:* tests first (`test-alone.R`, failing: the functions did not exist), then the code; predictions 108-116 and the scoring rules in `29d92e4` with the code; runs archived unscored in `3dd0f57`; scored with `Rscript bench/R/score-alone.R` (`bench/runs/2026-11-12-1711-alone-dev-score.txt`, `-1722-alone-dev-tree-score.txt`). Two earlier runs measured nothing (a shadowed option; `0c0217d`) and are not kept.
 - *Suite,* `NOT_CRAN=true Rscript -e "devtools::test()"`: host 11 files / 125 tests / 917 expectations / 0 failed / 0 skipped at `29d92e4` (was 10 / 119 / 885), container the same with 0 errors; host 11 / 126 / 922 at `d23876d`.
@@ -267,7 +268,7 @@
 
 ### Task 5: The pilot
 
-**Status:** `[ ]` (written out 2026-11-12; the rule below is fixed before any model run)
+**Status:** `[x]` (written out 2026-11-12; the rule below is fixed before any model run; done the same day, result at the end of this task)
 
 **Tests assumption:** 3 and 5: with the same model, material and budget, are answers through the substrate's tools and a validating `propose` right more often than answers worked out in a sandbox? And is a model needed at all where code can try every row?
 
@@ -298,6 +299,39 @@
 
 - *Assumption 5 does not hold on this question:* with the layer given by code, trying rows finds every answer. Arm A against arm B is still to be measured; what a model adds here is nothing.
 - Cost of the layer check: 108 lines added under `R/` and `tests/` (`R/propose.R` 32, `R/agent-tools.R` 3, tests 73), one host and one container suite run, two runs of the arm (about half a minute each). Moved: 7 of 30 questions from a wrong acceptance possible to none.
+
+**Result: the arms with a model** (2026-11-12; a pilot on development figures with three free models, not a reported number)
+
+- *Runs:* stamp `2026-11-12-2019`, `Rscript bench/agent/pilot.R run 2026-11-12-2019 <model>` for each model, two at a time, 20:19 to 22:13 UTC: 540 runs (30 questions, 3 models, 2 arms, 3 repeats), temperature 0, through the harness's own loop. No request error, no run made twice, no sandbox call out of time or memory (median 0.44 s, at most 2.05 s). Two models' runs record gloss at `83b398b` and the third's at `42a4c0e`, which differ in the scorer and two documents and in nothing a run loads. Predictions 134-139 first; the archives committed unscored (`fe14fb4`, `bd868f0`); then `Rscript bench/agent/score-pilot.R 2026-11-12-2019 bench/runs/2026-11-12-1913-pilot-enumerate.csv` (`bench/runs/2026-11-12-2019-pilot-score.txt`, `7827849`).
+
+  | Arm | Runs | Right | Wrong | No answer | Median run |
+  |---|---|---|---|---|---|
+  | A: raw material and a sandbox | 270 | 246 (91.1%) | 6 | 18 | 9 calls, 28.0 s, 44094 tokens |
+  | B: `gl_tools()`, bindings hidden | 270 | 269 (99.6%) | 0 | 1 | 7 calls, 9.4 s, 14108 tokens |
+  | S: no model, every row tried | 30 questions | 30 | 0 | 0 | 26265 rows, 29.7 s in all |
+
+- *By figure* (right runs of 27, three questions a figure; A by model of 9, in the order Qwen3.8-27B, deepseek-v4.1-flash, glm-5.3-flash):
+
+  | Figure | What is asked about | A | A by model | B | B minus A |
+  |---|---|---|---|---|---|
+  | bioc-016 | 10 bars in a flipped panel | 27 | 9, 9, 9 | 27 | 0.00 |
+  | exts-027 | 5625 tiles | 18 | 8, 6, 4 | 27 | +0.33 |
+  | exts-030 | 3 rectangles, a second layer over them | 27 | 9, 9, 9 | 27 | 0.00 |
+  | gallery-002 | 600 jittered points | 26 | 9, 8, 9 | 26 | 0.00 |
+  | gallery-005 | 100 points | 24 | 9, 8, 7 | 27 | +0.11 |
+  | gallery-029 | two histograms of 30 bars over 2000 other elements; a 1.9 MB SVG | 21 | 9, 8, 4 | 27 | +0.22 |
+  | patchwork-006 | 32 points in one plot of a composition | 26 | 9, 9, 8 | 27 | +0.04 |
+  | tree-062 | 10 tip points and 9 node points of a tree | 23 | 9, 8, 6 | 27 | +0.15 |
+  | tree-068 | 30 points of a tree | 27 | 9, 9, 9 | 27 | 0.00 |
+  | tree-077 | 15 points of a tree | 27 | 9, 9, 9 | 27 | 0.00 |
+
+  B above A on 5 figures, A above B on none, equal on 5. Mean over figures A 0.911, B 0.996; B minus A +0.085, sd 0.117, and +0.022 to +0.159 when the 10 figures are drawn again 10000 times. By model the same difference is +0.011 (0.000 to +0.033) for Qwen, +0.078 (+0.022 to +0.144) for deepseek and +0.167 (+0.033 to +0.311) for glm: A is right in 89, 83 and 74 of 90 runs, B in 90, 90 and 89. By question, B above A on 12 of 30, A above B on 1, both all right on 17.
+- *Arm B:* 275 proposals in 270 runs: 270 accepted, each the answer for the element asked about; 5 rejected (a first proposal each time), 4 of those runs then right; none refused; nothing accepted for another element. The rejections: a row of the other histogram at the same bins (3 runs, by the layer check; place alone rejects it too), an element's tag where its id is asked (1), the right row for the wrong element (1, the one run of B without an accepted answer: it never called `find_elements`). 3 failed calls of 1847. 168 runs asked for the element's binding and were told it is hidden; no tool's answer held a binding. No refusal is the population's doing and not a finding: the questions were drawn from elements code had verified one for one row, which is what `propose` can check (Task 5b: 27 of 250 such pairings sampled across the sets are refused).
+- *Arm A:* 2701 calls, 161 failed, each a mistake in the model's own code; the code reached the sandbox as written (296 calls with a comma before `]`). 269 of 270 runs read the SVG; 33 built the plot again or read its panel parameters; none ran the figure's code whole. Its 24 runs that are not right: 18 used their 16 requests without submitting (11 glm, 6 deepseek, 1 Qwen; 15 on exts-027, gallery-029 and gallery-005), and 6 submitted a wrong row of the answer's table once and stopped (5 glm, 1 deepseek; 3 on tree-062, whose tables' row names are not 1 to n).
+- *The gap depends on the budget.* Runs with the right answer in by their 8th tool call: A 104 of 270, B 236; by the 10th: 165 and 267; by the 16th: 244 and 269. B is done where A is half way, and A is still rising where the budget ends. A larger budget would narrow what is reported above; a smaller one would widen it.
+- *Repeats are needed for A and hardly for B:* the three runs of a model on a question disagree in 17 of A's 90 configurations and in 1 of B's.
+- *Assumption 3:* A is at 91.1%, under the 95% at which the plan would have changed the question, and at 98.9% for the best of the three models. *Assumption 5* (above): code alone answers all 30. Both point the same way; the scope change of 2026-11-12 (the pilot's result) says where.
+- Cost: 1066 lines under `bench/agent/` for this task (`pilot.R` 608, `score-pilot.R` 226, `material.R` 86, `show-run.R` 60, `pilot-sample.R` 47, `material-writer.R` 39), the 108 under `R/` and `tests/` counted above; 560 runs with a model (20 of them rehearsals), 211 minutes of model time in under two hours, 17.8 million tokens (A 13.7, B 4.1; 94% of them prompt tokens), free on the owner's models. Moved: the main claim's first numbers on figures not picked to pass, and the question M5 has to ask.
 
 ---
 
@@ -331,9 +365,11 @@ For every captured development figure, in the container: write the bundle, read 
 
 ### Task 6: Records
 
-**Status:** `[ ]`
+**Status:** `[x]` (done 2026-11-12)
 
 Design notes (§研究卡片, §评测设计, §审稿人预演, §实施计划), `NEWS.md` if anything exported changes, the dev log, closing notes with what M5 should be.
+
+**Result** (2026-11-12): dated notes in the design doc's §研究卡片 (the pilot against the main claim), §评测设计 (the budget as a curve, the population, what the material must say about rows; the loop, noted earlier), §审稿人预演 (five rows now have pilot data and say that it is a pilot), §实施计划 and §与上一版的区别; `NEWS.md` unchanged, nothing exported changed after `gl_propose()` and `gl_tools()` were entered there; the dev log `dev_logs/2026-11-12-agent-path-task3.md`, extended; the closing notes below. Suite at the end: 13 files / 150 tests / 1422 expectations / 0 failed / 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, host).
 
 ---
 
@@ -348,7 +384,44 @@ _(append-only; never edit completed tasks above)_
 
 - 2026-11-12 — **Place alone does not carry a proposal: the arm without a model shows `propose` accepting a row of another layer.** **Evidence:** run `2026-11-12-1906-pilot-enumerate`, predictions 125-128 (4 right, one point guess wrong): the answer is accepted on 30 of 30 questions and no other row of its own table is; on 7 questions (3 of 10 figures: exts-030, tree-062, tree-077) a row of another layer is accepted too, 10 rows in all, 5 of them as `verified`. Two layers draw at one place: a second layer over the same rectangles, a tree's branches ending at the nodes its points sit on. **Effect:** (a) Before any model is asked, `gl_propose()` rejects a row of another table than the one the element's leaf was drawn from, where the figure says which that is. It does: the engine reads each leaf's layer from the plot's own structure at capture (ggplot2's contract, ADR-0009) and the bindings in the figure keep it, also for leaves it could not bind. Where the figure holds no bindings the check rests on place alone, and an acceptance says so. Tests first. (b) This is the rule of design principle 2 applied to the check itself: which layer drew an element follows from the drawing system's contract, so code says it and no model is asked to guess it. (c) The arm without a model is run again after the change, with a prediction first. (d) Assumption 5 gets sharper: with the layer given by code, trying every row finds the one answer on these questions, so on single pairings in panels with linear scales a model has nothing to add to code. The pilot still measures arm A against arm B, because that comparison is about what the substrate saves a model, not about whether a model is needed.
 - 2026-11-12 — **The pilot's loop is the harness's own: aisdk's rewrote the code sent to the sandbox and made stop decisions of its own.** **Evidence:** the rehearsal archive `bench/runs/2026-11-12-1942-pilot-rehearsal.jsonl` (a hand-built figure, two models, two questions; I stopped it after 8 runs). In arm A, 28 of 83 tool calls failed (9, 9, 9 and 1 by run), 21 of them with "undefined columns selected": code a model wrote as `d[i, ]` reached the sandbox as `d[i]`. The cause, read from aisdk 1.5.0 and shown without a model on valid JSON (the dry run prints it): `parse_tool_arguments()` puts every tool call's arguments through `repair_json_string()` before it tries them as they are, and that repair's regular expressions (a comma before `]` or `}` is removed, among others) act inside string values. The same runs ended in ways the plan's budget did not describe: `max_steps = 16` is a window in aisdk's runtime, not a limit (runs of 17, 20 and 38 steps, one of 546191 tokens); the runtime asks the model for decisions of its own at a window's end and after a tool's error; and it ends a run as `blocked` when a tool call repeats (2 of the 4 arm-A runs, one of which had the right answer in its text and never submitted it). Arm B's 4 runs were right in 5 or 6 calls each. **Effect:** (a) The four arm-A rehearsal runs say nothing about condition A; they are kept as this evidence only. (b) Both arms of the pilot run in one plain loop in the harness (`tool_loop()` in `bench/agent/pilot.R`): requests until the model answers without a tool call or 16 requests have been made, arguments parsed as the model wrote them, no other request to the model. The dry run checks it with a scripted model. aisdk still makes the tool objects, and arm B is given `gl_tools()`. (c) Task 1 and step 4 ran through aisdk's loop and stand: all 615 string arguments in their two archives are plain identifiers (element, table and panel names), which the repair cannot touch, and all 120 runs ended with `stop`. (d) In the package nothing changes: gloss owns no loop, and `gl_tools()` has no tool that takes free text. A tool that did would be exposed, which is a risk for the design's later tools (a claim's text, a note). The defect is aisdk's; it is reported to the owner, whose lab maintains aisdk, with the reproduction, and is not worked around under `R/`. (e) Predictions 134-139 were written before the rehearsal and stand as written; a note beside them says what was seen since. (f) The plan's budget is now what the loop enforces: 16 requests a run, 180 s a request, 120 s a sandbox call, 4000 characters a tool hands back.
+- 2026-11-12 — **The pilot: on single pairings the tools change what a run costs and how it ends, and hardly whether a capable model finds the row. The comparison of A and B has to be asked where code cannot try every answer, and reported against the budget.** **Evidence:** Task 5's result (stamp `2026-11-12-2019`, 540 runs; run `-1913` for the arm without a model): A right in 91.1% of its runs and B in 99.6%; B minus A +0.085 over 10 figures (+0.022 to +0.159), and by model +0.011, +0.078 and +0.167; code alone 30 of 30; A's median run 3.0 times B's seconds and 3.1 times its tokens; 18 of A's 24 failures are runs that used up their requests, and by the 10th tool call A has 165 of 270 answers in against B's 267. **Effect:** (a) The rule written beside predictions 134-139 applies: A is within 10 points of B. On this question the difference between the conditions is a matter of the model and the budget: one run in 90 for the best of three free models, which are not the latest. A reported run with a current model should be expected at the ceiling in both arms; the main claim cannot rest on it. (b) For bindings the drawing system's contract gives, the result that stands is the one without a model: code checks a pairing from the figure alone and finds it by trying rows. In M5 that layer is reported as condition C and the enumeration, with A against B beside it as cost: tokens and seconds for a right answer, runs that end without one, and answers that are wrong and given as right (A 6 of 270, B none). (c) The comparison of A and B in accuracy moves to what code cannot enumerate: whether a statement on the figure holds, relations between elements, the roles that rules leave over. None of these has code to check a proposal today (check primitives are M3's), so the next plan toward the main claim is the thinnest path for one of them with its own pilot, and M5 is not sized before that pilot. (d) "The same budget" is reported as a curve, the share right against calls and tokens used, since a single limit decides the size of the gap; where A runs out, a second limit is run to show it. (e) The questions here were drawn from elements code had verified, so B refused nothing; a population for M5 includes what `propose` refuses, and B's coverage is measured on it. (f) The design's 2 by 2 is still unbuilt. Read from this archive without a run: B's first proposal was the answer in 265 of 270 runs and the check brought 4 of the other 5 to it; had A's submissions been checked, its 6 wrong answers would have been rejected, and what the model would have done next is not known. On this question most of the difference is in the tools and little in the check.
 
 ## Closing notes
 
-Filled in when the plan moves to `done/`.
+Closed 2026-11-12, all six tasks and Task 5b done. Closing dev log: [`dev_logs/2026-11-12-agent-path-task3.md`](../../dev_logs/2026-11-12-agent-path-task3.md).
+
+**End against start.**
+
+| | Start (`f078dd9`) | End |
+|---|---|---|
+| Suite, host | 10 files / 119 tests / 885 expectations / 0 failed / 0 skipped | 13 / 150 / 1422 / 0 / 0 (container 13 / 150 / 1416, 1 skipped: aisdk is not in its image) |
+| Agent code under `R/` | none | `R/propose.R`, `R/agent-tools.R`, `R/core-alone.R`; `gl_propose()`, `gl_tools()`, `gl_tool_state()` exported |
+| Runs with a model | 0 | 680, all archived under `bench/runs/` |
+| Numbers on conditions A and B | none | a pilot: A 91.1%, B 99.6% of 270 runs each, on 10 development figures; code alone 30 of 30 questions |
+| Captured development figures that can be written to a bundle and read back | never measured | 83 of 83; 78 identical in every part, 5 naming what they lack |
+
+**The assumptions, as measured.**
+
+| Assumption | Result |
+|---|---|
+| 1. The free models drive a tool loop to a validated submission | Yes: 60 of 60 runs on a hand-built figure, with the harness's tools and again with `gl_tools()`; 540 pilot runs without a request error |
+| 2. A pairing can be checked from the figure alone | Yes for ggplot and patchwork panels with linear scales: 99.9% and 98.2% of the elements the engine's positions verify, on the two development sets. Elsewhere `propose` refuses (polar and `sf` panels, base, heatmaps) |
+| 3. The question has room between the conditions | Little: A 91.1%, B 99.6%, and 98.9% against 100% for the best model. The room is in cost and in how runs end |
+| 4. Condition A can have an offline, read-only sandbox at the same budget | Yes: a new container a call, 0.44 s at the median over 2361 calls, none out of time or memory |
+| 5. Code alone does not already answer the questions | It does: 30 of 30 once `propose` checks the leaf's layer |
+
+**What exists now that did not:** `gl_propose()` and `gl_tools()` (exported, tested with a scripted model); a bundle that every captured development figure can be written to and read back from, saying what it left out; a binder that no longer passes a leaf on no result; under `bench/agent/`, a harness with its own loop, a sandbox, the material for condition A, a scorer and a transcript viewer; 540 archived runs. Cost of the plan: 799 lines added under `R/`, 716 under `tests/`, 2269 under `bench/` (`bench/agent/` 1831, `bench/R/` 438); 680 runs with a model (Task 1 60, step 4 60, rehearsals 20, the pilot 540).
+
+**What moved in the design.** `propose` checks the leaf's layer as well as the row's place (place alone accepted a row of another layer on 7 of 30 questions). The bundle is lossless for what its codec stores and names what it leaves out. The loop two conditions share is a factor the evaluation controls, and results are reported against the budget used. The research card's claim for bindings is noted as narrowed: what the drawing system's contract gives is code's to state and check, and the comparison of A and B in accuracy belongs to layers code cannot enumerate. The notes this plan appended to the design by date are folded into their sections; the design's §与上一版的区别 lists them.
+
+**What M5 should be, given the pilot.** This is a recommendation; the next plan is the owner's to choose.
+
+- *Which layer.* Not single pairings of the binding layer for the comparison of A and B in accuracy: code answers them, and a capable model with the raw material nearly does. There M5 reports condition C and the enumeration, on the held-out sets, with A against B as cost. The comparison in accuracy goes first to claims (does a statement on the figure hold in its built data), which the design already names as the layer where the check should matter most; then to relations and to the roles left over by rules, as each gets code and labels. A claims pilot needs a handful of check primitives and a `propose` for claims, and reuses this harness whole.
+- *How many figures.* Between figures the difference B minus A has an sd of 0.117 here (0.035 to 0.241 by model). By the usual normal approximation for a paired difference at 80% power and a two-sided 5% level, n is about 7.85 (sd / difference) squared: 15 figures for a difference of 0.085, about 80 for the 0.011 of the best model. These are guides from ten figures, half of which show no difference at all. For a new layer nothing is known: ten figures first, as here.
+- *How many repeats.* The design's five. With three, the runs of a model on a question disagreed in 17 of A's 90 configurations.
+- *Which models.* The reported run uses the current closed model and one with open weights, as designed. For pilots the three free models are enough and are kept together: the difference came mostly from one of them, and a result that only the weakest model shows has to be reported as that.
+- *The budget.* 16 requests a run, 180 s a request, 120 s a sandbox call, 4000 characters a tool hands back, enforced by the harness's loop. A reached the limit in 23 of 270 runs, B in 1. M5 reports the share right against calls and tokens, and runs A again at twice the requests on the figures where it ran out.
+- *What one run costs* (medians here): A 28.0 s, 44094 tokens, 9 calls; B 9.4 s, 14108 tokens, 7 calls; the arm without a model about a second a question. The pilot's 540 runs took 211 minutes of model time, under two hours with two models at a time, and 17.8 million tokens, 94% of them prompt tokens. By arithmetic from these medians, not a measurement: 100 figures, 3 questions, 5 repeats and 2 models are 3000 runs an arm; the four arms of the 2 by 2 would take about 350 million tokens and about 62 hours of model time run one after another, if the two arms on raw material cost what A cost and the two on the tools what B cost.
+- *Before any reported run.* (1) The two missing arms of the 2 by 2: a `submit` that is checked, and a `propose` that is not; small changes to `bench/agent/pilot.R`. (2) The material for A says what a row's number is in `tables.rds` as it does in the CSV files (a column `row`): 16 failed calls asked for that column, and 3 of A's 6 wrong answers are on the one figure whose tables keep other row names. A baseline should not lose on an ambiguity of ours. (3) A population that is not drawn from what code verified. (4) The loop stays the harness's own, and the report names it.
+
+**Left open, for the owner.** Whether the next plan toward the main claim is the claims path, as recommended, or the record core of M2. The research card's main claim as worded (more accurate on roles, bindings and claims) does not hold for bindings on this evidence and is noted there; rewording the card is the owner's. aisdk 1.5.0's two defects (`dev_docs/research/aisdk-args/`): whether and how to report them. Not done here: the 2 by 2; any held-out figure; a model newer than the three free ones; leaves the engine cannot bind (the idea note on proposals, `idea/2026-11-12-binding-proposals.md`, stands as written, and its rival, enumeration, is now the result on the leaves that could be bound).
