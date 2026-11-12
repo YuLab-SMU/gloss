@@ -2,7 +2,7 @@
 
 gloss reads an R figure that has already been drawn and traces every shape back to the grob, panel and data row behind it. People and AI agents can then attach notes to those shapes, and any note that makes a claim is checked against the data. The figure itself is never redrawn.
 
-> **Status, 2026-11-12: capture is implemented and measured; row binding is implemented inside the package and measured, but not exported yet; everything else is design.** `gloss()` captures the page a figure draws and checks its capture against that page. Each drawn element of a layer is paired with a data row, and the pairing is checked by putting the row back through the panel's scales. Roles, records, claim checks, interactive projections and agents are not built. Numbers come from a benchmark of sampled figures with runnable code ([`bench/`](https://github.com/YuLab-SMU/gloss/tree/main/bench)); numbers marked as spikes come from scripts in [`dev_docs/research/`](https://github.com/YuLab-SMU/gloss/tree/main/dev_docs/research).
+> **Status, 2026-11-12: capture and row binding are implemented and measured; everything else is design.** `gloss()` captures the page a figure draws and checks its capture against that page. Each drawn element of a layer is paired with a data row, the pairing is checked by putting the row back through the panel's scales, and `gl_bindings()` reads the result. Roles, records, claim checks, interactive projections and agents are not built. Numbers come from a benchmark of sampled figures with runnable code ([`bench/`](https://github.com/YuLab-SMU/gloss/tree/main/bench)); numbers marked as spikes come from scripts in [`dev_docs/research/`](https://github.com/YuLab-SMU/gloss/tree/main/dev_docs/research).
 
 ![Schematic. Left: an unchanged scatter plot. Middle: the substrate, a read-only table linking each drawn element to its leaf grob, panel and data row. Right: three layers of records anchored to those elements by dotted lines. Bottom: four projections: an interactive HTML page, an ARIA tree, a text description and a Web Annotation export.](man/figures/README-overview.png)
 
@@ -33,13 +33,14 @@ fig <- gloss(p)                      # also patchwork, Heatmap, recordedplot, an
 gl_elements(fig, list(tag = "circle"))  # every drawn element: leaf, box, style, panel
 gl_hit(fig, 2.62, 21, space = "data", panel = "panel2")  # what is drawn at this data point
 gl_tables(fig)                       # raw and built tables; mtcars is keyed by its row names
+gl_bindings(fig)                     # which row of which table each element draws, checked against the page
 gl_context(fig)                      # code, data, engine, environment, document, git
 
 gl_write(fig, "fig.html")            # the figure, with the whole bundle embedded
 fig <- gl_read("fig.html")           # restored exactly
 ```
 
-Not exported yet: bindings (they are computed and checked inside the package, and the benchmark reads them). Still planned: roles, `gl_annotate()` (staged agents propose records, each one verified), the interactive and accessible projection, and `gl_rebase()` for updated figures.
+A binding names a row of the layer's built data; the link from there to the rows of your own data frame is not built yet. Still planned: roles, `gl_annotate()` (staged agents propose records, each one verified), the interactive and accessible projection, and `gl_rebase()` for updated figures.
 
 ## Six capabilities
 
@@ -48,7 +49,7 @@ Not exported yet: bindings (they are computed and checked inside the package, an
 | Identify | Traces each drawn element to its leaf grob, viewport and panel | Implemented; 50 of 54 held-out figures equal to the page drawn, none captured as another figure |
 | Classify | Labels each element as a data mark, guide, reference line, decoration or annotation, using rules first and an agent for the rest | 481 of 486 elements by naming rules alone |
 | Organize | Builds the structure tree, the data tree and semantic groups, and maps each onto the others | Structure tree rebuilt for ggplot |
-| Attach semantics | Binds elements to data rows; records meaning, relations, checkable claims and narrative as anchored, layered records | Binding implemented internally: 92.6% of layer elements checked on 24 held-out ggplot tree figures, none failed. One claim check run by script; records are design |
+| Attach semantics | Binds elements to data rows; records meaning, relations, checkable claims and narrative as anchored, layered records | Binding implemented (`gl_bindings()`): 92.6% of layer elements checked on 24 held-out ggplot tree figures, none failed. One claim check run by script; records are design |
 | Operate | Provides one set of operations (select, style, show/hide, tooltip, overlay, ...) shared by R, the browser and agents | Design |
 | Update | Re-captures after the code or data changes, re-anchors records, and sends only the broken ones for repair | Design |
 

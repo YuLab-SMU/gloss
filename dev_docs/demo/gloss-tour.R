@@ -2,7 +2,7 @@
 # Run from the package root, with devtools, ggplot2 and svglite installed:
 #   Rscript dev_docs/demo/gloss-tour.R
 # or source() it in a live R session. dev_docs/ is not part of the build.
-# Step 9 uses the M1 binding step, which is internal until ADR-0007.
+# Steps 3 and 9 read the bindings made at capture (gl_bindings(), ADR-0007).
 
 gloss_tour <- function(write_bundles = TRUE) {
   suppressMessages(devtools::load_all(".", quiet = TRUE))
@@ -27,14 +27,19 @@ gloss_tour <- function(write_bundles = TRUE) {
       "| data marks:", sum(grepl("panel-", panel_of)),
       "| legend keys:", sum(!grepl("panel-", panel_of)), "\n")
 
+  # The dot under (2.62, 21) in the second panel, and the row it draws: the
+  # binding names a row of the layer's built data, checked against the page.
+  # From the built row to the row of mtcars there is no link yet (M1 Task 7),
+  # so the car is found by its values.
   hit <- gl_hit(fig, 2.62, 21, space = "data", panel = "panel2")
   dot <- hit[hit$tag == "circle", ][1, ]
-  d <- gl_to_data(fig, "panel2", (dot$x0 + dot$x1) / 2, (dot$y0 + dot$y1) / 2)
+  bound <- gl_bindings(fig, where = list(element = dot$id))
+  built <- gl_table(fig, bound$table)[bound$row, ]
   raw <- gl_table(fig, "raw")
-  row <- raw[abs(raw$wt - d$x) < 0.01 & abs(raw$mpg - d$y) < 0.01 & raw$am == 1, ]
+  row <- raw[abs(raw$wt - built$x) < 1e-9 & abs(raw$mpg - built$y) < 1e-9, ]
   cat("== 3. which car is that dot? ==\n")
-  cat(dot$id, "->", rownames(row)[1],
-      "| wt", row$wt, "mpg", row$mpg,
+  cat(dot$id, "->", bound$table, "row", bound$row, paste0("(", bound$status, ", ", bound$dev, " pt off)"),
+      "->", rownames(row)[1], "| wt", row$wt, "mpg", row$mpg,
       "| leaf", dot$leaf, "| panel2\n")
 
   cat("== 4. geometry queries ==\n")
@@ -69,12 +74,16 @@ gloss_tour <- function(write_bundles = TRUE) {
   cat("== 8. plugins and contract ==\n")
   print(gl_test_plugin("engine", "ggplot"))
 
-  cat("== 9. M1 binding (internal, not exported yet) ==\n")
-  b <- gloss:::bind_capture(p, width = 8, height = 5)
-  print(table(b$elements$status))
-  print(b$elements[b$elements$element == dot$id, ], row.names = FALSE)
+  cat("== 9. bindings: every pairing checked against the page ==\n")
+  b <- gl_bindings(fig)
+  print(table(b$status))
+  lv <- gl_bindings(fig, by = "leaf")
+  print(lv[!lv$status %in% "outside", c("leaf", "table", "mode", "status", "n_elements", "max_dev")], row.names = FALSE)
+  if (write_bundles) {
+    cat("the same from the bundle:", identical(gl_bindings(back), b), "\n")
+  }
 
-  invisible(list(fig = fig, binding = b))
+  invisible(list(fig = fig, bindings = b))
 }
 
 gloss_tour()
