@@ -640,3 +640,43 @@ Runs `runs/2026-11-12-0924-capture-dev-tree.*`, `-0927-bind-dev-tree.*` (stratum
 - 6 right of 6.
 - tree-014's points are two-thirds ambiguous: 8367 of 12690 elements lie within 0.5 pt of another row's point. Not read further; the likely cause is that the dot plot draws each pair of sequences at their distance on one tip's line, where equal distances coincide, as overlapping points did on v0's volcano plot.
 - tree-061's split moved (147 elements from verified to ambiguous) because the box rule reaches along the baseline as far as the glyph's box, wider than the vertex mean's 0.5 pt square; how they would split was left unpredicted for that reason.
+
+## What remains (tree binding plan Task 6)
+
+Written 2026-11-12, after the binder and the engines were changed (`c8081de` base points by symbol; `2325e3f` rows as the geom draws them: NA rows dropped as `Geom$handle_na()` drops them, draw-time nudges; `62f9536` images; `6d66aca` leaves made when drawn, copies at one offset; `ec8856d`, `c0c097d`, `897bedc`, `752bb73` fixes found while writing these), and before any of it ran on a bench figure. Baselines, all at `117665c`: stratum capture `0924` and binding `0927`; v0 capture `0930` and binding `0936`.
+
+Read before writing these:
+- the four baselines' figure and leaf tables;
+- the code of tree-003, -041, -054 and -072, and of v0's gallery-015, -054, -059, exts-013, -014 and -017;
+- in the container's libraries, the geoms these draw with: `handle_na`, required and non-missing aesthetics, `draw_panel()`'s parameters (in both libraries, every geom whose `draw_panel()` takes `nudge_x`, `nudge_y`, `hjust` or `vjust` as a parameter), ggimage's `imageGrob()` and `build_adjust()`, tidyterra's RGB raster, and geomtextpath's grobs;
+- treeio's RAxML example (tree-054's data: 126 rows, 61 bootstrap values, 130 characters);
+- a hand-built ggimage figure ([`research/image-justification`](../dev_docs/research/image-justification/README.md)), which overturned `897bedc` before these predictions were written.
+
+Not read: any bench figure's built data, and any output of gloss on a bench figure with these changes.
+
+### How the runs are made and scored (fixed before the runs)
+
+- `capture.R dev tree`, `bind.R dev tree`, `capture.R dev`, `bind.R dev`, in the container with no network, at the commit that holds these predictions, with no tracked file modified.
+- Captures compared with their baselines cell by cell over every column but `seconds` (`bench/R/compare-capture.R`, archived in this commit; the scratch copy used for Task 5 gives the same 4 cells on `2221` → `0924`); bindings with `compare-bind.R`; leaf modes read from the leaf tables.
+
+### Predictions
+
+87. **Stratum capture against `0924`: no cell of the 29 figures differs.** Task 6 changes capture only for base points, and the stratum has no base figure.
+88. **v0 capture against `0930`: no cell of the 55 figures differs.** The ten base figures draw pch 1 and 20, one part each, and none of them has a count mismatch in `0930`, so the count by parts gives the counts already matched.
+89. **Stratum binding against `0927`: no element fails (67 → 0).**
+    - tree-041's dotted lines (L005, `GeomSegmentGGtree`): 6 failed → verified.
+    - tree-041's tip images (layer 4): 6 unbound → verified, checked inside their box along x (`hjust = 0`). Its one image drawn at (0.8, 5.5) for each of the tree's 11 rows (layer 6): 11 unbound → ambiguous, since each lies at every row.
+    - tree-003's L006: 5 unbound → verified, its rows 11 → 5 (the tips' NA labels dropped).
+    - tree-054: the 41 boxes go failed → unbound with the made-when-drawn reason. The 28 connectors stay unbound, the made-when-drawn reason in place of "no comparison for <line>". The 41 texts stay count mismatches, their reason "… for 61 labels with 130 characters other than spaces …" in place of "… for 126 labels …".
+    - tree-072's 10 failed copy leaves: unbound as copies. Each names a sibling in its layer that passes, and an offset of at most 1.7 pt (twice the largest deviation, 0.81 pt).
+    - Totals: verified 5368 → 5385, ambiguous 17723 → 17734, failed 67 → 0, unbound 87 → 126, count mismatch 1792 unchanged; checked 92.2% → 92.3% (23119 of 25037).
+90. **No other stratum leaf changes status, counts or reason.**
+    - Changed: 139 of 595 leaves (tree-054 110, tree-041 18, tree-072 10, tree-003 1); unchanged: 456.
+    - Per figure, of the 28 ggplot figures: every layer element checked in 23 (was 22; tree-003 joins), at least 80% in 25 (unchanged), none at 0; tree-041 23% → 42%.
+91. **v0 binding against `0936`:**
+    - gallery-015's raster and exts-017's RGB raster (tidyterra, `coord_sf()`): unbound → verified, 1 + 1.
+    - gallery-059's repelled box and text: failed → unbound with the made-when-drawn reason. Its connector stays unbound, with that reason in place of "no comparison for <line>".
+    - gallery-054's 17 `labelpath` leaves and exts-013's `textcurve` text (73 elements): unbound, the made-when-drawn reason in place of "N elements for M rows". exts-013's polyline stays a count mismatch with its own reason (`ec8856d`).
+    - exts-014's two `geom_rocci()` label leaves stay failed (6 elements): no sibling that passes draws the same texts.
+    - Nothing else changes: 23 leaves changed, 7091 unchanged; no regression. Failed 8 → 6; unbound 1667 → 1665; verified 9847 → 9849; ambiguous and count mismatch unchanged.
+92. **v0's 27 base points leaves paired one per row in `0936` (bioc-004 5, gallery-008 20, gallery-021 1, gallery-040 1) are paired in mode `symbol`, with the same status and counts.** No other leaf of either set changes its mode.
