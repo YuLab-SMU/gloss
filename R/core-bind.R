@@ -53,16 +53,19 @@
 # unbound with that reason; so are polygons and paths whose rows have
 # bounds (rectangles munched along it).
 #
-# Nothing here is stored in the figure: where roles and bindings live is
-# plan Task 6 (ADR-0007).
+# bind_figure() returns the bindings by leaf, by element and, for an element
+# that draws a whole group, the group's rows. capture_figure() stores them in
+# the figure as a derived table (ADR-0007; derive_bindings() below), and
+# gl_bindings() reads them.
 
 bind_tolerance <- 0.5  # SVG user units, 1/72 in (design §绑定假设: 0.5 px)
 
-# Capture `x` and bind it; internal until ADR-0007. Returns the figure and
-# the bindings by element and by leaf.
+# Capture `x` and bind it, for the bench and the tests of the check: the
+# figure and the bindings as bind_figure() gives them, deviations unrounded.
 bind_capture <- function(x, width = 7, height = 5, dense = 10000, engine = NULL) {
   engines <- engine_candidates(x, engine)
-  res <- capture_figure(x, engines, width = width, height = height, dense = dense, context = FALSE)
+  res <- capture_figure(x, engines, width = width, height = height, dense = dense, context = FALSE,
+                        bind = FALSE)
   c(list(fig = res$fig), bind_figure(res$fig, res$engine, res$state))
 }
 
@@ -88,10 +91,12 @@ bind_figure <- function(fig, eng, state, tol = bind_tolerance) {
   }
   per_leaf <- list()
   per_el <- list()
+  per_rows <- list()
   for (cl in stated$claims) {
     r <- check_claim(cl, leaves[leaves$id == cl$leaf, , drop = FALSE], geo, tol)
     per_leaf[[cl$leaf]] <- r$leaf
     per_el[[cl$leaf]] <- r$elements
+    per_rows[[cl$leaf]] <- r$rows
   }
   for (id in setdiff(stated$outside %||% character(), names(per_leaf))) {
     per_leaf[[id]] <- leaf_row(id, status = "outside",
@@ -116,7 +121,9 @@ bind_figure <- function(fig, eng, state, tol = bind_tolerance) {
   rownames(lv) <- NULL
   el <- if (length(per_el)) do.call(rbind, unname(per_el)) else element_rows(character(), character())
   rownames(el) <- NULL
-  mark_copies(list(leaves = lv, elements = el), leaves, geo, sub$elements)
+  rw <- if (length(per_rows)) do.call(rbind, unname(per_rows)) else group_rows(character(), list())
+  rownames(rw) <- NULL
+  mark_copies(list(leaves = lv, elements = el, rows = rw), leaves, geo, sub$elements)
 }
 
 # A failed leaf whose elements are those of a passing sibling (same parent,
@@ -185,6 +192,125 @@ element_rows <- function(ids, leaf, table = NA_character_, row = NA_integer_, n_
              stringsAsFactors = FALSE)
 }
 
+# ---- in the figure ----------------------------------------------------------
+
+# The bindings as the figure keeps them (ADR-0007): a derived table made at
+# capture from the engine's pairings, named for the engine that stated them.
+# Deviations are kept to 1/1000 pt, far below the tolerance and what the
+# device writes (svglite: 1/100 pt), so that a bundle stores them exactly as
+# integers.
+derive_bindings <- function(fig, eng, state, tol = bind_tolerance) {
+  b <- bind_figure(fig, eng, state, tol)
+  thousandths <- function(v) round(v * 1000) / 1000
+  b$elements$dev <- thousandths(b$elements$dev)
+  b$leaves$max_dev <- thousandths(b$leaves$max_dev)
+  new_derived("bindings", by = eng, params = list(tolerance = tol),
+              tables = b[c("elements", "leaves", "rows")])
+}
+
+# The figure's bindings, or the reason it has none.
+bindings_of <- function(fig) {
+  d <- fig$derived$bindings
+  if (!is.null(d)) return(d)
+  w <- fig$status$withheld
+  why <- if (is.data.frame(w)) w$reason[w$what %in% "bindings"] else character()
+  if (length(why)) {
+    cli::cli_abort(c("This figure has no bindings.", x = "{why}"))
+  }
+  cli::cli_abort(c(
+    "This figure holds no bindings.",
+    i = "Bindings are made when a figure is captured. A bundle written without them, or a plain SVG, cannot give them."
+  ))
+}
+
+# One row per element and row it draws: the elements paired one per row as
+# they are, those paired one per group with every row of their group.
+binding_rows <- function(tables) {
+  el <- tables$elements
+  cols <- c("element", "leaf", "table", "row", "status")
+  one <- el[!is.na(el$row) & !el$element %in% tables$rows$element, cols, drop = FALSE]
+  i <- match(tables$rows$element, el$element)
+  many <- data.frame(element = tables$rows$element, leaf = el$leaf[i], table = el$table[i],
+                     row = tables$rows$row, status = el$status[i], stringsAsFactors = FALSE)
+  out <- rbind(one, many)
+  out[order(match(out$element, el$element)), , drop = FALSE]
+}
+
+#' Bindings: which rows of which table the drawn elements show
+#'
+#' When a figure is captured, its engine states which rows of its tables each
+#' leaf draws, and gloss checks every pairing against the page: where the
+#' row says the element is drawn must be where the device drew it, within
+#' `0.5` pt. Nothing is taken from a geom's name; an element counts as bound
+#' only when that check passes.
+#'
+#' @section Status:
+#' An element is
+#' * `verified`: its row passes the check and no other row of the layer in
+#'   its panel does;
+#' * `ambiguous`: its row passes, and so does another (rows drawn at one
+#'   place: the pairing cannot be told from the page alone);
+#' * `failed`: its row does not pass. The pairing is refuted, not a binding;
+#' * `unbound` or `count_mismatch`: no pairing could be checked. The leaf's
+#'   `reason` says why.
+#'
+#' A leaf is `verified` when all its elements are, `ambiguous` when all pass
+#' and some tie, `partly_failed` or `failed` when some or all fail, `unbound`
+#' or `count_mismatch` with a reason, `outside` when it is drawn outside the
+#' layers (an axis, a legend, a title), and `not_paired` when the engine
+#' states nothing about it.
+#'
+#' @param fig A `gloss_figure`.
+#' @param by What a row of the result is:
+#'   * `"element"`: an element of a leaf the engine paired. `table` and `row`
+#'     name the row it draws; an element that draws a whole group (a line, an
+#'     area) has the group's first row and, in `n_rows`, how many rows the
+#'     group has. `dev` is the distance in pt between where the row says and
+#'     where the element is, to 1/1000 pt.
+#'   * `"leaf"`: a leaf, with its `table`, `mode` (`"row"`: one element per
+#'     row; `"group"`: one per group; `"symbol"`: the parts of each row's
+#'     plotting symbol), `status`, counts and `reason`.
+#'   * `"row"`: an element and one row it draws, a group's rows all listed.
+#' @param where Optional named list of filters on the columns of the result,
+#'   e.g. `list(status = "verified")`, `list(table = "built_layer1", row = 3)`.
+#'   Values are matched with `%in%`.
+#' @return A data frame. The rows are those of the engine's tables as
+#'   [gl_table()] returns them (for a ggplot, the built data of a layer).
+#'   A figure without bindings (captured with `bind = FALSE`, or read from a
+#'   bundle or an SVG that holds none) is an error that says which.
+#' @examples
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   library(ggplot2)
+#'   fig <- gloss(ggplot(mtcars, aes(wt, mpg)) + geom_point())
+#'   head(gl_bindings(fig))
+#'   # the row behind the element under a point
+#'   hit <- gl_hit(fig, 5.424, 10.4, space = "data", panel = gl_panels(fig)$id[1], tolerance = 2)
+#'   b <- gl_bindings(fig, where = list(element = hit$id, status = "verified"))
+#'   gl_table(fig, b$table[1])[b$row, c("x", "y")]
+#'   gl_bindings(fig, by = "leaf")[c("leaf", "table", "mode", "status")]
+#' }
+#' @export
+gl_bindings <- function(fig, by = c("element", "leaf", "row"), where = NULL) {
+  check_figure(fig)
+  by <- match.arg(by)
+  tables <- bindings_of(fig)$tables
+  out <- switch(by, element = tables$elements, leaf = tables$leaves, row = binding_rows(tables))
+  for (nm in names(where)) {
+    if (!nm %in% names(out)) {
+      cli::cli_abort("Unknown binding field {.val {nm}}; {.code by = \"{by}\"} has {.val {names(out)}}.")
+    }
+    out <- out[out[[nm]] %in% where[[nm]], , drop = FALSE]
+  }
+  rownames(out) <- NULL
+  out
+}
+
+# The rows of the groups that elements paired one per group draw: element k
+# with every row of group k. The elements table keeps only the first.
+group_rows <- function(ids, rows) {
+  data.frame(element = rep(ids, lengths(rows)), row = as.integer(unlist(rows)), stringsAsFactors = FALSE)
+}
+
 # ---- one claim --------------------------------------------------------------
 
 check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
@@ -201,6 +327,7 @@ check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
     r$elements$status <- "unbound"
     r$elements$row <- NA_integer_
     r$elements$dev <- NA_real_
+    r$rows <- NULL
   }
   r
 }
@@ -283,7 +410,8 @@ check_claim_rows <- function(cl, leaf, geo, tol = bind_tolerance) {
                                           verified = sum(st == "verified"), ambiguous = sum(st == "ambiguous"),
                                           failed = sum(st == "failed"),
                                           max_dev = if (all(is.na(dev))) NA_real_ else max(dev, na.rm = TRUE)))),
-    elements = element_rows(ids, cl$leaf, cl$table, row = rows, n_rows = nr, status = st, dev = dev)
+    elements = element_rows(ids, cl$leaf, cl$table, row = rows, n_rows = nr, status = st, dev = dev),
+    rows = if (mode == "group") group_rows(ids, lapply(groups, function(k) pred$row[pred$group == k]))
   )
 }
 

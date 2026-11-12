@@ -14,7 +14,8 @@ gloss(x, ...)
   height = NULL,
   dense = 10000,
   context = TRUE,
-  engine = NULL
+  engine = NULL,
+  bind = TRUE
 )
 }
 \arguments{
@@ -34,6 +35,11 @@ git) at capture time.}
 
 \item{engine}{Name of the engine plugin to use instead of dispatching on
 class.}
+
+\item{bind}{Pair the drawn elements with rows of the engine's tables and
+check every pairing against the page (see \code{\link[=gl_bindings]{gl_bindings()}}). The step
+needs what the engine built while drawing, which the figure does not
+keep, so it runs at capture or not at all. \code{FALSE} skips it.}
 }
 \value{
 A \code{gloss_figure}.

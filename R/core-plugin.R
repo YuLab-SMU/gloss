@@ -99,10 +99,10 @@ gl_plugin_kinds <- function() names(plugin_kinds())
 #'   the page drawn: a table it cannot show describes that page is returned as
 #'   `list(name = , withheld = reason)` instead of with `data`, and `panels()`
 #'   can return `list(withheld = reason)`; gloss lists them in
-#'   `fig$status$withheld`. `bind(state, substrate)` (experimental, not yet
-#'   used by exported functions) states which rows of its tables each leaf
-#'   drew, with their positions on the device; gloss checks every pairing
-#'   against the drawn geometry and never takes it on trust.
+#'   `fig$status$withheld`. `bind(state, substrate)` (experimental) states
+#'   which rows of its tables each leaf drew, with their positions on the
+#'   device; gloss checks every pairing against the drawn geometry, never
+#'   takes it on trust, and keeps the result in the figure ([gl_bindings()]).
 #' * `rules`: `engine`, `rules`.
 #' * `layer`: `body` (schema); optional `depends`, `verify`, `scope`.
 #' * `check`: `run(table, args)`; `schema` describes `args`.

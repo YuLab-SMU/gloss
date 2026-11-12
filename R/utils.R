@@ -7,7 +7,7 @@ gloss_api_version <- "0.1.0"
 gloss_version <- function() as.character(utils::packageVersion("gloss"))
 
 # Bundle format written by this version of gloss.
-bundle_format_version <- "0.1.0"
+bundle_format_version <- "0.2.0"
 
 is_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 

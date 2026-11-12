@@ -504,7 +504,9 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
       suppressMessages(pkgload::load_all(repo, quiet = TRUE, export_all = FALSE, helpers = FALSE))
       t1 <- Sys.time()
       warns <- character()
-      g <- tryCatch(withCallingHandlers(gloss::gloss(fig), warning = function(w) {
+      # bind = FALSE: `seconds` is the capture alone, as in every archived
+      # run; the bind step is timed by the bind run below (bind_capture()).
+      g <- tryCatch(withCallingHandlers(gloss::gloss(fig, bind = FALSE), warning = function(w) {
         warns <<- c(warns, conditionMessage(w))
         invokeRestart("muffleWarning")
       }), error = function(e) e)
@@ -568,7 +570,7 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
         # second capture with dense = Inf.
         scene <- s$scene
         if (cap$dense_leaves > 0L) {
-          gv <- tryCatch(suppressWarnings(gloss::gloss(fig, dense = Inf)), error = function(e) NULL)
+          gv <- tryCatch(suppressWarnings(gloss::gloss(fig, dense = Inf, bind = FALSE)), error = function(e) NULL)
           scene <- if (is.null(gv)) NA_character_ else gv$substrate$scene
           cap$vector_recapture <- !is.null(gv)
         }

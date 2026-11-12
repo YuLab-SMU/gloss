@@ -1,5 +1,12 @@
 # gloss 0.0.0.9000
 
+## Bindings in the figure and the API (2026-11-12, M1 Task 6a)
+
+- `gl_bindings()` is new: which rows of which table the drawn elements show, as checked against the page. `by = "element"` gives one row per element with its table, row, status (`verified`, `ambiguous`, `failed`, `unbound`, `count_mismatch`) and deviation in pt; `by = "leaf"` one row per leaf with its mode, counts and, where nothing could be checked, the reason; `by = "row"` every row an element draws, a line's or an area's whole group included. `where` filters any of them. Until now the bind step was internal and only the bench read it.
+- `gloss()` makes the bindings at capture and keeps them in the figure (`fig$derived$bindings`), named for the engine that stated the pairings and its version. The step needs what the engine built while drawing, which the figure does not keep, so it cannot run later. `gloss(bind = FALSE)` skips it. A bind step that fails does not fail the capture: the figure has no bindings and `fig$status$withheld` says why, as `print()` and `gl_bindings()` do.
+- A bundle keeps the bindings (`substrate/derived/bindings/`), and a figure read back has the ones it was written with. Bundle format 0.2.0; bundles of format 0.1.0 are read as before and have none.
+- Cost, on hand-built scatter plots of 10^3, 10^4 and 10^5 points on the host: the bind step takes 0.03, 0.05 and 0.43 s beside 0.22, 0.59 and 5.38 s of capture, and adds 6.5, 14.9 and 94.4 KB to a single-file bundle of 160, 662 and 2717 KB. It grows with the number of leaves: a base figure of 5000 `segments()` calls captures in 1.9 s and binds in 8.6 s.
+
 ## Binding on tree figures (2026-11-11, tree binding plan)
 
 - A page with an embedded image larger than the XML parser's limit for one node (about 10 MB of base64) is captured; gloss stopped with the parser's error ("Huge input lookup"), neither capturing nor refusing it. An SVG read from outside with such a node is refused with the parser's reason; only pages gloss drew itself are parsed without the limit.

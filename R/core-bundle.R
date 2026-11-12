@@ -123,7 +123,7 @@ bundle_files <- function(fig, embed = "default") {
   files[["substrate/elements.json"]] <- as_bytes(json_write(elements_doc, pretty = FALSE))
 
   tab_files <- encode_tables(fig$tables, embed)
-  files <- c(files, tab_files)
+  files <- c(files, tab_files, encode_derived(fig$derived, sub))
 
   ctx <- fig$context
   if (identical(embed, "none") && !is.null(ctx$data$value$tables)) {
@@ -146,6 +146,7 @@ bundle_files <- function(fig, embed = "default") {
     plugins = fig$plugins %||% data.frame(),
     status = fig$status,
     tables = as.list(names(fig$tables)),
+    derived = derived_manifest(fig$derived),
     layers = list(),
     files = lapply(sort(names(files)), function(nm) {
       list(path = nm, bytes = length(files[[nm]]),
@@ -386,13 +387,15 @@ figure_from_files <- function(files) {
   context <- if (!is.null(files[["context.json"]])) json_read(bytes_text(files[["context.json"]])) else list()
   if (is.null(context) || !length(context)) context <- list()
 
+  substrate <- list(scene = scene, leaves = el_doc$leaves, elements = elements,
+                    panels = el_doc$panels, rasters = rasters)
   fig <- new_figure(
     meta = meta,
-    substrate = list(scene = scene, leaves = el_doc$leaves, elements = elements,
-                     panels = el_doc$panels, rasters = rasters),
+    substrate = substrate,
     tables = tables,
     context = context,
-    plugins = plugins
+    plugins = plugins,
+    derived = decode_derived(files, man$derived, substrate)
   )
   fig$status <- status
   fig

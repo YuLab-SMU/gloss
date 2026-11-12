@@ -14,7 +14,8 @@ gl_capture(
   expr = NULL,
   call = NULL,
   env = parent.frame(),
-  size_basis = "argument"
+  size_basis = "argument",
+  bind = TRUE
 )
 }
 \arguments{
@@ -26,7 +27,7 @@ page, the page \code{x} draws chooses among them.}
 
 \item{width, height}{Size in inches.}
 
-\item{dense, context}{See \code{\link[=gloss]{gloss()}}.}
+\item{dense, context, bind}{See \code{\link[=gloss]{gloss()}}.}
 
 \item{expr, call, env}{The expression, call and calling environment, used
 by context sniffers.}

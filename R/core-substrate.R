@@ -70,6 +70,10 @@
 #'   git) at capture time.
 #' @param engine Name of the engine plugin to use instead of dispatching on
 #'   class.
+#' @param bind Pair the drawn elements with rows of the engine's tables and
+#'   check every pairing against the page (see [gl_bindings()]). The step
+#'   needs what the engine built while drawing, which the figure does not
+#'   keep, so it runs at capture or not at all. `FALSE` skips it.
 #' @return A `gloss_figure`.
 #' @examples
 #' if (requireNamespace("ggplot2", quietly = TRUE)) {
@@ -84,7 +88,7 @@ gloss <- function(x, ...) UseMethod("gloss")
 #' @rdname gloss
 #' @export
 gloss.default <- function(x, ..., width = NULL, height = NULL, dense = 10000,
-                          context = TRUE, engine = NULL) {
+                          context = TRUE, engine = NULL, bind = TRUE) {
   expr <- substitute(x)
   call <- sys.call()
   # Record the call as the user wrote it, not as dispatched.
@@ -94,7 +98,7 @@ gloss.default <- function(x, ..., width = NULL, height = NULL, dense = 10000,
   engines <- engine_candidates(x, engine)
   gl_capture(x, engines, width = size$width, height = size$height, dense = dense,
              context = context, expr = expr, call = call, env = env,
-             size_basis = size$basis)
+             size_basis = size$basis, bind = bind)
 }
 
 figure_size <- function(width, height) {
@@ -136,7 +140,7 @@ engine_page <- function(engine) engine$page %||% "grid"
 #'   candidate engine plugins; when the candidates capture different kinds of
 #'   page, the page `x` draws chooses among them.
 #' @param width,height Size in inches.
-#' @param dense,context See [gloss()].
+#' @param dense,context,bind See [gloss()].
 #' @param expr,call,env The expression, call and calling environment, used
 #'   by context sniffers.
 #' @param size_basis Where the size came from.
@@ -145,17 +149,18 @@ engine_page <- function(engine) engine$page %||% "grid"
 #' @export
 gl_capture <- function(x, engine, width = 7, height = 5, dense = 10000,
                        context = TRUE, expr = NULL, call = NULL,
-                       env = parent.frame(), size_basis = "argument") {
+                       env = parent.frame(), size_basis = "argument", bind = TRUE) {
   capture_figure(x, engine, width = width, height = height, dense = dense, context = context,
-                 expr = expr, call = call, env = env, size_basis = size_basis)$fig
+                 expr = expr, call = call, env = env, size_basis = size_basis, bind = bind)$fig
 }
 
 # gl_capture()'s work. Also returns the engine and its state after drawing,
 # which the figure does not keep: binding (core-bind.R) reads the build and
-# the grob tree the engine drew.
+# the grob tree the engine drew, so the bindings are derived here, while the
+# state is at hand (ADR-0007).
 capture_figure <- function(x, engine, width = 7, height = 5, dense = 10000,
                            context = TRUE, expr = NULL, call = NULL,
-                           env = parent.frame(), size_basis = "argument") {
+                           env = parent.frame(), size_basis = "argument", bind = TRUE) {
   engines <- if (inherits(engine, "gloss_plugin")) list(engine) else engine
   cap <- capture_page(x, engines, width, height)
   eng <- cap$engine
@@ -240,16 +245,34 @@ capture_figure <- function(x, engine, width = 7, height = 5, dense = 10000,
     fig$context <- sniffed$items
     fig$plugins <- rbind(fig$plugins, sniffed$plugins)
   }
+  fig$meta$id <- substrate_id(fig$substrate)
+  # Bindings: a step that fails, or is skipped, leaves the figure without
+  # them and says why; it never fails the capture.
+  no_bindings <- if (!isTRUE(bind)) {
+    "not computed: the figure was captured with bind = FALSE"
+  } else {
+    b <- tryCatch(derive_bindings(fig, eng, state), error = function(e) e)
+    if (inherits(b, "error")) {
+      paste("the bind step failed:", conditionMessage(b))
+    } else {
+      fig$derived$bindings <- b
+      NULL
+    }
+  }
+  if (!is.null(no_bindings)) {
+    withheld <- rbind(withheld, data.frame(what = "bindings", reason = no_bindings, stringsAsFactors = FALSE))
+  }
   if (nrow(withheld)) {
     rownames(withheld) <- NULL
     fig$status$withheld <- withheld
   }
-  fig$meta$id <- substrate_id(fig$substrate)
   list(fig = fig, engine = eng, state = state)
 }
 
-new_figure <- function(meta, substrate, tables, context, plugins) {
-  structure(list(meta = meta, substrate = substrate, tables = tables,
+# `derived` holds what code worked out from the substrate and the engine's
+# state (core-derived.R): bindings, when the capture made them.
+new_figure <- function(meta, substrate, tables, context, plugins, derived = list()) {
+  structure(list(meta = meta, substrate = substrate, tables = tables, derived = derived,
                  context = context, plugins = plugins, status = list()),
             class = "gloss_figure")
 }
@@ -1535,6 +1558,16 @@ print.gloss_figure <- function(x, ...) {
       pg$verdict)
     cat(sprintf("  page: %s, drawn by %s; %s\n", pg$kind, pg$drawn_by, how))
     if (isTRUE(pg$pages > 1L)) cat(sprintf("  the input drew %d pages; the last is captured\n", pg$pages))
+  }
+  b <- x$derived$bindings
+  if (!is.null(b)) {
+    st <- factor(b$tables$elements$status, c("verified", "ambiguous", "failed"))
+    lst <- b$tables$leaves$status
+    cat(sprintf("  bindings: %d element%s verified, %d ambiguous, %d failed; %d lea%s unbound\n",
+                sum(st %in% "verified"), if (sum(st %in% "verified") == 1L) "" else "s",
+                sum(st %in% "ambiguous"), sum(st %in% "failed"),
+                sum(lst %in% c("unbound", "count_mismatch")),
+                if (sum(lst %in% c("unbound", "count_mismatch")) == 1L) "f" else "ves"))
   }
   w <- x$status$withheld
   if (is.data.frame(w) && nrow(w)) {
