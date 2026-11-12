@@ -952,3 +952,23 @@ Written 2026-11-12, after the change to `R/propose.R` and its tests and before r
 ### Scored (2026-11-12, run `2026-11-12-1913-pilot-enumerate`, archived unscored in `e99f4b3`; `propose` of `7edf4fc`)
 
 129. **Right.** 30 of 30: the answer accepted on every question and nothing else, 3 of 3 on each of the 10 figures. No proposal is refused: the 6 refusals of the first run, rows of other layers on tree-068, are now rejections that name the leaf's layer.
+
+## The bundle's round trip on the development sets (agent-path plan, Task 5b)
+
+Written 2026-11-12, before `bench/R/bundle.R` exists or has run. What I have seen: one failure, exts-021 (a raw table with a `terms` attribute); the codec's code, which stores atomic vectors and lists of atomic vectors with their attributes and stops on anything else; the suite's round-trip tests, all on hand-built figures. No bench run has written a bundle before.
+
+### How it is run and scored (fixed before the run)
+
+- Every figure of the two development sets, in the offline container. A figure that gloss captures is written twice as a single HTML file, with everything embedded (`embed = "all"`) and with the default embedding, and each file is read back.
+- With everything embedded, the figure read back is compared with the one written by `identical()` on its substrate, tables, derived tables, metadata and status. With the default embedding, raw tables keep only the columns something refers to, so the substrate and the derived tables are compared.
+- On the figure read back from the default bundle, up to 5 elements bound one for one row and verified at capture (seeded) are proposed with their own row through `gl_propose()`.
+- Archived before scoring. Shares are given per set with the figures named.
+
+### Predictions
+
+130. **With everything embedded, between 5 and 15 of the 83 captured figures cannot be written.** Besides attributes like exts-021's, I expect data frames grouped with dplyr (their `groups` attribute holds a list column the codec has no case for) and `sf` geometry columns. Point guess 9.
+131. **Every figure that is written is read back, and at least 95% of those come back identical in every part compared.** A difference, if there is one, is in a table (a column type the codec does not carry over exactly), not in the substrate or the bindings.
+132. **The default embedding writes every figure that the full one writes, and at most 3 more:** it leaves out raw columns nothing refers to, and with them, sometimes, what the codec cannot store.
+133. **On figures read back, `gl_propose()` accepts at least 95% of the pairings tried,** and what it does not accept it refuses with a reason (polar and `sf` panels, base and heatmap figures); it rejects none. A rejection would mean the figure read back does not check as the one captured.
+
+**What would change the plan:** more than 15 figures that cannot be written: then storing a figure is not something to patch case by case, and what a table may hold has to be decided once (keep what the codec stores, leave the rest out with a reason in the figure's status), before M5. A rejection under 133: found before any agent is served a bundle.
