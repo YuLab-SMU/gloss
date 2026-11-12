@@ -1,0 +1,103 @@
+run: 2026-11-12-1422-capture-heldout-tree.csv | 28 figures | held-out (tree stratum) set
+
+Predictions 5-8 were made for v0's development set; for this stratum they are numbers, not tests.
+
+Outcomes by engine
+           outcome
+engine      captured Sum
+  ggplot          24  24
+  patchwork        4   4
+  Sum             28  28
+
+Status detail
+
+captured 
+      28 
+
+Prediction 5 (>= 90% capture without error)
+  captured / figures that rerun: 28/28 = 100% 
+  captured / all held-out (tree stratum) figures: 28/28 = 100% 
+  verdict: right 
+
+Prediction 6 (grid scenes fail more often than returned objects)
+  not captured, recovered by grid.grab(): 0/0 
+  not captured, returned objects: 0/28 = 0% 
+  not captured, base (recordPlot), for reference: 0/0 
+  verdict: not scorable (n = 0 grid, 28 objects) 
+
+Prediction 7 (>= 30% of captured figures have a leaf with a count mismatch)
+   4/28 = 14% | verdict: wrong 
+  by engine:
+     ggplot 2/24 = 8% 
+     patchwork 2/4 = 50% 
+
+Prediction 8 (>= 95% of captured figures: the only unowned element is the device background)
+   28/28 = 100% | verdict: right 
+
+Capture size and time (captured figures)
+    engine  n median_elements median_leaves median_seconds max_seconds
+    ggplot 24            78.0           8.5           0.21        1.34
+ patchwork  4           782.5          36.5           0.79        2.34
+
+Fidelity (captured scene = what the code drew on svglite; not predicted)
+  ggplot    faithful 23/24 = 96% | not compared 0 | median primitives differing among the rest 62
+  patchwork faithful 4/4 = 100% | not compared 0 | median primitives differing among the rest -
+  not faithful:
+       id engine recovered prims_ref prims_scene prims_differ
+ tree-035 ggplot    object      1480        1480           62
+
+Fidelity verdicts (equal / known exception / different)
+           verdict
+engine      equal not_deterministic known_exception different Sum
+  ggplot       23                 1               0         0  24
+  patchwork     4                 0               0         0   4
+  Sum          27                 1               0         0  28
+
+Known exceptions, with the reason
+  none
+
+Different: first primitives present on only one side
+  none
+
+Which leaves mismatch: 4/28 = 14% captured figures
+       id    engine leaves_mismatch
+ tree-006    ggplot               2
+ tree-020 patchwork               5
+ tree-043    ggplot               2
+ tree-049 patchwork              10
+                                                                                                                                                                                         mismatch_leaves
+                                                                                                                             L005:panel.grid.major.y..polyline.110 L006:panel.grid.major.x..polyline.112
+                                                                                                     L009:GRID.text.1462 L015:GRID.text.1185 L016:GRID.text.1186 L021:GRID.text.1507 L022:GRID.text.1520
+                                                                                                                                                                   L006:GRID.text.707 L008:GRID.text.725
+ L010:GRID.text.1059 L013:GRID.text.1072 L018:GRID.text.1086 L026:GRID.text.1113 L032:GRID.text.1137 L036:GRID.text.1143 L041:GRID.text.1155 L044:GRID.text.1168 L049:GRID.text.1182 L053:GRID.text.1196
+Rasterized dense leaves: 0 captured figures
+
+Page route: outcome by page
+      result
+page   equal not_deterministic Sum
+  grid    27                 1  28
+  Sum     27                 1  28
+
+The bench's verdict against gloss's own (captured figures)
+                   gloss
+bench               equal not_deterministic Sum
+  equal                27                 0  27
+  not_deterministic     0                 1   1
+  Sum                  27                 1  28
+  agreement on pages (plan Task 4 reading): 28/28 = 100% | identical verdicts: 28/28 = 100% 
+  different for the bench while gloss says equal (failed invariant), pages : 0 
+
+Not deterministic (two plain drawings differ, the bench's proof)
+       id engine self_differ           verdict     gloss_verdict
+ tree-035 ggplot          60 not_deterministic not_deterministic
+
+Objects: the object drawn alone against the page the code left: 27/28 = 96% equal
+       id engine code_differ           verdict
+ tree-035 ggplot          56 not_deterministic
+
+Withheld tables or panels: 1/28 = 4% captured figures
+       id    engine withheld
+ tree-020 patchwork   panels
+
+Drawn pages per figure (gloss): more than one in 0 of 28 captured figures
+Dense figures compared on a vector recapture: 0 

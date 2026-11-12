@@ -1,0 +1,77 @@
+== residue by run
+                               run elements leaves figures
+ 2026-11-12-1427-bind-heldout-tree     3564     86       8
+
+== by class of reason
+ reason_class                                                                        
+ text drawn as glyph outlines (showtext)                                             
+ rectangles munched along a coord                                                    
+ other: the leaf lies in no panel with scales                                        
+ count mismatch: GeomText                                                            
+ made when the layer's grob is drawn                                                 
+ neither one element per row nor one per group                                       
+ no comparison for a <line> paired this way                                          
+ other: the coord's transform failed (CoordPolar): replacement has N rows, data has N
+ other: the rows paired with <polygon> elements have no x                            
+ lacks    elements leaves figures
+ package  2492      7     2      
+ contract  600      6     2      
+ unread    341      6     1      
+ package    50      1     1      
+ package    31     31     1      
+ unread     20     10     1      
+ contract   10     10     1      
+ unread     10      5     1      
+ unread     10     10     1      
+
+== by what is lacking
+    lacks elements leaves figures
+  package     2573     39       4
+ contract      610     16       3
+   unread      381     31       3
+
+total: 3564 elements in 86 leaves of 8 figures, 9 classes
+
+== classes not given by every baseline: 411 elements in 22 leaves of 4 figures, 4 classes
+ reason_class                                                                        
+ other: the leaf lies in no panel with scales                                        
+ count mismatch: GeomText                                                            
+ other: the coord's transform failed (CoordPolar): replacement has N rows, data has N
+ other: the rows paired with <polygon> elements have no x                            
+ lacks   elements leaves figures ids     
+ unread  341       6     1       tree-020
+ package  50       1     1       tree-043
+ unread   10       5     1       tree-027
+ unread   10      10     1       tree-070
+
+== classes not given by 2026-11-12-1107-bind-dev-tree-leaves.csv: 1041 elements in 48 leaves of 6 figures, 7 classes
+ reason_class                                                                        
+ rectangles munched along a coord                                                    
+ other: the leaf lies in no panel with scales                                        
+ count mismatch: GeomText                                                            
+ neither one element per row nor one per group                                       
+ no comparison for a <line> paired this way                                          
+ other: the coord's transform failed (CoordPolar): replacement has N rows, data has N
+ other: the rows paired with <polygon> elements have no x                            
+ lacks    elements leaves figures ids              
+ contract 600       6     2       tree-009 tree-026
+ unread   341       6     1       tree-020         
+ package   50       1     1       tree-043         
+ unread    20      10     1       tree-070         
+ contract  10      10     1       tree-070         
+ unread    10       5     1       tree-027         
+ unread    10      10     1       tree-070         
+
+== classes not given by 2026-11-12-1116-bind-dev-leaves.csv: 2903 elements in 29 leaves of 5 figures, 5 classes
+ reason_class                                                                        
+ text drawn as glyph outlines (showtext)                                             
+ other: the leaf lies in no panel with scales                                        
+ count mismatch: GeomText                                                            
+ other: the coord's transform failed (CoordPolar): replacement has N rows, data has N
+ other: the rows paired with <polygon> elements have no x                            
+ lacks   elements leaves figures ids              
+ package 2492      7     2       tree-020 tree-049
+ unread   341      6     1       tree-020         
+ package   50      1     1       tree-043         
+ unread    10      5     1       tree-027         
+ unread    10     10     1       tree-070         

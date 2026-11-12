@@ -83,6 +83,7 @@
 - Suite: 9 files, 109 tests, 807 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `752bb73`; the container the same); was 88 / 544 at `b02ea8c`.
 - Key numbers: stratum development half, 29 of 29 captured (run `2026-11-12-1105`); 92.3% of 25037 layer elements checked (verified 14212, ambiguous 8907), failed 0, unbound 126, count mismatch 1792 (text drawn as glyph outlines); every layer element checked in 23 of 28 ggplot figures, at least 80% in 25, none at 0 (run `2026-11-12-1107`). After Task 5: 92.2%, failed 67, unbound 87, 22 of 28 (run `2026-11-12-0927`). Was 28 captured, 40.1% of 24915, failed 212, unbound 308, 15 of 27 (runs `2110`, `2118`). v0 development binding: 0 regressions against run `1353`; gallery-020's 5 labels and exts-014's 12 symbol parts gained (runs `2315`, `2026-11-12-0936`); against run `0936`, 0 regressions, failed 8 to 6, two rasters verified (run `2026-11-12-1116`).
 - Direction (2026-11-12, Scope changes): the owner stopped rule-writing for what remains; the binder is frozen at `752bb73` for Task 7.
+- Held-out half, one run (2026-11-12, runs `1422`, `1427`; predictions 93-101 before): 28 of 28 captured, 27 `equal`, 1 `not_deterministic`; 74.4% of 13923 layer elements checked, failed 0; ggplot figures 92.6% of 9847, every layer element checked in 18 of 24; patchwork 30.5% of 4076 (two book compositions drawn as outlines).
 
 **Overall progress**
 - [x] Task 1: A page over the parser's limit (tree-041)
@@ -91,8 +92,8 @@
 - [x] Task 4: Text drawn as glyph outlines (the book figures)
 - [x] Task 5: Points in several shapes (tree-014)
 - [x] Task 6: What remains: repelled labels (tree-054), tree-003's text leaf; with tree-041's nudged lines and images, tree-072's copies, and base points by symbol
-- [ ] Task 7: The stratum's held-out half, one run _(stub; decision 1: (a), once at the end of this plan)_
-- [ ] Task 8: Records: design notes, NEWS, dev log, closing notes
+- [x] Task 7: The stratum's held-out half, one run _(decision 1: (a))_
+- [~] Task 8: Records: design notes, NEWS, dev log, closing notes _(records of Tasks 1-7 written; the closing notes are left)_
 
 Each of Tasks 1-4 ends with a run on the stratum's development half, predictions committed before it. Tasks 2-4 change the binder, so each also reruns v0's development binding and compares it with run `1353`.
 
@@ -322,7 +323,31 @@ Also, from Task 1: ggtree's segments moved by their draw-time `nudge_x` (tree-04
 
 ### Task 7: The stratum's held-out half, one run
 
-**Status:** `[ ]` _(stub; decision 1)_
+**Status:** `[x]` (2026-11-12; written out and run on the owner's word, "接受 ADR，推送，然后按建议跑 Task 7"; decision 1 (a))
+
+**Intent**
+- A reported number for tree figures: what the binder measured and tuned on the development half does on the 28 figures it never saw. Under the Scope change of 2026-11-12 the run also answers a second question: how much of what stays unchecked is a reason the development figures never gave.
+- One run, the binder frozen, predictions first, nothing changed in answer.
+
+**Checklist**
+- [x] The binder frozen and shown to be the one measured on the development half. — `git diff --quiet 752bb73 HEAD -- R tests inst` at `ee75172`: no difference. Container suite at `40bbe77` (`GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/suite.R`): 9 files / 109 tests / 807 expectations / 0 failed / 0 errors / 0 skipped / 0 warnings. Both runs' `gloss_source_digest` is `b5307a62…`, the digest of the development runs `1105` to `1116`.
+- [x] A scorer for the residue, fixed before the runs. — `bench/R/score-residue.R`: classes of reason, and with `--against` the classes no baseline gave; on runs `1107` and `1116` it gives `d3-residue.out`'s numbers (5232 elements, 18 classes).
+- [x] Predictions 93-101 committed and pushed before the runs (`ee75172`). Known when written: the 28 ids, their engines, and the PSU each came from. Not read: their code, `meta.json`, pages, or any output of gloss on them.
+- [x] `capture.R heldout tree`, then `bind.R heldout tree`, container, no network, each once to its last figure (runs `2026-11-12-1422`, `-1427`, both at `ee75172` from start to end); archived unscored (`41fc2b2`), then scored.
+
+**Result (2026-11-12).** The held-out half of the tree stratum, 28 figures; reported apart from v0.
+- Capture (`Rscript bench/R/score-capture.R bench/runs/2026-11-12-1422-capture-heldout-tree.csv`): 28 of 28 captured, no refusal, no error; 27 `equal`, 1 `not_deterministic` (tree-035, repelled labels), 0 `different`; gloss's verdict identical to the bench's on all 28.
+- Binding (`Rscript bench/R/score-bind.R bench/runs/2026-11-12-1427-bind-heldout-tree.csv`): 13923 layer elements, verified 7960, ambiguous 2398 (74.4% checked), failed 0, unbound 1022, count mismatch 2542.
+  - The 24 ggplot figures: 92.6% of 9847; every layer element checked in 18, at least 80% in 21, none at 0. Topics 15 of 17, vignettes 3 of 7.
+  - The 4 patchwork compositions: 30.5% of 4076. The two from vignettes are fully checked; the two from the book hold 2492 elements of text drawn as outlines and 341 in panels gloss withheld.
+- Residue (`Rscript bench/R/score-residue.R bench/runs/2026-11-12-1427-bind-heldout-tree-leaves.csv --against` the leaf tables of `1107` and `1116`): 3564 elements in 8 figures, 9 classes. No development figure gave 4 of the classes, 411 elements in 4 figures (panels withheld in a composition 341; a `GeomText` count mismatch 50; an error caught while placing rows under a polar coord 10; a boxplot's rows 10). Against the development half of the stratum alone: 7 classes, 1041 elements.
+- Predictions: 8 of 9 right. Wrong: 99, which expected at least one failed element; there is none.
+- Nothing in `R/`, `tests/` or the bench was changed after the runs. This half is no longer unseen for capture or for binding: a later change to either, run on it again, is reported as made after this run.
+
+**What it says**
+- The rules that state what the drawing system does carried over: 18 of 24 ggplot figures fully checked, where the development half's topics and vignettes stood at 14 of 23 before this plan and 22 of 23 after tuning on them.
+- Unseen figures did bring reasons the development figures had not given, as the owner expected. By their text none of the four is a package placing its marks its own way; they are gaps in how gloss handles ggplot2 and patchwork themselves, or not read.
+- What a proposal about a package could reach on this half is the outlines (2492, no comparison exists) and tree-035's 31 repelled elements.
 
 ### Task 8: Records
 

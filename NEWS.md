@@ -17,6 +17,7 @@
   - a leaf the layer's grob makes only when drawn (ggrepel's labels and connectors, geomtextpath's text) is unbound with that reason when the layer's rows do not pass for it;
   - a leaf that repeats a passing sibling moved by one offset (shadowtext's halo) is unbound as a copy, with the offset.
 - On the 29 development figures of the bench's tree stratum: 29 captured (was 28); 92.3% of layer elements checked (was 40.1%), none failed (was 212); every layer element checked in 23 of 28 ggplot figures (was 15 of 27), none left without a single checked element (was 3). On v0's 54 development figures, no element that was checked before is unchecked now, and failed elements went from 8 to 6.
+- On the stratum's 28 held-out figures, run once with the binder frozen and the predictions committed first: 28 captured, 27 equal to the page drawn and 1 not deterministic; 74.4% of 13923 layer elements checked and none failed. The 24 ggplot figures: 92.6% checked, every layer element in 18 of them. The 4 patchwork compositions: 30.5%; two are book figures whose text is drawn as glyph outlines. What stays unchecked carries its reason (9 classes of reason, 4 of them not seen on the development figures).
 
 ## Patchwork panels and base expected counts (2026-11-11, M1)
 

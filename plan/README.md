@@ -27,7 +27,7 @@ See [`_template.md`](_template.md).
 ## Active plans
 
 - [2026-11-11-m1-roles-and-binding.md](2026-11-11-m1-roles-and-binding.md): M1, first slice: roles and bindings on the development set. Opened 2026-11-11; the owner's three decisions settled. Scope change of 2026-11-12: few rules, with the open tasks read under ADR-0009 (accepted 2026-11-12).
-- [2026-11-11-tree-binding.md](2026-11-11-tree-binding.md): gloss on the tree stratum's development half: every page captured or refused with a reason; justified, rotated and polar labels and glyph outlines checked or named. Opened 2026-11-11 on the owner's word. Tasks 1-6 done: 92.3% of layer elements checked on the development half, none failed. The owner stopped rule-writing on 2026-11-12 (Scope changes; ADR-0009, accepted the same day). Open: Task 7, the held-out half once with the binder frozen (decision 1 (a)), and the closing notes.
+- [2026-11-11-tree-binding.md](2026-11-11-tree-binding.md): gloss on the tree stratum's development half: every page captured or refused with a reason; justified, rotated and polar labels and glyph outlines checked or named. Opened 2026-11-11 on the owner's word. Tasks 1-6 done: 92.3% of layer elements checked on the development half, none failed. The owner stopped rule-writing on 2026-11-12 (Scope changes; ADR-0009, accepted the same day). Task 7 done the same day: the held-out half run once with the binder frozen, 28 of 28 captured, 74.4% of layer elements checked (92.6% on its 24 ggplot figures), none failed; predictions 93-101, 8 of 9 right. Open: the closing notes.
 
 ## Completed plans
 
