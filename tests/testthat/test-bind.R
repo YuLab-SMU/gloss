@@ -720,6 +720,16 @@ test_that("rows ggplot2 drops before drawing are not paired (NA labels)", {
   expect_equal(lv$status, "verified", label = lv$reason)
   expect_equal(c(lv$n_elements, lv$n_rows), c(3L, 3L))
   expect_equal(b$elements$row[b$elements$leaf == lv$leaf], c(1L, 3L, 5L))
+  # a list column among the aesthetics: ggplot2's remove_missing() counts an
+  # element missing only when it is NULL (complete.cases() would stop)
+  GeomObj <- ggplot2::ggproto("GeomObj", ggplot2::GeomPoint, required_aes = c("x", "y", "obj"))
+  d$obj <- I(list(1, NULL, "b", 2, NULL))
+  p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, obj = .data$obj)) +
+    ggplot2::layer(geom = GeomObj, stat = "identity", position = "identity", params = list(na.rm = TRUE))
+  b <- suppressWarnings(bind_capture(p))
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_equal(lv$status, "verified", label = lv$reason)
+  expect_equal(b$elements$row[b$elements$leaf == lv$leaf], c(1L, 3L, 4L))
 })
 
 test_that("a geom that moves x by its nudge_x when drawing is checked at the moved place", {

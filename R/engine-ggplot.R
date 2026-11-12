@@ -418,8 +418,12 @@ ggplot_rows_drawn <- function(d, layer) {
   geom <- layer$geom
   inner <- function(m) tryCatch(environment(m)$f, error = function(e) NULL)
   if (identical(inner(geom$handle_na), inner(ggplot2::Geom$handle_na))) {
+    # as remove_missing() decides: an element of a list column is missing
+    # only when it is NULL
     vars <- intersect(c(geom$required_aes, geom$non_missing_aes), names(d))
-    if (length(vars)) d <- d[stats::complete.cases(d[vars]), , drop = FALSE]
+    ok <- rep(TRUE, nrow(d))
+    for (v in vars) ok <- ok & if (is.list(d[[v]])) !vapply(d[[v]], is.null, logical(1)) else !is.na(d[[v]])
+    d <- d[ok, , drop = FALSE]
   }
   args <- names(formals(inner(geom$draw_panel) %||% function() NULL))
   params <- layer$computed_geom_params %||% layer$geom_params %||% list()
