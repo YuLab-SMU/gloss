@@ -63,7 +63,7 @@
 
 **Overall progress**
 - [x] Task 1: Do the free models drive tools to a validated submission?
-- [ ] Task 2: A pairing checked from the figure alone, measured against the capture-time bindings _(stub; written out after Task 1)_
+- [~] Task 2: A pairing checked from the figure alone, measured against the capture-time bindings
 - [ ] Task 3: `gl_tools()` and a validating `propose`; the first record _(stub; after Task 2)_
 - [ ] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(stub)_
 - [ ] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(stub)_
@@ -110,9 +110,30 @@
 
 ### Task 2: A pairing checked from the figure alone
 
-**Status:** `[ ]` _(stub; written out after Task 1)_
+**Status:** `[~]` (written out 2026-11-12, after Task 1)
 
-An internal check of one pairing (element, table, row) from the substrate, the tables and the panel's scales, reusing the binder's comparisons by tag. Measured in the container on both development sets, with no model: of the elements `gl_bindings()` has as verified, the share whose own row passes and the share for which a permuted row fails, by engine and by coord. Decides whether `propose` can rest on the figure alone or needs row placements stored at capture.
+**Tests assumption:** 2.
+
+**Files**
+- Create: `R/core-alone.R` (`place_rows()`: a table's rows put on the page through a panel's scales, from the figure and nothing else; `recheck_alone()`: the engine's own claims checked a second time with their rows placed that way; `alone_capture()` for the bench), `tests/testthat/test-alone.R`, `bench/R/alone.R`, `bench/R/score-alone.R`.
+- Modify: `bench/R/runner.R` and `bench/R/harvest.R` (an `alone` option beside `bind`), `bench/predictions.md`.
+
+**Intent**
+- `propose` has to validate on a figure read from a bundle, where the engine's state is gone. Today the device position of a row comes from the engine at capture (the coord's own transform, the base entry's `usr`, a heatmap's cell order). The cheapest replacement is what the figure already holds: the table's position columns and the panel's scale ranges. This task measures how far that goes before anything is built on it. It uses no model.
+- The comparison is made claim by claim at capture, where both are available: the same rows, the same comparison by tag, the positions once from the engine and once from the figure alone.
+
+**Checklist**
+- [ ] Tests first (`test-alone.R`), on hand-built figures: placements equal the engine's on a cartesian scatter and a facetted figure; a panel whose scales are not ranges on the page (polar) gives a reason, not a position; a flipped coord is never verified by mistake.
+- [ ] `place_rows()`, `recheck_alone()`, `alone_capture()`; host suite and container suite.
+- [ ] Per claimed leaf: the status under the engine's positions and under the figure's own; the largest gap between the two placements in pt; the reason when the figure alone cannot place the rows; and a mutation (positions shifted by one row within the leaf) counted under both, as the number of elements whose place moves by more than the tolerance and that still pass.
+- [ ] Predictions committed; then `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/alone.R dev` and `... dev tree`, archived before scoring.
+- [ ] Report by engine, verified apart from ambiguous, with per-figure counts; the reasons, by class.
+
+**Verification**
+- The two runs above and `Rscript bench/R/score-alone.R <run>-leaves.csv`.
+- Expected: on ggplot figures with a cartesian coord the two agree. The result that would change the plan: under 80% of the elements the engine's positions verify on ggplot figures are verified from the figure alone (then row placements become a derived table made at capture, ADR-0007, before `propose` is built); any element verified from the figure alone that the engine's positions fail (a defect in one of the two, examined before anything else).
+
+**Result** _(filled in when done)_
 
 ---
 

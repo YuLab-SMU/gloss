@@ -324,7 +324,7 @@ launch_worker <- function(worker, args) {
 # Runs inside a fresh R process. Self-contained: callr ships only this function.
 run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, recover, capture, repo,
                        device = "pdf", fidelity_verdict = NULL, compare_pages = NULL, bind = FALSE,
-                       keep = NULL) {
+                       keep = NULL, alone = FALSE) {
   setwd(dir)
   set.seed(seed)
   # The device the code draws on. "svg" (capture runs) is gloss's own device,
@@ -623,6 +623,34 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
             cap$bind_leaves <- lv
           }
         }
+        # Rows placed from the figure alone (agent-path plan Task 2): the
+        # engine's claims checked with its own positions and with the table's
+        # columns put through the panel's scales. One row per claimed leaf.
+        if (isTRUE(alone)) {
+          t3 <- Sys.time()
+          a <- tryCatch(suppressWarnings(gloss:::alone_capture(fig)), error = function(e) e)
+          cap$alone_seconds <- as.numeric(difftime(Sys.time(), t3, units = "secs"))
+          if (inherits(a, "error")) {
+            cap$alone_error <- conditionMessage(a)
+          } else {
+            lv <- a$leaves
+            sl <- a$fig$substrate$leaves
+            el <- a$fig$substrate$elements
+            pn <- a$fig$substrate$panels
+            i <- match(lv$leaf, sl$id)
+            lv$class <- sl$class[i]
+            lv$dense <- sl$dense[i]
+            lv$panel_type <- if (is.data.frame(pn) && nrow(pn)) pn$x_type[match(sl$panel[i], pn$id)] else rep(NA_character_, nrow(lv))
+            tags <- tapply(el$tag, el$leaf, function(t) paste(sort(unique(t)), collapse = "+"))
+            lv$tag <- unname(tags[lv$leaf])
+            desc <- vapply(a$fig$tables, function(t) t$description %||% NA_character_, "")
+            d <- unname(desc[lv$table])
+            pat <- "^(plot [0-9]+: )?built data of layer [0-9]+ \\(([^,]+),.*$"
+            lv$geom <- ifelse(!is.na(d) & grepl(pat, d), sub(pat, "\\2", d),
+                              ifelse(grepl("^base_", lv$table), sub("^base_", "", lv$table), NA_character_))
+            cap$alone_leaves <- lv
+          }
+        }
       }
       result$capture <- cap
     }
@@ -726,7 +754,8 @@ gloss_snapshot <- function(repo = ".") {
 }
 
 run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
-                       recover = FALSE, capture = FALSE, device = "pdf", bind = FALSE, keep = NULL) {
+                       recover = FALSE, capture = FALSE, device = "pdf", bind = FALSE, keep = NULL,
+                       alone = FALSE) {
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   env <- c(callr::rcmd_safe_env(), R_LIBS_USER = paste(bench_libpaths(), collapse = .Platform$path.sep))
   if (offline) env <- c(env, offline_env)
@@ -738,7 +767,7 @@ run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
                                      recover = recover,
                                      capture = capture, repo = gloss_snapshot(), device = device,
                                      fidelity_verdict = fidelity_verdict, compare_pages = compare_pages,
-                                     bind = bind, keep = keep)),
+                                     bind = bind, keep = keep, alone = alone)),
              libpath = bench_libpaths(), env = env, timeout = timeout, show = FALSE,
              package = FALSE),
     error = function(e) e)
