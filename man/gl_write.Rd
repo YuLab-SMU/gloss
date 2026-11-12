@@ -40,6 +40,13 @@ that aesthetics, facets or the row key refer to;
 \item \code{"none"}: table names and keys only, and no column summaries in the
 context either.
 }
+
+A bundle stores atomic vectors and lists of atomic vectors, with their
+attributes. A column or an attribute of a table that is something else (a
+column of geometries, a nested list, a model's terms) is left out with a
+warning that names it; the figure itself is not changed. Read back, that
+table has the status \code{partial_data}, and its \code{not_stored} says what it
+lacks and why.
 }
 \examples{
 fig <- gloss(grid::rectGrob(), width = 2, height = 2, context = FALSE)

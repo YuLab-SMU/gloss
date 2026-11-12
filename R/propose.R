@@ -64,18 +64,20 @@ check_proposal <- function(ctx, proposal) {
   if (is.null(tab) || is.null(tab$data)) {
     return(done("rejected", "exists", sprintf("no table '%s' with rows in the figure", quoted(proposal$table))))
   }
-  t <- tab$data
-  row <- as.integer(proposal$row)
-  if (row < 1L || row > nrow(t)) {
-    return(done("rejected", "exists", sprintf("row %d is outside the table '%s' (%d rows)", row, tab$name, nrow(t))))
-  }
-
+  # a figure of another engine is refused before its rows are looked at: what
+  # a row number means there is the engine's own (a heatmap's is a cell)
   engine <- fig$meta$engine %||% NA_character_
   if (!engine %in% proposal_engines) {
     return(done("refused", "check", sprintf(
       "bindings are checked on %s figures so far; this figure's engine is '%s'",
       paste(proposal_engines, collapse = " and "), engine)))
   }
+  t <- tab$data
+  row <- as.integer(proposal$row)
+  if (row < 1L || row > nrow(t)) {
+    return(done("rejected", "exists", sprintf("row %d is outside the table '%s' (%d rows)", row, tab$name, nrow(t))))
+  }
+
   if (!identical(tab$role, "built")) {
     return(done("refused", "check", sprintf(
       "the table '%s' is not a layer's built data: only built data state where a row is drawn", tab$name)))

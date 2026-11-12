@@ -185,3 +185,66 @@ test_that("an HTML page with an inline SVG but no bundle gives geometry", {
   expect_equal(fig$substrate$elements$tag, c("circle", "text"))
   expect_equal(fig$meta$width, 1)
 })
+
+test_that("a figure with no tables is read back identical too", {
+  # The bundle's round trip on the development set (bench run
+  # 2026-11-12-1918-bundle-dev): five figures of the grid and base engines
+  # came back identical in every part but `tables`, an empty list that had
+  # lost its (empty) names on the way.
+  fig <- gloss(grid::circleGrob(r = 0.2), context = FALSE)
+  expect_length(fig$tables, 0L)
+  f <- withr::local_tempfile(fileext = ".html")
+  gl_write(fig, f, embed = "all")
+  back <- gl_read(f)
+  for (part in c("substrate", "tables", "derived", "meta", "status")) {
+    expect_identical(back[[part]], fig[[part]], label = part)
+  }
+})
+
+test_that("what a table holds that a bundle cannot store is left out, named and reported; the rest comes back", {
+  # The bundle's round trip on the development set (bench run
+  # 2026-11-12-1918-bundle-dev): 5 of 54 captured figures could not be
+  # written at all. Their tables held a fitted model's `terms` as an
+  # attribute (exts-021), a list column of lists (gallery-048), and columns
+  # of geometries or rasters (exts-017, patchwork-010, patchwork-011).
+  skip_if_no("ggplot2", "tibble")
+  d <- tibble::as_tibble(data.frame(x = c(1, 2, 3, 4), y = c(2, 4, 1, 3)))
+  d$nested <- list(list(1, "a"), list(2), list(3), list(4))
+  d$ok_list <- list(1:2, "b", NULL, c(1.5, 2))
+  attr(d, "terms") <- quote(y ~ x)
+  attr(d, "note") <- "kept"
+  p <- ggplot2::ggplot(d, ggplot2::aes(x, y)) + ggplot2::geom_point()
+  fig <- gloss(p, context = FALSE)
+  for (embed in c("all", "default")) {
+    f <- withr::local_tempfile(fileext = ".html")
+    expect_warning(gl_write(fig, f, embed = embed), "cannot be stored", label = embed)
+    back <- gl_read(f)
+    raw <- back$tables$raw
+    expect_equal(raw$status, "partial_data", label = embed)
+    # each thing left out, with why
+    expect_true(any(grepl("attribute terms", raw$not_stored)), label = embed)
+    expect_false(any(grepl("note|ok_list|column x", raw$not_stored)), label = embed)
+    expect_null(attr(raw$data, "terms"))
+    expect_equal(raw$data$x, d$x)
+    expect_true("raw" %in% back$status$partial_data)
+    # everything else is as it was written
+    expect_identical(back$substrate, fig$substrate, label = embed)
+    expect_identical(back$derived, fig$derived, label = embed)
+    expect_identical(gl_table(back, "built_layer1"), gl_table(fig, "built_layer1"), label = embed)
+    b <- gl_bindings(back)[1, ]
+    expect_equal(gl_propose(back, list(kind = "binding", element = b$element, table = b$table, row = b$row))$outcome, "accepted")
+  }
+  # with everything embedded, the column of lists is the one column left out
+  f <- withr::local_tempfile(fileext = ".html")
+  suppressWarnings(gl_write(fig, f, embed = "all"))
+  raw <- gl_read(f)$tables$raw
+  expect_equal(raw$dropped, "nested")
+  expect_true(any(grepl("column nested", raw$not_stored)))
+  expect_identical(raw$data$ok_list, d$ok_list)
+  expect_equal(attr(raw$data, "note"), "kept")
+  # the figure in memory is not changed by writing it
+  expect_true("nested" %in% names(gl_table(fig, "raw")))
+  # and a figure that holds nothing of the kind is written without a word
+  plain <- gloss(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point(), context = FALSE)
+  expect_no_warning(gl_write(plain, withr::local_tempfile(fileext = ".html"), embed = "all"))
+})

@@ -18,6 +18,8 @@ file written by \code{\link[=gl_write]{gl_write()}}. Whatever is present is rest
 \itemize{
 \item a complete bundle gives the complete figure;
 \item tables written without data come back with status \code{missing_data};
+\item tables written without some of their columns, or without something
+the bundle cannot store, come back with status \code{partial_data};
 \item plugins named in the manifest but not installed are listed in
 \code{fig$status$missing_plugins}, and everything else is restored;
 \item an SVG without an embedded bundle gives geometry only: its elements,

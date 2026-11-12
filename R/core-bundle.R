@@ -31,6 +31,13 @@ embed_modes <- c("default", "all", "summary", "none")
 #' * `"none"`: table names and keys only, and no column summaries in the
 #'   context either.
 #'
+#' A bundle stores atomic vectors and lists of atomic vectors, with their
+#' attributes. A column or an attribute of a table that is something else (a
+#' column of geometries, a nested list, a model's terms) is left out with a
+#' warning that names it; the figure itself is not changed. Read back, that
+#' table has the status `partial_data`, and its `not_stored` says what it
+#' lacks and why.
+#'
 #' @param fig A `gloss_figure`.
 #' @param path A directory (no extension, or `.gloss`), or a file ending in
 #'   `.html` or `.svg`.
@@ -218,6 +225,7 @@ table_meta_fields <- c("name", "role", "layer", "description", "referenced", "ke
 
 encode_tables <- function(tables, embed) {
   files <- list()
+  left_out <- list()
   # Raw-table columns, for storing identical columns of other tables once.
   raw_cols <- list()
   for (t in tables) {
@@ -250,9 +258,20 @@ encode_tables <- function(tables, embed) {
     }
     keep <- embedded_columns(t, embed)
     dropped <- setdiff(names(data), keep)
-    meta$embedded <- if (length(dropped)) "columns" else "all"
-    if (length(dropped)) meta$dropped <- as.list(dropped)
     data <- data[keep]
+    # What the codec cannot store is left out and named, so that the figure
+    # can be written: 5 of 54 captured development figures could not be
+    # (bench run 2026-11-12-1918-bundle-dev).
+    cant <- unstorable(data)
+    if (length(cant$what)) {
+      data <- data[setdiff(names(data), cant$columns)]
+      for (an in cant$attrs) attr(data, an) <- NULL
+      dropped <- c(dropped, cant$columns)
+      meta$not_stored <- as.list(cant$what)
+      left_out[[t$name]] <- cant$what
+    }
+    meta$embedded <- if (length(dropped) || length(cant$what)) "columns" else "all"
+    if (length(dropped)) meta$dropped <- as.list(dropped)
     refs <- list()
     if (!identical(t$role, "raw")) {
       for (cn in names(data)) {
@@ -265,7 +284,35 @@ encode_tables <- function(tables, embed) {
     }
     files[[table_file(t$name)]] <- as_bytes(df_to_json(data, meta = list(table = meta), refs = refs))
   }
+  if (length(left_out)) {
+    what <- unlist(lapply(names(left_out), function(n) sprintf("table %s, %s", n, left_out[[n]])))
+    cli::cli_warn(c("Some of what the figure's tables hold cannot be stored in a bundle and was left out.",
+                    stats::setNames(what, rep("*", length(what))),
+                    i = "Read back, such a table has the status {.val partial_data} and lists what it lacks."))
+  }
   files
+}
+
+# What of a table's data the codec cannot store: columns, and attributes of
+# the data frame, each with the codec's own reason.
+unstorable <- function(data) {
+  why <- function(x) {
+    plain <- !is.list(x) && typeof(x) %in% c("double", "integer", "logical", "character") &&
+      all(vapply(attributes(x), function(a) is.atomic(a) && is.null(attributes(a)), logical(1)))
+    if (plain) return(NA_character_)
+    tryCatch({
+      encode_vector(x)
+      NA_character_
+    }, error = function(e) cli::ansi_strip(conditionMessage(e)))
+  }
+  cols <- vapply(names(data), function(cn) why(data[[cn]]), "")
+  cols <- cols[!is.na(cols)]
+  extra <- attributes(data)
+  extra[c("names", "row.names", "class")] <- NULL
+  attrs <- vapply(names(extra), function(an) why(extra[[an]]), "")
+  attrs <- attrs[!is.na(attrs)]
+  list(columns = names(cols), attrs = names(attrs),
+       what = c(sprintf("column %s: %s", names(cols), cols), sprintf("attribute %s: %s", names(attrs), attrs)))
 }
 
 embedded_columns <- function(t, embed) {
@@ -285,6 +332,8 @@ embedded_columns <- function(t, embed) {
 #' file written by [gl_write()]. Whatever is present is restored:
 #' * a complete bundle gives the complete figure;
 #' * tables written without data come back with status `missing_data`;
+#' * tables written without some of their columns, or without something
+#'   the bundle cannot store, come back with status `partial_data`;
 #' * plugins named in the manifest but not installed are listed in
 #'   `fig$status$missing_plugins`, and everything else is restored;
 #' * an SVG without an embedded bundle gives geometry only: its elements,
@@ -410,7 +459,8 @@ decode_tables <- function(files) {
   metas <- lapply(parsed, function(o) json_unprep(o$table))
   names(parsed) <- vapply(metas, `[[`, "", "name")
   names(metas) <- names(parsed)
-  out <- list()
+  # named also when empty, as a captured figure's tables are
+  out <- stats::setNames(list(), character())
   # Raw tables first: other tables may refer to their columns.
   order_idx <- order(vapply(metas, function(m) !identical(m$role, "raw"), logical(1)))
   for (nm in names(parsed)[order_idx]) {
@@ -446,6 +496,7 @@ decode_tables <- function(files) {
     )
     if (!is.null(m$summary)) out[[nm]]$summary <- m$summary
     if (!is.null(m$dropped)) out[[nm]]$dropped <- as.character(unlist(m$dropped))
+    if (!is.null(m$not_stored)) out[[nm]]$not_stored <- as.character(unlist(m$not_stored))
   }
   out[names(parsed)]
 }

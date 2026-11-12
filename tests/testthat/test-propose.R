@@ -131,6 +131,12 @@ test_that("what the figure does not let it check is refused with the reason, nev
   r <- gl_propose(base, binding(bb$element[1], bb$table[1], bb$row[1]))
   expect_equal(r$outcome, "refused")
   expect_match(r$reasons, "base")
+  # and that is said before the row is looked at: a heatmap's binding names a
+  # cell of the matrix, a number beyond the table's rows, and "outside the
+  # table" was the answer (bench run 2026-11-12-1918-bundle-dev, 8 pairings)
+  r <- gl_propose(base, binding(bb$element[1], bb$table[1], 100000L))
+  expect_equal(r$outcome, "refused")
+  expect_match(r$reasons, "base")
 })
 
 test_that("a flipped panel and a dense leaf are checked like any other", {
