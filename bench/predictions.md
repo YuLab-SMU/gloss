@@ -940,3 +940,11 @@ Written 2026-11-12, before the pilot's material was read on the host, before its
 128. **Right.** No question has all its proposals refused; 6 proposals are refused in all, 2 on each question of tree-068, none of them the answer's table.
 
 **What this changes:** as written above under 127. `propose` as built accepts a row of the wrong layer when two layers draw at one place: 3 of 10 figures, 7 of 30 questions. The figure knows which layer drew a leaf (the engine reads it from the plot's own structure at capture), so the check is to use it before any model is asked (plan, scope change of 2026-11-12).
+
+## The arm without a model again, after `propose` uses the leaf's layer (agent-path plan, scope change of 2026-11-12)
+
+Written 2026-11-12, after the change to `R/propose.R` and its tests and before running `bench/agent/pilot.R enumerate` again. What I have seen: run `2026-11-12-1906-pilot-enumerate` in full (all 10 other rows accepted are in other tables than the answer's), and the new tests on a hand-built figure with two layers at the same places.
+
+129. **The arm is right on 30 of 30 questions:** the answer accepted, nothing else. The 10 rows of other tables are rejected with the reason that names the leaf's layer. Refusals stay where they were (6, on tree-068) or become rejections for the same reason.
+
+**What would change the plan:** another row still accepted. Then either a leaf of these figures has no layer stated in the bundle's bindings, or two rows of one layer tie in a way capture did not see; each is read before a model is asked.
