@@ -69,7 +69,7 @@
 - [~] Task 3: `gl_tools()` and a validating `propose`; the first record _(steps 1 to 3 done 2026-11-12: the flipped panel, `gl_propose()`, `gl_tools()`; the run with models open)_
 - [x] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(done 2026-11-12; no model has used it yet)_
 - [~] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(material, 30 questions, the dry run and the arm without a model done 2026-11-12; the arms with models wait for the models)_
-- [ ] Task 5b: The bundle's round trip on the development sets _(added 2026-11-12, see Scope changes)_
+- [~] Task 5b: The bundle's round trip on the development sets _(measured and three defects closed 2026-11-12; the rerun on v0 is going)_
 - [ ] Task 6: Records: design notes, NEWS, dev log, closing notes
 
 ---
@@ -296,9 +296,28 @@
 
 ### Task 5b: The bundle's round trip on the development sets
 
-**Status:** `[ ]` (added 2026-11-12)
+**Status:** `[~]` (added 2026-11-12)
 
 For every captured development figure, in the container: write the bundle, read it back, compare elements, tables and bindings with the figure written, and have one verified binding checked by `gl_propose()` on the figure read back. Reported per figure with the reason for each one that does not come back whole. Prediction first. What it decides: whether arm B can be served on every figure the bench captures, and what the codec must store, or leave out with a reason, before M5.
+
+**Result** (2026-11-12; `bench/R/bundle.R`, `bench/R/score-bundle.R`; predictions 130-133 first: two right, one half right, one wrong)
+
+- *Runs* `2026-11-12-1918-bundle-dev` (55 figures, 54 captured) and `-1926-bundle-dev-tree` (29, all captured), offline container, each figure written with everything embedded and with the default embedding, read back and compared.
+
+  | | v0 development, 54 | tree development, 29 |
+  |---|---|---|
+  | cannot be written (either embedding) | 5: exts-021, gallery-048, exts-017, patchwork-010, patchwork-011 | 0 |
+  | written and read back | 49 | 29 |
+  | identical in every part, everything embedded | 44 | 29 |
+  | differ | 5, in an empty list of tables only: gallery-052, gallery-056, exts-007, bioc-001, bioc-009 | 0 |
+  | identical in substrate and derived tables, default embedding | 49 | 29 |
+
+  By engine, written of captured: ggplot 56 of 59, patchwork 5 of 7, base 10 of 10, grid 4 of 4, heatmap 3 of 3.
+- *Why 5 are not written:* a table holds something the codec has no case for: a `terms` attribute of type language, a list column of lists, a column of `SpatRaster`, `sf` geometries (two figures). The codec said which type and stopped the whole figure.
+- *`gl_propose()` on the figure read back* (default embedding; up to 5 pairings a figure, verified at capture, one element for one row): ggplot and patchwork, 50 figures, 250 pairings: 222 accepted, 27 refused, 1 rejected; 44 figures with all accepted. Refused: four figures with polar or `sf` panels (20) and segments paired one per row (7). Rejected: one row on tree-014 that its geom moves while drawing, the gap Task 2 counted. Base and heatmap, 11 figures, 55 pairings: 47 refused and 8 rejected, the 8 being a heatmap's cell number answered as "outside the table" before the engine was refused.
+- *Closed, each with a test that failed first* (`0296183`): a table is written without what the codec cannot store, with a warning that names each column or attribute, and comes back `partial_data` with `not_stored`; a figure without tables reads back identical; `propose` refuses another engine's figure before it looks at the row. Suite after: host 13 files / 148 tests / 1393 expectations / 0 failed / 0 skipped; container 13 / 148 / 1387 / 0 failed / 1 skipped.
+- *What it decides:* arm B can be served every figure the bench captures once the rerun below confirms it; its coverage on ggplot and patchwork figures is what `propose` can check there, 222 of 250 sampled pairings, and the rest is refused with a reason. The bundle is lossless for what the codec stores and says what it left out.
+- Cost: 140 lines added and 9 removed under `R/`, `tests/` and `man/` for the three fixes (`R/core-bundle.R` 57, `R/propose.R` 14 moved, tests 69, documentation 9), 177 under `bench/R/` (`bundle.R` 135, `score-bundle.R` 42); one host and one container suite run, two bench runs and a rerun.
 
 ---
 
