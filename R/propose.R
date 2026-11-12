@@ -6,6 +6,14 @@
 # answers the same on a figure read back from a bundle, where the engine's
 # state is gone. Plan 2026-11-12-agent-path, Task 3.
 #
+# Place is not all of it: two layers can draw at one place. Which layer drew
+# a leaf follows from the plot's own structure, the engine reads it at
+# capture, and the bindings in the figure keep it, also for a leaf the engine
+# could not bind. Where the figure says so, a row of another layer's table
+# is rejected wherever it lands; where it does not (no bindings in the
+# figure, a leaf the engine gave no layer), the check rests on place and the
+# record says so (`layer_known`).
+#
 # Three outcomes, and no fourth:
 #   accepted   the check ran and the pairing passes; `record` holds it
 #   rejected   the proposal is not valid data (stage "schema"), names what
@@ -28,7 +36,9 @@ propose_context <- function(fig, tol = bind_tolerance) {
   check_figure(fig)
   modes <- fig$derived$bindings$tables$leaves
   list(fig = fig, geo = scene_geometry(fig$substrate), tol = tol,
-       mode = if (is.null(modes)) character() else stats::setNames(modes$mode, modes$leaf))
+       mode = if (is.null(modes)) character() else stats::setNames(modes$mode, modes$leaf),
+       # the table of the layer that drew each leaf, where the engine stated one
+       table = if (is.null(modes)) character() else stats::setNames(modes$table, modes$leaf))
 }
 
 # A value from a proposal, short enough to quote in a reason.
@@ -92,6 +102,13 @@ check_proposal <- function(ctx, proposal) {
       "a <%s> element of this leaf draws, or may draw, a whole group of rows; a binding of one element to one row is not checked for it",
       tag)))
   }
+  # the layer that drew the leaf, where the figure says which it is
+  stated <- ctx$table[leaf] %|NA|% NA_character_
+  if (!is.na(stated) && !identical(unname(stated), tab$name)) {
+    return(done("rejected", "check", sprintf(
+      "the element's leaf (%s) was drawn by the layer whose built data is '%s', as the plot's own structure says; a row of '%s' is not what it draws",
+      leaf, stated, tab$name)))
+  }
   # the plot of a composition, and the panel, the row belongs to
   plot_of <- function(x, what) sub(what, "", x)
   if (!identical(plot_of(panel, "panel[0-9]+$"), plot_of(tab$name, "built_layer[0-9]+$"))) {
@@ -122,7 +139,7 @@ check_proposal <- function(ctx, proposal) {
   done("accepted", "check", character(), record = list(
     kind = "binding", element = proposal$element, leaf = leaf, table = tab$name, row = row,
     status = if (res$n_pass > 1L) "ambiguous" else "verified",
-    dev = round(res$dev * 1000) / 1000, tolerance = tol, basis = "figure"
+    dev = round(res$dev * 1000) / 1000, tolerance = tol, basis = "figure", layer_known = !is.na(stated)
   ))
 }
 
@@ -135,8 +152,14 @@ check_proposal <- function(ctx, proposal) {
 #' The check uses the figure alone: the row is put on the page through the
 #' scales of the element's panel and compared with where the element is
 #' drawn, within 0.5 pt, by the comparison [gl_bindings()] uses for that kind
-#' of element. It needs neither the object that was drawn nor the bindings
-#' made at capture, so it answers the same on a figure read with [gl_read()].
+#' of element. It does not need the object that was drawn, so it answers the
+#' same on a figure read with [gl_read()].
+#'
+#' Two layers can draw at the same place. Which layer drew an element is
+#' known from the plot's own structure when the figure was captured with its
+#' bindings (the default), and a row of another layer's table is then
+#' rejected wherever it lands. A figure captured with `bind = FALSE` does not
+#' say, and the check rests on place alone: `record$layer_known` is `FALSE`.
 #'
 #' @section Proposals:
 #' A named list with exactly these fields:
@@ -148,7 +171,8 @@ check_proposal <- function(ctx, proposal) {
 #' @section Outcomes:
 #' * `"accepted"`: the row is drawn where the element is. `record` holds the
 #'   pairing with its `status`: `"verified"`, or `"ambiguous"` when another
-#'   row of the layer in that panel is drawn at the same place.
+#'   row of the layer in that panel is drawn at the same place; and
+#'   `layer_known`, whether the figure said which layer drew the element.
 #' * `"rejected"`: the proposal is not valid data (`stage` `"schema"`), names
 #'   an element, a table or a row that is not in the figure (`"exists"`), or
 #'   was checked and does not hold (`"check"`). `reasons` says which.
@@ -186,6 +210,9 @@ print.gloss_proposal <- function(x, ...) {
     r <- x$record
     cat(sprintf("<gloss proposal> accepted: %s draws row %d of %s (%s, %s pt off)\n",
                 r$element, r$row, r$table, r$status, format(r$dev)))
+    if (isFALSE(r$layer_known)) {
+      cat("  checked by its place only: the figure does not say which layer drew the element\n")
+    }
   } else {
     cat(sprintf("<gloss proposal> %s (%s)\n", x$outcome, x$stage))
     for (r in x$reasons) cat("  ", r, "\n", sep = "")

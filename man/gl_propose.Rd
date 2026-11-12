@@ -25,8 +25,14 @@ figure and says what happened. People and agents call the same function.
 The check uses the figure alone: the row is put on the page through the
 scales of the element's panel and compared with where the element is
 drawn, within 0.5 pt, by the comparison \code{\link[=gl_bindings]{gl_bindings()}} uses for that kind
-of element. It needs neither the object that was drawn nor the bindings
-made at capture, so it answers the same on a figure read with \code{\link[=gl_read]{gl_read()}}.
+of element. It does not need the object that was drawn, so it answers the
+same on a figure read with \code{\link[=gl_read]{gl_read()}}.
+
+Two layers can draw at the same place. Which layer drew an element is
+known from the plot's own structure when the figure was captured with its
+bindings (the default), and a row of another layer's table is then
+rejected wherever it lands. A figure captured with \code{bind = FALSE} does not
+say, and the check rests on place alone: \code{record$layer_known} is \code{FALSE}.
 }
 \section{Proposals}{
 
@@ -44,7 +50,8 @@ A named list with exactly these fields:
 \itemize{
 \item \code{"accepted"}: the row is drawn where the element is. \code{record} holds the
 pairing with its \code{status}: \code{"verified"}, or \code{"ambiguous"} when another
-row of the layer in that panel is drawn at the same place.
+row of the layer in that panel is drawn at the same place; and
+\code{layer_known}, whether the figure said which layer drew the element.
 \item \code{"rejected"}: the proposal is not valid data (\code{stage} \code{"schema"}), names
 an element, a table or a row that is not in the figure (\code{"exists"}), or
 was checked and does not hold (\code{"check"}). \code{reasons} says which.

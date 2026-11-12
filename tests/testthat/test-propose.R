@@ -153,3 +153,62 @@ test_that("a flipped panel and a dense leaf are checked like any other", {
   far <- bd$row[which.max(abs(d$x[bd$row] - d$x[bd$row[1]]))]
   expect_equal(check_proposal(ctx, binding(bd$element[1], bd$table[1], far))$outcome, "rejected")
 })
+
+# Two layers that draw at the same places: every point twice, the second as
+# an open circle around the first.
+p_twice <- function() {
+  d <- data.frame(x = c(1, 2, 3, 4), y = c(2, 4, 1, 3))
+  ggplot2::ggplot(d, ggplot2::aes(x, y)) + ggplot2::geom_point() + ggplot2::geom_point(shape = 1, size = 5)
+}
+
+test_that("a row of another layer drawn at the same place is rejected: the figure says which layer drew the leaf", {
+  # The pilot's arm without a model (bench run 2026-11-12-1906-pilot-enumerate):
+  # trying every row had a row of another layer accepted on 7 of 30 questions,
+  # where two layers draw at one place. Which layer drew a leaf the engine
+  # reads from the plot's own structure at capture, and the bindings keep it.
+  skip_if_no("ggplot2")
+  fig <- gloss(p_twice(), context = FALSE)
+  b <- gl_bindings(fig)
+  b <- b[b$status == "verified", ]
+  tabs <- c("built_layer1", "built_layer2")
+  expect_equal(as.integer(table(b$table)[tabs]), c(4L, 4L))
+  ctx <- propose_context(fig)
+  for (i in seq_len(nrow(b))) {
+    own <- check_proposal(ctx, binding(b$element[i], b$table[i], b$row[i]))
+    expect_equal(own$outcome, "accepted", label = b$element[i])
+    expect_true(own$record$layer_known)
+    r <- check_proposal(ctx, binding(b$element[i], setdiff(tabs, b$table[i]), b$row[i]))
+    expect_equal(r$outcome, "rejected", label = b$element[i])
+    expect_equal(r$stage, "check")
+    # the reason names the table of the layer that drew the leaf
+    expect_match(r$reasons, sprintf("'%s'", b$table[i]), fixed = TRUE)
+  }
+  # trying every row of every table finds each element's own row and nothing else
+  for (i in seq_len(nrow(b))) {
+    hits <- 0L
+    for (t in tabs) for (row in 1:4) hits <- hits + (check_proposal(ctx, binding(b$element[i], t, row))$outcome == "accepted")
+    expect_equal(hits, 1L, label = b$element[i])
+  }
+  # and the same on the figure read back from a bundle
+  f <- withr::local_tempfile(fileext = ".html")
+  gl_write(fig, f)
+  back <- gl_read(f)
+  expect_equal(gl_propose(back, binding(b$element[1], setdiff(tabs, b$table[1]), b$row[1]))$outcome, "rejected")
+  expect_equal(gl_propose(back, binding(b$element[1], b$table[1], b$row[1]))$outcome, "accepted")
+})
+
+test_that("a figure without bindings is checked by place alone, and an acceptance says so", {
+  skip_if_no("ggplot2")
+  b <- gl_bindings(gloss(p_twice(), context = FALSE))
+  b <- b[b$status == "verified", ]
+  bare <- gloss(p_twice(), context = FALSE, bind = FALSE)
+  other <- setdiff(c("built_layer1", "built_layer2"), b$table[1])
+  r <- gl_propose(bare, binding(b$element[1], other, b$row[1]))
+  expect_equal(r$outcome, "accepted")
+  expect_false(r$record$layer_known)
+  expect_output(print(r), "by its place only")
+  own <- gl_propose(gloss(p_twice(), context = FALSE), binding(b$element[1], b$table[1], b$row[1]))
+  expect_true(own$record$layer_known)
+  expect_output(print(own), "accepted")
+  expect_false(any(grepl("by its place only", utils::capture.output(print(own)))))
+})

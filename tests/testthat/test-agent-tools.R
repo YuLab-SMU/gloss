@@ -178,3 +178,17 @@ test_that("gl_tools() gives aisdk tools that a model drives to a validated submi
   expect_equal(back$outcome, "rejected")
   expect_match(back$reasons, "pt from")
 })
+
+test_that("propose tells an agent when an acceptance rests on place alone", {
+  skip_if_no("ggplot2")
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  b <- gl_bindings(gloss(p, context = FALSE))
+  bare <- tool_specs(gloss(p, context = FALSE, bind = FALSE))
+  out <- run_spec(bare, "propose", list(element = b$element[3], table = b$table[3], row = b$row[3]))
+  expect_equal(out$outcome, "accepted")
+  expect_match(out$note, "place only")
+  full <- tool_specs(gloss(p, context = FALSE))
+  out <- run_spec(full, "propose", list(element = b$element[3], table = b$table[3], row = b$row[3]))
+  expect_equal(out$outcome, "accepted")
+  expect_null(out$note)
+})

@@ -175,6 +175,9 @@ tool_specs <- function(fig, hide = NULL) {
         out <- list(outcome = r$outcome)
         if (length(r$reasons)) out$reasons <- as.list(r$reasons)
         if (!is.null(r$record)) out$status <- r$record$status
+        if (isFALSE(r$record$layer_known)) {
+          out$note <- "checked by place only: the figure does not say which layer drew this element"
+        }
         out
       })
   )
