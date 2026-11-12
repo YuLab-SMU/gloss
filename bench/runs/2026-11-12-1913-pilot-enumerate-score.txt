@@ -1,0 +1,14 @@
+
+arm S (no model), 2026-11-12-1913-pilot-enumerate.csv: 30 questions; right (the answer accepted and nothing else) 30; the answer accepted 30; questions with another row accepted 0; with a refusal 0; rows tried 26265, median 0.0 s a question
+        figure questions right answer_accepted others_accepted refused tried
+      bioc-016         3     3               3               0       0    30
+      exts-027         3     3               3               0       0 16875
+      exts-030         3     3               3               0       0    18
+   gallery-002         3     3               3               0       0  1800
+   gallery-005         3     3               3               0       0   300
+   gallery-029         3     3               3               0       0  6180
+ patchwork-006         3     3               3               0       0    96
+      tree-062         3     3               3               0       0   264
+      tree-068         3     3               3               0       0   540
+      tree-077         3     3               3               0       0   162
+other rows accepted: 0 in all, 0 of them in the answer's own table

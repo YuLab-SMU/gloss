@@ -58,15 +58,16 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 13 files, 141 tests, 1278 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, Task 3 step 3); the bench container 13 / 141 / 1272, 0 failed, 0 errors, 1 skipped (the scripted-model test: aisdk is not in the container's image).
+- Suite: 13 files, 146 tests, 1357 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `7edf4fc`); the bench container 13 / 146 / 1351, 0 failed, 0 errors, 1 skipped (the scripted-model test: aisdk is not in the container's image).
 - Key numbers: the figure alone against the engine's positions, runs `2026-11-12-1737-alone-dev` and `-1748-alone-dev-tree` (development sets, container, after the flipped-panel change): of the elements the engine's positions verify, the figure alone verifies 99.9% on v0's ggplot figures (9063 of 9069; 24 of 26 figures agree) and 98.2% on the tree set's (13865 of 14112; 24 of 28); base 83.8% (4 of 9 figures); heatmap 0 of 250 cells; no leaf passes more from the figure alone. Before the change (Task 2's runs): 99.8% and 98.1%, 23 of 26 and 23 of 28.
-- Task 1, run `2026-11-12-1627-drive-tools` (hand-built figure, host): 60 of 60 runs correct, 10 of 10 for each of three models in each variant; 0 failed calls of 313; 0 rejected submissions; median 7.5 s and 8380 tokens a run. Conditions A and B: no number yet.
+- Task 1, run `2026-11-12-1627-drive-tools` (hand-built figure, host): 60 of 60 runs correct, 10 of 10 for each of three models in each variant; 0 failed calls of 313; 0 rejected submissions; median 7.5 s and 8380 tokens a run. Conditions A and B: no number yet; the models stopped answering on 2026-11-12 before any run of them.
+- The pilot's arm without a model (30 questions on 10 development figures, every row of every built table proposed): with `propose` checking place only, the answer accepted on 30 and the arm right on 23 (run `2026-11-12-1906-pilot-enumerate`); with the leaf's layer checked as well, right on 30 of 30 (run `-1913`).
 
 **Overall progress**
 - [x] Task 1: Do the free models drive tools to a validated submission?
 - [x] Task 2: A pairing checked from the figure alone, measured against the capture-time bindings
 - [~] Task 3: `gl_tools()` and a validating `propose`; the first record _(steps 1 to 3 done 2026-11-12: the flipped panel, `gl_propose()`, `gl_tools()`; the run with models open)_
-- [~] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(step 1 done 2026-11-12: the sandbox)_
+- [x] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(done 2026-11-12; no model has used it yet)_
 - [~] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(material, 30 questions, the dry run and the arm without a model done 2026-11-12; the arms with models wait for the models)_
 - [ ] Task 5b: The bundle's round trip on the development sets _(added 2026-11-12, see Scope changes)_
 - [ ] Task 6: Records: design notes, NEWS, dev log, closing notes
@@ -218,7 +219,7 @@
 
 ### Task 4: Condition A
 
-**Status:** `[~]` (written out 2026-11-12, after Task 3 step 3)
+**Status:** `[x]` (written out 2026-11-12, after Task 3 step 3; done the same day)
 
 **Tests assumption:** 4 (a sandbox that is read-only, offline and held to the same budget), before any model is asked.
 
@@ -232,8 +233,8 @@
 
 **Checklist**
 - [x] Step 1: `bench/agent/sandbox.R` with a self-check (`--dry`) of what it can and cannot do.
-- [ ] Step 2: `bench/agent/material.R`, development figures only: per figure, the bundle gloss writes (for condition B and the enumeration, read on the host with `gl_read()`), the bindings made at capture (the answers, kept apart), and condition A's directory: `code.R` and its `data/`, `tables/<name>.csv` and `tables.rds`, `grob_tree.txt`, `figure.svg`. A check that every element a question can ask about has the same place in `figure.svg` as in gloss's scene.
-- [ ] Step 3: the harness's two tool sets: A has `run_r(code)` and `submit(table, row)`, which records and says nothing more; B has `gl_tools()` with every binding hidden. One budget for both: the same limit on steps and on time, the same cap on what a tool hands back. A no-model check drives both to a right answer on one figure.
+- [x] Step 2: `bench/agent/material.R`, development figures only: per figure, the bundle gloss writes (for condition B and the enumeration, read on the host with `gl_read()`), the bindings made at capture (the answers, kept apart), and condition A's directory: `code.R` and its `data/`, `tables/<name>.csv` and `tables.rds`, `grob_tree.txt`, `figure.svg`. A check that every element a question can ask about has the same place in `figure.svg` as in gloss's scene.
+- [x] Step 3: the harness's two tool sets: A has `run_r(code)` and `submit(table, row)`, which records and says nothing more; B has `gl_tools()` with every binding hidden. One budget for both: the same limit on steps and on time, the same cap on what a tool hands back. A no-model check drives both to a right answer on one figure.
 
 **Verification**
 - The self-check's output; the material's counts per figure; the no-model check.
@@ -244,6 +245,16 @@
 - `Rscript bench/agent/sandbox.R --dry`: 13 checks, all pass. The sandbox reads its material, loads the bench's packages and builds a plot (0.9 s for that call, container start included); has no network; sees no key, token or proxy of the host, no repository and no sources; cannot write outside `/work` and `/tmp`; keeps its own files from one call to the next and leaves the material unchanged; stops code after its time limit and says so; clips a long output to head and tail; an error or a call for too much memory ends that call only; a new sandbox starts from the material; closing removes it.
 - *Assumption 4's threshold:* a call costs about 1 s with the container's start, far under the 10 s that would have asked for a session that stays up. One container a call is kept.
 - Cost: 136 lines under `bench/agent/`, none under `R/` or `tests/`.
+
+**Result, steps 2 and 3** (2026-11-12; `0def04f`, `a3c352d`, `641a942`)
+
+- *Material* (`GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/agent/material.R pilot`, runs `2026-11-12-1853-material-pilot` and `-1900`): written for 9 of the 10 sampled figures, 41 KB to 5130 KB a figure. Not for exts-021: `gl_write()` stops on its raw table (Scope changes). exts-030 stands in.
+- *The same element in both arms:* of the 6493 circles and rectangles bound one for one row in the 10 figures, 0 are at another place in svglite's own page than in gloss's scene (0.01 pt); the result that would have changed the plan did not occur.
+- *The tool sets* (`Rscript bench/agent/pilot.R dry`, no model, all 30 questions): the answer's row is in arm A's material and a submission of it scores right; arm B finds the element at its place, its binding is hidden, and `propose` accepts the answer on the figure read back from the bundle. Every figure's own code runs in the sandbox, 0.7 to 55.2 s.
+- *One budget:* 16 model turns, 180 s a model request, 120 s a sandbox call, 4000 characters a tool hands back. The time of a whole run is recorded, not capped.
+- *What the first dry run showed:* bioc-016's code was killed at the sandbox's 2 GB and the sandbox called it a timeout. Now 6 GB, and a memory kill is told apart from a timeout (14 checks in the self-check).
+- *Assumption 4 holds:* the sandbox is read-only outside its own copy, offline, and its calls cost about 1 s.
+- Cost: 942 lines under `bench/agent/` (sandbox 144, material 86, writer 39, harness 470, sample 47, scorer 156) and 20 added in the bench worker and its caller; none under `R/` or `tests/`. Not done: no model has called `run_r` or `submit`; the rehearsal on a hand-built figure waits for the models.
 
 ---
 
@@ -267,6 +278,27 @@
 **Verification**
 - The archive and its score; predictions scored.
 - The results that would change the plan, each way: A as right as B (the tools are a convenience for this question, and M5's decisive comparison has to be asked on claims or on repair, not on single pairings); S as right as B (binding one element is a search, and the model's work lies elsewhere); a wrong acceptance (the check alone does not carry a proposal, and `propose` needs more than a place).
+
+**Result so far** (2026-11-12; no model yet)
+
+- *Sample and questions:* 10 figures by the rule (`bench/agent/pilot-figures.csv`; exts-030 in place of exts-021), 30 questions (`bench/agent/pilot-questions.csv`): bars, tiles and points, 21 on the seven figures that are not trees and 9 on the three that are.
+- *Arm S,* predictions first (125-128: 4 right, one point guess wrong; 129: right):
+
+  | Run | `propose` checks | Answer accepted | Right | Questions with another row accepted |
+  |---|---|---|---|---|
+  | `2026-11-12-1906-pilot-enumerate` | place | 30 of 30 | 23 of 30 (by figure 3, 3, 0, 3, 3, 3, 3, 2, 3, 0) | 7 (10 rows, all of another layer) |
+  | `2026-11-12-1913-pilot-enumerate` | place and the leaf's layer (`7edf4fc`) | 30 of 30 | 30 of 30 | 0 |
+
+- *Assumption 5 does not hold on this question:* with the layer given by code, trying rows finds every answer. Arm A against arm B is still to be measured; what a model adds here is nothing.
+- Cost of the layer check: 108 lines added under `R/` and `tests/` (`R/propose.R` 32, `R/agent-tools.R` 3, tests 73), one host and one container suite run, two runs of the arm (about half a minute each). Moved: 7 of 30 questions from a wrong acceptance possible to none.
+
+---
+
+### Task 5b: The bundle's round trip on the development sets
+
+**Status:** `[ ]` (added 2026-11-12)
+
+For every captured development figure, in the container: write the bundle, read it back, compare elements, tables and bindings with the figure written, and have one verified binding checked by `gl_propose()` on the figure read back. Reported per figure with the reason for each one that does not come back whole. Prediction first. What it decides: whether arm B can be served on every figure the bench captures, and what the codec must store, or leave out with a reason, before M5.
 
 ---
 

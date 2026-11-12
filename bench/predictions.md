@@ -948,3 +948,7 @@ Written 2026-11-12, after the change to `R/propose.R` and its tests and before r
 129. **The arm is right on 30 of 30 questions:** the answer accepted, nothing else. The 10 rows of other tables are rejected with the reason that names the leaf's layer. Refusals stay where they were (6, on tree-068) or become rejections for the same reason.
 
 **What would change the plan:** another row still accepted. Then either a leaf of these figures has no layer stated in the bundle's bindings, or two rows of one layer tie in a way capture did not see; each is read before a model is asked.
+
+### Scored (2026-11-12, run `2026-11-12-1913-pilot-enumerate`, archived unscored in `e99f4b3`; `propose` of `7edf4fc`)
+
+129. **Right.** 30 of 30: the answer accepted on every question and nothing else, 3 of 3 on each of the 10 figures. No proposal is refused: the 6 refusals of the first run, rows of other layers on tree-068, are now rejections that name the leaf's layer.
