@@ -8,6 +8,7 @@
 - `gl_panels()` has a column `flipped`: `TRUE` for a ggplot panel under `coord_flip()`, where the horizontal scale is the one the tables call `y`.
 - `gl_bindings()` says what `row` is for a heatmap: a cell of the matrix, counted column by column.
 - Measured on the development sets, with the binder's own pairings: of the elements verified at capture, the figure alone verifies 9063 of 9069 on v0's ggplot figures (24 of 26 figures in full) and 13865 of 14112 on the tree stratum's (24 of 28); 2131 of 2544 on base figures and none of 250 heatmap cells, which is why those two are refused for now.
+- Fixed: a leaf could be reported `verified` with no verified element, and its element with status `NA`. It happened when a boxplot drew exactly as many outliers as boxes: the outliers were compared as point symbols against rows that have no `y`, the comparison came back empty, and an empty result counted as a pass. Such a leaf is now `unbound` with the reason, and any comparison that does not give a result for every element of a leaf leaves the leaf `unbound` instead of passing it or stopping the figure's bindings with an error. Found on one leaf of a held-out figure after its run (tree-070); the reported shares do not change at the precision given, and the held-out set was not rerun.
 
 ## Bindings in the figure and the API (2026-11-12, M1 Task 6a)
 

@@ -399,6 +399,14 @@ check_claim_rows <- function(cl, leaf, geo, tol = bind_tolerance) {
                 row = check_rows(g, pred, all_pred, tol),
                 group = check_groups(g, pred, groups, all_pred, all_groups, tol))
   if (!is.null(res$reason)) return(done("unbound", res$reason, mode))
+  # A leaf passes only on a result for each of its elements. A comparison
+  # that came back short or undecided is not a pass: all() of nothing is
+  # true, and a leaf was once "verified" that way with no element verified
+  # (held-out run 2026-11-12-1427, tree-070 L022).
+  if (length(res$pass) != n_el || anyNA(res$pass)) {
+    return(done("unbound", sprintf("the comparison gave no result for every element: %d decided for %d element%s",
+                                   sum(!is.na(res$pass)), n_el, plural(n_el)), mode))
+  }
   st <- ifelse(!res$pass, "failed", ifelse(res$n_pass > 1L, "ambiguous", "verified"))
   rows <- switch(mode, symbol = res$rows, row = pred$row,
                  group = vapply(groups, function(k) pred$row[pred$group == k][1], 1L))
@@ -429,6 +437,12 @@ plural <- function(n) if (n == 1L) "" else "s"
 # one (ambiguous). The rows' shapes say how many parts each draws; when
 # they do not add up to the elements, the leaf is not paired part by part.
 check_symbols <- function(g, pred, all_pred, tol) {
+  # rows that state a shape but no point: a boxplot's rows, whose outliers
+  # are drawn as points, have no y
+  miss <- setdiff(c("x", "y"), names(pred))
+  if (length(miss)) {
+    return(list(reason = sprintf("the rows paired with the leaf's point symbols have no %s", paste(miss, collapse = ", "))))
+  }
   kind <- symbol_kind(pred$shape)
   k <- match(kind, names(symbol_parts))
   n_parts <- ifelse(is.na(k), 0L, lengths(symbol_parts)[k])

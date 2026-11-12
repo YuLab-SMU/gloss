@@ -895,3 +895,48 @@ test_that("a failed leaf that is a passing sibling moved by one offset is unboun
   # the copy with its labels in another order is not a copy: still failed
   expect_equal(lv$status[4], "failed")
 })
+
+test_that("a leaf is never verified without a verified element (a boxplot's one outlier)", {
+  # Held-out tree run 2026-11-12-1427, tree-070 leaf L022, found after the
+  # run: the one outlier of one box. The row's shape draws one part, so the
+  # leaf was compared as symbols; a boxplot's rows have no y, the comparison
+  # came back empty, and all() of nothing made the leaf "verified" with no
+  # element verified and its element's status NA.
+  skip_if_not_installed("ggplot2")
+  p <- ggplot2::ggplot(data.frame(g = "a", y = c(1:10, 30)), ggplot2::aes(.data$g, .data$y)) +
+    ggplot2::geom_boxplot()
+  b <- bind_capture(p)
+  sl <- b$fig$substrate$leaves
+  out <- b$leaves[b$leaves$leaf %in% sl$id[sl$class == "points"], ]
+  expect_equal(nrow(out), 1L)
+  expect_equal(out$status, "unbound")
+  expect_match(out$reason, "have no y")
+  expect_equal(c(out$verified, out$ambiguous, out$failed), c(0L, 0L, 0L))
+  el <- b$elements[b$elements$leaf %in% out$leaf, ]
+  expect_equal(el$status, "unbound")
+  expect_true(is.na(el$row))
+  # and in the bindings the figure keeps
+  fig <- gloss(p, context = FALSE)
+  lv <- gl_bindings(fig, by = "leaf")
+  expect_false(any(lv$status == "verified" & lv$verified == 0L))
+  expect_false(anyNA(gl_bindings(fig)$status))
+})
+
+test_that("a comparison without a result for every element leaves the leaf unbound, never verified", {
+  # the general case behind the leaf above: whatever a comparison returns,
+  # a leaf passes only on a result for each of its elements
+  skip_if_not_installed("ggplot2")
+  p <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$wt, .data$mpg)) + ggplot2::geom_point()
+  for (res in list(list(pass = logical(), dev = double(), n_pass = integer()),
+                   list(pass = rep(NA, 32L), dev = rep(NA_real_, 32L), n_pass = rep(1L, 32L)))) {
+    local_mocked_bindings(check_symbols = function(g, pred, all_pred, tol) res)
+    b <- bind_capture(p)
+    lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+    expect_equal(lv$status, "unbound")
+    expect_match(lv$reason, "no result for")
+    expect_equal(c(lv$verified, lv$ambiguous, lv$failed), c(0L, 0L, 0L))
+    el <- b$elements[b$elements$leaf %in% lv$leaf, ]
+    expect_equal(nrow(el), 32L)
+    expect_true(all(el$status == "unbound") && all(is.na(el$row)))
+  }
+})
