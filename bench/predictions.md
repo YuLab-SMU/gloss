@@ -623,3 +623,20 @@ Written 2026-11-12, after capture and the binder were changed to count and pair 
 84. **tree-061's L007 keeps its 3785 elements verified or ambiguous, none failed, and its maximum deviation falls from 0.49 pt to under 0.05 pt.** How they split between verified and ambiguous is not predicted (the box rule's reach along the baseline differs from the vertex mean's).
 85. **No other leaf of the stratum changes status, counts or reason.** The other ten points leaves are paired in mode `symbol` with the same counts. Per figure, of the 28 ggplot figures: every layer element checked in 22 (unchanged; tree-014 keeps its text drawn as outlines), at least 80% in 25 (was 24; tree-014 at 89.7%), none at 0.
 86. **v0 binding against `2347`: exts-014's L013 and L016 go from count mismatch to verified (6 + 6); its L007 and L010 stay unbound, their reason now "the rows' shapes draw 1001 parts, the leaf drew 10 elements"; no other leaf changes status, counts or reason; no regression; failed stays 8.** ggplot count mismatch 27 → 15.
+
+### Predictions 81-86 (scored 2026-11-12)
+
+Runs `runs/2026-11-12-0924-capture-dev-tree.*`, `-0927-bind-dev-tree.*` (stratum), `-0930-capture-dev.*`, `-0936-bind-dev.*` (v0), all at `117665c` from start to end (the predictions committed in it; no tracked file modified), one copy of gloss's source for all four (digest `2657d803`), container, no network. Captures compared cell by cell over 38 columns (all but `seconds`); bindings with `compare-bind.R`.
+
+| Prediction | Observed | Verdict |
+|---|---|---|
+| 81. Stratum capture against `2221`: tree-014's L030 `ok`, its mismatch leaves 19 → 18, nothing else differs; 84 → 83 | Four cells differ, all tree-014's: `leaves_ok` 94 → 95, `leaves_mismatch` 19 → 18, `leaf_status`, `mismatch_leaves` (L030 gone). 84 → 83 | right |
+| 82. v0 capture against `2104`: exts-014's two `geom_rocci()` leaves `ok`, 2 → 0, nothing else differs; 59 → 57 | Four cells differ, all exts-014's: `leaves_ok` 32 → 34, `leaves_mismatch` 2 → 0, `leaf_status`, `mismatch_leaves`. 59 → 57 | right |
+| 83. Stratum: tree-014's L030 paired symbol by symbol, 12690 verified or ambiguous, 0 failed, max deviation < 0.05 pt; count mismatch 14482 → 1792; 41.5% → 92.2%; failed 67, unbound 87 | Mode `symbol`, 4323 verified + 8367 ambiguous, 0 failed, max 0.008 pt. Count mismatch 1792; 92.2%; failed 67; unbound 87 | right |
+| 84. tree-061's L007: 3785 verified or ambiguous, 0 failed, max deviation 0.49 → < 0.05 pt | 3344 verified + 441 ambiguous (was 3491 + 294), 0 failed, max 0.007 pt | right |
+| 85. No other stratum leaf changes; the other ten points leaves in mode `symbol` with the same counts; per figure all checked 22, at least 80% 25, none 0 | `compare-bind.R`: 593 of 595 leaves unchanged, the 2 changed are L030 and L007, 0 regressions; the ten in mode `symbol`, statuses and counts equal; 22, 25, 0 | right |
+| 86. v0 against `2347`: exts-014's L013, L016 verified (6 + 6); L007, L010 unbound with "the rows' shapes draw 1001 parts, the leaf drew 10 elements"; nothing else changes; no regression; failed 8; ggplot count mismatch 27 → 15 | 7110 of 7114 leaves unchanged; the 4 changed as predicted (max 0.007 pt); 0 regressions; failed 8; ggplot count mismatch 15 | right |
+
+- 6 right of 6.
+- tree-014's points are two-thirds ambiguous: 8367 of 12690 elements lie within 0.5 pt of another row's point. Not read further; the likely cause is that the dot plot draws each pair of sequences at their distance on one tip's line, where equal distances coincide, as overlapping points did on v0's volcano plot.
+- tree-061's split moved (147 elements from verified to ambiguous) because the box rule reaches along the baseline as far as the glyph's box, wider than the vertex mean's 0.5 pt square; how they would split was left unpredicted for that reason.

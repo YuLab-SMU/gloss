@@ -61,7 +61,7 @@
 
 **Decisions (the owner's; the recommendation is Claude's):**
 
-1. *When the stratum's held-out half is run.* (a) Once, at the end of this plan, with the binder frozen at a commit and predictions committed before: a reported number for tree figures now. A later change to the binder (M1 Tasks 3-6) would mean a second run, archived and reported as made after the first. (b) After M1 closes, together with v0's held-out binding run: one run for both, and no reported number on tree figures until then. **Recommended: (a).** The lab cares about tree figures now, and nothing in the M1 tasks left open is planned to change how ggplot layers bind. Needed only by Task 7.
+1. *When the stratum's held-out half is run.* (a) Once, at the end of this plan, with the binder frozen at a commit and predictions committed before: a reported number for tree figures now. A later change to the binder (M1 Tasks 3-6) would mean a second run, archived and reported as made after the first. (b) After M1 closes, together with v0's held-out binding run: one run for both, and no reported number on tree figures until then. **Recommended: (a).** The lab cares about tree figures now, and nothing in the M1 tasks left open is planned to change how ggplot layers bind. Needed only by Task 7. **Decided 2026-11-12 by the owner: (a)** ("按你的建议选 (a)，继续做 Task 5").
 
 ---
 
@@ -80,17 +80,17 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 9 files, 96 tests, 620 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `73b317d`; the container the same); was 88 / 544 at `b02ea8c`.
-- Key numbers: stratum development half, 29 of 29 captured (run `2221`); 41.5% of 25037 layer elements checked, failed 67, unbound 87, every text leaf drawn as outlines named; every layer element checked in 22 of 28 ggplot figures, none at 0 (run `2344`). Was 28 captured, 40.1% of 24915, failed 212, unbound 308, 15 of 27 (runs `2110`, `2118`). v0 development binding: 0 regressions against run `1353`; gallery-020's 5 labels gained (run `2315`).
+- Suite: 9 files, 102 tests, 733 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `5c0a3cd`; the container the same); was 88 / 544 at `b02ea8c`.
+- Key numbers: stratum development half, 29 of 29 captured (run `2026-11-12-0924`); 92.2% of 25037 layer elements checked, failed 67, unbound 87, count mismatch 1792 (text drawn as glyph outlines); every layer element checked in 22 of 28 ggplot figures, at least 80% in 25, none at 0 (run `2026-11-12-0927`). Was 28 captured, 40.1% of 24915, failed 212, unbound 308, 15 of 27 (runs `2110`, `2118`). v0 development binding: 0 regressions against run `1353`; gallery-020's 5 labels and exts-014's 12 symbol parts gained (runs `2315`, `2026-11-12-0936`).
 
 **Overall progress**
 - [x] Task 1: A page over the parser's limit (tree-041)
 - [x] Task 2: Labels in their own frame: justification and rotation (tree-011, -060, -083, -072; tree-045)
 - [x] Task 3: Polar coordinates through the coord's transform (tree-025, -038, -057)
 - [x] Task 4: Text drawn as glyph outlines (the book figures)
-- [ ] Task 5: Points in several shapes (tree-014) _(stub)_
+- [x] Task 5: Points in several shapes (tree-014)
 - [ ] Task 6: What remains: repelled labels (tree-054), tree-003's text leaf _(stub)_
-- [ ] Task 7: The stratum's held-out half, one run _(stub; decision 1)_
+- [ ] Task 7: The stratum's held-out half, one run _(stub; decision 1: (a), once at the end of this plan)_
 - [ ] Task 8: Records: design notes, NEWS, dev log, closing notes
 
 Each of Tasks 1-4 ends with a run on the stratum's development half, predictions committed before it. Tasks 2-4 change the binder, so each also reruns v0's development binding and compares it with run `1353`.
@@ -227,7 +227,7 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 
 ### Task 5: Points in several shapes (tree-014)
 
-**Status:** `[~]` _(written out 2026-11-11, after Tasks 1-4; started 2026-11-12)_
+**Status:** `[x]` (2026-11-12)
 
 **Tests assumption:** a new one, written here before any of it is measured: *every primitive svglite draws for a point symbol (pch 0-25) is centred on the point*, so a row drawn as k elements can be checked element by element against one centre. A symbol whose primitives are not centred (a triangle drawn with its box off the point, as the vertex-mean rule already knows) gets the centre its own family uses; a symbol that cannot be checked this way is listed with its reason, never passed.
 
@@ -245,7 +245,16 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 - [x] Suite on the host; container suite (capture reads what the device wrote). — Host 9 files / 101 tests / 717 expectations / 0 failed / 0 skipped (was 96 / 620); container (`bench/R/suite.R`) the same, 0 errors, 0 warnings.
 - [x] Before the predictions, a class found by reading run `2344`'s leaves: tree-061's `geom_point(shape = '|')` under `emojifont` draws each symbol as a glyph outline (3785 paths), which the vertex-mean rule passed with max deviation 0.49 pt against 0.5. The symbol rule would fail them on their tag. A character symbol drawn as paths is now named as glyph outlines and not compared, as text is since Task 4 (a test that failed first, `test-bind.R`). Suite: host 9 / 102 / 721 / 0 failed / 0 skipped; container the same.
 - [x] The outline rule revised the same session, after measuring where outlines sit (`dev_docs/research/point-symbols/glyph.R`, host and container identical): the vertex mean of an outline is 0.49 pt off for tree-061's `|` at its size and up to 10.7 pt for other glyphs and sizes, so the old pass was luck; the outline's box is centred on the point across the baseline to 0.01 pt for every glyph tried, since R's engine centres a symbol's character by its glyph's metric box, and holds the point along it (side bearings: a `j` 0.24-1.36 pt off centre). A character symbol drawn as a path is checked so, as text is (exact across, inside the box along), instead of being left unchecked (`0dda3d3` replaced; its test now asserts verified, and permuted rows failing). Suite: host 9 / 102 / 733 / 0 failed / 0 skipped; container the same.
-- [ ] Predictions, then `capture.R dev tree`, `bind.R dev tree`, `capture.R dev` and `bind.R dev`; compared with the runs before.
+- [x] Predictions, then `capture.R dev tree`, `bind.R dev tree`, `capture.R dev` and `bind.R dev`; compared with the runs before. — Predictions 81-86 at `117665c`; runs `2026-11-12-0924`, `-0927`, `-0930`, `-0936`: 6 of 6 right.
+
+**Verification**
+- tree-014's leaf of points counted and checked; v0 compared leaf by leaf with run `2347`, no element moving out of verified or ambiguous.
+
+**Result** (2026-11-12, container, no network, all four runs at `117665c` from start to end, one copy of the source)
+- Capture, stratum (`... bench/R/capture.R dev tree`, run `2026-11-12-0924`) against `2221`, 38 columns: only tree-014's L030 changes, count mismatch → `ok` (12690 = 12690); mismatch leaves 84 → 83. v0 (`capture.R dev`, run `0930`) against `2104`: only exts-014's two `geom_rocci()` leaves, `ok` (6 = 6); 59 → 57.
+- Binding, stratum (`bind.R dev tree`, run `0927`): 25037 layer elements, verified 14195, ambiguous 8896 (92.2%; was 41.5% in run `2344`), failed 67, unbound 87, count mismatch 1792 (was 14482: what is left is text drawn as glyph outlines). tree-014's L030: 4323 verified, 8367 ambiguous, 0 failed, max 0.008 pt. tree-061's L007: 3344 + 441, 0 failed, max 0.007 pt (was 0.49). `compare-bind.R` against `2344`: 593 of 595 leaves unchanged, 0 regressions. Per figure, of 28 ggplot figures: every layer element checked in 22, at least 80% in 25 (was 24; tree-014 at 89.7%), none at 0.
+- v0 (`bind.R dev`, run `0936`) against `2347`: 7110 of 7114 leaves unchanged, 0 regressions, failed 8; exts-014's L013 and L016 verified (12 elements); its `geom_roc()` points unbound with a reason that counts the rows' parts; ggplot count mismatch 27 → 15.
+- Suite: host 9 files / 102 tests / 733 expectations / 0 failed / 0 skipped; container the same.
 
 ### Task 6: What remains (tree-054's repelled labels, tree-003's text leaf)
 
