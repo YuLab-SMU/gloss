@@ -132,3 +132,18 @@ The first row is not a measurement of arm A (Surprises). `Rscript bench/agent/pi
 - **Then Task 6:** the closing notes of the plan. What they already have to say: on single pairings in panels with linear scales, code finds the answer by trying rows once it knows the leaf's layer, so M5's decisive comparison has to be asked where code cannot enumerate (a leaf the engine could not bind, a table that has to be found in the figure's code, a claim about the figure); a figure's bundle now always exists but may lack what the codec cannot store; and the loop that runs an arm has to be shown not to touch what a model sends.
 - **aisdk:** the reproduction is in `dev_docs/research/aisdk-args/`. Whether to report it upstream, and whether gloss should ask for a fixed version before its own tools take free text, is the owner's call.
 - **Waiting on the owner:** pull request 1; reading ADR-0007; when to push `feat/agent-path` (not on the remote; 58 commits since `8835020`, four of them another session's: `34f13b0`, `d3ae23c`, `1e22e10`, `18e9557`); how two sessions share the branch.
+
+## Later still: while the pilot's runs were being made
+
+The pilot's 540 runs were started at 20:19 UTC from a clean tree at `83b398b`, two models at a time (stamp `2026-11-12-2019`). Nothing under `R/`, `tests/` or the pilot's harness was touched while they ran.
+
+### What changed
+
+- `c73e831`, `8527cd6`: two additions to `bench/agent/score-pilot.R` (65 lines), written before any run of the pilot was scored. The paired difference by figure (B's share right minus A's), its mean, sd and a 95% interval from drawing the figures again (10000 draws, seed 20261113), for all models and for each, with what a question cost in A over what it cost in B. And the tool calls that failed, by what the tool answered.
+- `eed40df`: a dated note in design §评测设计: the loop both conditions share is a factor to control.
+
+### Measured
+
+- `R CMD build --no-build-vignettes .` and `R CMD check --no-manual` on the tarball (host; the package's files are those of `68a6fe9`, `git diff --stat 68a6fe9 HEAD -- R tests man inst DESCRIPTION NAMESPACE` is empty): Status OK, no error, warning or note.
+- The scorer's additions, no model. On a synthetic archive of 3 figures, 2 models and known answers the printed differences (+0.00, +0.50, +0.75; mean +0.417, sd 0.382; by model +0.333 and +0.500) are the ones computed apart from the scorer. On the two rehearsal archives the failed calls come out as they were counted by hand: `-1942` (aisdk's loop) arm A 28 of 83, 21 of them "undefined columns selected"; `-2008` (the harness's loop) 4 of 68, four different messages; arm B none in either. No line of the saved score of `-2008` changes.
+- **Not run:** the suite (nothing it tests changed); the scorer on the pilot's own archives, which are scored once, after they are complete and committed.
