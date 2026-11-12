@@ -451,20 +451,41 @@ if (mode == "run") {
         "\n", file = f, sep = "")
   }
   model <- provider()$language_model(model_id)
-  errors_in_a_row <- 0L
+  # The models behind the gateway are not always up (2026-11-12: 502 for an
+  # hour, then 429 for one of them). The model is asked for one word before
+  # its runs and after a run that ended in a request error, and waited for.
+  answers <- function() {
+    r <- tryCatch(aisdk::generate_text(model = model, prompt = "Reply with the single word: ready", max_steps = 1, temperature = 0),
+                  error = function(e) e)
+    !inherits(r, "error")
+  }
+  wait_for_model <- function(minutes = 90) {
+    t0 <- Sys.time()
+    repeat {
+      if (answers()) return(invisible(TRUE))
+      if (as.numeric(difftime(Sys.time(), t0, units = "mins")) > minutes) {
+        stop(sprintf("%s has not answered for %d min; run again later under the same stamp", model_id, minutes))
+      }
+      Sys.sleep(60)
+    }
+  }
+  wait_for_model()
   mats <- list()
   for (q in qs) for (rep in seq_len(n_repeats)) for (arm in arms) {
     key <- paste(arm, q$figure, q$question, rep)
     tries <- done[[key]]
-    if (any(tries) || length(tries) >= 2L) next
+    if (any(tries)) next
     if (is.null(mats[[q$figure]])) mats[[q$figure]] <- pilot_material(q$figure)
-    r <- c(list(model = model_id, rep = rep, attempt = length(tries) + 1L), run_one(model, arm, mats[[q$figure]], q))
-    cat(json_line(r), "\n", file = f, append = TRUE, sep = "")
-    cat(sprintf("%-20s %s %-14s q%d r%d  %s  calls %2d  %6.1f s%s\n", short(model_id), arm, q$figure, q$question, rep,
-                if (r$correct) "correct" else if (r$answered) "WRONG  " else "no answer", r$tool_calls, r$seconds,
-                if (is.na(r$error)) "" else "  (request error)"))
-    errors_in_a_row <- if (is.na(r$error)) 0L else errors_in_a_row + 1L
-    if (errors_in_a_row >= 3L) stop("three requests in a row failed: the models are not answering; run again later under the same stamp")
+    while (length(tries) < 2L) {
+      r <- c(list(model = model_id, rep = rep, attempt = length(tries) + 1L), run_one(model, arm, mats[[q$figure]], q))
+      cat(json_line(r), "\n", file = f, append = TRUE, sep = "")
+      cat(sprintf("%-20s %s %-14s q%d r%d  %s  calls %2d  %6.1f s%s\n", short(model_id), arm, q$figure, q$question, rep,
+                  if (r$correct) "correct" else if (r$answered) "WRONG  " else "no answer", r$tool_calls, r$seconds,
+                  if (is.na(r$error)) "" else "  (request error)"))
+      tries <- c(tries, is.na(r$error))
+      if (is.na(r$error)) break
+      wait_for_model()
+    }
   }
   cat("done:", f, "\n")
 }
