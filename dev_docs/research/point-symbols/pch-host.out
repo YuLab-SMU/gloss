@@ -1,0 +1,241 @@
+svglite 2.2.2 | grid 4.5.2 | R version 4.5.2 (2025-10-31) | Darwin 
+
+== 1. pch 0-25, one point at the page centre (108, 108 pt), size 6 pt and 24 pt
+   dx, dy: offset from the point, pt; fy: the point's height in the union box (0 top, 1 bottom)
+pch  0 size  6: 1 part  | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | rect box(+0.00,+0.00)
+pch  0 size 24: 1 part  | union box 17.93 x 17.93, point at fx 0.5003 fy 0.5003 | rect box(-0.00,-0.00)
+pch  1 size  6: 1 part  | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00)
+pch  1 size 24: 1 part  | union box 17.94 x 17.94, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00)
+pch  2 size  6: 1 part  | union box 6.04 x 5.23, point at fx 0.5000 fy 0.6673 | polygon box(+0.00,-0.88) vmean(+0.00,-0.00)
+pch  2 size 24: 1 part  | union box 24.16 x 20.91, point at fx 0.5000 fy 0.6667 | polygon box(+0.00,-3.48) vmean(+0.00,+0.00)
+pch  3 size  6: 2 parts | union box 6.34 x 6.34, point at fx 0.5000 fy 0.5000 | line box(+0.00,+0.00); line box(+0.00,+0.00)
+pch  3 size 24: 2 parts | union box 25.36 x 25.36, point at fx 0.5000 fy 0.5000 | line box(+0.00,+0.00); line box(+0.00,+0.00)
+pch  4 size  6: 2 parts | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | line box(+0.00,+0.00); line box(+0.00,+0.00)
+pch  4 size 24: 2 parts | union box 17.94 x 17.94, point at fx 0.5000 fy 0.5000 | line box(+0.00,+0.00); line box(+0.00,+0.00)
+pch  5 size  6: 1 part  | union box 6.34 x 6.34, point at fx 0.5000 fy 0.5000 | polygon box(+0.00,+0.00) vmean(+0.00,+0.00)
+pch  5 size 24: 1 part  | union box 25.36 x 25.36, point at fx 0.5000 fy 0.5000 | polygon box(+0.00,+0.00) vmean(+0.00,+0.00)
+pch  6 size  6: 1 part  | union box 6.04 x 5.23, point at fx 0.5000 fy 0.3327 | polygon box(+0.00,+0.88) vmean(+0.00,+0.00)
+pch  6 size 24: 1 part  | union box 24.16 x 20.91, point at fx 0.5000 fy 0.3333 | polygon box(+0.00,+3.48) vmean(+0.00,+0.00)
+pch  7 size  6: 3 parts | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | rect box(+0.00,+0.00); line box(+0.00,+0.00); line box(+0.00,+0.00)
+pch  7 size 24: 3 parts | union box 17.94 x 17.94, point at fx 0.5000 fy 0.5000 | rect box(-0.00,-0.00); line box(+0.00,+0.00); line box(+0.00,+0.00)
+pch  8 size  6: 4 parts | union box 6.34 x 6.34, point at fx 0.5000 fy 0.5000 | line box(+0.00,+0.00); line box(+0.00,+0.00); line box(+0.00,+0.00); line box(+0.00,+0.00)
+pch  8 size 24: 4 parts | union box 25.36 x 25.36, point at fx 0.5000 fy 0.5000 | line box(+0.00,+0.00); line box(+0.00,+0.00); line box(+0.00,+0.00); line box(+0.00,+0.00)
+pch  9 size  6: 3 parts | union box 6.34 x 6.34, point at fx 0.5000 fy 0.5000 | line box(+0.00,+0.00); line box(+0.00,+0.00); polygon box(+0.00,+0.00) vmean(+0.00,+0.00)
+pch  9 size 24: 3 parts | union box 25.36 x 25.36, point at fx 0.5000 fy 0.5000 | line box(+0.00,+0.00); line box(+0.00,+0.00); polygon box(+0.00,+0.00) vmean(+0.00,+0.00)
+pch 10 size  6: 3 parts | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00); line box(+0.00,+0.00); line box(+0.00,+0.00)
+pch 10 size 24: 3 parts | union box 17.94 x 17.94, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00); line box(+0.00,+0.00); line box(+0.00,+0.00)
+pch 11 size  6: 2 parts | union box 6.04 x 6.98, point at fx 0.5000 fy 0.5000 | polygon box(+0.00,+0.44) vmean(+0.00,-0.58); polygon box(+0.00,-0.44) vmean(+0.00,+0.58)
+pch 11 size 24: 2 parts | union box 24.16 x 27.88, point at fx 0.5000 fy 0.5000 | polygon box(+0.00,+1.74) vmean(+0.00,-2.33); polygon box(+0.00,-1.74) vmean(+0.00,+2.33)
+pch 12 size  6: 3 parts | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | line box(+0.00,+0.00); line box(+0.00,+0.00); rect box(+0.00,+0.00)
+pch 12 size 24: 3 parts | union box 17.94 x 17.94, point at fx 0.5000 fy 0.5000 | line box(+0.00,+0.00); line box(+0.00,+0.00); rect box(-0.00,-0.00)
+pch 13 size  6: 3 parts | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00); line box(+0.00,+0.00); line box(+0.00,+0.00)
+pch 13 size 24: 3 parts | union box 17.94 x 17.94, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00); line box(+0.00,+0.00); line box(+0.00,+0.00)
+pch 14 size  6: 2 parts | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | polygon box(+0.00,+0.00) vmean(+0.00,+0.75); rect box(+0.00,+0.00)
+pch 14 size 24: 2 parts | union box 17.94 x 17.94, point at fx 0.5000 fy 0.5000 | polygon box(+0.00,+0.00) vmean(+0.00,+2.99); rect box(-0.00,-0.00)
+pch 15 size  6: 1 part  | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | polygon box(+0.00,+0.00) vmean(+0.00,+0.00)
+pch 15 size 24: 1 part  | union box 17.94 x 17.94, point at fx 0.5000 fy 0.5000 | polygon box(+0.00,+0.00) vmean(+0.00,+0.00)
+pch 16 size  6: 1 part  | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00)
+pch 16 size 24: 1 part  | union box 17.94 x 17.94, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00)
+pch 17 size  6: 1 part  | union box 6.04 x 5.23, point at fx 0.5000 fy 0.6673 | polygon box(+0.00,-0.88) vmean(+0.00,-0.00)
+pch 17 size 24: 1 part  | union box 24.16 x 20.91, point at fx 0.5000 fy 0.6667 | polygon box(+0.00,-3.48) vmean(+0.00,+0.00)
+pch 18 size  6: 1 part  | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | polygon box(+0.00,+0.00) vmean(+0.00,+0.00)
+pch 18 size 24: 1 part  | union box 17.94 x 17.94, point at fx 0.5000 fy 0.5000 | polygon box(+0.00,+0.00) vmean(+0.00,+0.00)
+pch 19 size  6: 1 part  | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00)
+pch 19 size 24: 1 part  | union box 17.94 x 17.94, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00)
+pch 20 size  6: 1 part  | union box 2.98 x 2.98, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00)
+pch 20 size 24: 1 part  | union box 11.96 x 11.96, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00)
+pch 21 size  6: 1 part  | union box 4.48 x 4.48, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00)
+pch 21 size 24: 1 part  | union box 17.94 x 17.94, point at fx 0.5000 fy 0.5000 | circle box(+0.00,+0.00)
+pch 22 size  6: 1 part  | union box 3.97 x 3.97, point at fx 0.5013 fy 0.5013 | rect box(-0.00,-0.00)
+pch 22 size 24: 1 part  | union box 15.89 x 15.89, point at fx 0.5003 fy 0.5003 | rect box(-0.00,-0.00)
+pch 23 size  6: 1 part  | union box 5.62 x 5.62, point at fx 0.5000 fy 0.5000 | polygon box(+0.00,+0.00) vmean(+0.00,+0.00)
+pch 23 size 24: 1 part  | union box 22.48 x 22.48, point at fx 0.5000 fy 0.5000 | polygon box(+0.00,+0.00) vmean(+0.00,+0.00)
+pch 24 size  6: 1 part  | union box 6.04 x 5.23, point at fx 0.5000 fy 0.6673 | polygon box(+0.00,-0.88) vmean(+0.00,-0.00)
+pch 24 size 24: 1 part  | union box 24.16 x 20.91, point at fx 0.5000 fy 0.6667 | polygon box(+0.00,-3.48) vmean(+0.00,+0.00)
+pch 25 size  6: 1 part  | union box 6.04 x 5.23, point at fx 0.5000 fy 0.3327 | polygon box(+0.00,+0.88) vmean(+0.00,+0.00)
+pch 25 size 24: 1 part  | union box 24.16 x 20.91, point at fx 0.5000 fy 0.3333 | polygon box(+0.00,+3.48) vmean(+0.00,+0.00)
+pch 46 size  6: 1 part  | union box 1.00 x 1.00, point at fx 0.5000 fy 0.5000 | rect box(+0.00,+0.00)
+pch 46 size 24: 1 part  | union box 1.00 x 1.00, point at fx 0.5000 fy 0.5000 | rect box(+0.00,+0.00)
+
+== 1b. The point in each part's box (fx, fy; y down), sizes 3, 6, 12, 24, 48, 96 pt
+pch  0: 1 rect fx 0.5001 fy 0.5001
+        largest error using the 96 pt fractions at sizes 3-96: 0.0075 pt
+pch  1: 1 circle fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch  2: 1 polygon fx 0.5000 fy 0.6667
+        largest error using the 96 pt fractions at sizes 3-96: 0.0033 pt
+pch  3: 1 line fx 0.5000 fy 0.5000 | 2 line fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch  4: 1 line fx 0.5000 fy 0.5000 | 2 line fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch  5: 1 polygon fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch  6: 1 polygon fx 0.5000 fy 0.3333
+        largest error using the 96 pt fractions at sizes 3-96: 0.0033 pt
+pch  7: 1 rect fx 0.5001 fy 0.5001 | 2 line fx 0.5000 fy 0.5000 | 3 line fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0075 pt
+pch  8: 1 line fx 0.5000 fy 0.5000 | 2 line fx 0.5000 fy 0.5000 | 3 line fx 0.5000 fy 0.5000 | 4 line fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch  9: 1 line fx 0.5000 fy 0.5000 | 2 line fx 0.5000 fy 0.5000 | 3 polygon fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch 10: 1 circle fx 0.5000 fy 0.5000 | 2 line fx 0.5000 fy 0.5000 | 3 line fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch 11: 1 polygon fx 0.5000 fy 0.4285 | 2 polygon fx 0.5000 fy 0.5715
+        largest error using the 96 pt fractions at sizes 3-96: 0.0041 pt
+pch 12: 1 line fx 0.5000 fy 0.5000 | 2 line fx 0.5000 fy 0.5000 | 3 rect fx 0.5001 fy 0.5001
+        largest error using the 96 pt fractions at sizes 3-96: 0.0075 pt
+pch 13: 1 circle fx 0.5000 fy 0.5000 | 2 line fx 0.5000 fy 0.5000 | 3 line fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch 14: 1 polygon fx 0.5000 fy 0.5000 | 2 rect fx 0.5001 fy 0.5001
+        largest error using the 96 pt fractions at sizes 3-96: 0.0075 pt
+pch 15: 1 polygon fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch 16: 1 circle fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch 17: 1 polygon fx 0.5000 fy 0.6667
+        largest error using the 96 pt fractions at sizes 3-96: 0.0033 pt
+pch 18: 1 polygon fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch 19: 1 circle fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch 20: 1 circle fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch 21: 1 circle fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch 22: 1 rect fx 0.4999 fy 0.4999
+        largest error using the 96 pt fractions at sizes 3-96: 0.0062 pt
+pch 23: 1 polygon fx 0.5000 fy 0.5000
+        largest error using the 96 pt fractions at sizes 3-96: 0.0000 pt
+pch 24: 1 polygon fx 0.5000 fy 0.6667
+        largest error using the 96 pt fractions at sizes 3-96: 0.0033 pt
+pch 25: 1 polygon fx 0.5000 fy 0.3333
+        largest error using the 96 pt fractions at sizes 3-96: 0.0033 pt
+TRC0 1.555120: 2/3 = 0.6667, 1/3 = 0.3333, 3/7 = 0.4286, 4/7 = 0.5714
+
+== 2. Other values, three points
+pch '.'                                        3: rect rect rect
+pch 46                                         3: rect rect rect
+pch 'a'                                        3: text text text
+pch 65                                         3: text text text
+pch c('a', 'bc', 'd')                          3: text text text
+pch 26                                         0: 
+pch 27                                         0: 
+pch 28                                         0: 
+pch 29                                         0: 
+pch 30                                         0: 
+pch 31                                         0: 
+pch 32 (space)                                 3: text text text
+pch 127                                        3: text text text
+pch c(1, NA, 3)                                3: circle line line
+x c(.2, NA, .8), pch 3                         4: line line line line
+x c(.2, Inf, .8) native, pch 3                 4: line line line line
+x c(.2, 2, .8) npc (off the page), pch 3       6: line line line line line line
+pch c(3, 8) recycled on 3 points               8: line line line line line line line line
+size 0, pch 8                                  12: line line line line line line line line line line line line
+col NA, pch 3                                  6: line line line line line line
+alpha 0, pch 8                                 12: line line line line line line line line line line line line
+lwd 0, pch 8                                   12: line line line line line line line line line line line line
+lwd NA, pch 8                                  0: 
+lwd c(NA, 1, 1), pch 8                         8: line line line line line line line line
+col 'transparent', pch 8                       12: line line line line line line line line line line line line
+lty 0 on the viewport, pch 8                   0: 
+size c(1, NA, 1) char, pch 3                   4: line line line line
+size c(1, Inf, 1) char, pch 1                  2: circle circle
+pch c(7, 1, 8): parts point after point        8: rect line line circle line line line line
+pch ""                                         0: 
+pch NA_character_                              0: 
+pch -65                                        3: text text text
+pch 128L                                       0: 
+pch 255L                                       0: 
+pch 256L                                       0: 
+pch 1000L                                      0: 
+pch 0.5                                        3: rect rect rect
+pch 2.7                                        3: polygon polygon polygon
+pch 25.9                                       3: polygon polygon polygon
+pch TRUE                                       3: circle circle circle
+l10n_info()$MBCS: TRUE (pch 128-255 draw a character only in a single-byte locale: GESymbol's maxchar)
+lty 0, pch 8                                   0: 
+lty 'blank', pch 7                             3: rect rect rect
+lty c(0, 1, 1), pch 8 (gp recycled per point?) 8: line line line line line line line line
+lty 0 on the parent gTree, pch 8               0: 
+lty 0, pch 0                                   3: rect rect rect
+lty 0, pch 1                                   3: circle circle circle
+lty 0, pch 2                                   3: polygon polygon polygon
+lty 0, pch 3                                   0: 
+lty 0, pch 4                                   0: 
+lty 0, pch 5                                   3: polygon polygon polygon
+lty 0, pch 6                                   3: polygon polygon polygon
+lty 0, pch 7                                   3: rect rect rect
+lty 0, pch 8                                   0: 
+lty 0, pch 9                                   3: polygon polygon polygon
+lty 0, pch 10                                  3: circle circle circle
+lty 0, pch 11                                  6: polygon polygon polygon polygon polygon polygon
+lty 0, pch 12                                  3: rect rect rect
+lty 0, pch 13                                  3: circle circle circle
+lty 0, pch 14                                  6: polygon rect polygon rect polygon rect
+lty 0, pch 15                                  3: polygon polygon polygon
+lty 0, pch 16                                  3: circle circle circle
+lty 0, pch 17                                  3: polygon polygon polygon
+lty 0, pch 18                                  3: polygon polygon polygon
+lty 0, pch 19                                  3: circle circle circle
+lty 0, pch 20                                  3: circle circle circle
+lty 0, pch 21                                  3: circle circle circle
+lty 0, pch 22                                  3: rect rect rect
+lty 0, pch 23                                  3: polygon polygon polygon
+lty 0, pch 24                                  3: polygon polygon polygon
+lty 0, pch 25                                  3: polygon polygon polygon
+lwd NA, pch 0                                  3: rect rect rect
+lwd NA, pch 1                                  3: circle circle circle
+lwd NA, pch 2                                  3: polygon polygon polygon
+lwd NA, pch 3                                  0: 
+lwd NA, pch 4                                  0: 
+lwd NA, pch 5                                  3: polygon polygon polygon
+lwd NA, pch 6                                  3: polygon polygon polygon
+lwd NA, pch 7                                  3: rect rect rect
+lwd NA, pch 8                                  0: 
+lwd NA, pch 9                                  3: polygon polygon polygon
+lwd NA, pch 10                                 3: circle circle circle
+lwd NA, pch 11                                 6: polygon polygon polygon polygon polygon polygon
+lwd NA, pch 12                                 3: rect rect rect
+lwd NA, pch 13                                 3: circle circle circle
+lwd NA, pch 14                                 6: polygon rect polygon rect polygon rect
+lwd NA, pch 15                                 3: polygon polygon polygon
+lwd NA, pch 16                                 3: circle circle circle
+lwd NA, pch 17                                 3: polygon polygon polygon
+lwd NA, pch 18                                 3: polygon polygon polygon
+lwd NA, pch 19                                 3: circle circle circle
+lwd NA, pch 20                                 3: circle circle circle
+lwd NA, pch 21                                 3: circle circle circle
+lwd NA, pch 22                                 3: rect rect rect
+lwd NA, pch 23                                 3: polygon polygon polygon
+lwd NA, pch 24                                 3: polygon polygon polygon
+lwd NA, pch 25                                 3: polygon polygon polygon
+
+== 2c. Settings from a parent gTree or viewport
+parent lty 0, pch 7                            3: rect rect rect
+parent lty 0, leaf lty 1, pch 7                9: rect line line rect line line rect line line
+parent lwd NA, leaf lwd 2, pch 3               6: line line line line line line
+parent lex 0, pch 3                            6: line line line line line line
+parent lex NA, pch 3                           0: 
+parent lex NA, leaf lex 1, pch 3               0: 
+parent cex 0, leaf cex 1, pch c(1, 3, 0)       3: line line rect
+parent fontsize 0, leaf fontsize 12, pch 3     6: line line line line line line
+parent fontface 5, pch 200                     3: text text text
+pch 1 radius: parent cex 2 fontsize 10, leaf cex 3: 22.50; leaf nothing: 7.50; leaf fontsize 20: 15.00
+fontsize 0, size 1 char, pch 0-25 and 46: 3 0 3 6 6 3 3 9 12 9 6 6 9 6 6 3 0 3 3 0 0 0 3 3 3 3 3
+fontsize NA, size 1 char, pch 0-25 and 46: 3 3 3 6 6 3 3 9 12 9 9 6 9 9 6 3 3 3 3 3 3 3 3 3 3 3 3
+cex 0, size 1 char, pch 0-25 and 46: 3 0 3 6 6 3 3 9 12 9 6 6 9 6 6 3 0 3 3 0 0 0 3 3 3 3 3
+size 0 pt, pch 0-25 and 46: 3 0 3 6 6 3 3 9 12 9 6 6 9 6 6 3 0 3 3 0 0 0 3 3 3 3 3
+size 0 char, pch 0-25 and 46: 3 0 3 6 6 3 3 9 12 9 6 6 9 6 6 3 0 3 3 0 0 0 3 3 3 3 3
+pch 'a', fontsize 0                            3: text text text
+pch 'a', size 0 pt                             3: text text text
+
+== 2b. Units
+0.2npc, NAnpc, Infnpc                    class simpleUnit/unit/unit_v2 as.numeric: 0.2  NA Inf
+1npc, NAmm                               class unit/unit_v2           as.numeric:  1 NA
+sum(1npc, 1mm), sum(1npc, 2mm)           class unit/unit_v2           as.numeric: 1 1
+
+== 3. ggplot2 4.0.3.9000 geom_point(shape = factor), scale_shape_manual(values = 1:8)
+built shape column: integer 1 2 3 4 5 6 7 8 1 2 3 4 5 6 7 8 
+drawn: 30 elements; circle 2, line 20, polygon 6, rect 2 
+shape = 'triangle open': built shape column character triangle open -> 2 
