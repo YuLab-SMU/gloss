@@ -445,11 +445,15 @@ row_family <- function(tag, pred) {
                   tabulate(pr$p[ok], nbins = nrow(e))
                 }))
   }
-  if (tag == "polygon" && has(c("hjust", "vjust"))) {
-    # A label's box (ggplot2's labelGrob): its centre is the row moved by
-    # (0.5 - hjust) of its width and (0.5 - vjust) of its height, in the
-    # row's angle. The vertex mean of a rounded rectangle is not its centre:
-    # bench tree-041 and tree-045, boxes 0.67-0.74 pt off with hjust = .5.
+  # A label's box (ggplot2's labelGrob): its centre is the row moved by
+  # (0.5 - hjust) of its width and (0.5 - vjust) of its height, in the
+  # row's angle. The vertex mean of a rounded rectangle is not its centre:
+  # bench tree-041 and tree-045, boxes 0.67-0.74 pt off with hjust = .5.
+  # An image whose rows state a justification is placed the same way, as
+  # grid justifies a rasterGrob (ggimage's tip images, hjust = 0: bench
+  # tree-041). ggimage moves an image only for hjust 0 and 1 and centres it
+  # for any other value; such an image would fail here.
+  if ((tag == "polygon" && has(c("hjust", "vjust"))) || (tag == "image" && (has("hjust") || has("vjust")))) {
     return(list(need = c("x", "y"), cols = c("x", "y"),
                 element = function(e) e,
                 row = function(p) data.frame(x = p$x, y = p$y, hjust = col_or(p, "hjust", 0.5),

@@ -434,6 +434,16 @@ ggplot_rows_drawn <- function(d, layer) {
       d[[ax]] <- suppressWarnings(as.double(d[[ax]])) + v
     }
   }
+  # A geom whose draw_panel() takes hjust or vjust as a parameter, not as an
+  # aesthetic of its rows, justifies what it draws by the layer's value or
+  # the parameter's default (ggimage's GeomImage: geom_tiplab(geom = "image")
+  # passes hjust = 0, so each image starts at its tip; bench tree-041).
+  fm <- formals(inner(geom$draw_panel) %||% function() NULL)
+  for (nm in c("hjust", "vjust")) {
+    if (!nm %in% args || nm %in% names(d)) next
+    v <- params[[nm]] %||% tryCatch(eval(fm[[nm]], baseenv()), error = function(e) NULL)
+    if ((is.numeric(v) || is.character(v)) && length(v) == 1L) d[[nm]] <- rep(v, nrow(d))
+  }
   d
 }
 
