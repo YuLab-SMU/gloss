@@ -810,6 +810,20 @@ test_that("leaves a layer's grob makes only when drawn are unbound with that rea
     # the points of the same plot still bind
     expect_equal(b$leaves$status[b$leaves$table %in% "built_layer1"], "verified", label = geom)
   }
+  # A leaf whose count capture refused stays a count mismatch with its own
+  # reason: it was never paired, so "the rows do not pass" would not be true
+  # (bench tree-054's texts, drawn as glyph outlines, are count mismatches).
+  p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, label = .data$lab)) + ggrepel::geom_text_repel(seed = 1)
+  j <- suppressWarnings(justified_claim(p))
+  made <- Filter(function(cl) !is.null(cl$made_reason), j$claims)
+  expect_gt(length(made), 0L)
+  for (cl in made) {
+    leaf <- j$leaves[j$leaves$id == cl$leaf, ]
+    leaf$status <- "count_mismatch"
+    r <- check_claim(cl, leaf, j$geo)
+    expect_equal(r$leaf$status, "count_mismatch")
+    expect_false(grepl("makes what it draws", r$leaf$reason))
+  }
 })
 
 test_that("a failed leaf that is a passing sibling moved by one offset is unbound as a copy", {

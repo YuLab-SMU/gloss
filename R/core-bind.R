@@ -192,8 +192,8 @@ check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
   # a leaf the engine could pair only with all the layer's rows, because it
   # was made when its layer's grob was drawn, is unbound with the engine's
   # reason when that pairing does not pass (plan 2026-11-11-tree-binding,
-  # Task 6)
-  if (!is.null(cl$made_reason) && !r$leaf$status %in% c("verified", "ambiguous")) {
+  # Task 6). A count mismatch was never paired and keeps its own reason.
+  if (!is.null(cl$made_reason) && r$leaf$status %in% c("failed", "partly_failed", "unbound")) {
     r$leaf$status <- "unbound"
     r$leaf$reason <- cl$made_reason
     r$leaf[c("verified", "ambiguous", "failed")] <- 0L
