@@ -1,8 +1,8 @@
 # ADR-0009: Code binds what the drawing system's contract gives; a package's own behaviour enters as a checked proposal
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-12
-- **Deciders:** Yonghe Xia. The owner agreed to the direction on 2026-11-12 ("同意，按你说的三件事做"); the wording below is Claude's draft and is accepted when the owner has read it.
+- **Deciders:** Yonghe Xia. The owner agreed to the direction on 2026-11-12 ("同意，按你说的三件事做") and accepted this text, drafted by Claude, the same day ("接受 ADR").
 - **Related:** plan/2026-11-11-tree-binding.md (Task 6, Scope change of 2026-11-12); plan/2026-11-11-m1-roles-and-binding.md (Scope change of 2026-11-12); idea/2026-11-12-binding-proposals.md; dev_logs/2026-11-12-tree-binding-remains.md; dev_logs/2026-11-12-few-rules.md; design §命名、与 ggai 的关系、设计原则 (principle 2), §绑定假设也要能检查, §分阶段的 agent.
 
 ## Context

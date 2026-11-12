@@ -1,7 +1,7 @@
 # Binding proposals: who repairs a binding the engine cannot state
 
 > Status: idea, for the owner's decision. Not a plan, not an ADR. Nothing here has been run.
-> Date: 2026-11-12. Follows [ADR-0009](../dev_docs/decisions/0009-package-behaviour-enters-as-a-checked-proposal.md) (proposed). Evidence: [`dev_docs/research/bind-dev/d3-residue.R`](../dev_docs/research/bind-dev/d3-residue.R) and its `.out`; [dev log](../dev_logs/2026-11-12-few-rules.md).
+> Date: 2026-11-12. Follows [ADR-0009](../dev_docs/decisions/0009-package-behaviour-enters-as-a-checked-proposal.md) (accepted the same day, after this note was written). Evidence: [`dev_docs/research/bind-dev/d3-residue.R`](../dev_docs/research/bind-dev/d3-residue.R) and its `.out`; [dev log](../dev_logs/2026-11-12-few-rules.md).
 
 ## The question
 

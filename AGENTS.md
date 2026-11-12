@@ -84,7 +84,7 @@ Don't weaken a test, widen a tolerance, or drop a figure from a set to make a re
 From the design doc; these are the owner's standing preferences. They are the starting position, not a substitute for evidence.
 
 1. Geometry comes only from the original graphics device. Nothing redraws the figure, and agents never write SVG.
-2. What code can determine is never left to a model. Model output must be checkable.
+2. What follows from the drawing system's own contract is determined by code, never by a model. What a package does on top of that contract is not written into gloss as a rule: it enters as a proposal, from an agent, a person or a search, and counts only when code has checked it. Model output must be checkable. ([ADR-0009](dev_docs/decisions/0009-package-behaviour-enters-as-a-checked-proposal.md) says what the contract is and gives the test for a rule.)
 3. Semantics live apart from the figure, anchored to elements, append-only.
 4. Verification is a standing constraint, re-run whenever the substrate changes, not a single gate at export.
 5. People and agents use the same API. A human note is just another record.
