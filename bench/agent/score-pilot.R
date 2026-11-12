@@ -120,6 +120,41 @@ if (all(c("A", "B") %in% d$arm)) {
   fb <- tapply(d$correct[d$arm == "B"], d$figure[d$arm == "B"], mean)[names(fa)]
   cat(sprintf("figures (%d), by the same share: B above A in %d, A above B in %d, equal in %d; mean over figures A %.3f, B %.3f\n",
               length(fa), sum(fb > fa), sum(fa > fb), sum(fa == fb), mean(fa), mean(fb)))
+
+  # The difference a figure shows (B's share right minus A's), and how far a
+  # set of figures this size pins its mean: figures drawn again with
+  # replacement. Written before any run of the pilot was scored.
+  paired <- function(x, draws = 10000L) {
+    a <- tapply(x$correct[x$arm == "A"], x$figure[x$arm == "A"], mean)
+    b <- tapply(x$correct[x$arm == "B"], x$figure[x$arm == "B"], mean)[names(a)]
+    dif <- b - a
+    dif <- dif[!is.na(dif)]
+    if (length(dif) < 2L) return(list(dif = dif, lo = NA_real_, hi = NA_real_))
+    set.seed(20261113)
+    means <- vapply(seq_len(draws), function(i) mean(sample(dif, replace = TRUE)), 1)
+    list(dif = dif, lo = unname(stats::quantile(means, 0.025)), hi = unname(stats::quantile(means, 0.975)))
+  }
+  line <- function(label, p) {
+    cat(sprintf("  %-22s mean %+.3f, sd %.3f, 95%% interval %s over %d figure%s\n", label, mean(p$dif),
+                if (length(p$dif) > 1L) stats::sd(p$dif) else NA_real_,
+                if (is.na(p$lo)) "not given (one figure)" else sprintf("%+.3f to %+.3f", p$lo, p$hi),
+                length(p$dif), if (length(p$dif) == 1L) "" else "s"))
+  }
+  p <- paired(d)
+  cat("\nB minus A, the share of a figure's runs that are right (figures drawn again 10000 times, seed 20261113)\n")
+  cat("  by figure: ", paste(sprintf("%s %+.2f", names(p$dif), p$dif), collapse = ", "), "\n", sep = "")
+  line("all models", p)
+  for (m in unique(d$model)) line(m, paired(d[d$model == m, ]))
+
+  # what the same question cost in each arm: A's median over B's, question by question
+  ratio <- function(v) {
+    a <- tapply(v[d$arm == "A"], qk[d$arm == "A"], stats::median, na.rm = TRUE)
+    b <- tapply(v[d$arm == "B"], qk[d$arm == "B"], stats::median, na.rm = TRUE)[names(a)]
+    r <- (a / b)[is.finite(a / b)]
+    sprintf("%.1f (%.1f to %.1f)", stats::median(r), min(r), max(r))
+  }
+  cat(sprintf("what a question cost in A over what it cost in B, median over questions (range): tool calls %s, tokens %s, seconds %s\n",
+              ratio(d$tool_calls), ratio(d$tokens), ratio(d$seconds)))
 }
 
 b <- d[d$arm == "B", ]
