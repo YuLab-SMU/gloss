@@ -30,12 +30,14 @@ Imports:
     utils,
     xml2
 Suggests:
+    aisdk,
     ComplexHeatmap,
     ggExtra,
     ggplot2,
     ggrepel,
     knitr,
     patchwork,
+    R6,
     ragg,
     shiny,
     showtext,

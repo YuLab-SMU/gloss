@@ -58,14 +58,14 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 12 files, 135 tests, 1233 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, Task 3 step 2); the bench container the same, 0 errors.
+- Suite: 13 files, 141 tests, 1278 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, Task 3 step 3); the bench container 13 / 141 / 1272, 0 failed, 0 errors, 1 skipped (the scripted-model test: aisdk is not in the container's image).
 - Key numbers: the figure alone against the engine's positions, runs `2026-11-12-1737-alone-dev` and `-1748-alone-dev-tree` (development sets, container, after the flipped-panel change): of the elements the engine's positions verify, the figure alone verifies 99.9% on v0's ggplot figures (9063 of 9069; 24 of 26 figures agree) and 98.2% on the tree set's (13865 of 14112; 24 of 28); base 83.8% (4 of 9 figures); heatmap 0 of 250 cells; no leaf passes more from the figure alone. Before the change (Task 2's runs): 99.8% and 98.1%, 23 of 26 and 23 of 28.
 - Task 1, run `2026-11-12-1627-drive-tools` (hand-built figure, host): 60 of 60 runs correct, 10 of 10 for each of three models in each variant; 0 failed calls of 313; 0 rejected submissions; median 7.5 s and 8380 tokens a run. Conditions A and B: no number yet.
 
 **Overall progress**
 - [x] Task 1: Do the free models drive tools to a validated submission?
 - [x] Task 2: A pairing checked from the figure alone, measured against the capture-time bindings
-- [~] Task 3: `gl_tools()` and a validating `propose`; the first record _(steps 1 and 2 done 2026-11-12: the flipped panel, `gl_propose()`; the tools open)_
+- [~] Task 3: `gl_tools()` and a validating `propose`; the first record _(steps 1 to 3 done 2026-11-12: the flipped panel, `gl_propose()`, `gl_tools()`; the run with models open)_
 - [ ] Task 4: Condition A: the raw material and a read-only, offline R sandbox _(stub)_
 - [ ] Task 5: The pilot: conditions A and B and the enumeration arm on development figures _(stub)_
 - [ ] Task 6: Records: design notes, NEWS, dev log, closing notes
@@ -176,7 +176,7 @@
 **Checklist**
 - [x] Step 1: a flipped panel says so and is placed through; measured again on both development sets (Result below).
 - [x] Step 2, no model: `gl_propose(fig, proposal)` for `list(kind = "binding", element, table, row)`. Schema first (fields, types, no extras), then existence (element, table, row), then the check: the row placed by `place_rows()`, the element compared by the binder's comparison for its tag, and the other rows of the table in that panel counted as the binder counts ties. Three outcomes, never a fourth: `accepted` (with the status `verified` or `ambiguous` and the deviation), `rejected` (the check ran and failed; the reason carries the distance), `refused` (the check cannot run here; the reason says why: a panel whose scales are not ranges, a table without positions, an element that draws a group). Tests first, among them: every verified element of a facetted figure is accepted with its own row and rejected with another's; the same on the figure read back from an HTML bundle; a polar figure is refused, not rejected; an extra field or a URL in a field is a schema error.
-- [ ] Step 3: `gl_tools(fig)`: `overview` (panels with their scales, tables with their columns), elements by place, rows by number and by value, `propose`; a state that keeps what was accepted, rejected and refused in the run. aisdk in `Suggests`; its internet probe switched off for the run (`options(aisdk.skip_internet_check = TRUE)`: it only asks `curl::has_internet()`, which looks up two public DNS names and, behind a proxy, fetches a captive-portal page; it sends nothing of ours). Contract tests with a scripted `aisdk::LanguageModelV1` subclass, no network.
+- [x] Step 3: `gl_tools(fig)`: `overview` (panels with their scales, tables with their columns), elements by place, rows by number and by value, `propose`; a state that keeps what was accepted, rejected and refused in the run. aisdk in `Suggests`; its internet probe switched off for the run (`options(aisdk.skip_internet_check = TRUE)`: it only asks `curl::has_internet()`, which looks up two public DNS names and, behind a proxy, fetches a captive-portal page; it sends nothing of ours). Contract tests with a scripted `aisdk::LanguageModelV1` subclass, no network.
 - [ ] Step 4: Task 1's harness run again through `gl_tools()` on its figure, as a check that the package's tools do what the harness's did (predictions first).
 
 **Verification**
@@ -201,6 +201,17 @@
 - *Speed:* on a 32-point figure the context takes 0.002 s and 32 checks 0.029 s (host, one run).
 - *Cost:* 363 lines added under `R/` and `tests/` (`R/propose.R` 194, its tests 155, 14 in a helper shared with `core-alone.R`); one host suite run, one container run. *Moved:* the validating entry point from design to an exported function tested on a bundle-restored figure; no bench number.
 - *Not done:* a model has not called it; no proposal for a group of rows; no record is stored anywhere.
+
+---
+
+**Result, step 3** (2026-11-12)
+
+- *What landed:* `gl_tools(fig, hide = NULL)` and `gl_tool_state(tools)`, exported; the tools' work is plain R in `tool_specs()`, which needs no aisdk. Nine tools: `overview` (page, panels with their scales and whether they are flipped, tables with their columns), `find_elements` (by place), `get_element`, `get_binding` (what capture bound; `hidden` for the leaves named in `hide`), `describe_table`, `get_rows` (by number, 20 at most), `find_rows` (nearest rows by value in a panel), `to_data`, and `propose`, which is `gl_propose()`. Arguments are checked against each tool's schema before the tool runs; a call that cannot be served answers `{"error": ...}` and is counted as failed; every call is kept in the run's state, and only `propose` adds to its proposals. No tool writes the figure, runs code or reaches outside.
+- *Tests first* (`tests/testthat/test-agent-tools.R`, 6 tests, 45 expectations on the host): the eight read-only tools answer what the R API answers; eight read-only calls leave no proposal, a wrong row is rejected with the distance and the right one accepted; eight calls no tool can serve (a wrong type, a missing argument, an element, table or panel that is not there, too many rows, a table without positions, a tool that does not exist) come back as data; hidden bindings stay hidden and `propose` still checks; the same on a figure read back from an HTML bundle; a scripted `aisdk::LanguageModelV1` subclass drives `gl_tools()` through aisdk's loop to a rejected and then an accepted proposal, and what it is handed back after the rejection is the reason as JSON.
+- *Suite,* `NOT_CRAN=true Rscript -e "devtools::test()"`: host 13 files / 141 tests / 1278 expectations / 0 failed / 0 skipped (was 12 / 135 / 1233). Bench container (`GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/suite.R`): 13 / 141 / 1272 / 0 failed / 0 errors / 1 skipped. The skip is the scripted-model test: aisdk is not in the container's image, so the wrapper `gl_tools()` has run on the host only; `tool_specs()`, which does all the reading, ran in both.
+- *aisdk:* in `Suggests`, with R6 for the test's scripted model. CRAN has aisdk 1.4.12 (index read 2026-11-12); the host has 1.5.0, and nothing was run against 1.4.12.
+- *Cost:* 451 lines added under `R/` and `tests/` (`R/agent-tools.R` 271, its tests 180); the host suite and the container suite once each on the final code. *Moved:* the tools from the bench harness into the package, under contract tests; no bench number.
+- *Not done:* no real model has called these tools yet (step 4); the state lives for one run and is not written into the figure (records are M2's); nothing limits how many calls a run makes, that is the loop's `max_steps`.
 
 ---
 
