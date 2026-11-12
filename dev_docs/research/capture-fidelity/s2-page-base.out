@@ -1,0 +1,27 @@
+case                   prims entries | by entry = native  replayPlot = native | gridGraphics vs native | seconds (by entry)
+scatter_abline_legend     60      15 | identical          identical          | differ=3 (61 prims)    | 0.01
+mfrow_bar_legend          69      23 | identical          identical          | differ=1 (70 prims)    | 0.01
+pairs                    758     192 | identical          identical          | differ=17 (769 prims)  | 0.37
+rect_border_0              2       3 | identical          identical          | differ=1 (3 prims)     | 0.00
+rect_border_FALSE          2       3 | identical          identical          | differ=3 (3 prims)     | 0.00
+bg_colour                 36       8 | identical          identical          | differ=3 (37 prims)    | 0.00
+axis_las_mtext            47      10 | identical          identical          | differ=1 (48 prims)    | 0.00
+boxplot                   45      27 | identical          identical          | differ=1 (46 prims)    | 0.01
+hist_density              32       8 | identical          identical          | differ=1 (33 prims)    | 0.00
+image_contour           5855      10 | identical          identical          | differ=531 (5356 prims) | 0.06
+persp                    162       3 | identical          identical          | differ=31 (163 prims)  | 0.00
+pie                       10      13 | identical          identical          | differ=1 (11 prims)    | 0.00
+plotmath                  43       9 | identical          identical          | error                  | 0.00
+layout_widths             72      25 | identical          identical          | differ=1 (73 prims)    | 0.01
+par_new_two_axes          48      15 | identical          identical          | differ=1 (49 prims)    | 0.00
+log_axes                 130       8 | identical          identical          | differ=1 (131 prims)   | 0.00
+heatmap_base             155      87 | identical          identical          | differ=9 (156 prims)   | 0.06
+dendrogram                43       6 | identical          identical          | differ=79 (46 prims)   | 0.00
+matplot_arrows            67      12 | identical          identical          | differ=1 (68 prims)    | 0.00
+stars                     73      34 | identical          identical          | differ=1 (74 prims)    | 0.01
+mosaic                    64      43 | identical          identical          | differ=1 (65 prims)    | 0.02
+coplot                   113      38 | identical          identical          | differ=1 (114 prims)   | 0.02
+smooth_scatter         16441      11 | identical          identical          | differ=1 (16442 prims) | 0.24
+filled_contour         10144      17 | identical          identical          | differ=1 (10145 prims) | 0.36
+symbols_xpd               37      10 | identical          identical          | differ=1 (38 prims)    | 0.00
+lm_page_4                 79      25 | identical          identical          | differ=5 (80 prims)    | 0.01  [4 pages drawn, last kept]

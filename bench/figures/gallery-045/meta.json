@@ -1,0 +1,25 @@
+{
+  "id": "gallery-045",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "190-mirrored-histogram.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:37:56 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 2,
+    "expr": 7,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 244140156
+}

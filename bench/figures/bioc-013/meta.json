@@ -1,0 +1,40 @@
+{
+  "id": "bioc-013",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "biocGraph",
+  "vignette": "biocGraph.Rnw",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "biocGraph",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "biocGraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "graph",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 08:59:44 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 32,
+    "expr": 2,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 134537118
+}

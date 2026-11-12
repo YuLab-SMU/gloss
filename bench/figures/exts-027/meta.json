@@ -1,0 +1,35 @@
+{
+  "id": "exts-027",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "hrbrthemes",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "hrbrthemes",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "scales",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:51:04 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 2,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 258127310
+}

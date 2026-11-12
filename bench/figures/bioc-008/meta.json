@@ -1,0 +1,75 @@
+{
+  "id": "bioc-008",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "CAGEfightR",
+  "vignette": "Introduction_to_CAGEfightR.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "CAGEfightR",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "CAGEfightR",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "TxDb.Mmusculus.UCSC.mm9.knownGene",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "InteractionSet",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "org.Mm.eg.db",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "Gviz",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "BiocParallel",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "devtools",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 08:48:07 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 65,
+    "expr": 2,
+    "kind": "grid",
+    "class": "grid",
+    "engine": "grid"
+  },
+  "seed": 40627957
+}

@@ -1,0 +1,35 @@
+{
+  "id": "exts-025",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "ggspectra",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggspectra",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "photobiologyWavebands",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "photobiology",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:50:54 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 7,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 122845784
+}

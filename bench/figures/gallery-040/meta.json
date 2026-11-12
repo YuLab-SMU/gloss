@@ -1,0 +1,35 @@
+{
+  "id": "gallery-040",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "249-igraph-network-map-a-color.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "igraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "RColorBrewer",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:37:38 UTC",
+  "nbsp_replaced": 1,
+  "figure": {
+    "chunk": 2,
+    "expr": 9,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 108426258
+}

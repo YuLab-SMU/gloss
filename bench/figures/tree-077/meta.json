@@ -1,0 +1,61 @@
+{
+  "id": "tree-077",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "crumblr",
+  "vignette": "crumblr.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "crumblr",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "crumblr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "variancePartition",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "limma",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 20:20:13 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 8,
+    "expr": 2,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 338537
+}

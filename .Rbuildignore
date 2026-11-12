@@ -10,3 +10,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.quarto$
+^\.claude$
+^\.rho$
+^\.workbuddy$
+(^|/)Rplots.*\.pdf$

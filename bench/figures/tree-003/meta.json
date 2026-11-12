@@ -1,0 +1,51 @@
+{
+  "id": "tree-003",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "cogeqc",
+  "vignette": "vignette_02_assessing_orthogroup_inference.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "cogeqc",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "cogeqc",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "sessioninfo",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 19:45:25 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 11,
+    "expr": 1,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 212120881
+}

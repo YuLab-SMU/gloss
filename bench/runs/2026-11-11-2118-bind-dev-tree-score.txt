@@ -1,0 +1,134 @@
+== figures
+           
+            bound not captured
+  ggplot       27            1
+  patchwork     1            0
+
+== layer elements by engine (leaves attributed to a layer, body or track)
+          figures leaves elements verified ambiguous failed unbound
+ggplot         27    262    24789     9562       322    186     308
+patchwork       1      6      126      100         0     26       0
+          count_mismatch checked
+ggplot             14411   39.9%
+patchwork              0   79.4%
+all: 24915 elements; verified 9662, ambiguous 322 (verified or ambiguous 40.1%); failed 212; unbound 308; count_mismatch 14411
+
+== ggplot layer elements by stratum
+     figures leaves elements verified ambiguous failed unbound count_mismatch
+tree      27    262    24789     9562       322    186     308          14411
+     checked
+tree   39.9%
+
+== engines that state no bindings (leaves, elements)
+
+== paired leaves by geom and tag (ggplot), elements
+                                     figures leaves elements verified ambiguous
+GeomPoint / circle+line+polygon+rect       1      1    12690        0         0
+GeomSegment / line                        24     63     5084     5064        20
+GeomPoint / path                           1      1     3785     3491       294
+GeomTextGGtree / path                      2      8     1596        0         0
+GeomPointGGtree / circle                   7      9      471      471         0
+GeomCol / rect                             1      1      230      230         0
+GeomTextGGtree / text                     11     15      230       94         0
+GeomLabelRepel / path                      1     41       92        0         0
+GeomPath / polyline                        1      1       90       82         8
+NewGeomTile / rect                         1      1       50       50         0
+GeomText / path                            2     10       44        0         0
+GeomLabelRepel / polygon                   1     41       41        0         0
+GeomShadowText / text                      1     17       34        0         0
+NewGeomSegment / line                      1      2       32       32         0
+GeomPoint / circle                         1      1       30       30         0
+GeomLabelRepel / line                      1     28       28        0         0
+NewGeomTextGGtree / text                   1      1       10       10         0
+GeomLabel / polygon                        1      5        5        2         0
+GeomLabel / text                           1      4        4        4         0
+GeomHilightRect / rect                     1      1        2        2         0
+GeomLabel / NA                             1      1        0        0         0
+                                     failed unbound count_mismatch
+GeomPoint / circle+line+polygon+rect      0       0          12690
+GeomSegment / line                        0       0              0
+GeomPoint / path                          0       0              0
+GeomTextGGtree / path                     3       0           1593
+GeomPointGGtree / circle                  0       0              0
+GeomCol / rect                            0       0              0
+GeomTextGGtree / text                   131       5              0
+GeomLabelRepel / path                     0       0             92
+GeomPath / polyline                       0       0              0
+NewGeomTile / rect                        0       0              0
+GeomText / path                           8       0             36
+GeomLabelRepel / polygon                 41       0              0
+GeomShadowText / text                     0      34              0
+NewGeomSegment / line                     0       0              0
+GeomPoint / circle                        0       0              0
+GeomLabelRepel / line                     0      28              0
+NewGeomTextGGtree / text                  0       0              0
+GeomLabel / polygon                       3       0              0
+GeomLabel / text                          0       0              0
+GeomHilightRect / rect                    0       0              0
+GeomLabel / NA                            0       0              0
+
+== unbound reasons (leaves, elements), layer leaves
+  engine
+4 ggplot
+3 ggplot
+2 ggplot
+1 ggplot
+  why                                                                     
+4 the panel's scales cannot be mapped (CoordPolar)                        
+3 the <text> elements carry no geometry to compare (rotated text?)        
+2 no comparison for <line> elements paired one per group                  
+1 k elements for m rows in n groups: neither one per row nor one per group
+  leaves elements
+4 10     241     
+3 17      34     
+2 28      28     
+1  1       5     
+
+== failed elements by figure, geom and tag
+       id    engine           geom     tag  mode leaves failed elements
+ tree-054    ggplot GeomLabelRepel polygon group     41     41       41
+ tree-014    ggplot       GeomText    path   row      6      8        8
+ tree-014    ggplot GeomTextGGtree    path   row      3      3        3
+ tree-046 patchwork GeomTextGGtree    path   row      2     26       26
+ tree-045    ggplot      GeomLabel polygon   row      3      3        3
+ tree-011    ggplot GeomTextGGtree    text   row      1     76       76
+ tree-045    ggplot GeomTextGGtree    text   row      1      3        3
+ tree-060    ggplot GeomTextGGtree    text   row      1     14       14
+ tree-083    ggplot GeomTextGGtree    text   row      2     38       38
+
+== checked share per figure (ggplot): the element-weighted share is dominated by the largest figures
+figures 27; median share 1.000; share >= 0.8 in 18; share 0 in 3; largest two figures hold 19832 of 24789 elements
+       id stratum elements checked failed share
+ tree-057    tree       95       0      0 0.000
+ tree-025    tree       73       0      0 0.000
+ tree-038    tree       73       0      0 0.000
+ tree-014    tree    14669     471     11 0.032
+ tree-062    tree      191      59      0 0.309
+ tree-083    tree       76      38     38 0.500
+ tree-054    tree      413     252     41 0.610
+ tree-045    tree       22      16      6 0.727
+ tree-072    tree      154     120      0 0.779
+ tree-011    tree      453     377     76 0.832
+ tree-060    tree       87      73     14 0.839
+ tree-003    tree       33      28      0 0.848
+ tree-061    tree     5163    5163      0 1.000
+ tree-079    tree     2149    2149      0 1.000
+ tree-037    tree      240     240      0 1.000
+ tree-068    tree      178     178      0 1.000
+ tree-074    tree      148     148      0 1.000
+ tree-066    tree      145     145      0 1.000
+ tree-008    tree       73      73      0 1.000
+ tree-017    tree       73      73      0 1.000
+ tree-069    tree       60      60      0 1.000
+ tree-077    tree       54      54      0 1.000
+ tree-012    tree       39      39      0 1.000
+ tree-010    tree       38      38      0 1.000
+ tree-021    tree       38      38      0 1.000
+ tree-050    tree       38      38      0 1.000
+ tree-032    tree       14      14      0 1.000
+
+== ambiguous elements: in dense leaves / elsewhere
+0 / 322
+
+== time: binding (a second capture plus the bind step) against capture, per figure
+median capture 0.33 s, median capture + bind 0.40 s, maximum capture + bind 4.66 s

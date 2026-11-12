@@ -1,6 +1,6 @@
 # dev_docs
 
-Long-lived engineering documentation. Unlike `dev_logs/` (append-only history) or `plan/` (phase plans), the design here is **the current truth**, rewritten as the system evolves. The research material is the exception and is kept as it was researched.
+Long-lived engineering documentation. Unlike `dev_logs/` (append-only history) or `plan/` (phase plans), the design here is **the current best explanation**, rewritten as the system evolves: a dated note records a correction when it is made, and the notes a plan added are folded into the text when the plan closes. It can still lag the code; the code, the tests and the measurements say what gloss does (`AGENTS.md`). The research material is the exception and is kept as it was researched.
 
 ## Index
 

@@ -1,0 +1,35 @@
+{
+  "id": "bioc-004",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "NOISeq",
+  "vignette": "NOISeq.Rnw",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "NOISeq",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "NOISeq",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 08:36:17 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 16,
+    "expr": 2,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 248289935
+}

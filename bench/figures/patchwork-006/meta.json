@@ -1,0 +1,35 @@
+{
+  "id": "patchwork-006",
+  "stratum": "patchwork",
+  "kind": "topic",
+  "psu": "patchwork::wrap_ggplot_grob",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "patchwork",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "gtable",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 05:13:44 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 9,
+    "kind": "object",
+    "class": "patchwork",
+    "engine": "patchwork"
+  },
+  "seed": 40480608
+}

@@ -1,0 +1,70 @@
+{
+  "id": "patchwork-010",
+  "stratum": "patchwork",
+  "kind": "gallery",
+  "psu": "web-choropleth-barchart-map.Rmd",
+  "vignette": null,
+  "rewrites": [
+    {
+      "literal": "https://github.com/viniciusoike/restateinsight/raw/main/static/data/atlas_sp_hdi.rds",
+      "url": "https://github.com/viniciusoike/restateinsight/raw/main/static/data/atlas_sp_hdi.rds",
+      "file": "data/atlas_sp_hdi.rds",
+      "ok": true,
+      "bytes": 4354674,
+      "md5": "9d93668ed1716c91aa41612d2cf3c352",
+      "companions": []
+    }
+  ],
+  "packages": [
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggthemes",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "patchwork",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "readr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "sf",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "htmltools",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 05:14:10 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 10,
+    "expr": 2,
+    "kind": "object",
+    "class": "patchwork",
+    "engine": "patchwork"
+  },
+  "seed": 242384010
+}

@@ -1,0 +1,61 @@
+{
+  "id": "tree-043",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "LymphoSeq",
+  "vignette": "LymphoSeq.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "LymphoSeq",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "LymphoSeq",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "RColorBrewer",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "wordcloud",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "reshape",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "pheatmap",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 20:07:12 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 15,
+    "expr": 1,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 124824391
+}

@@ -1,0 +1,35 @@
+{
+  "id": "gallery-024",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "137-spring-shapes-data-art.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "RColorBrewer",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:36:50 UTC",
+  "nbsp_replaced": 76,
+  "figure": {
+    "chunk": 2,
+    "expr": 13,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 93187306
+}

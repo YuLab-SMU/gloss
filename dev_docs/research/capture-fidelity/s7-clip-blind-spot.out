@@ -1,0 +1,11 @@
+== a clipping grob as a leaf ==
+  gloss() today                      primitives equal TRUE  | with clip regions equal TRUE  (0 of 2 differ)
+  page route                         primitives equal TRUE  | with clip regions equal TRUE  (0 of 2 differ)
+
+== ordinary figures: is clipping kept? ==
+  gloss() today: ggplot_facet        primitives equal TRUE  | with clip regions equal TRUE  (0 of 134 differ)
+  gloss() today: patchwork           primitives equal TRUE  | with clip regions equal TRUE  (0 of 186 differ)
+  gloss() today: base                primitives equal TRUE  | with clip regions equal TRUE  (0 of 60 differ)
+  gloss() today: heatmap             primitives equal TRUE  | with clip regions equal TRUE  (0 of 293 differ)
+  gloss() today: ggrepel             primitives equal TRUE  | with clip regions equal TRUE  (0 of 115 differ)
+  gloss() today: points_1e4          primitives equal TRUE  | with clip regions equal TRUE  (0 of 10040 differ)

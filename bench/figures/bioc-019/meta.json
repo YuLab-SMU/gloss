@@ -1,0 +1,40 @@
+{
+  "id": "bioc-019",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "flowPlots",
+  "vignette": "flowPlots.Rnw",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "flowPlots",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "flowPlots",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "vcd",
+      "status": "installed",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 09:19:48 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 20,
+    "expr": 2,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 235751145
+}

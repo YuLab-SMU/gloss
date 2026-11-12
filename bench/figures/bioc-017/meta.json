@@ -1,0 +1,45 @@
+{
+  "id": "bioc-017",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "scPipe",
+  "vignette": "scPipe_tutorial.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "scPipe",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "scPipe",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "SingleCellExperiment",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "Rsubread",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 09:17:39 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 10,
+    "expr": 1,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 143765115
+}

@@ -1,0 +1,35 @@
+{
+  "id": "exts-007",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "ggpattern",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggpattern",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggpattern",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:49:10 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 1,
+    "kind": "grid",
+    "class": "grid",
+    "engine": "grid"
+  },
+  "seed": 95856458
+}

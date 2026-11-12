@@ -1,0 +1,41 @@
+{
+  "set": "dev",
+  "stratum": "tree",
+  "figures": 29,
+  "started": "2026-11-11-2344",
+  "commit": "57fc97b7c833078414c8f6661412d9ed7818905e",
+  "commit_at_end": "57fc97b7c833078414c8f6661412d9ed7818905e",
+  "gloss_source_digest": "8ebaec39562615f51c9d49834294f203",
+  "timeout": 900,
+  "tolerance_pt": 0.5,
+  "R": "R version 4.5.2 (2025-10-31)",
+  "image": "bioconductor/bioconductor_docker@sha256:359702d482e70e343d2a436731b7c6deffd1ec184a1f1700de5d64b0c97cacba",
+  "environments": {
+    "cran": {
+      "cran": "https://p3m.dev/cran/__linux__/noble/2026-10-22",
+      "packages": {
+        "gloss": null,
+        "ggplot2": "4.0.3",
+        "ComplexHeatmap": "2.24.1",
+        "patchwork": "1.3.2",
+        "ggtree": "3.16.3",
+        "aplot": "0.3.2",
+        "svglite": "2.2.2",
+        "grid": "4.5.2"
+      }
+    },
+    "bioc": {
+      "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+      "packages": {
+        "gloss": null,
+        "ggplot2": "4.0.0",
+        "ComplexHeatmap": "2.24.1",
+        "patchwork": "1.3.2",
+        "ggtree": "3.16.3",
+        "aplot": "0.2.9",
+        "svglite": "2.2.2",
+        "grid": "4.5.2"
+      }
+    }
+  }
+}

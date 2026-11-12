@@ -1,0 +1,40 @@
+{
+  "id": "exts-030",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "ggstatsplot",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggstatsplot",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "afex",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:51:10 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 4,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 88619369
+}

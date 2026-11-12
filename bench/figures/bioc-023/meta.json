@@ -1,0 +1,150 @@
+{
+  "id": "bioc-023",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "ribosomeProfilingQC",
+  "vignette": "ribosomeProfilingQC.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "ribosomeProfilingQC",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "ribosomeProfilingQC",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "BSgenome.Drerio.UCSC.danRer10",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "GenomicFeatures",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "Rsamtools",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "AnnotationDbi",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "motifStack",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "BSgenome.Hsapiens.UCSC.hg38",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "BSgenome.Mmusculus.UCSC.mm10",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "TxDb.Drerio.UCSC.danRer10.refGene",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "TxDb.Hsapiens.UCSC.hg38.knownGene",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "TxDb.Mmusculus.UCSC.mm10.knownGene",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "rtracklayer",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "AnnotationHub",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "edgeR",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "limma",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ChIPpeakAnno",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "org.Mm.eg.db",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "org.Hg.eg.db",
+      "status": "failed",
+      "reason": "package ‘org.Hg.eg.db’ is not available for this version of R"
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "Biostrings",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "GenomeInfoDb",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "data.table",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 09:40:02 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 27,
+    "expr": 1,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 22100273
+}

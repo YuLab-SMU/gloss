@@ -1,0 +1,40 @@
+{
+  "id": "exts-028",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "lemon",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "lemon",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "gtable",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "gridExtra",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:51:05 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 6,
+    "kind": "grid",
+    "class": "grid",
+    "engine": "grid"
+  },
+  "seed": 164413206
+}

@@ -1,0 +1,50 @@
+{
+  "id": "exts-029",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "ggpage",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggpage",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "stringr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidytext",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggpage",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:51:08 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 8,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 124300097
+}

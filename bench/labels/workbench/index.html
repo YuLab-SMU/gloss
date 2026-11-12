@@ -1,0 +1,1139 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gloss 标注工作台</title>
+<!--
+  Label workbench (M1 plan Task 1). Served by serve.py; see its header.
+  One leaf at a time: the leaf is outlined on the page the figure's code
+  drew, the annotator answers the guideline's questions with the number
+  keys, and the server writes the label files. Roles, kinds, questions and
+  cases come from bench/labels/vocabulary.json. Text from figures is written
+  with textContent only.
+
+  With several annotators (serve.py --team) the page first asks for a
+  nickname. The others' labels of a figure are asked for, and shown, only
+  after the annotator's own labels of it are frozen; the server decides.
+
+  Aids to see what a leaf is (they change the view only, never the figure or
+  a label): fill and stroke as the browser computes them, with "none" told
+  apart from white; painting the leaf; the leaf alone on a checkerboard;
+  hiding it; hiding what was drawn after it; dragging it aside; its place in
+  the drawing order; the guideline's worked examples of the same class.
+
+  Standard examples: every role and kind is shown, beside its option, as it
+  appears in the guideline's worked examples (a role in each example figure,
+  a kind as the leaves the vocabulary names for it); pointing at an option
+  enlarges them, a click on the small picture opens them large (the whole
+  figure beside the detail), E shows them all.
+
+  The page is drawn with a margin around it, so that the outline of a leaf
+  at the page's edge is not cut off. A guide (G) says what to do; it opens
+  by itself the first time.
+-->
+<style>
+  :root {
+    --bg: #f4f3ef; --panel: #ffffff; --ink: #1c1c1e; --muted: #6e6e73; --line: #e3e1da; --soft: #f7f6f2;
+    --hl: #e6007e; --ok: #0a7d4f;
+    --data: #2563eb; --guide: #0a8f66; --reference: #7c3aed; --annotation: #c76a00; --decoration: #5f6672;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  header { display: flex; align-items: center; gap: 14px; padding: 8px 16px; background: var(--panel);
+           border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+  header .brand { font-weight: 650; letter-spacing: .01em; }
+  header .who { color: var(--muted); font-size: 12px; }
+  #tabs { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+  .tab { border: 1px solid var(--line); background: var(--soft); border-radius: 999px; padding: 3px 10px 3px 6px;
+         font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--ink); }
+  .tab.on { border-color: var(--ink); background: var(--panel); }
+  .tab .ring { width: 14px; height: 14px; border-radius: 50%; background: conic-gradient(var(--ok) var(--p, 0%), #dddbd3 0); }
+  .tab.done .ring { background: var(--ok); }
+  #total { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  #total b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 540px; gap: 14px; padding: 14px 16px; align-items: start; }
+  @media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  #stage { padding: 10px; position: sticky; top: 58px; }
+  #page svg { display: block; width: 100%; height: auto; max-height: calc(100vh - 150px); background: #e9e7df; }
+  #page, #loupe { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #fff; }
+  .wb-dim [data-gloss-leaf]:not(.wb-cur) { opacity: .42; }
+  .wb-hl rect { fill: none; vector-effect: non-scaling-stroke; pointer-events: none; }
+  .wb-hl .under { stroke: #fff; stroke-width: 4.5px; }
+  .wb-hl .over { stroke: var(--hl); stroke-width: 2px; stroke-dasharray: 6 3; }
+  details { margin-top: 8px; }
+  details > summary { cursor: pointer; color: var(--muted); font-size: 12px; user-select: none; }
+  #code pre { margin: 6px 0 0; padding: 10px; background: var(--soft); border-radius: 6px; max-height: 320px; overflow: auto;
+              font-size: 12px; line-height: 1.5; white-space: pre-wrap; }
+  #panel { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  #body { display: flex; flex-direction: column; gap: 8px; }
+  #loupe svg { display: block; width: 100%; aspect-ratio: 16 / 7; background: #e9e7df; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .meta .where { font-weight: 650; font-variant-numeric: tabular-nums; margin-right: 2px; }
+  .chip { border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font-size: 12px; background: var(--soft); }
+  .chip.text { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; border: 1px solid rgba(0,0,0,.25); vertical-align: -1px; margin-right: 4px; }
+  .path { font-size: 11px; color: var(--muted); word-break: break-all; line-height: 1.35; }
+  .now { font-size: 13px; padding: 6px 8px; border-radius: 6px; background: var(--soft); }
+  .now b { font-weight: 650; }
+  .choices { display: grid; grid-template-columns: 1fr; gap: 5px; }
+  .choices.kinds { grid-template-columns: 1fr 1fr; }
+  .choices h3 { grid-column: 1 / -1; }
+  .choices h3 { margin: 2px 0; font-size: 12px; font-weight: 600; color: var(--muted); display: flex; justify-content: space-between; }
+  .opt { display: grid; grid-template-columns: 26px 1fr; gap: 8px; align-items: start; text-align: left; width: 100%;
+         border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 5px 8px; cursor: pointer; color: inherit; font: inherit; }
+  .opt:hover { border-color: #b9b6ab; background: var(--soft); }
+  .opt .name { font-weight: 650; }
+  .opt .hint { display: block; color: var(--muted); font-size: 11.5px; line-height: 1.3; }
+  .opt.repeat { grid-template-columns: 26px 1fr; }
+  .opt.repeat .hint { display: inline; margin-left: 8px; font-size: 12.5px; }
+  kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px;
+        border: 1px solid #c9c6bb; border-bottom-width: 2px; border-radius: 5px; background: #fff; font: 600 12px ui-monospace, Menlo, monospace; color: var(--ink); }
+  .repeat { border-style: dashed; }
+  .tools { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 12px; color: var(--muted); }
+  .tools .tool { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; background: none; border: 0; padding: 0; color: inherit; font: inherit; }
+  .tools .tool.on { color: var(--hl); font-weight: 600; }
+  #note { flex: 1; min-width: 120px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 7px; font: inherit; font-size: 12px; }
+  #dots { display: flex; flex-wrap: wrap; gap: 3px; }
+  .dot { width: 12px; height: 12px; border-radius: 3px; background: #dddbd3; cursor: pointer; border: 0; padding: 0; }
+  .dot.el { width: 7px; border-radius: 2px; }
+  .dot.cur { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .done-card { text-align: center; padding: 18px 10px; }
+  .done-card .big { font-size: 20px; font-weight: 700; color: var(--ok); }
+  .done-card p { margin: 6px 0; color: var(--muted); }
+  .btn { border: 1px solid var(--ink); background: var(--ink); color: #fff; border-radius: 8px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; }
+  #cases ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink); font-size: 12px; }
+  #cases li { margin: 3px 0; }
+  #loupe.iso svg { background: repeating-conic-gradient(#b9b9b9 0% 25%, #e4e4e4 0% 50%) 50% / 14px 14px; }
+  .wb-iso [data-gloss-leaf]:not(.wb-cur), .wb-iso .wb-loose { visibility: hidden; }
+  .wb-above, .wb-hidecur .wb-cur { visibility: hidden; }
+  #page svg.movable .wb-cur { cursor: grab; }
+  .sw.none { background: repeating-conic-gradient(#a9a9a9 0% 25%, #e4e4e4 0% 50%) 50% / 6px 6px; }
+  .chip.warn { border-color: var(--hl); color: var(--hl); background: #fff; }
+  .layer { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .layer b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .hint2 { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+  .refs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .refcard { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; font-size: 11.5px; }
+  .refcard svg { display: block; width: 100%; aspect-ratio: 16 / 9; background: #fff; }
+  .refcard div { padding: 3px 6px; }
+  .opt.ex { grid-template-columns: 26px 1fr auto; }
+  .thumb { display: block; width: 86px; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #fff; align-self: center; }
+  .thumb svg, .excard svg { display: block; width: 100%; aspect-ratio: 16 / 10; background: #fff; }
+  .thumbs { display: flex; gap: 4px; align-self: center; cursor: zoom-in; position: relative; }
+  .thumbs:hover .thumb { border-color: var(--ink); }
+  .thumbs .more { position: absolute; right: 2px; bottom: 2px; background: var(--ink); color: #fff; border-radius: 8px; font-size: 10px; padding: 0 5px; line-height: 15px; }
+  .choices:not(.kinds) .thumb { width: 66px; }
+  .sheet.wide { width: min(1180px, 100%); }
+  .zoomrow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 14px; }
+  .zoomrow.one { grid-template-columns: 1fr; }
+  .zoomrow svg { display: block; width: 100%; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  .zoomrow .cap { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+  .excard.click { cursor: zoom-in; }
+  .zoomrow .wb-ex.wb-dim [data-gloss-leaf]:not(.wb-cur), #expreview .wb-ex.wb-dim [data-gloss-leaf]:not(.wb-cur) { opacity: .38; }
+  /* a role in the example figure: its leaves in the role's colour (svglite writes fills in the style attribute) */
+  .wb-role .wb-cur * { stroke: var(--c) !important; }
+  .wb-role .wb-cur [style*="fill: #"], .wb-role .wb-cur text { fill: var(--c) !important; fill-opacity: .6; stroke: none !important; }
+  .wb-role .wb-cur text { fill-opacity: 1; }
+  .opt.repeat .thumb { width: 60px; }
+  .thumb.none { border-style: dashed; color: var(--muted); font-size: 10.5px; text-align: center; padding: 6px 2px; line-height: 1.25; }
+  .wb-ex.wb-dim [data-gloss-leaf]:not(.wb-cur) { opacity: .18; }
+  #expreview { position: fixed; z-index: 8; width: 470px; display: none; padding: 10px 12px; box-shadow: 0 10px 34px rgba(0, 0, 0, .2); pointer-events: none; }
+  #expreview h3 { margin: 0 0 2px; font-size: 14px; }
+  #expreview p { margin: 0 0 8px; font-size: 12px; color: var(--muted); }
+  .exgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .exgrid.one { grid-template-columns: 1fr; }
+  .excard { font-size: 11.5px; color: var(--muted); }
+  .excard svg { border: 1px solid var(--line); border-radius: 6px; }
+  .excard b { color: var(--ink); }
+  .guide ol, .guide ul { margin: 4px 0; padding-left: 20px; font-size: 13px; line-height: 1.6; }
+  .guide li { margin: 2px 0; }
+  .guide kbd { margin: 0 1px; }
+  .guide .q { color: var(--muted); }
+  .btn.ghost { background: var(--panel); color: var(--ink); margin: 3px; }
+  .link { background: none; border: 0; padding: 0; color: var(--data); cursor: pointer; font: inherit; text-align: left; }
+  .overlay { position: fixed; inset: 0; background: rgba(28, 28, 30, .45); z-index: 20; display: none; align-items: flex-start;
+             justify-content: center; padding: 5vh 16px; overflow: auto; }
+  .overlay.on { display: flex; }
+  .sheet { background: var(--panel); border-radius: 12px; border: 1px solid var(--line); padding: 18px 20px; width: min(780px, 100%); }
+  .sheet h2 { margin: 0 0 6px; font-size: 18px; }
+  .sheet h3 { margin: 18px 0 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .sheet p { margin: 6px 0; color: var(--muted); }
+  .sheet p.strong { color: var(--ink); }
+  .sheet table { border-collapse: collapse; width: 100%; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .sheet th, .sheet td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .sheet th { color: var(--muted); font-weight: 600; }
+  .sheet ul { margin: 0; padding-left: 18px; font-size: 12.5px; }
+  .sheet li { margin: 4px 0; }
+  .field { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; font-size: 12px; color: var(--muted); }
+  .field input, .sheet input.own { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 15px; color: var(--ink); width: 100%; }
+  .sheet input.own { font-size: 12px; }
+  .err { color: #b00020; min-height: 1.4em; font-size: 12.5px; }
+  .bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #dddbd3; min-width: 80px; }
+  .bar span { display: block; height: 100%; }
+  .peers { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; }
+  .peers h3 { margin: 0; font-size: 12px; font-weight: 600; color: var(--muted); display: flex; justify-content: space-between; }
+  .ans { display: grid; grid-template-columns: 96px 1fr; gap: 8px; }
+  .ans .name { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ans.me .name { color: var(--ink); font-weight: 600; }
+  .dot.disp { box-shadow: 0 0 0 2px var(--hl); }
+  #toast { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); background: #b00020; color: #fff; padding: 8px 14px;
+           border-radius: 8px; font-size: 13px; display: none; z-index: 9; }
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">gloss 标注工作台</span>
+  <span class="who" id="who"></span>
+  <div id="tabs"></div>
+  <button class="tab" id="help">使用说明（G）</button>
+  <button class="tab" id="team" hidden></button>
+  <span id="total"></span>
+</header>
+<main>
+  <section class="card" id="stage">
+    <div id="page"></div>
+    <details id="code"><summary>这张图的代码 code.R（<kbd>C</kbd>）</summary><pre class="mono"></pre></details>
+  </section>
+  <aside class="card" id="panel">
+    <div id="loupe"></div>
+    <div id="body"></div>
+    <div id="dots"></div>
+    <details id="cases"><summary>判例：这些情况已经定好怎么标</summary><ul></ul></details>
+  </aside>
+</main>
+<div class="card" id="expreview"></div>
+<div class="overlay" id="join"><div class="sheet" id="joinBody"></div></div>
+<div class="overlay" id="over"><div class="sheet" id="overBody"></div></div>
+<div id="toast"></div>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const NS = "http://www.w3.org/2000/svg";
+function h(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "onclick") n.addEventListener("click", v);
+    else if (k === "style") n.style.cssText = v;
+    else n.setAttribute(k, v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) n.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return n;
+}
+// Team mode: the annotator's token is kept in this browser and sent in a header.
+let TOKEN = null, TEAM = false, REVEAL = null;
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private window: the token lasts for this tab */ } },
+};
+function headers(json) {
+  const hd = {};
+  if (TOKEN) hd["X-Workbench-Token"] = TOKEN;
+  if (json) hd["Content-Type"] = "application/json";
+  return hd;
+}
+async function api(path, body) {
+  const opt = { headers: headers(body !== undefined) };
+  if (body !== undefined) { opt.method = "POST"; opt.body = JSON.stringify(body); }
+  const r = await fetch(path, opt);
+  let p = null;
+  try { p = await r.json(); } catch (e) { /* not JSON */ }
+  if (!r.ok) { const e = new Error((p && p.error) || ("HTTP " + r.status)); e.status = r.status; throw e; }
+  return p;
+}
+
+let CFG = null, VOC = null, FIG = null, S = null;
+let items = [], cur = 0, stage = "role", role = null, last = null;
+let dim = true, finished = false, draft = { note: "", unsure: false };
+let dirty = false, saving = false, saveTimer = null, lastInput = Date.now(), unsavedSeconds = 0;
+let roots = [];
+// aids: what is shown of the current leaf (the view only)
+let paint = false, iso = false, hideCur = false, peel = false, refOpen = false, moved = null;
+let painted = [], movedNodes = [], curPaint = null, REF = [], REFK = {}, REFROLE = null;
+const thumbs = new Map();
+
+// ---- state ---------------------------------------------------------------
+function buildItems() {
+  items = [];
+  for (const lf of FIG.leaves) {
+    if (lf.n === 0) continue;
+    const lab = S.labels[lf.k];
+    if (lab && lab.split) for (let i = 1; i <= lf.n; i++) items.push({ k: lf.k, el: i });
+    else items.push({ k: lf.k, el: null });
+  }
+}
+function getLabel(it) {
+  const l = S.labels[it.k];
+  if (!l) return null;
+  if (it.el) return l.split ? l.split[it.el - 1] : null;
+  return l.split ? null : l;
+}
+function setLabel(it, lab) {
+  if (it.el) S.labels[it.k].split[it.el - 1] = lab; else S.labels[it.k] = lab;
+}
+function nextUnlabelled(from) {
+  for (let s = 1; s <= items.length; s++) {
+    const i = (from + s) % items.length;
+    if (!getLabel(items[i])) return i;
+  }
+  return -1;
+}
+function loadDraft() {
+  const l = items[cur] && getLabel(items[cur]);
+  draft = l ? { note: l.note || "", unsure: !!l.unsure } : { note: "", unsure: false };
+}
+function markDirty() {
+  dirty = true;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flush, 400);
+}
+// One save at a time: each names the revision of the labels this page holds
+// (S.rev, as loaded or as the save before returned it). The server refuses a
+// save from a page that holds an older one, so a page left open elsewhere cannot
+// write its old labels over newer ones; this page then loads the newer ones.
+let saves = Promise.resolve();
+function flush() {
+  clearTimeout(saveTimer);
+  saves = saves.then(saveNow);
+  return saves;
+}
+async function saveNow() {
+  if (!dirty || !FIG) return;
+  dirty = false; unsavedSeconds = 0; saving = true;
+  const id = FIG.id, st = S;
+  try {
+    const p = await api("/api/state/" + id, { labels: st.labels, seconds: st.seconds, cursor: cur, rev: st.rev || 0 });
+    st.rev = p.rev;
+    const f = CFG.figures.find(x => x.id === id);
+    Object.assign(f, p);
+    saving = false;
+    if (FIG.id === id) FIG.file = p.file;
+    renderHeader();
+    if (finished && FIG.id === id) renderBody();
+  } catch (e) {
+    saving = false;
+    if (e.status === 409) {
+      toast("这张图在别的页面（或别的设备）上改过，这个页面里的是旧的：已经载入最新的标注，刚才那一步请再做一次。");
+      try { if (FIG && FIG.id === id) await loadFigure(id); } catch (e2) { toast("没有载入成功：" + e2.message + "（请刷新页面）"); }
+      return;
+    }
+    dirty = true;
+    toast("没有保存成功：" + e.message + (TEAM ? "（网络断了吗？恢复后再按任意一个键会重新保存）" : "（serve.py 还在运行吗？）"));
+  }
+}
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.style.display = "block";
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = "none", 6000);
+}
+
+// ---- the page --------------------------------------------------------------
+function cleanSvg(text) {
+  const svg = new DOMParser().parseFromString(text, "image/svg+xml").documentElement;
+  svg.querySelectorAll("script, foreignObject, [data-gloss-sheet]").forEach(n => n.remove());
+  svg.querySelectorAll("*").forEach(n => { for (const a of [...n.attributes]) if (/^on/i.test(a.name)) n.removeAttribute(a.name); });
+  svg.removeAttribute("width"); svg.removeAttribute("height");
+  return svg;
+}
+const SHAPES = "rect, circle, ellipse, line, polyline, polygon, path, text, image, use";
+// A page is shown with a margin, so that an outline at its edge is not cut off.
+const MARGIN = 7;
+const padded = vb => [vb[0] - MARGIN, vb[1] - MARGIN, vb[2] + 2 * MARGIN, vb[3] + 2 * MARGIN];
+// The device's page background is a rectangle of 100%: of the view, once there is a margin. Give it the page's size.
+function pinPage(svg, vb) {
+  svg.querySelectorAll('rect[width="100%"][height="100%"]').forEach(r => {
+    r.setAttribute("x", vb[0]); r.setAttribute("y", vb[1]); r.setAttribute("width", vb[2]); r.setAttribute("height", vb[3]);
+  });
+}
+function mountSvg(text) {
+  const src = cleanSvg(text);
+  FIG.viewBox = (src.getAttribute("viewBox") || "0 0 504 360").split(/\s+/).map(Number);
+  pinPage(src, FIG.viewBox);
+  src.setAttribute("viewBox", padded(FIG.viewBox).join(" "));
+  const main = document.importNode(src, true), loupe = document.importNode(src, true);
+  // what the device drew outside every leaf (the page's own background)
+  for (const root of [main, loupe]) root.querySelectorAll(SHAPES).forEach(n => { if (!n.closest("[data-gloss-leaf], defs, clipPath")) n.classList.add("wb-loose"); });
+  $("#page").replaceChildren(main);
+  $("#loupe").replaceChildren(loupe);
+  roots = [main, loupe];
+  // the drawing order: the order of the leaves in the page
+  FIG.groups = [...main.querySelectorAll("[data-gloss-leaf]")].map(g => [g.getAttribute("data-gloss-leaf"), g]);
+  FIG.z = Object.fromEntries(FIG.groups.map(([leaf], i) => [leaf, i]));
+  painted = []; movedNodes = []; moved = null;
+  main.classList.add("movable");
+  dragSetup(main);
+}
+function boxOf(it) {
+  const b = it.el ? ((FIG.el[it.k] || [])[it.el - 1] || {}).box : FIG.byK[it.k].box;
+  return b && b.every(v => v != null) ? b : null;
+}
+function leafGroup(root, lf) { return root.querySelector('[data-gloss-leaf="' + lf.leaf + '"]'); }
+// The page nodes of an item: a leaf's elements are the children of its group, in order.
+function nodesOf(root, it) {
+  const lf = FIG.byK[it.k], g = leafGroup(root, lf);
+  if (!g) return [];
+  const kids = [...g.children];
+  return it.el && kids.length === lf.n ? [kids[it.el - 1]] : kids;
+}
+function drawBox(root, box) {
+  let g = root.querySelector(":scope > .wb-hl");
+  if (!g) { g = document.createElementNS(NS, "g"); g.setAttribute("class", "wb-hl"); root.append(g); }
+  g.replaceChildren();
+  if (box) for (const cls of ["under", "over"]) {
+    const r = document.createElementNS(NS, "rect"), pad = 2.2;
+    r.setAttribute("class", cls);
+    r.setAttribute("x", box[0] - pad); r.setAttribute("y", box[1] - pad);
+    r.setAttribute("width", Math.max(box[2] - box[0], 0.1) + 2 * pad); r.setAttribute("height", Math.max(box[3] - box[1], 0.1) + 2 * pad);
+    r.setAttribute("rx", 1.5);
+    g.append(r);
+  }
+}
+function zoom(svg, vb, box, R) {
+  let view = padded(vb);
+  if (box) {
+    const bw = box[2] - box[0], bh = box[3] - box[1];
+    const w = Math.max(bw * 1.5 + 16, (bh * 1.5 + 16) * R, 80);
+    if (w < vb[2]) view = [(box[0] + box[2]) / 2 - w / 2, (box[1] + box[3]) / 2 - w / R / 2, w, w / R];
+  }
+  svg.setAttribute("viewBox", view.join(" "));
+}
+// Fill and stroke as the browser computes them, before any painting: "none" is not white.
+const numOr = (v, d) => { const x = parseFloat(v); return isNaN(x) ? d : x; };
+function colourOf(c, opacity) {
+  const m = /^rgba?\(([^)]+)\)/.exec(c || "");
+  if (!m) return "none";
+  const p = m[1].split(/[,\s\/]+/).filter(Boolean).map(Number);
+  const a = Math.round(100 * (p.length > 3 ? p[3] : 1) * opacity);
+  return a <= 0 ? "none" : [p[0], p[1], p[2], a].join(",");
+}
+function paintInfo(nodes) {
+  const info = { fill: new Set(), stroke: new Set(), text: nodes.length > 0, image: false };
+  for (const n of nodes) {
+    const tag = n.tagName.toLowerCase(), cs = getComputedStyle(n), op = numOr(cs.opacity, 1);
+    if (tag === "image") { info.image = true; info.text = false; continue; }
+    const isText = tag === "text" || tag === "g";
+    info.text = info.text && isText;
+    if (tag !== "line") info.fill.add(colourOf(cs.fill, numOr(cs.fillOpacity, 1) * op));
+    if (!isText) info.stroke.add(numOr(cs.strokeWidth, 1) > 0 ? colourOf(cs.stroke, numOr(cs.strokeOpacity, 1) * op) : "none");
+  }
+  const seen = s => [...s].some(v => v !== "none");
+  info.invisible = nodes.length > 0 && !info.image && !seen(info.fill) && !seen(info.stroke);
+  return info;
+}
+function unpaint() {
+  for (const [n, style] of painted) { if (style == null) n.removeAttribute("style"); else n.setAttribute("style", style); }
+  painted = [];
+}
+// Painting: solid where the element has a fill, a full line where it has a stroke, a dashed line where it has none.
+function doPaint(it) {
+  for (const root of roots) for (const n of nodesOf(root, it)) {
+    const tag = n.tagName.toLowerCase(), cs = getComputedStyle(n), isText = tag === "text" || tag === "g";
+    const filled = cs.fill !== "none" && colourOf(cs.fill, numOr(cs.fillOpacity, 1)) !== "none";
+    const stroked = cs.stroke !== "none" && numOr(cs.strokeWidth, 1) > 0 && colourOf(cs.stroke, numOr(cs.strokeOpacity, 1)) !== "none";
+    painted.push([n, n.getAttribute("style")]);
+    const set = (k, v) => n.style.setProperty(k, v, "important");
+    set("opacity", "1");
+    if (filled && tag !== "line") { set("fill", "#e6007e"); set("fill-opacity", isText ? "1" : ".5"); }
+    if (!isText) {
+      set("stroke", "#e6007e"); set("stroke-opacity", "1"); set("stroke-width", "1.6px"); set("vector-effect", "non-scaling-stroke");
+      set("stroke-dasharray", stroked ? "none" : "3 2.5");
+    }
+  }
+}
+function applyMove() {
+  for (const [g, clip] of movedNodes) { g.removeAttribute("transform"); if (clip) clip.style.clipPath = ""; }
+  movedNodes = [];
+  const it = items[cur];
+  if (!moved || finished || !it || moved.k !== it.k) { moved = null; return; }
+  const g = leafGroup(roots[0], FIG.byK[it.k]);
+  if (!g) return;
+  g.setAttribute("transform", "translate(" + moved.dx + " " + moved.dy + ")");
+  const clip = g.parentNode && g.parentNode.closest ? g.parentNode.closest("[clip-path]") : null;
+  if (clip) clip.style.clipPath = "none";      // a leaf dragged out of its panel stays visible
+  movedNodes.push([g, clip]);
+}
+// Drag the outlined leaf aside to see what is under it; it goes back with M or on leaving the leaf.
+function dragSetup(svg) {
+  let start = null;
+  const at = e => new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse());
+  svg.addEventListener("pointerdown", e => {
+    if (finished || e.button !== 0 || !items[cur]) return;
+    const it = items[cur], b = FIG.byK[it.k].box, p = at(e), base = moved && moved.k === it.k ? moved : { dx: 0, dy: 0 }, pad = 6;
+    if (!b || b.some(v => v == null)) return;
+    if (p.x < b[0] + base.dx - pad || p.x > b[2] + base.dx + pad || p.y < b[1] + base.dy - pad || p.y > b[3] + base.dy + pad) return;
+    start = { x: p.x, y: p.y, dx: base.dx, dy: base.dy, k: it.k };
+    try { svg.setPointerCapture(e.pointerId); } catch (err) { /* no such pointer: the drag still follows moves over the page */ }
+    e.preventDefault();
+  });
+  svg.addEventListener("pointermove", e => {
+    if (!start) return;
+    const p = at(e), r1 = v => Math.round(v * 10) / 10;
+    moved = { k: start.k, dx: r1(start.dx + p.x - start.x), dy: r1(start.dy + p.y - start.y) };
+    applyMove();
+  });
+  const end = () => { if (start) { start = null; renderBody(); } };
+  svg.addEventListener("pointerup", end);
+  svg.addEventListener("pointercancel", end);
+}
+function highlight() {
+  const it = items[cur], lf = FIG.byK[it.k], box = finished ? null : boxOf(it), on = !finished;
+  unpaint();
+  for (const root of roots) {
+    root.querySelectorAll(".wb-cur").forEach(n => n.classList.remove("wb-cur"));
+    root.querySelectorAll('[data-gloss-leaf="' + lf.leaf + '"]').forEach(n => n.classList.add("wb-cur"));
+    root.classList.toggle("wb-dim", dim && on && root === roots[0]);
+    drawBox(root, box);
+  }
+  curPaint = on ? paintInfo(nodesOf(roots[0], it)) : null;
+  roots[1].classList.toggle("wb-iso", iso && on);
+  $("#loupe").classList.toggle("iso", iso && on);
+  roots[0].classList.toggle("wb-hidecur", hideCur && on);
+  const z = FIG.z[lf.leaf];
+  for (const [leaf, g] of FIG.groups) g.classList.toggle("wb-above", peel && on && z != null && FIG.z[leaf] > z);
+  if (paint && on) doPaint(it);
+  applyMove();
+  zoom(roots[1], FIG.viewBox, box, 16 / 7);
+}
+
+// ---- rendering -------------------------------------------------------------
+const fmtTime = s => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+function renderHeader() {
+  $("#who").textContent = "标注者 " + CFG.annotator + " · 细则第 " + VOC.guideline + " 版" + (TEAM ? "" : " · 写入 " + CFG.out + "/");
+  $("#team").hidden = !TEAM;
+  $("#team").textContent = "大家的进度和统计（O）";
+  $("#tabs").replaceChildren(...CFG.figures.map(f =>
+    h("button", { class: "tab" + (FIG && f.id === FIG.id ? " on" : "") + (f.done ? " done" : ""),
+                  onclick: () => openFigure(f.id), title: f.labelled + " / " + f.leaves },
+      h("span", { class: "ring", style: "--p:" + Math.round(100 * f.labelled / Math.max(f.leaves, 1)) + "%" }),
+      f.id + (f.done ? " ✓" : " " + f.labelled + "/" + f.leaves))));
+  const all = CFG.figures.reduce((a, f) => a + f.leaves, 0), got = CFG.figures.reduce((a, f) => a + f.labelled, 0);
+  $("#total").replaceChildren("已标 ", h("b", {}, got), " / " + all + " 个叶子 · 本图用时 ", h("b", {}, fmtTime(S ? S.seconds : 0)));
+}
+function swatch(v) {
+  if (v === "none") return h("span", { class: "sw none" });
+  const [r, g, b, a] = v.split(",").map(Number), c = "rgba(" + [r, g, b, a / 100].join(",") + ")";
+  return h("span", { class: "sw", style: "background: linear-gradient(" + c + "," + c + "), repeating-conic-gradient(#a9a9a9 0% 25%, #e4e4e4 0% 50%) 50% / 6px 6px" });
+}
+function colourName(v) {
+  const [r, g, b, a] = v.split(",").map(Number);
+  const hex = "#" + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, "0")).join("").toUpperCase();
+  return hex + (hex === "#FFFFFF" ? " 白色" : "") + (a < 100 ? " · " + a + "% 不透明" : "");
+}
+function paintChip(name, set) {
+  const vals = [...set];
+  if (!vals.length) return null;
+  if (vals.length === 1) return h("span", { class: "chip" }, swatch(vals[0]), name + "：" + (vals[0] === "none" ? "无（透明）" : colourName(vals[0])));
+  return h("span", { class: "chip" }, vals.slice(0, 5).map(swatch), name + "：" + vals.length + " 种" + (vals.includes("none") ? "，有的没有" : ""));
+}
+function paintChips(p) {
+  if (p.invisible) return [h("span", { class: "chip warn", title: "细则：看不见的元素按画它的东西来标，备注写 invisible" }, h("span", { class: "sw none" }),
+                             "看不见：没有填充，也没有描边")];
+  return [p.image ? h("span", { class: "chip" }, "图片") : null, paintChip(p.text ? "文字颜色" : "填充", p.fill), paintChip("描边", p.stroke)];
+}
+function jumpK(k) { const i = items.findIndex(x => x.k === k); if (i >= 0) go(i); }
+// Where the leaf is in the drawing order, and which leaves its outline overlaps.
+function layerInfo(it) {
+  const lf = FIG.byK[it.k], b = lf.box, z = FIG.z[lf.leaf];
+  if (z == null) return null;
+  const over = [], under = [];
+  if (b && b.every(v => v != null)) for (const o of FIG.leaves) {
+    if (o.k === lf.k || o.n === 0 || FIG.z[o.leaf] == null || !o.box || o.box.some(v => v == null)) continue;
+    if (o.box[0] <= b[2] && o.box[2] >= b[0] && o.box[1] <= b[3] && o.box[3] >= b[1]) (FIG.z[o.leaf] > z ? over : under).push(o);
+  }
+  over.sort((p, q) => FIG.z[p.leaf] - FIG.z[q.leaf]);
+  under.sort((p, q) => FIG.z[q.leaf] - FIG.z[p.leaf]);
+  const name = o => o.class + (o.text ? " “" + o.text.slice(0, 10) + "”" : "");
+  const list = arr => arr.length ? [...arr.slice(0, 3).flatMap((o, i) => [i ? "、" : "", h("button", { class: "link", onclick: () => jumpK(o.k) }, name(o))]),
+                                    arr.length > 3 ? " 等 " + arr.length + " 个" : ""] : ["没有"];
+  return h("div", { class: "layer", title: "绘制顺序就是叠放顺序：后画的盖在先画的上面。“盖在上面 / 被盖住”按外框是否重叠来算。" },
+    "第 ", h("b", {}, (z + 1) + " / " + FIG.groups.length), " 层（1 在最底下）· 盖在它上面：", ...list(over), " · 被它盖住：", ...list(under));
+}
+// The guideline's worked examples of leaves of the same class: one per distinct label.
+function refBlock(lf) {
+  if (!refOpen || !REF.length) return null;
+  const groups = new Map();
+  let total = 0;
+  for (const ex of REF) for (const o of ex.leaves) {
+    if (o.class !== lf.class) continue;
+    total++;
+    const labs = [...new Map(o.labels.map(l => [l.role + " / " + l.kind, l])).values()], key = labs.map(l => l.role + " / " + l.kind).join(" + ");
+    if (!groups.has(key)) groups.set(key, { ex, o, labs, count: 0 });
+    groups.get(key).count++;
+  }
+  const cards = [...groups.values()].sort((a, b) => b.count - a.count).slice(0, 6).map(g => {
+    const svg = document.importNode(g.ex.dom, true);
+    svg.classList.add("wb-dim");
+    const node = svg.querySelector('[data-gloss-leaf="' + g.o.leaf + '"]');
+    if (node) node.classList.add("wb-cur");
+    const box = g.o.box.every(v => v != null) ? g.o.box : null;
+    drawBox(svg, box);
+    zoom(svg, g.ex.vb, box, 16 / 9);
+    return h("div", { class: "refcard", title: g.ex.id + (g.o.text ? " “" + g.o.text + "”" : "") }, svg,
+             h("div", {}, g.labs.flatMap((l, i) => [i ? " + " : "", roleSpan(l.role, l.kind)]), " ×" + g.count));
+  });
+  return h("div", { class: "peers" },
+    h("h3", {}, h("span", {}, "细则示例里的 " + lf.class + " · " + total + " 个"), h("span", {}, h("kbd", {}, "R"), " 收起")),
+    cards.length ? h("div", { class: "refs" }, cards) : h("div", {}, "细则的示例图里没有这种图形。"),
+    h("div", { class: "hint2" }, "这是示例，不是答案：同一种图形在不同的位置可以是不同的角色。看它在这张图里起什么作用。"));
+}
+function roleSpan(r, k) { return h("b", { style: "color: var(--" + r + ")" }, r + (k ? " / " + k : "")); }
+function option(key, name, hint, title, fn, color, extra, thumb, preview) {
+  const b = h("button", { class: "opt" + (extra || "") + (thumb ? " ex" : ""), onclick: fn, title: title },
+    h("kbd", {}, key), h("span", {}, h("span", { class: "name", style: color ? "color: var(--" + color + ")" : null }, name),
+                         hint ? h("span", { class: "hint" }, hint) : null), thumb || null);
+  if (preview) { b.addEventListener("mouseenter", () => showPreview(preview, b)); b.addEventListener("mouseleave", hidePreview); }
+  return b;
+}
+// ---- the standard examples: a role or a kind as the guideline's worked examples show it -----
+// A copy of an example page with the leaves `lit` says undimmed; cached, one node per place it is shown.
+// `view`: "crop" zooms to the box, "whole" shows the page with the box drawn.
+function exCopy(key, ex, lit, box, index, view) {
+  if (thumbs.has(key)) return thumbs.get(key);
+  let node = null;
+  if (ex) {
+    node = document.importNode(ex.dom, true);
+    node.classList.add("wb-dim", "wb-ex");
+    for (const lf of ex.leaves) {
+      if (!lit(lf)) continue;
+      const g = node.querySelector('[data-gloss-leaf="' + lf.leaf + '"]');
+      if (!g) continue;
+      g.classList.add("wb-cur");
+      if (index) [...g.children].forEach((c, n) => { if (!index.includes(n + 1)) c.style.opacity = ".18"; });
+    }
+    drawBox(node, box);
+    if (view === "whole") node.setAttribute("viewBox", padded(ex.vb).join(" ")); else zoom(node, ex.vb, box, 16 / 10);
+  }
+  thumbs.set(key, node);
+  return node;
+}
+function kindExample(role, kind, n, place, view) {
+  const spec = (REFK[role + " / " + kind] || [])[n], ex = spec && REF.find(f => f.id === spec.figure);
+  const box = spec && spec.box.every(v => v != null) ? spec.box : null;
+  return exCopy([place, role, kind, n, view].join("|"), ex, lf => lf.k === spec.k, box, spec && spec.index, view);
+}
+// The example figures that show a role, the vocabulary's own first.
+function roleFigures(role) {
+  return REF.filter(f => f.leaves.some(lf => lf.labels.some(l => l.role === role)))
+            .sort((a, b) => (b.id === REFROLE) - (a.id === REFROLE));
+}
+function roleExample(role, place, ex) {
+  const node = exCopy([place, role, ex.id].join("|"), ex, lf => lf.labels.some(l => l.role === role), null, null, "whole");
+  if (node) { node.classList.add("wb-role"); node.style.setProperty("--c", "var(--" + role + ")"); }
+  return node;
+}
+// The small pictures of an option; a click on them opens them large instead of choosing the option.
+function thumbsOf(p) {
+  if (!REF.length) return null;
+  const nodes = p.kind ? [kindExample(p.role, p.kind, 0, "option")].filter(Boolean) : roleFigures(p.role).map(ex => roleExample(p.role, "option", ex));
+  if (!nodes.length) return h("span", { class: "thumb none" }, "示例图里", h("br"), "没有这一种");
+  const more = p.kind ? (REFK[p.role + " / " + p.kind] || []).length : 0;
+  const box = h("span", { class: "thumbs", title: "点一下放大看" }, nodes.map(n => h("span", { class: "thumb" }, n)), more > 1 ? h("span", { class: "more" }, more + " 个") : null);
+  box.addEventListener("click", e => { e.stopPropagation(); e.preventDefault(); showZoom(p); });
+  return box;
+}
+function exCard(node, caption, p) {
+  const c = h("div", { class: "excard" + (p ? " click" : ""), title: p ? "点一下放大看" : null }, node, h("div", {}, caption));
+  if (p) c.addEventListener("click", () => showZoom(p));
+  return c;
+}
+const specCaption = spec => [spec.figure, spec.text && !spec.index ? " “" + spec.text.slice(0, 22) + "”" : "", spec.index ? " · 这个叶子里的第 " + spec.index.join("、") + " 个元素" : ""].join("");
+function exCards(p, place, most, click) {
+  if (!p.kind) return roleFigures(p.role).slice(0, most).map(ex => exCard(roleExample(p.role, place, ex), ex.id + "：上了色的都是 " + p.role, click ? p : null));
+  return (REFK[p.role + " / " + p.kind] || []).slice(0, most).map((spec, n) => exCard(kindExample(p.role, p.kind, n, place), specCaption(spec), click ? p : null));
+}
+// Large: every example of the option; for a kind, the whole figure beside the detail.
+function showZoom(p) {
+  hidePreview();
+  const r = VOC.roles.find(x => x.role === p.role), k = p.kind && r.kinds.find(x => x.kind === p.kind);
+  const rows = p.kind
+    ? (REFK[p.role + " / " + p.kind] || []).map((spec, n) => h("div", { class: "zoomrow" },
+        h("div", { class: "cap" }, "示例 " + (n + 1) + " · " + specCaption(spec) + "（左：它在整张图里的位置；右：放大）"),
+        kindExample(p.role, p.kind, n, "zoom", "whole"), kindExample(p.role, p.kind, n, "zoom", "crop")))
+    : roleFigures(p.role).map(ex => h("div", { class: "zoomrow one" }, h("div", { class: "cap" }, ex.id + "：上了色的都是 " + p.role + "，其余的淡化了"), roleExample(p.role, "zoom", ex)));
+  $("#overBody").classList.add("wide");
+  $("#overBody").replaceChildren(
+    h("button", { class: "link", style: "float: right", onclick: hideOverview }, "关闭（Esc）"),
+    h("h2", {}, roleSpan(p.role, p.kind), " 在标准示例里"),
+    h("p", {}, (k ? k.hint_zh : r.question_zh) + (rows.length ? "" : " 细则的示例图里没有这一种。")),
+    ...rows);
+  $("#over").classList.add("on");
+}
+function showPreview(p, anchor) {
+  const card = $("#expreview"), panel = $("#panel").getBoundingClientRect();
+  if (!REF.length || window.innerWidth <= 1000 || panel.left < 490) return;
+  if ($("#over").classList.contains("on")) return;
+  const r = VOC.roles.find(x => x.role === p.role), k = p.kind && r.kinds.find(x => x.kind === p.kind), cards = exCards(p, "preview", 4);
+  card.replaceChildren(h("h3", {}, roleSpan(p.role, p.kind), " 在标准示例里"), h("p", {}, k ? k.hint_zh : r.question_zh),
+    cards.length ? h("div", { class: "exgrid" + (cards.length === 1 ? " one" : "") }, cards) : h("p", {}, "细则的示例图里没有这一种。"));
+  card.style.display = "block";
+  const top = Math.min(Math.max(anchor.getBoundingClientRect().top - 60, 64), Math.max(64, window.innerHeight - card.offsetHeight - 12));
+  card.style.left = (panel.left - 482) + "px";
+  card.style.top = top + "px";
+}
+function hidePreview() { $("#expreview").style.display = "none"; }
+// E: every option of the current question, each in the standard examples
+function showExamples() {
+  if (!REF.length || finished) return;
+  hidePreview();
+  const r = stage === "kind" ? VOC.roles.find(x => x.role === role) : null;
+  const rows = r ? r.kinds.map((k, n) => [(n + 1) % 10, { role: r.role, kind: k.kind }, k.hint_zh])
+                 : VOC.roles.map((x, n) => [n + 1, { role: x.role }, x.question_zh]);
+  $("#overBody").classList.remove("wide");
+  $("#overBody").replaceChildren(
+    h("button", { class: "link", style: "float: right", onclick: hideOverview }, "关闭（Esc）"),
+    h("h2", {}, r ? [roleSpan(r.role), " 的各个种类，在标准示例里"] : "五种角色，在标准示例里"),
+    h("p", {}, "标准示例是细则里手工画的四张图（ggplot、base、热图、箱线图加参考带），每个叶子怎么标已经定好。亮着、框出来的就是这个选项；点图可以放大。看完按 Esc，再按数字键作答。"),
+    ...rows.flatMap(([key, p, hint]) => {
+      const cards = exCards(p, "all", 4, true);
+      return [h("h3", {}, h("kbd", {}, key), " ", roleSpan(p.role, p.kind), " · " + hint),
+              cards.length ? h("div", { class: "exgrid" + (cards.length === 1 ? " one" : "") }, cards) : h("p", {}, "细则的示例图里没有这一种。")];
+    }));
+  $("#over").classList.add("on");
+}
+function renderBody() {
+  const body = $("#body");
+  if (finished) {
+    const allDone = CFG.figures.every(f => f.done), f = CFG.figures.find(x => x.id === FIG.id);
+    const next = CFG.figures.find(x => !x.done && x.id !== FIG.id);
+    body.replaceChildren(h("div", { class: "done-card" },
+      h("div", { class: "big" }, allDone ? "全部标完了" : "这张标完了 ✓"),
+      h("p", {}, TEAM ? (dirty || saving ? "正在保存…" : "已保存") : (f.file ? "已写入 " + f.file : "正在保存…"), " · 用时 " + fmtTime(S.seconds)),
+      next ? h("button", { class: "btn", onclick: () => openFigure(next.id) }, "下一张：" + next.id + "（Enter）") : null,
+      TEAM ? teamCard() : (allDone ? h("p", {}, CFG.figures.length + " 张图都已保存。回到终端，告诉 Claude“标完了”即可。") : null),
+      h("p", {}, "想改某一个：按 ← 回去，或点下面的小方块。")));
+    return;
+  }
+  const it = items[cur], lf = FIG.byK[it.k], el = it.el ? FIG.el[it.k][it.el - 1] : null, lab = getLabel(it);
+  const leafNo = FIG.order.indexOf(lf.k) + 1;
+  const meta = h("div", { class: "meta" },
+    h("span", { class: "where" }, "叶子 " + leafNo + " / " + FIG.order.length + (el ? " · 元素 " + it.el + " / " + lf.n : "")),
+    h("span", { class: "chip mono" }, lf.class),
+    el ? h("span", { class: "chip mono" }, "<" + el.tag + ">") : h("span", { class: "chip" }, lf.n + " 个元素 · " + lf.tags),
+    (el ? el.text : lf.text) ? h("span", { class: "chip text", title: el ? el.text : lf.text }, "“" + (el ? el.text : lf.text) + "”" + (!el && lf.n > 1 ? " …" : "")) : null,
+    curPaint ? paintChips(curPaint) : null);
+  const layer = layerInfo(it);
+  const path = h("div", { class: "path mono", title: "路径只用来找到这个叶子，不决定它的角色" }, lf.path);
+  const now = lab ? h("div", { class: "now" }, "已标为 ", roleSpan(lab.role, lab.kind), lab.unsure ? " · 拿不准" : "", lab.note ? " · " + lab.note : "",
+                      S.independent ? "（独立标注已定稿；现在再改，会另外记为“看过之后的修改”）" : "（重新选即可修改）") : null;
+  const peers = peerBlock(it.k);
+  let choices;
+  if (stage === "role") {
+    choices = h("div", { class: "choices" },
+      h("h3", {}, h("span", {}, "它是什么？从上往下问，第一个“是”就选它"), h("span", {}, "按数字键")),
+      VOC.roles.map((r, i) => option(i + 1, r.role, r.question_zh, r.question, () => pickRole(i), r.role, "",
+                                     thumbsOf({ role: r.role }), { role: r.role })));
+  } else {
+    const r = VOC.roles.find(x => x.role === role);
+    choices = h("div", { class: "choices kinds" },
+      h("h3", {}, h("span", {}, roleSpan(r.role), " 里的哪一种？"), h("span", {}, h("kbd", {}, "Esc"), " 返回")),
+      r.kinds.map((k, i) => option((i + 1) % 10, k.kind, k.hint_zh, k.hint, () => commit(r.role, k.kind), null, "",
+                                   thumbsOf({ role: r.role, kind: k.kind }), { role: r.role, kind: k.kind })));
+  }
+  const rep = last ? option("␣", "和上一个一样", last.role + " / " + last.kind, "Space", () => commit(last.role, last.kind), null, " repeat",
+                            kindExample(last.role, last.kind, 0, "last") ? h("span", { class: "thumb" }, kindExample(last.role, last.kind, 0, "last")) : null, last) : null;
+  const note = h("input", { id: "note", placeholder: "备注（N）", value: draft.note });
+  note.addEventListener("input", () => { draft.note = note.value; const l = getLabel(items[cur]); if (l) { l.note = draft.note; markDirty(); } });
+  const tools = h("div", { class: "tools" },
+    lf.n > 1 ? h("button", { class: "tool" + (it.el ? " on" : ""), onclick: toggleSplit,
+                             title: "一个叶子里的元素不是同一种东西时（base 的坐标轴、title()），逐个元素来标" },
+                 h("kbd", {}, "S"), it.el ? "合并回整个叶子" : "拆成 " + lf.n + " 个元素分别标") : null,
+    h("button", { class: "tool" + (draft.unsure ? " on" : ""), onclick: toggleUnsure }, h("kbd", {}, "U"), "拿不准"),
+    h("button", { class: "tool" + (dim ? " on" : ""), onclick: toggleDim }, h("kbd", {}, "D"), "淡化其他"),
+    h("span", { class: "tool" }, h("kbd", {}, "←"), h("kbd", {}, "→"), "上一个 / 下一个"),
+    FIG.peerBy ? h("button", { class: "tool", onclick: nextDisputed }, h("kbd", {}, "X"), "下一个有分歧的") : null,
+    note);
+  const aids = h("div", { class: "tools" },
+    h("button", { class: "tool" + (paint ? " on" : ""), onclick: togglePaint, title: "把它涂成洋红色，看清它到底占了哪一块" }, h("kbd", {}, "F"), "涂色"),
+    h("button", { class: "tool" + (iso ? " on" : ""), onclick: toggleIso, title: "放大镜里只画它一个，底是棋盘格" }, h("kbd", {}, "I"), "单独看"),
+    h("button", { class: "tool" + (hideCur ? " on" : ""), onclick: toggleHide, title: "把它从图上拿掉，看少了什么" }, h("kbd", {}, "H"), "藏起它"),
+    h("button", { class: "tool" + (peel ? " on" : ""), onclick: togglePeel, title: "不画在它之后画的东西" }, h("kbd", {}, "T"), "掀掉上面的"),
+    moved ? h("button", { class: "tool on", onclick: resetMove }, h("kbd", {}, "M"), "放回原处")
+          : h("span", { class: "tool", title: "在图上按住框出来的这一块，拖到旁边" }, "按住可拖开"),
+    REF.length ? h("button", { class: "tool", onclick: showExamples, title: "当前这一步的每个选项，在标准示例里长什么样" }, h("kbd", {}, "E"), "各选项的标准示例") : null,
+    REF.length ? h("button", { class: "tool" + (refOpen ? " on" : ""), onclick: toggleRef, title: "细则的示例图里，同一种图形（同一个 class）是怎么标的" }, h("kbd", {}, "R"), "同类图形怎么标") : null);
+  const hint = paint || iso ? h("div", { class: "hint2" },
+    paint ? "涂色：实心 = 有填充；实线 = 有描边；虚线 = 原本没有描边。" : "",
+    iso ? "单独看：棋盘格是灰的，所以白色看得出是白色；透明的地方会透出棋盘格。" : "") : null;
+  body.replaceChildren(meta, path, layer || "", now || "", peers || "", rep || "", choices, tools, aids, hint || "", refBlock(lf) || "");
+}
+function renderDots() {
+  $("#dots").replaceChildren(...items.map((it, i) => {
+    const l = getLabel(it);
+    return h("button", { class: "dot" + (it.el ? " el" : "") + (i === cur && !finished ? " cur" : "") + (disputed(it.k) ? " disp" : ""),
+                         style: l ? "background: var(--" + l.role + ")" : null,
+                         title: "叶子 " + (FIG.order.indexOf(it.k) + 1) + (it.el ? " 元素 " + it.el : "") + (l ? "：" + l.role + " / " + l.kind : ""),
+                         onclick: () => go(i) });
+  }));
+}
+function render() { renderHeader(); highlight(); renderBody(); renderDots(); }
+
+// ---- the others' labels (team mode; only what the server gives) -------------
+const pct = v => v == null ? "–" : Math.round(100 * v) + "%";
+function indexPeers() { FIG.peerBy = FIG.peers ? Object.fromEntries(FIG.peers.leaves.map(l => [l.k, l])) : null; }
+function disputed(k) { const p = FIG.peerBy && FIG.peerBy[k]; return !!p && p.n > 1 && p.share != null && p.share < 1; }
+function roleBar(roles, n) {
+  return h("div", { class: "bar" }, Object.entries(roles).sort((a, b) => b[1] - a[1]).map(([r, v]) =>
+    h("span", { style: "width:" + (100 * v / Math.max(n, 1)) + "%; background: var(--" + r + ")", title: r + " " + (Math.round(v * 10) / 10) })));
+}
+function peerBlock(k) {
+  const p = FIG.peerBy && FIG.peerBy[k];
+  if (!p) return null;
+  return h("div", { class: "peers" },
+    h("h3", {}, h("span", {}, "大家怎么标的 · " + p.n + " 人"), h("span", {}, p.n < 2 ? "只有你" : (p.share === 1 ? "角色一致" : "多数 " + pct(p.share)))),
+    roleBar(p.roles, p.n),
+    p.answers.map(a => h("div", { class: "ans" + (a.me ? " me" : "") },
+      h("span", { class: "name", title: a.who }, a.who + (a.me ? "（我）" : "")),
+      h("span", {}, a.parts.flatMap((x, i) => [i ? "；" : "", x.elements !== "all" ? "[" + x.elements + "] " : "", roleSpan(x.role, x.kind), x.note ? "（" + x.note + "）" : ""])))));
+}
+function canOpen() {
+  return TEAM && !S.independent && (REVEAL === "figure" ? CFG.figures.find(f => f.id === FIG.id).done : CFG.figures.every(f => f.done));
+}
+function teamCard() {
+  if (S.independent) {
+    const ls = FIG.peers ? FIG.peers.leaves : [], n = FIG.peers ? FIG.peers.annotators.length : 1, disp = ls.filter(l => disputed(l.k)).length;
+    return [h("p", {}, "这张图你的独立标注已定稿。" + (n < 2 ? "目前只有你标完了这张图。" : n + " 人标完了这张图，" + (ls.length - disp) + " / " + ls.length + " 个叶子大家给的角色完全一致。")),
+            disp ? h("button", { class: "btn ghost", onclick: nextDisputed }, "看有分歧的叶子（X）") : null,
+            h("button", { class: "btn ghost", onclick: showOverview }, "大家的进度和统计（O）")];
+  }
+  if (canOpen()) return [h("button", { class: "btn", onclick: openPeers }, "看看大家怎么标的"),
+                         h("p", {}, "打开之后，你" + (REVEAL === "figure" ? "这张图" : "") + "的标注就定稿了：之后还能改，但改动会另外记录，不算进一致性统计。")];
+  const left = CFG.figures.filter(x => !x.done).length;
+  return [h("p", {}, REVEAL === "figure" ? "标完这张图就能看到大家怎么标的。"
+                                          : "全部标完后就能看到大家怎么标的（还差 " + left + " 张）。先各标各的，一致性统计才有意义。")];
+}
+async function openPeers() {
+  await flush();
+  try {
+    const r = await api("/api/open/" + FIG.id, {});
+    CFG = await api("/api/config");
+    FIG.peers = r.peers; S.independent = r.state.independent; indexPeers(); render();
+  } catch (e) { toast(e.message); }
+}
+function nextDisputed() {
+  if (!FIG.peerBy) return;
+  const start = finished ? -1 : cur;
+  for (let s = 1; s <= items.length; s++) {
+    const i = (start + s) % items.length;
+    if (disputed(items[i].k)) return go(i);
+  }
+}
+// ---- the guide: what to do, from the vocabulary's questions and cases ---------
+function showGuide() {
+  hidePreview();
+  const K = (...ks) => ks.map(k => h("kbd", {}, k));
+  const li = (...kids) => h("li", {}, ...kids);
+  $("#overBody").classList.remove("wide");
+  $("#overBody").replaceChildren(h("div", { class: "guide" },
+    h("button", { class: "link", style: "float: right", onclick: hideOverview }, "关闭（Esc）"),
+    h("h2", {}, "使用说明"),
+    h("p", { class: "strong" }, "一张图是由很多块东西画出来的：背景、网格线、点、坐标轴、图例……每一块叫一个“叶子”。你的任务是告诉我们每个叶子是什么。一共 " + CFG.figures.length + " 张图，一张几分钟；随时可以关掉，回来接着标。"),
+    h("h3", {}, "1  每个叶子回答两步"),
+    h("p", {}, "左边的图上，当前的叶子用洋红色虚线框出来（其他的淡化），右上角是它的放大图。先选角色：从上往下问，第一个回答“是”的就选它。"),
+    h("ol", {}, VOC.roles.map(r => li(roleSpan(r.role), " ", h("span", { class: "q" }, r.question_zh)))),
+    h("p", {}, "再选它是这个角色里的哪一种（比如 guide 里的刻度线、刻度文字、图例标题）。选完自动跳到下一个叶子。"),
+    h("h3", {}, "2  按键"),
+    h("ul", {},
+      li(K("1"), "–", K("5"), " 选角色，再按数字选种类（", K("0"), " 是第 10 个）；", K("Esc"), " 退回去重选角色。"),
+      li(K("␣"), " 空格：和上一个叶子标成一样。连着好几个同类的叶子时最快。"),
+      li(K("←"), K("→"), " 回到上一个 / 去下一个；下面的小方块也可以点。已经标过的，重新选一次就是修改。"),
+      li(K("S"), " 一个叶子里的东西不是同一种时（比如 base 的坐标轴：轴线、刻度线、刻度文字画在一起），拆开，逐个元素标。"),
+      li(K("U"), " 拿不准：先选你认为最可能的，再按 U 做个记号。", K("N"), " 写备注。不要留空。"),
+      li(K("C"), " 看这张图的代码：位置是不是从数据来的、值是不是写死的，代码里最清楚。")),
+    h("h3", {}, "3  看不清它是什么的时候"),
+    h("ul", {},
+      li("叶子下面那一行写着它的", h("b", {}, "填充和描边"), "：“无（透明）”和“#FFFFFF 白色”是两回事。"),
+      li(K("F"), " 涂色：把它涂成洋红色。实心 = 有填充，实线 = 有描边，虚线 = 原本没有描边。"),
+      li(K("I"), " 单独看：放大图里只画它一个，底是灰色棋盘格，白色和透明一眼分得出。"),
+      li(K("H"), " 藏起它，看图上少了什么；", K("T"), " 掀掉画在它之后的东西；按住框出来的那一块可以拖到旁边，", K("M"), " 放回。"),
+      li("“第几层”那一行：1 在最底下，后画的盖在先画的上面；盖在它上面、被它盖住的叶子可以点过去看。"),
+      li(K("D"), " 开关“淡化其他”。")),
+    REF.length ? h("h3", {}, "4  每个选项长什么样：标准示例") : null,
+    REF.length ? h("ul", {},
+      li("每个选项右边的小图，是它在标准示例图（手工画的 ggplot、base、热图各一张，怎么标已经定好）里的样子。"),
+      li("鼠标停在选项上会放大；", h("b", {}, "点小图"), "打开大图（左边是它在整张图里的位置，右边是放大）；", K("E"), " 一次看完当前这一步的所有选项。"),
+      li(K("R"), " 示例图里同一种图形（比如都是 rect）分别是怎么标的。同一种图形可以是不同的角色，别照抄，看它在这张图里起什么作用。"),
+      li("有几个选项写着“示例图里没有这一种”：按文字说明判断。")) : null,
+    h("h3", {}, (REF.length ? "5" : "4") + "  这些情况已经定好怎么标"),
+    h("ul", {}, VOC.cases.map(c => li(c.zh))),
+    TEAM ? h("h3", {}, (REF.length ? "6" : "5") + "  和大家一起标") : null,
+    TEAM ? h("ul", {},
+      li(h("b", {}, "请独立完成。"), "标完之前不要和别人商量，也不要看别人的屏幕：我们要量的正是不同的人各自标，结果一不一致。"),
+      li("谁标了多少随时能看（", K("O"), "）。别人具体怎么标的，要等你" + (REVEAL === "figure" ? "标完一张图" : "把全部的图标完") + "、点“看看大家怎么标的”之后才显示；那一刻你的标注就定稿了。"),
+      li("定稿之后可以看每个叶子大家各选了什么、哪些有分歧（", K("X"), " 跳到下一个有分歧的）、整体的一致性。之后还能改，但改动另外记录。"),
+      li("换一台电脑接着标：在“大家的进度和统计”最下面有你的专属链接。")) : null,
+    h("p", {}, "这份说明随时可以再看：按 ", K("G"), "，或点页面顶上的“使用说明”。"),
+    h("button", { class: "btn", onclick: hideOverview }, "开始标注（Esc）")));
+  $("#over").classList.add("on");
+  $("#over").scrollTop = 0;
+}
+function table(head, rows) {
+  return h("table", {}, h("tr", {}, head.map(x => h("th", {}, x))), rows.map(r => h("tr", {}, r.map(c => h("td", {}, c)))));
+}
+function hideOverview() { $("#over").classList.remove("on"); }
+async function showOverview() {
+  if (!TEAM) return;
+  await flush();
+  let o;
+  try {
+    o = await api("/api/overview");
+    if (FIG && S.independent) { FIG.peers = (await api("/api/peers/" + FIG.id)).peers; indexPeers(); render(); }
+  } catch (e) { return toast(e.message); }
+  const k2 = v => v == null ? "–" : v.toFixed(2);
+  $("#overBody").classList.remove("wide");
+  const kids = [h("button", { class: "link", style: "float: right", onclick: hideOverview }, "关闭（Esc）"), h("h2", {}, "大家的进度和统计"),
+    h("h3", {}, "谁在标 · " + o.people.length + " 人"),
+    table(["昵称", "进度", "叶子", "标完的图"], o.people.map(p => [
+      p.who + (p.me ? "（我）" : "") + (p.readonly ? "（事先标好的）" : ""),
+      h("div", { class: "bar" }, h("span", { style: "width:" + (100 * p.labelled / Math.max(p.leaves, 1)) + "%; background: var(--ok)" })),
+      p.labelled + " / " + p.leaves, p.figures_done + " / " + p.figures]))];
+  if (!o.figures.length) {
+    kids.push(h("p", { class: "strong" }, "别人的标注和一致性统计，在你" + (o.reveal === "figure" ? "标完一张图" : "标完全部的图") +
+                "、并点“看看大家怎么标的”之后显示。先各标各的，统计出来的一致性才有意义。"));
+  } else {
+    kids.push(h("h3", {}, "每张图（只算标完了这张图的人）"),
+      table(["图", "人数", "叶子", "角色完全一致的叶子", "两两一致率的平均"], o.figures.map(f => [
+        h("button", { class: "link", onclick: () => { hideOverview(); openFigure(f.id); } }, f.id),
+        f.annotators, f.leaves, f.unanimous + " / " + f.leaves, pct(f.agreement)])));
+    kids.push(h("h3", {}, "两两一致性（角色，按叶子加权）"),
+      o.pairs.length ? table(["标注者", "标注者", "共同的图", "κ", "一致率", "κ（角色 + 种类）"],
+                             o.pairs.map(p => [p.a, p.b, p.figures, h("b", {}, k2(p.kappa)), pct(p.agreement), k2(p.kappa_kind)]))
+                     : h("p", {}, "还没有第二个人标完。"),
+      h("p", {}, "κ（Cohen's kappa）是扣掉“碰巧一致”之后的一致程度，1 是完全一致；这个项目的标准是 κ ≥ 0.8。算法与 bench/R/score-labels.R 相同，正式数字以那个脚本为准。"));
+    kids.push(h("h3", {}, "分歧最大的叶子" + (o.disputed.length ? "（点一下去看）" : "")),
+      o.disputed.length ? h("ul", {}, o.disputed.map(d => h("li", {},
+        h("button", { class: "link", onclick: () => jump(d.fig, d.k) },
+          d.fig + " · " + d.class + (d.text ? " “" + d.text.slice(0, 24) + "”" : "") + " · " + d.n + " 人，多数 " + pct(d.share) + " · " +
+          Object.entries(d.roles).sort((a, b) => b[1] - a[1]).map(([r, v]) => r + " " + (Math.round(v * 10) / 10)).join("，")))))
+                        : h("p", {}, "没有。"));
+  }
+  const own = h("input", { class: "own mono", readonly: "", hidden: "", value: location.origin + "/#t=" + TOKEN });
+  own.addEventListener("focus", () => own.select());
+  const show = h("button", { class: "link", onclick: () => { own.hidden = false; show.hidden = true; own.focus(); } }, "显示我的专属链接");
+  kids.push(h("h3", {}, "换一台设备或浏览器接着标"), show, own,
+            h("p", {}, "在另一个浏览器打开这个链接，就还是你（" + CFG.annotator + "）。它相当于你的密码，不要发给别人，也不要截图。"));
+  $("#overBody").replaceChildren(...kids);
+  $("#over").classList.add("on");
+}
+async function jump(fig, k) {
+  hideOverview();
+  if (!FIG || FIG.id !== fig) await openFigure(fig);
+  jumpK(k);
+}
+function join(hello) {
+  return new Promise(resolve => {
+    const nick = h("input", { maxlength: "16", autocomplete: "off", placeholder: "2–16 个字：汉字、字母、数字都行" });
+    const inv = h("input", { autocomplete: "off", value: new URLSearchParams(location.search).get("invite") || "" });
+    const err = h("div", { class: "err" });
+    let busy = false;
+    const submit = async () => {
+      if (busy) return;
+      busy = true; err.textContent = "";
+      try {
+        const r = await api("/api/join", { nickname: nick.value, invite: inv.value });
+        TOKEN = r.token; store.set("wb-token", r.token);
+        $("#join").classList.remove("on");
+        resolve();
+      } catch (e) { err.textContent = e.message; }
+      busy = false;
+    };
+    for (const el of [nick, inv]) el.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) submit(); });
+    $("#joinBody").replaceChildren(
+      h("h2", {}, "gloss 标注：加入"),
+      h("p", {}, "一共 " + hello.figures + " 张图。每张图里画出来的每一块东西（一个“叶子”）会被依次框出来，你回答“它是什么”：按数字键选五类之一，再选种类。一张图几分钟。"),
+      h("p", { class: "strong" }, "请独立完成：标完之前不要和别人商量，也不要看别人的屏幕。" +
+        (hello.reveal === "figure" ? "每标完一张图" : "全部标完后") + "，这里会显示大家各自怎么标的，以及每个叶子和整体的统计。谁标了多少，随时能看。"),
+      h("label", { class: "field" }, "给自己起一个昵称（别人没用过的）", nick),
+      hello.invite ? h("label", { class: "field" }, "邀请码", inv) : null,
+      err,
+      h("button", { class: "btn", onclick: submit }, "开始"));
+    $("#join").classList.add("on");
+    nick.focus();
+  });
+}
+
+// ---- actions ---------------------------------------------------------------
+function pickRole(i) { role = VOC.roles[i].role; stage = "kind"; hidePreview(); renderBody(); }
+function resetView() { hideCur = false; peel = false; moved = null; }
+function togglePaint() { paint = !paint; highlight(); renderBody(); }
+function toggleIso() { iso = !iso; highlight(); renderBody(); }
+function toggleHide() { hideCur = !hideCur; highlight(); renderBody(); }
+function togglePeel() { peel = !peel; highlight(); renderBody(); }
+function resetMove() { moved = null; applyMove(); renderBody(); }
+function toggleRef() { refOpen = !refOpen; renderBody(); }
+function commit(r, k) {
+  // `ref`: the reference examples were open when this label was given
+  setLabel(items[cur], Object.assign({ role: r, kind: k, note: draft.note, unsure: draft.unsure }, refOpen ? { ref: true } : {}));
+  resetView(); hidePreview();
+  last = { role: r, kind: k };
+  const f = CFG.figures.find(x => x.id === FIG.id);
+  f.labelled = FIG.order.filter(key => leafDone(key)).length;
+  dirty = true;
+  const nx = nextUnlabelled(cur);
+  stage = "role"; role = null;
+  if (nx < 0) { finished = true; flush(); } else { cur = nx; markDirty(); }
+  loadDraft(); render();
+}
+function leafDone(k) {
+  const l = S.labels[k];
+  return !!l && (l.split ? l.split.every(Boolean) : true);
+}
+function go(i) {
+  if (i < 0 || i >= items.length) return;
+  resetView();
+  cur = i; finished = false; stage = "role"; role = null; loadDraft(); render();
+}
+function toggleSplit() {
+  const it = items[cur], lf = FIG.byK[it.k];
+  if (lf.n < 2) return;
+  const l = S.labels[it.k];
+  if (l && l.split) {
+    const a = l.split[0], same = l.split.every(x => x && a && x.role === a.role && x.kind === a.kind);
+    if (same) S.labels[it.k] = a; else delete S.labels[it.k];
+  } else S.labels[it.k] = { split: Array(lf.n).fill(null) };
+  resetView();
+  buildItems();
+  cur = items.findIndex(x => x.k === it.k);
+  finished = false; stage = "role"; markDirty(); loadDraft(); render();
+}
+function toggleUnsure() {
+  draft.unsure = !draft.unsure;
+  const l = getLabel(items[cur]); if (l) { l.unsure = draft.unsure; markDirty(); }
+  renderBody();
+}
+function toggleDim() { dim = !dim; highlight(); renderBody(); }
+
+async function openFigure(id) {
+  await flush();
+  await loadFigure(id);
+}
+async function loadFigure(id) {
+  FIG = await api("/api/figure/" + id);
+  indexPeers();
+  S = FIG.state; S.labels = S.labels || {}; S.seconds = S.seconds || 0;
+  FIG.byK = Object.fromEntries(FIG.leaves.map(l => [l.k, l]));
+  FIG.order = FIG.leaves.filter(l => l.n > 0).map(l => l.k);
+  FIG.el = {};
+  for (const e of FIG.elements) (FIG.el[e.k] = FIG.el[e.k] || [])[e.index - 1] = e;
+  FIG.file = (CFG.figures.find(f => f.id === id) || {}).file;
+  resetView();
+  mountSvg(FIG.svg);
+  $("#code pre").textContent = FIG.code || "（没有找到代码）";
+  buildItems();
+  const first = getLabel(items[0]) ? nextUnlabelled(0) : 0;
+  finished = first < 0; cur = finished ? 0 : first;
+  stage = "role"; role = null; last = null; loadDraft(); render();
+}
+
+function onKey(e) {
+  lastInput = Date.now();
+  const typing = e.target && e.target.tagName === "INPUT";
+  if (typing) { if (e.key === "Enter" || e.key === "Escape") { e.target.blur(); e.preventDefault(); } return; }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const code = e.code || "";
+  if ($("#join").classList.contains("on")) return;
+  if ($("#over").classList.contains("on")) {
+    if (["Escape", "Enter", "KeyO", "KeyE", "KeyG"].includes(code)) { hideOverview(); if (e.preventDefault) e.preventDefault(); }
+    return;
+  }
+  if (code === "KeyG") { showGuide(); if (e.preventDefault) e.preventDefault(); return; }
+  if (TEAM && code === "KeyO") { showOverview(); if (e.preventDefault) e.preventDefault(); return; }
+  if (TEAM && code === "KeyX") { nextDisputed(); if (e.preventDefault) e.preventDefault(); return; }
+  const digit = /^(Digit|Numpad)(\d)$/.exec(code);
+  let used = true;
+  if (finished) {
+    if (code === "Enter") { const n = CFG.figures.find(x => !x.done && x.id !== FIG.id); if (n) openFigure(n.id); }
+    else if (code === "ArrowLeft") go(items.length - 1);
+    else used = false;
+  } else if (digit) {
+    const d = Number(digit[2]);
+    if (stage === "role") { if (d >= 1 && d <= VOC.roles.length) pickRole(d - 1); }
+    else { const ks = VOC.roles.find(x => x.role === role).kinds, i = d === 0 ? 9 : d - 1; if (ks[i]) commit(role, ks[i].kind); }
+  } else if (code === "Space") { if (last) commit(last.role, last.kind); }
+  else if (code === "Escape" || code === "Backspace") { stage = "role"; role = null; renderBody(); }
+  else if (code === "ArrowLeft") go(cur - 1);
+  else if (code === "ArrowRight") go(cur + 1);
+  else if (code === "KeyS") toggleSplit();
+  else if (code === "KeyU") toggleUnsure();
+  else if (code === "KeyD") toggleDim();
+  else if (code === "KeyC") { const d = $("#code"); d.open = !d.open; }
+  else if (code === "KeyF") togglePaint();
+  else if (code === "KeyI") toggleIso();
+  else if (code === "KeyH") toggleHide();
+  else if (code === "KeyT") togglePeel();
+  else if (code === "KeyM") resetMove();
+  else if (code === "KeyR") toggleRef();
+  else if (code === "KeyE") showExamples();
+  else if (code === "KeyN") { const n = $("#note"); if (n) n.focus(); }
+  else used = false;
+  if (used && e.preventDefault) e.preventDefault();
+}
+
+async function boot() {
+  let hello = { team: false };
+  try { hello = await api("/api/hello"); } catch (e) { if (e.status !== 404) throw e; }   // 404: a server for one annotator
+  TEAM = !!hello.team; REVEAL = hello.reveal;
+  if (TEAM) {
+    // a personal link (#t=<token>) carries an annotator to another browser
+    const m = /^#t=([0-9a-f]{32})$/.exec(location.hash);
+    if (m) { store.set("wb-token", m[1]); history.replaceState(null, "", location.pathname + location.search); }
+    TOKEN = m ? m[1] : store.get("wb-token");
+    if (TOKEN) try { CFG = await api("/api/config"); } catch (e) { if (e.status !== 401) throw e; TOKEN = null; }
+    if (!CFG) { await join(hello); CFG = await api("/api/config"); }
+  } else CFG = await api("/api/config");
+  VOC = CFG.vocabulary;
+  try {
+    const ref = await api("/api/reference");
+    REF = ref.figures.map(f => {
+      const dom = cleanSvg(f.svg), vb = (dom.getAttribute("viewBox") || "0 0 504 360").split(/\s+/).map(Number);
+      pinPage(dom, vb);
+      return Object.assign(f, { dom, vb });
+    });
+    REFK = ref.kinds || {}; REFROLE = ref.figure || null;
+  } catch (e) { REF = []; }          // a server without the examples: no reference
+  $("#team").addEventListener("click", showOverview);
+  $("#help").addEventListener("click", showGuide);
+  $("#cases ul").replaceChildren(...VOC.cases.map(c => h("li", { title: c.en }, c.zh)));
+  document.addEventListener("keydown", onKey);
+  document.addEventListener("pointerdown", () => { lastInput = Date.now(); });
+  setInterval(() => {
+    if (!FIG || finished || S.independent || document.hidden || Date.now() - lastInput > 60000) return;
+    S.seconds++; unsavedSeconds++;
+    if (unsavedSeconds >= 15) markDirty();
+    renderHeader();
+  }, 1000);
+  window.addEventListener("pagehide", () => {
+    if (FIG && (dirty || unsavedSeconds)) fetch("/api/state/" + FIG.id, { method: "POST", keepalive: true, headers: headers(true),
+      body: JSON.stringify({ labels: S.labels, seconds: S.seconds, cursor: cur, rev: S.rev || 0 }) });
+  });
+  const first = CFG.figures.find(f => !f.done) || CFG.figures[0];
+  await openFigure(first.id);
+  // Debugging aid: ?keys=Digit1,Digit1,Space replays key codes after loading.
+  const replay = new URLSearchParams(location.search).get("keys");
+  // the guide opens by itself the first time (not when keys are replayed)
+  if (!replay && !store.get("wb-guide")) { showGuide(); store.set("wb-guide", "1"); }
+  if (replay) for (const code of replay.split(",")) {
+    if (/^Zoom\d$/.test(code)) {    // clicks the pictures of the n-th option
+      const t = document.querySelectorAll(".choices .opt .thumbs")[Number(code.slice(4)) - 1];
+      if (t) t.click();
+    } else if (/^Hover\d$/.test(code)) {   // points at the n-th option
+      const b = document.querySelectorAll(".choices .opt")[Number(code.slice(5)) - 1];
+      if (b) b.dispatchEvent(new MouseEvent("mouseenter"));
+    } else if (code === "Drag") {          // drags the current leaf 90 px right and 60 px up, with pointer events
+      const b = FIG.byK[items[cur].k].box, svg = roots[0];
+      const c = new DOMPoint((b[0] + b[2]) / 2, (b[1] + b[3]) / 2).matrixTransform(svg.getScreenCTM());
+      const ev = (type, dx, dy) => svg.dispatchEvent(new PointerEvent(type, { clientX: c.x + dx, clientY: c.y + dy, button: 0, pointerId: 7, bubbles: true }));
+      ev("pointerdown", 0, 0); ev("pointermove", 90, -60); ev("pointerup", 90, -60);
+    } else onKey({ code, key: code });
+    await new Promise(r => setTimeout(r, 30));
+  }
+}
+boot().catch(e => toast("启动失败：" + e.message));
+</script>
+</body>
+</html>

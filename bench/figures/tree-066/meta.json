@@ -1,0 +1,36 @@
+{
+  "id": "tree-066",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "LinTInd",
+  "vignette": "tutorial.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "LinTInd",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "LinTInd",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 20:18:13 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 10,
+    "expr": 2,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 189188051
+}

@@ -1,0 +1,50 @@
+{
+  "id": "exts-012",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "directlabels",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "directlabels",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "lattice",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "nlme",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "lars",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "directlabels",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:49:35 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 5,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 254678468
+}

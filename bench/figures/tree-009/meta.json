@@ -1,0 +1,76 @@
+{
+  "id": "tree-009",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "ggtreeExtra",
+  "vignette": "ggtreeExtra.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "ggtreeExtra",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtreeExtra",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggstar",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "treeio",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggnewscale",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "remotes",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 19:46:36 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 5,
+    "expr": 15,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 266503823
+}

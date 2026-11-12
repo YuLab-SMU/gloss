@@ -1,0 +1,45 @@
+{
+  "id": "gallery-048",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "314-custom-circle-packing-with-several-levels.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "igraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidyverse",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "viridis",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:38:01 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 2,
+    "expr": 8,
+    "kind": "object",
+    "class": "ggraph",
+    "engine": "ggplot"
+  },
+  "seed": 47670105
+}

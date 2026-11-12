@@ -1,0 +1,84 @@
+{
+  "id": "gallery-013",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "a-smooth-transition-between-chloropleth-and-cartogram.Rmd",
+  "vignette": null,
+  "rewrites": [
+    {
+      "literal": "DATA/world_shape_file/TM_WORLD_BORDERS_SIMPL-0.3.shp",
+      "url": "https://raw.githubusercontent.com/holtzy/R-graph-gallery/8be6801aa6643931cedb22283dfa69e305c8bf79/DATA/world_shape_file/TM_WORLD_BORDERS_SIMPL-0.3.shp",
+      "file": "data/TM_WORLD_BORDERS_SIMPL-0.3.shp",
+      "ok": true,
+      "bytes": 448188,
+      "md5": "ae4648a8a6be706e910e46607f261317",
+      "companions": [
+        {
+          "url": "https://raw.githubusercontent.com/holtzy/R-graph-gallery/8be6801aa6643931cedb22283dfa69e305c8bf79/DATA/world_shape_file/TM_WORLD_BORDERS_SIMPL-0.3.shx",
+          "file": "data/TM_WORLD_BORDERS_SIMPL-0.3.shx",
+          "bytes": 2068,
+          "md5": "6321ef787b7826afe06e9cf3eb20e656"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/holtzy/R-graph-gallery/8be6801aa6643931cedb22283dfa69e305c8bf79/DATA/world_shape_file/TM_WORLD_BORDERS_SIMPL-0.3.dbf",
+          "file": "data/TM_WORLD_BORDERS_SIMPL-0.3.dbf",
+          "bytes": 24740,
+          "md5": "d65d87e1570510af8a81d7d174ea361a"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/holtzy/R-graph-gallery/8be6801aa6643931cedb22283dfa69e305c8bf79/DATA/world_shape_file/TM_WORLD_BORDERS_SIMPL-0.3.prj",
+          "file": "data/TM_WORLD_BORDERS_SIMPL-0.3.prj",
+          "bytes": 145,
+          "md5": "c742bee3d4edfc2948a2ad08de1790a5"
+        }
+      ]
+    }
+  ],
+  "packages": [
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "cartogram",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "transformr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "gganimate",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "sf",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:36:18 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 3,
+    "expr": 3,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 22547788
+}

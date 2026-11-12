@@ -1,6 +1,6 @@
 # ADR-0001: Capture elements by graphics-group delimiting plus probes
 
-- **Status:** Accepted
+- **Status:** Accepted; what is wrapped and the base route amended by [ADR-0006](0006-capture-the-page-the-figure-draws.md)
 - **Date:** 2026-11-08 (mechanism verified 2026-11-07)
 - **Deciders:** Yonghe Xia
 - **Related:** [design: 底座](../design.qmd), [research/capture-groups/](../research/capture-groups/), [research report](../research-report.qmd)

@@ -1,0 +1,45 @@
+{
+  "id": "gallery-053",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "package/gganimate.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "gganimate",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "gapminder",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:43:42 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 2,
+    "expr": 6,
+    "kind": "object",
+    "class": "gganim",
+    "engine": "ggplot"
+  },
+  "seed": 18549928
+}

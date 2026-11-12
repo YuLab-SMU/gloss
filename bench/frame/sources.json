@@ -1,0 +1,39 @@
+{
+  "built": "2026-11-10",
+  "gallery": {
+    "repo": "https://github.com/holtzy/R-graph-gallery.git",
+    "sha": "8be6801aa6643931cedb22283dfa69e305c8bf79",
+    "posts": 344,
+    "chunks": 2417
+  },
+  "exts": {
+    "url": "https://raw.githubusercontent.com/ggplot2-exts/gallery/10a7d4033993d91744cc95c60a2f696851adca8a/_config.yml",
+    "entries": 170,
+    "cran": 145
+  },
+  "bioc": {
+    "url": "https://bioconductor.org/packages/3.21/bioc/VIEWS",
+    "md5": "c31abce89dca2b411d127a6b270a59a0",
+    "packages": 2341,
+    "visualization": 431,
+    "frame": 419
+  },
+  "topics": {
+    "ComplexHeatmap": "2.26.0",
+    "patchwork": "1.3.2"
+  },
+  "strata": {
+    "gallery": 344,
+    "exts": 145,
+    "bioc": 419,
+    "patchwork": 30,
+    "heatmap": 347
+  },
+  "out_of_scope": {
+    "rule": "help topic whose examples have no executable line (blank, comment or bare NULL only)",
+    "heatmap_rule": "heatmap stratum (2026-11-10): also a ComplexHeatmap help topic whose examples call none of Heatmap, Heatmap3D, HeatmapList, densityHeatmap, frequencyHeatmap, oncoPrint, UpSet, pheatmap",
+    "patchwork": 0,
+    "heatmap": 222
+  },
+  "tidytuesday": "not in the v0 frame: the official repository holds data, readmes and images but no figure code"
+}

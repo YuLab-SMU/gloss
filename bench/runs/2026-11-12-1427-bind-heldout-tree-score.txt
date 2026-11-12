@@ -1,0 +1,229 @@
+== figures
+           
+            bound
+  ggplot       24
+  patchwork     4
+
+== layer elements by engine (leaves attributed to a layer, body or track)
+          figures leaves elements verified ambiguous failed unbound
+ggplot         24    183     9847     6737      2378      0     681
+patchwork       4     44     4076     1223        20      0     341
+          count_mismatch checked
+ggplot                50   92.6%
+patchwork           2492   30.5%
+all: 13923 elements; verified 7960, ambiguous 2398 (verified or ambiguous 74.4%); failed 0; unbound 1022; count_mismatch 2542
+
+== ggplot layer elements by stratum
+     figures leaves elements verified ambiguous failed unbound count_mismatch
+tree      24    183     9847     6737      2378      0     681             50
+     checked
+tree   92.6%
+
+== engines that state no bindings (leaves, elements)
+
+== paired leaves by geom and tag (ggplot), elements
+                                 figures leaves elements verified ambiguous
+GeomSegment / polyline                 4      8     5824     3769      2055
+GeomSegment / line                    18     36     2552     2233       319
+NewGeomBar / polygon                   1      2      200        0         0
+NewGeomCol / polygon                   1      2      200        0         0
+NewGeomStar / polygon                  2      2      200      200         0
+GeomTextGGtree / text                 11     15      189      185         4
+GeomPoint / circle                     3      3      120      120         0
+GeomBar / polygon                      1      1      100        0         0
+GeomCol / polygon                      1      1      100        0         0
+GeomText / text                        5      8       73       23         0
+GeomPointGGtree / circle+polygon       1      1       65       65         0
+GeomSegmentGGtree / line               2      3       39       39         0
+NewGeomSegment / line                  1      2       38       38         0
+NewGeomBoxplot / line                  1     20       30        0         0
+GeomPointGGtree / circle               1      1       15       15         0
+GeomLabelGGtree / polygon              1     14       14       14         0
+GeomLabelGGtree / text                 1     14       14       14         0
+GeomLabelRepel / polygon               1     11       11        0         0
+GeomLabelRepel / text                  1     11       11        0         0
+NewGeomBoxplot / polygon               1     10       10        0         0
+NewGeomSegmentGGtree / line            1      1       10       10         0
+NewGeomTextGGtree / text               1      1       10       10         0
+GeomLabelRepel / line                  1      9        9        0         0
+GeomRect / rect                        1      1        2        2         0
+NewGeomBoxplot / circle                1      1        1        0         0
+                                 failed unbound count_mismatch
+GeomSegment / polyline                0       0              0
+GeomSegment / line                    0       0              0
+NewGeomBar / polygon                  0     200              0
+NewGeomCol / polygon                  0     200              0
+NewGeomStar / polygon                 0       0              0
+GeomTextGGtree / text                 0       0              0
+GeomPoint / circle                    0       0              0
+GeomBar / polygon                     0     100              0
+GeomCol / polygon                     0     100              0
+GeomText / text                       0       0             50
+GeomPointGGtree / circle+polygon      0       0              0
+GeomSegmentGGtree / line              0       0              0
+NewGeomSegment / line                 0       0              0
+NewGeomBoxplot / line                 0      30              0
+GeomPointGGtree / circle              0       0              0
+GeomLabelGGtree / polygon             0       0              0
+GeomLabelGGtree / text                0       0              0
+GeomLabelRepel / polygon              0      11              0
+GeomLabelRepel / text                 0      11              0
+NewGeomBoxplot / polygon              0      10              0
+NewGeomSegmentGGtree / line           0       0              0
+NewGeomTextGGtree / text              0       0              0
+GeomLabelRepel / line                 0       9              0
+GeomRect / rect                       0       0              0
+NewGeomBoxplot / circle               0       0              0
+
+== unbound reasons (leaves, elements), layer leaves
+   engine   
+3  ggplot   
+36 patchwork
+1  ggplot   
+2  ggplot   
+4  ggplot   
+37 ggplot   
+5  ggplot   
+6  ggplot   
+7  ggplot   
+8  ggplot   
+9  ggplot   
+10 ggplot   
+11 ggplot   
+12 ggplot   
+13 ggplot   
+14 ggplot   
+15 ggplot   
+16 ggplot   
+17 ggplot   
+18 ggplot   
+19 ggplot   
+20 ggplot   
+21 ggplot   
+22 ggplot   
+23 ggplot   
+24 ggplot   
+25 ggplot   
+26 ggplot   
+27 ggplot   
+28 ggplot   
+29 ggplot   
+30 ggplot   
+31 ggplot   
+32 ggplot   
+33 ggplot   
+34 ggplot   
+35 ggplot   
+   why                                                                                                                                                                         
+3  rectangles are drawn as polygons munched along the coord (CoordPolar); no comparison for them                                                                               
+36 the leaf lies in no panel with scales                                                                                                                                       
+1  k elements for m rows in n groups: neither one per row nor one per group                                                                                                    
+2  no comparison for <line> elements paired one per row                                                                                                                        
+4  the coord's transform failed (CoordPolar): replacement has 0 rows, data has 2                                                                                               
+37 the rows paired with <polygon> elements have no x                                                                                                                           
+5  the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob1 is not among its children before drawing, and the layer's rows do not pass for it    
+6  the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob10 is not among its children before drawing, and the layer's rows do not pass for it   
+7  the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob11 is not among its children before drawing, and the layer's rows do not pass for it   
+8  the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob2 is not among its children before drawing, and the layer's rows do not pass for it    
+9  the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob3 is not among its children before drawing, and the layer's rows do not pass for it    
+10 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob4 is not among its children before drawing, and the layer's rows do not pass for it    
+11 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob5 is not among its children before drawing, and the layer's rows do not pass for it    
+12 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob6 is not among its children before drawing, and the layer's rows do not pass for it    
+13 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob7 is not among its children before drawing, and the layer's rows do not pass for it    
+14 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob8 is not among its children before drawing, and the layer's rows do not pass for it    
+15 the layer's grob (labelrepeltree) makes what it draws when it is drawn: rectrepelgrob9 is not among its children before drawing, and the layer's rows do not pass for it    
+16 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob1 is not among its children before drawing, and the layer's rows do not pass for it 
+17 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob10 is not among its children before drawing, and the layer's rows do not pass for it
+18 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob11 is not among its children before drawing, and the layer's rows do not pass for it
+19 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob2 is not among its children before drawing, and the layer's rows do not pass for it 
+20 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob4 is not among its children before drawing, and the layer's rows do not pass for it 
+21 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob6 is not among its children before drawing, and the layer's rows do not pass for it 
+22 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob7 is not among its children before drawing, and the layer's rows do not pass for it 
+23 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob8 is not among its children before drawing, and the layer's rows do not pass for it 
+24 the layer's grob (labelrepeltree) makes what it draws when it is drawn: segmentrepelgrob9 is not among its children before drawing, and the layer's rows do not pass for it 
+25 the layer's grob (labelrepeltree) makes what it draws when it is drawn: textrepelgrob1 is not among its children before drawing, and the layer's rows do not pass for it    
+26 the layer's grob (labelrepeltree) makes what it draws when it is drawn: textrepelgrob10 is not among its children before drawing, and the layer's rows do not pass for it   
+27 the layer's grob (labelrepeltree) makes what it draws when it is drawn: textrepelgrob11 is not among its children before drawing, and the layer's rows do not pass for it   
+28 the layer's grob (labelrepeltree) makes what it draws when it is drawn: textrepelgrob2 is not among its children before drawing, and the layer's rows do not pass for it    
+29 the layer's grob (labelrepeltree) makes what it draws when it is drawn: textrepelgrob3 is not among its children before drawing, and the layer's rows do not pass for it    
+30 the layer's grob (labelrepeltree) makes what it draws when it is drawn: textrepelgrob4 is not among its children before drawing, and the layer's rows do not pass for it    
+31 the layer's grob (labelrepeltree) makes what it draws when it is drawn: textrepelgrob5 is not among its children before drawing, and the layer's rows do not pass for it    
+32 the layer's grob (labelrepeltree) makes what it draws when it is drawn: textrepelgrob6 is not among its children before drawing, and the layer's rows do not pass for it    
+33 the layer's grob (labelrepeltree) makes what it draws when it is drawn: textrepelgrob7 is not among its children before drawing, and the layer's rows do not pass for it    
+34 the layer's grob (labelrepeltree) makes what it draws when it is drawn: textrepelgrob8 is not among its children before drawing, and the layer's rows do not pass for it    
+35 the layer's grob (labelrepeltree) makes what it draws when it is drawn: textrepelgrob9 is not among its children before drawing, and the layer's rows do not pass for it    
+   leaves elements
+3   6     600     
+36  6     341     
+1  10      20     
+2  10      10     
+4   5      10     
+37 10      10     
+5   1       1     
+6   1       1     
+7   1       1     
+8   1       1     
+9   1       1     
+10  1       1     
+11  1       1     
+12  1       1     
+13  1       1     
+14  1       1     
+15  1       1     
+16  1       1     
+17  1       1     
+18  1       1     
+19  1       1     
+20  1       1     
+21  1       1     
+22  1       1     
+23  1       1     
+24  1       1     
+25  1       1     
+26  1       1     
+27  1       1     
+28  1       1     
+29  1       1     
+30  1       1     
+31  1       1     
+32  1       1     
+33  1       1     
+34  1       1     
+35  1       1     
+
+== failed elements by figure, geom and tag
+none
+
+== checked share per figure (ggplot): the element-weighted share is dominated by the largest figures
+figures 24; median share 1.000; share >= 0.8 in 21; share 0 in 0; largest two figures hold 6481 of 9847 elements
+       id stratum elements checked failed share
+ tree-009    tree      798     498      0 0.624
+ tree-026    tree      798     498      0 0.624
+ tree-070    tree      194     153      0 0.789
+ tree-043    tree      371     321      0 0.865
+ tree-035    tree     1477    1446      0 0.979
+ tree-027    tree     5004    4994      0 0.998
+ tree-016    tree      178     178      0 1.000
+ tree-052    tree       98      98      0 1.000
+ tree-058    tree       88      88      0 1.000
+ tree-064    tree       87      87      0 1.000
+ tree-028    tree       86      86      0 1.000
+ tree-047    tree       73      73      0 1.000
+ tree-063    tree       73      73      0 1.000
+ tree-082    tree       73      73      0 1.000
+ tree-031    tree       63      63      0 1.000
+ tree-030    tree       60      60      0 1.000
+ tree-073    tree       52      52      0 1.000
+ tree-085    tree       50      50      0 1.000
+ tree-001    tree       48      48      0 1.000
+ tree-013    tree       48      48      0 1.000
+ tree-078    tree       48      48      0 1.000
+ tree-007    tree       38      38      0 1.000
+ tree-006    tree       29      29      0 1.000
+ tree-015    tree       13      13      0 1.000
+
+== ambiguous elements: in dense leaves / elsewhere
+0 / 2398
+
+== time: binding (a second capture plus the bind step) against capture, per figure
+median capture 0.24 s, median capture + bind 0.50 s, maximum capture + bind 3.67 s

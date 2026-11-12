@@ -1,0 +1,21 @@
+== A. the six test inputs: page route against gloss() ==
+  ggplot_facet  ggplot    leaves  62 /  62 same=FALSE | elements   134 /   134 same=TRUE  | panels 2 / 2 same=TRUE
+      leaf columns that differ: name, vp 
+  patchwork     patchwork leaves  84 /  84 same=FALSE | elements   186 /   186 same=TRUE  | panels 0 / 0 same=TRUE
+      leaf columns that differ: name, vp 
+  base          base: page route = native TRUE | gloss() today = native FALSE (differ 8) | entries that drew 10, gridGraphics leaves 14
+  heatmap       heatmap   leaves  16 /  16 same=FALSE | elements   293 /   293 same=TRUE  | panels 1 / 1 same=TRUE
+      leaf columns that differ: name, vp 
+  ggrepel       ggplot    leaves  51 /  51 same=FALSE | elements   115 /   115 same=TRUE  | panels 1 / 1 same=TRUE
+      leaf columns that differ: name, vp 
+  points_1e4    ggplot    leaves  13 /  13 same=FALSE | elements 10040 / 10040 same=TRUE  | panels 1 / 1 same=TRUE
+      leaf columns that differ: name, vp 
+
+== B. base: panel box and scales from par(), checked against the drawn points ==
+  scatter                    entry  4 (C_plotXY) drew  32 circles for  32 rows; largest gap between computed and drawn position: 0.005 pt (x), 0.005 pt (y)
+  log-log                    entry  4 (C_plotXY) drew 100 circles for 100 rows; largest gap between computed and drawn position: 0.005 pt (x), 0.005 pt (y)
+  mfrow, second panel        entry 12 (C_plotXY) drew  32 circles for  32 rows; largest gap between computed and drawn position: 0.005 pt (x), 0.005 pt (y)
+  layout + margins           entry 12 (C_plotXY) drew  32 circles for  32 rows; largest gap between computed and drawn position: 0.005 pt (x), 0.004 pt (y)
+
+== C. a wrapped display list redrawn on a second device ==
+  display list of 1 elements (forcedgrob) drawn on a second svglite device: identical to the page = TRUE

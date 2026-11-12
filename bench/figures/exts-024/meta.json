@@ -1,0 +1,30 @@
+{
+  "id": "exts-024",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "ggupset",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggupset",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:50:52 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 3,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 205401238
+}

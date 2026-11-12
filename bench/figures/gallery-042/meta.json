@@ -1,0 +1,30 @@
+{
+  "id": "gallery-042",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "142-basic-radar-chart.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "fmsb",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:37:40 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 4,
+    "expr": 5,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 201677653
+}

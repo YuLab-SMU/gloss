@@ -1,0 +1,174 @@
+[1/155] gallery-002 package/ggbeeswarm.Rmd: retained 
+[2/155] gallery-003 310-custom-hierarchical-edge-bundling.Rmd: retained 
+[3/155] gallery-004 324-map-background-with-the-ggmap-library.Rmd: code error eval Google now requires an API key; see `ggmap::register_google()`.
+[4/155] gallery-005 50-51-52-scatter-plot-with-ggplot2.Rmd: retained 
+[5/155] gallery-006 274-map-a-variable-to-ggplot2-scatterplot.Rmd: retained 
+[6/155] gallery-007 320-the-basis-of-bubble-plot.Rmd: retained 
+[7/155] gallery-008 98-basic-scatterplot-matrix.Rmd: retained 
+[8/155] gallery-009 line-chart-dual-Y-axis-ggplot2.Rmd: retained 
+[9/155] gallery-010 307-add-space-in-circle-packing.Rmd: retained 
+[10/155] gallery-011 273-custom-your-scatterplot-ggplot2.Rmd: retained 
+[11/155] gallery-012 web-extended-dumbbell-plot-ggplot2.Rmd: retained 
+[12/155] gallery-013 a-smooth-transition-between-chloropleth-and-cartogram.Rmd: code error eval Cannot open "/cache/work/harvest/gallery-013/data/TM_WORLD_BORDERS_SIMPL-0.
+[13/155] gallery-014 362-scatter-plot-with-trend-line-and-labels.Rmd: retained 
+[14/155] gallery-015 2d-density-plot-with-ggplot2.Rmd: retained 
+[15/155] gallery-016 263-ggplot2-boxplot-parameters.Rmd: retained 
+[16/155] gallery-017 264-control-ggplot2-boxplot-colors.Rmd: retained 
+[17/155] gallery-018 155-interactive-streamgraph-change-offset.Rmd: missing package eval there is no package called ‘streamgraph’
+[18/155] gallery-019 373-basic-beeswarm-with-ggbeeswarm.Rmd: retained 
+[19/155] gallery-020 piechart-ggplot2.Rmd: retained 
+[20/155] gallery-021 23-add-colors-to-specific-groups-of-a-boxplot.Rmd: retained 
+[21/155] gallery-022 violin_horizontal_ggplot2.Rmd: retained 
+[22/155] gallery-023 127-r-snail.Rmd: retained 
+[23/155] gallery-024 137-spring-shapes-data-art.Rmd: parse error parse <text>:9:1: unexpected input
+8: for(i in seq(1:30)){
+9:  
+   ^
+[24/155] gallery-025 335-custom-ggraph-dendrogram.Rmd: retained 
+[25/155] gallery-026 336-interactive-dendrogram-with-collapsibletree.Rmd: missing data eval cannot open the connection
+[26/155] gallery-027 5-correlation-of-discrete-variables.Rmd: retained 
+[27/155] gallery-028 309-intro-to-hierarchical-edge-bundling.Rmd: retained 
+[28/155] gallery-029 density_mirror_ggplot2.Rmd: retained 
+[29/155] gallery-030 159-save-interactive-streamgraph-to-static-image-png.Rmd: missing package eval there is no package called ‘streamgraph’
+[30/155] gallery-031 line-chart-ggplot2.Rmd: retained 
+[31/155] gallery-032 267-reorder-a-variable-in-ggplot2.Rmd: retained 
+[32/155] gallery-033 272-basic-scatterplot-with-ggplot2.Rmd: retained 
+[33/155] gallery-034 368-plotting-in-cells-with-gtextras.Rmd: missing data eval cannot open the connection
+[34/155] gallery-035 364-add-html-content-in-dt-table.Rmd: missing data eval path[1]="HtmlWidget": No such file or directory
+[35/155] gallery-036 257-input-formats-for-network-charts.Rmd: retained 
+[36/155] gallery-037 package/ggthemes.Rmd: retained 
+[37/155] gallery-038 175-choropleth-map-cartography-pkg.Rmd: retained 
+[38/155] gallery-039 323-sankey-diagram-with-the-networkd3-library.Rmd: missing data eval cannot open the connection
+[39/155] gallery-040 249-igraph-network-map-a-color.Rmd: retained 
+[40/155] gallery-041 167-animated-3d-plot-imagemagick.Rmd: parse error parse <text>:15:1: unexpected input
+14: for (i in seq(0, 350 ,10)){
+15:  
+    ^
+[41/155] gallery-042 142-basic-radar-chart.Rmd: retained 
+[42/155] gallery-043 283-the-hourly-heatmap.Rmd: missing package eval there is no package called ‘Interpol.T’
+[43/155] gallery-044 web-line-chart-small-multiple-all-group-greyed-out.Rmd: offline: needs network eval Couldn't connect to server [fonts.gstatic.com]:
+Failed to connect to 127.0.
+[44/155] gallery-045 190-mirrored-histogram.Rmd: retained 
+[45/155] gallery-046 296-add-labels-to-circular-barplot.Rmd: retained 
+[46/155] gallery-047 package/hrbrthemes.Rmd: retained 
+[47/155] gallery-048 314-custom-circle-packing-with-several-levels.Rmd: retained 
+[48/155] gallery-049 144-droid-bb-8-data-art.Rmd: missing package parse <text>:12:1: unexpected input
+11: coord_circle <- function(centre = c(0, 0
+[49/155] gallery-050 354-highlight-specific-elements-in-line-chart.Rmd: retained 
+[50/155] gallery-051 package/esquisse.Rmd: timeout timeout ! callr timed out
+[51/155] gallery-052 277-marginal-histogram-for-ggplot2.Rmd: retained 
+[52/155] gallery-053 package/gganimate.Rmd: retained 
+[53/155] gallery-054 package/geomtextpath.Rmd: retained 
+[54/155] gallery-055 37-barplot-with-number-of-observation.Rmd: retained 
+[55/155] gallery-056 235-treemap-with-subgroups.Rmd: retained 
+[56/155] gallery-057 package/showtext.Rmd: needs network eval Timeout was reached [fonts.gstatic.com]:
+SSL connection timeout
+[57/155] gallery-058 24-boxplot-with-variable-width.Rmd: retained 
+[58/155] gallery-059 package/gghighlight.Rmd: retained 
+[59/155] gallery-060 package/patchwork.Rmd: retained 
+[60/155] gallery-061 342-introduction-to-waffle-plot-with-R.Rmd: missing package eval there is no package called ‘waffle’
+[61/155] gallery-062 74-margin-and-oma-cheatsheet.Rmd: parse error parse <text>:13:60: unexpected input
+12: # Place text in the margins and label t
+[62/155] gallery-063 chord-diagram-interactive.Rmd: missing package eval there is no package called ‘chorddiag’
+[63/155] gallery-064 240-custom-layout-background-ggplot2.Rmd: retained 
+[64/155] gallery-065 web-area-chart-with-small-multiple.Rmd: offline: needs network eval Couldn't connect to server [fonts.gstatic.com]:
+Failed to connect to 127.0.
+[65/155] gallery-066 web-dumbbell-chart-with-a-gap-column.Rmd: retained 
+[66/155] gallery-067 27-levelplot-with-lattice.Rmd: missing data eval cannot open the connection
+[67/155] gallery-068 374-grouped-beeswarm-with-ggbeeswarm.Rmd: retained 
+[68/155] gallery-069 311-add-labels-to-hierarchical-edge-bundling.Rmd: retained 
+[69/155] gallery-070 238-custom-layout-axis-ggplot2.Rmd: retained 
+[70/155] exts-002 ggdibbler: retained 
+[71/155] exts-003 ggTimeSeries: missing package 
+[72/155] exts-004 gginnards: retained 
+[73/155] exts-005 ggnetwork: retained 
+[74/155] exts-006 ggperiodic: retained 
+[75/155] exts-007 ggpattern: retained 
+[76/155] exts-008 ggerror: missing package 
+[77/155] exts-009 nflplotR: retained 
+[78/155] exts-010 ggstance: retained 
+[79/155] exts-011 ggalign: no figure ran without error, no figure
+[80/155] exts-012 directlabels: retained 
+[81/155] exts-013 geomtextpath: retained 
+[82/155] exts-014 plotROC: retained 
+[83/155] exts-015 ggsurvfit: missing package 
+[84/155] exts-016 ggseas: missing package 
+[85/155] exts-017 tidyterra: retained 
+[86/155] exts-018 ggbreak: retained 
+[87/155] exts-019 ggsurveillance: retained 
+[88/155] exts-020 ggeasy: retained 
+[89/155] exts-021 gglm: retained 
+[90/155] exts-022 ggvolcano: retained 
+[91/155] exts-023 ggpol: missing package 
+[92/155] exts-024 ggupset: retained 
+[93/155] exts-025 ggspectra: retained 
+[94/155] exts-026 ggheatmap: missing package 
+[95/155] exts-027 hrbrthemes: retained 
+[96/155] exts-028 lemon: retained 
+[97/155] exts-029 ggpage: retained 
+[98/155] exts-030 ggstatsplot: retained 
+[99/155] bioc-002 BrowserViz: no figure ran without error, no figure
+[100/155] bioc-003 scTreeViz: retained 
+[101/155] bioc-004 NOISeq: retained 
+[102/155] bioc-005 Voyager: needs network eval cannot open URL 'data/tissue_lowres_5a.jpeg'
+[103/155] bioc-006 epivizrServer: no figure ran without error, no figure
+[104/155] bioc-007 chevreulProcess: no figure ran without error, no figure
+[105/155] bioc-008 CAGEfightR: missing package 
+[106/155] bioc-009 Basic4Cseq: retained 
+[107/155] bioc-010 RCy3: no figure ran without error, no figure
+[108/155] bioc-011 SigFuge: code error eval subscript out of bounds
+[109/155] bioc-012 wiggleplotr: code error eval `select_()` was deprecated in dplyr 0.7.0 and is now defunct.
+ℹ Please use 
+[110/155] bioc-013 biocGraph: retained 
+[111/155] bioc-014 DifferentialRegulation: retained 
+[112/155] bioc-015 condiments: code error eval Required packages are missing: randomForest
+[113/155] bioc-016 ChIPseeker: retained 
+[114/155] bioc-017 scPipe: missing package 
+[115/155] bioc-018 GenomicOZone: no figure ran without error, no figure
+[116/155] bioc-019 flowPlots: setup error ! in callr subprocess.
+Caused by error: 
+! Bioconductor version cannot be valida
+[117/155] bioc-020 sincell: code error eval HTTP 405 Method Not Allowed.
+[118/155] bioc-021 MicrobiotaProcess: missing package 
+[119/155] bioc-022 psichomics: no figure ran without error, no figure
+[120/155] bioc-023 ribosomeProfilingQC: retained 
+[121/155] bioc-024 visiumStitched: offline: needs network eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+
+[122/155] bioc-025 mariner: code error eval Cannot find the file(s): "figures/binningFigure.png"
+[123/155] bioc-026 rWikiPathways: no figure ran without error, no figure
+[124/155] bioc-027 schex: offline: needs network eval failed to connect
+  reason: Couldn't connect to server [bioconductor.org]:
+
+[125/155] bioc-028 atSNP: retained 
+[126/155] bioc-029 MicrobiomeProfiler: code error eval Cannot find the file(s): "./screenshot_1.png"
+[127/155] bioc-030 EBImage: code error eval could not find function "output"
+[128/155] patchwork-002 414-map-multiple-charts-in-ggiraph.Rmd: missing data eval path[1]="HtmlWidget": No such file or directory
+[129/155] patchwork-004 patchwork::wrap_plots: retained 
+[130/155] patchwork-006 patchwork::wrap_ggplot_grob: retained 
+[131/155] patchwork-007 web-waffle-chart-share.Rmd: missing package eval there is no package called ‘camcorder’
+[132/155] patchwork-008 patchwork::inset_element: retained 
+[133/155] patchwork-010 web-choropleth-barchart-map.Rmd: retained 
+[134/155] patchwork-011 package/sf.Rmd: retained 
+[135/155] patchwork-012 patchwork::plot_annotation: retained 
+[136/155] patchwork-013 web-map-choropleth-quantile.Rmd: retained 
+[137/155] patchwork-014 patchwork::area: retained 
+[138/155] patchwork-015 patchwork::guide_area: retained 
+[139/155] patchwork-016 web-vertical-line-chart-with-ggplot2.Rmd: missing package eval there is no package called ‘urbnmapr’
+[140/155] patchwork-017 package/ggiraph.Rmd: missing data eval path[1]="../HtmlWidget": No such file or directory
+[141/155] patchwork-018 patchwork::plot_spacer: retained 
+[142/155] heatmap-007 ComplexHeatmap::c.ColorMapping: no figure ran without error, no figure
+[143/155] heatmap-008 ComplexHeatmap::decorate_annotation: retained 
+[144/155] heatmap-009 ComplexHeatmap::is_abs_unit: no figure ran without error, no figure
+[145/155] heatmap-012 ComplexHeatmap::Extract.Heatmap: retained 
+[146/155] heatmap-016 ClustAll: outside population knitr_kable integer ClustAllObject list sankeyNetwork data.frame numeric session
+[147/155] heatmap-017 ComplexHeatmap::anno_barplot: no figure figures of other engines: grid x2
+[148/155] heatmap-019 ComplexHeatmap::bar3D: no figure figures of other engines: grid x1
+[149/155] heatmap-021 SPONGE: missing package eval worker initialization failed: there is no package called ‘GSVA’
+[150/155] heatmap-024 ComplexHeatmap::cluster_within_group: no figure figures of other engines: grid x1
+[151/155] heatmap-026 ComplexHeatmap::anno_summary: retained 
+[152/155] heatmap-028 gmoviz: code error eval Summation of cell padding on y-direction are larger than the height of
+the 
+[153/155] heatmap-030 ComplexHeatmap::set_nameAssign: no figure ran without error, no figure
+[154/155] heatmap-031 ComplexHeatmap::default_axis_param: no figure ran without error, no figure
+[155/155] heatmap-034 barbieQ: retained 

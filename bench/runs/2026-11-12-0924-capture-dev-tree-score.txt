@@ -1,0 +1,110 @@
+run: 2026-11-12-0924-capture-dev-tree.csv | 29 figures | development (tree stratum) set
+
+Predictions 5-8 were made for v0's development set; for this stratum they are numbers, not tests.
+
+Outcomes by engine
+           outcome
+engine      captured Sum
+  ggplot          28  28
+  patchwork        1   1
+  Sum             29  29
+
+Status detail
+
+captured 
+      29 
+
+Prediction 5 (>= 90% capture without error)
+  captured / figures that rerun: 29/29 = 100% 
+  captured / all development (tree stratum) figures: 29/29 = 100% 
+  verdict: right 
+
+Prediction 6 (grid scenes fail more often than returned objects)
+  not captured, recovered by grid.grab(): 0/0 
+  not captured, returned objects: 0/29 = 0% 
+  not captured, base (recordPlot), for reference: 0/0 
+  verdict: not scorable (n = 0 grid, 29 objects) 
+
+Prediction 7 (>= 30% of captured figures have a leaf with a count mismatch)
+   7/29 = 24% | verdict: wrong 
+  by engine:
+     ggplot 7/28 = 25% 
+     patchwork 0/1 = 0% 
+
+Prediction 8 (>= 95% of captured figures: the only unowned element is the device background)
+   29/29 = 100% | verdict: right 
+
+Capture size and time (captured figures)
+    engine  n median_elements median_leaves median_seconds max_seconds
+    ggplot 28              94             7           0.20        6.14
+ patchwork  1             134            13           0.69        0.69
+
+Fidelity (captured scene = what the code drew on svglite; not predicted)
+  ggplot    faithful 27/28 = 96% | not compared 0 | median primitives differing among the rest 309
+  patchwork faithful 1/1 = 100% | not compared 0 | median primitives differing among the rest -
+  not faithful:
+       id engine recovered prims_ref prims_scene prims_differ
+ tree-054 ggplot    object       445         444          309
+
+Fidelity verdicts (equal / known exception / different)
+           verdict
+engine      equal not_deterministic known_exception different Sum
+  ggplot       27                 1               0         0  28
+  patchwork     1                 0               0         0   1
+  Sum          28                 1               0         0  29
+
+Known exceptions, with the reason
+  none
+
+Different: first primitives present on only one side
+  none
+
+Which leaves mismatch: 7/29 = 24% captured figures
+       id engine leaves_mismatch
+ tree-014 ggplot              18
+ tree-041 ggplot               6
+ tree-045 ggplot               1
+ tree-054 ggplot              43
+ tree-061 ggplot              10
+ tree-062 ggplot               3
+ tree-077 ggplot               2
+                                                                                                                                                                                                                                                                                                                                                                                                             mismatch_leaves
+                                                                       L005:GRID.text.613 L007:GRID.text.615 L008:GRID.text.616 L018:GRID.text.634 L019:GRID.text.635 L022:GRID.text.617 L033:GRID.text.673 L035:GRID.text.676 L038:GRID.text.663 L041:GRID.text.668 L043:GRID.text.701 L106:GRID.text.704 L107:GRID.text.707 L108:GRID.text.710 L109:GRID.text.713 L110:GRID.text.716 L112:GRID.text.722 L113:GRID.text.725
+                                                                                                                                                                                                                                                                                                           L013:GRID.text.209 L015:GRID.text.212 L017:GRID.text.215 L019:GRID.text.218 L021:GRID.text.221 L023:GRID.text.224
+                                                                                                                                                                                                                                                                                                                                                                                                          L006:GRID.text.139
+ L034:textrepelgrob1 L036:textrepelgrob2 L038:textrepelgrob3 L040:textrepelgrob4 L042:textrepelgrob5 L044:textrepelgrob6 L046:textrepelgrob8 L048:textrepelgrob9 L050:textrepelgrob10 L052:textrepelgrob11 L054:textrepelgrob12 L056:textrepelgrob13 L058:textrepelgrob14 L060:textrepelgrob15 L062:textrepelgrob16 L064:textrepelgrob17 L066:textrepelgrob18 L068:textrepelgrob19 L070:textrepelgrob20 L072:textrepelgrob24
+                                                                                                                                                                                                                               L011:GRID.text.542 L013:GRID.text.545 L015:GRID.text.548 L018:GRID.text.527 L021:GRID.text.532 L024:GRID.text.537 L026:GRID.text.580 L039:GRID.text.583 L040:GRID.text.586 L041:GRID.text.589
+                                                                                                                                                                                                                                                                                                                                                                    L008:GRID.text.109 L010:GRID.text.111 L011:GRID.text.112
+                                                                                                                                                                                                                                                                                                                                                                                       L009:GRID.text.391 L015:GRID.text.404
+Rasterized dense leaves: 1 captured figures
+       id engine dense_leaves
+ tree-014 ggplot            1
+
+Page route: outcome by page
+      result
+page   equal not_deterministic Sum
+  grid    28                 1  29
+  Sum     28                 1  29
+
+The bench's verdict against gloss's own (captured figures)
+                   gloss
+bench               equal not_deterministic Sum
+  equal                28                 0  28
+  not_deterministic     0                 1   1
+  Sum                  28                 1  29
+  agreement on pages (plan Task 4 reading): 29/29 = 100% | identical verdicts: 29/29 = 100% 
+  different for the bench while gloss says equal (failed invariant), pages : 0 
+
+Not deterministic (two plain drawings differ, the bench's proof)
+       id engine self_differ           verdict     gloss_verdict
+ tree-054 ggplot         309 not_deterministic not_deterministic
+
+Objects: the object drawn alone against the page the code left: 27/29 = 93% equal
+       id engine code_differ           verdict
+ tree-054 ggplot         317 not_deterministic
+ tree-066 ggplot         335             equal
+
+Withheld tables or panels: 0/29 = 0% captured figures
+
+Drawn pages per figure (gloss): more than one in 0 of 29 captured figures
+Dense figures compared on a vector recapture: 1 

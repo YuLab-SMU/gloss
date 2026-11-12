@@ -1,0 +1,25 @@
+{
+  "id": "gallery-062",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "74-margin-and-oma-cheatsheet.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:48:28 UTC",
+  "nbsp_replaced": 17,
+  "figure": {
+    "chunk": 2,
+    "expr": 18,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 217484049
+}

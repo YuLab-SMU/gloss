@@ -1,0 +1,64 @@
+{
+  "id": "patchwork-013",
+  "stratum": "patchwork",
+  "kind": "gallery",
+  "psu": "web-map-choropleth-quantile.Rmd",
+  "vignette": null,
+  "rewrites": [
+    {
+      "literal": "https://github.com/BjnNowak/TidyTuesday/raw/refs/heads/main/map/price_map_france.gpkg",
+      "url": "https://github.com/BjnNowak/TidyTuesday/raw/refs/heads/main/map/price_map_france.gpkg",
+      "file": "data/price_map_france.gpkg",
+      "ok": true,
+      "bytes": 2953216,
+      "md5": "ac76ad7e0708b2e1eb517eb73ca31b9f",
+      "companions": []
+    },
+    {
+      "literal": "https://github.com/BjnNowak/lego_map/raw/main/data/france_sport.gpkg",
+      "url": "https://github.com/BjnNowak/lego_map/raw/main/data/france_sport.gpkg",
+      "file": "data/france_sport.gpkg",
+      "ok": true,
+      "bytes": 1015808,
+      "md5": "68fbb7cdf355c9c864a6110f4bb2224b",
+      "companions": []
+    }
+  ],
+  "packages": [
+    {
+      "package": "patchwork",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "scico",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "sf",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidyverse",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 05:14:26 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 9,
+    "expr": 2,
+    "kind": "object",
+    "class": "patchwork",
+    "engine": "patchwork"
+  },
+  "seed": 174210618
+}

@@ -1,0 +1,193 @@
+== figures
+           
+            bind error bound not captured
+  base               0    10            0
+  ggplot             0    31            1
+  grid               3     1            0
+  heatmap            0     3            0
+  patchwork          0     6            0
+
+== layer elements by engine (leaves attributed to a layer, body or track)
+        figures leaves elements verified ambiguous failed unbound
+ggplot       31   4165    24800     7968       126   2038   14641
+heatmap       3     32      406      250         0      0     156
+        count_mismatch checked
+ggplot              27   32.6%
+heatmap              0   61.6%
+all: 25206 elements; verified 8218, ambiguous 126 (verified or ambiguous 33.1%); failed 2038; unbound 14797; count_mismatch 27
+
+== ggplot layer elements by stratum
+        figures leaves elements verified ambiguous failed unbound
+bioc          2      3       22       22         0      0       0
+exts         12     63    18549     5942         0      6   12574
+gallery      17   4099     6229     2004       126   2032    2067
+        count_mismatch checked
+bioc                 0  100.0%
+exts                27   32.0%
+gallery              0   34.2%
+
+== engines that state no bindings (leaves, elements)
+     engine leaves elements
+1      base   2043     2923
+2      grid     19       82
+3 patchwork    202     2289
+
+== paired leaves by geom and tag (ggplot), elements
+                              figures leaves elements verified ambiguous failed
+GeomTile / rect                     2      2     5628     5628         0      0
+GeomLabel / polygon                 1   2000     2000        0         0   2000
+GeomLabel / text                    1   2000     2000        0         0      0
+GeomPoint / circle                  7      7      954      952         2      0
+GeomHex / polygon                   1      1      551      551         0      0
+GeomEpicurve / rect                 1      1      270      270         0      0
+GeomCircle / polygon                1      1      252      248         4      0
+GeomPoint / circle+polygon          1      1      150       90        60      0
+GeomPoint / rect                    1      1      150       90        60      0
+GeomBar / rect                      3      4       76       76         0      0
+GeomTextcurve / text                1      1       73        0         0      0
+GeomLabeldensity2d / text           1      8       31        0         0      0
+GeomArea / polygon                  1     30       30       30         0      0
+GeomArea / polyline                 1     30       30        0         0     30
+GeomRoc / circle                    1      2       20        0         0      0
+GeomRoc / text                      1      2       20        0         0      0
+GeomLabeldensity2d / polyline       1      1       16        0         0      0
+GeomRocci / line                    1      2       12        0         0      0
+GeomErrorStat / polyline            1      1        9        0         0      0
+GeomText / text                     2      2        9        9         0      0
+GeomLabeldensity2d / polygon        1      8        8        0         0      0
+GeomSegment / line                  1      1        8        8         0      0
+GeomLine / polyline                 2      3        7        7         0      0
+GeomRocci / rect                    1      2        6        6         0      0
+GeomRocci / text                    1      2        6        0         0      6
+GeomTextcurve / polyline            1      1        6        0         0      0
+GeomRoc / polyline                  1      2        2        2         0      0
+GeomAbline / line                   1      1        1        0         0      0
+GeomLabelRepel / line               1      1        1        0         0      0
+GeomLabelRepel / polygon            1      1        1        0         0      1
+GeomLabelRepel / text               1      1        1        0         0      1
+GeomPath / polyline                 1      1        1        1         0      0
+GeomRaster / image                  1      1        1        0         0      0
+                              unbound count_mismatch
+GeomTile / rect                     0              0
+GeomLabel / polygon                 0              0
+GeomLabel / text                 2000              0
+GeomPoint / circle                  0              0
+GeomHex / polygon                   0              0
+GeomEpicurve / rect                 0              0
+GeomCircle / polygon                0              0
+GeomPoint / circle+polygon          0              0
+GeomPoint / rect                    0              0
+GeomBar / rect                      0              0
+GeomTextcurve / text               73              0
+GeomLabeldensity2d / text          31              0
+GeomArea / polygon                  0              0
+GeomArea / polyline                 0              0
+GeomRoc / circle                   20              0
+GeomRoc / text                     20              0
+GeomLabeldensity2d / polyline      16              0
+GeomRocci / line                    0             12
+GeomErrorStat / polyline            0              9
+GeomText / text                     0              0
+GeomLabeldensity2d / polygon        8              0
+GeomSegment / line                  0              0
+GeomLine / polyline                 0              0
+GeomRocci / rect                    0              0
+GeomRocci / text                    0              0
+GeomTextcurve / polyline            0              6
+GeomRoc / polyline                  0              0
+GeomAbline / line                   1              0
+GeomLabelRepel / line               1              0
+GeomLabelRepel / polygon            0              0
+GeomLabelRepel / text               0              0
+GeomPath / polyline                 0              0
+GeomRaster / image                  1              0
+
+== unbound reasons (leaves, elements), layer leaves
+   engine 
+9  ggplot 
+6  ggplot 
+2  ggplot 
+7  ggplot 
+1  heatmap
+10 ggplot 
+11 ggplot 
+8  ggplot 
+3  ggplot 
+4  ggplot 
+5  ggplot 
+12 ggplot 
+   why                                                                                                                                                                       
+9  the panel holds other grobs than background, 5 layers and foreground                                                                                                      
+6  no comparison for <text> elements paired one per group                                                                                                                    
+2  k elements for m rows in n groups: neither one per row nor one per group                                                                                                  
+7  print.ggcut draws the page, not ggplot2's print method; the built data and panels describe the plot before that method, so gloss cannot show they describe the page drawn.
+1  annotation tracks and dendrograms are not paired yet                                                                                                                      
+10 the panel's scales cannot be mapped (CoordCombMatrix)                                                                                                                     
+11 the panel's scales cannot be mapped (CoordPolar)                                                                                                                          
+8  the layer's rows carry neither x and y nor xmin, xmax, ymin and ymax                                                                                                      
+3  no comparison for <image> elements paired one per group                                                                                                                   
+4  no comparison for <line> elements paired one per group                                                                                                                    
+5  no comparison for <line> elements paired one per row                                                                                                                      
+12 the panel's scales cannot be mapped (CoordSf)                                                                                                                             
+   leaves elements
+9     8   12275   
+6  2000    2000   
+2    22     168   
+7    29     162   
+1    27     156   
+10    1      20   
+11    2      10   
+8     2       2   
+3     1       1   
+4     1       1   
+5     1       1   
+12    1       1   
+
+== failed elements by figure, geom and tag
+          id engine           geom      tag  mode leaves failed elements
+ gallery-029 ggplot      GeomLabel  polygon group   2000   2000     2000
+ gallery-024 ggplot       GeomArea polyline group     30     30       30
+ gallery-059 ggplot GeomLabelRepel  polygon   row      1      1        1
+ gallery-059 ggplot GeomLabelRepel     text   row      1      1        1
+    exts-014 ggplot      GeomRocci     text   row      2      6        6
+
+== checked share per figure (ggplot): the element-weighted share is dominated by the largest figures
+figures 31; median share 0.996; share >= 0.8 in 17; share 0 in 9; largest two figures hold 17900 of 24800 elements
+          id stratum elements checked failed share
+    exts-022    exts    12275       0      0 0.000
+    exts-018    exts      162       0      0 0.000
+    exts-013    exts       79       0      0 0.000
+ gallery-054 gallery       55       0      0 0.000
+    exts-024    exts       20       0      0 0.000
+ gallery-020 gallery       10       0      0 0.000
+    exts-008    exts        9       0      0 0.000
+    exts-017    exts        1       0      0 0.000
+ gallery-015 gallery        1       0      0 0.000
+ gallery-029 gallery     4060      60   2000 0.015
+    exts-014    exts       66       8      6 0.121
+ gallery-024 gallery       60      30     30 0.500
+    exts-001    exts        2       1      0 0.500
+ gallery-059 gallery        7       4      2 0.571
+    exts-021    exts       33      32      0 0.970
+    exts-019    exts      271     270      0 0.996
+    exts-027    exts     5625    5625      0 1.000
+ gallery-002 gallery      600     600      0 1.000
+ gallery-001 gallery      551     551      0 1.000
+ gallery-048 gallery      252     252      0 1.000
+ gallery-006 gallery      150     150      0 1.000
+ gallery-011 gallery      150     150      0 1.000
+ gallery-068 gallery      150     150      0 1.000
+ gallery-005 gallery      100     100      0 1.000
+ gallery-047 gallery       32      32      0 1.000
+ gallery-070 gallery       32      32      0 1.000
+ gallery-032 gallery       16      16      0 1.000
+    bioc-017    bioc       12      12      0 1.000
+    bioc-016    bioc       10      10      0 1.000
+    exts-030    exts        6       6      0 1.000
+ gallery-050 gallery        3       3      0 1.000
+
+== ambiguous elements: in dense leaves / elsewhere
+0 / 126
+
+== time: binding (a second capture plus the bind step) against capture, per figure
+median capture 0.33 s, median capture + bind 0.36 s, maximum capture + bind 35.19 s

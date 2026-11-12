@@ -1,0 +1,138 @@
+circle_centres <- function(el) {
+  data.frame(cx = (el$x0 + el$x1) / 2, cy = (el$y0 + el$y1) / 2)
+}
+
+test_that("built data mapped through each panel's scales lands on the drawn points", {
+  skip_if_no("ggplot2")
+  fig <- suppressWarnings(gloss(p_facet(), width = 7, height = 4, context = FALSE))
+  built <- gl_table(fig, "built_layer1")
+  lv <- gl_leaf(fig)
+  for (k in 1:2) {
+    panel <- paste0("panel", k)
+    rows <- built[built$PANEL == k, ]
+    leaf <- lv$id[grepl("geom_point", lv$path) & lv$panel %in% panel]
+    expect_length(leaf, 1L)
+    el <- gl_elements(fig, list(leaf = leaf))
+    px <- gl_to_pixel(fig, panel, rows$x, rows$y)
+    cc <- circle_centres(el)
+    expect_lt(max(abs(px$x - cc$cx)), 0.011)
+    expect_lt(max(abs(px$y - cc$cy)), 0.011)
+    back <- gl_to_data(fig, panel, cc$cx, cc$cy)
+    expect_lt(max(abs(back$x - rows$x)), 0.01)
+  }
+  expect_equal(gl_panels(fig)$key, c("am=0", "am=1"))
+})
+
+test_that("jittered points land on the rows of the built table", {
+  # position_jitter() without a seed draws random numbers in the build. With
+  # print() drawing the page and the engine building separately, 0 of 32 rows
+  # landed on their point (p2-jitter-tables.out); the engine now draws the
+  # build its tables come from. Tolerance: the SVG prints 0.01 pt.
+  skip_if_no("ggplot2")
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(cyl, mpg)) +
+    ggplot2::geom_point(position = ggplot2::position_jitter(width = 0.4, height = 0))
+  for (k in 1:3) {
+    fig <- gloss(p, width = 5, height = 4, context = FALSE)
+    built <- gl_table(fig, "built_layer1")
+    lv <- gl_leaf(fig)
+    el <- gl_elements(fig, list(leaf = lv$id[grepl("geom_point", lv$path)]))
+    px <- gl_to_pixel(fig, gl_panels(fig)$id, built$x, built$y)
+    cc <- circle_centres(el)
+    expect_equal(nrow(cc), 32L)
+    expect_equal(sum(abs(px$x - cc$cx) < 0.011 & abs(px$y - cc$cy) < 0.011), 32L)
+  }
+})
+
+test_that("facet_grid panels are matched to the layout by position", {
+  skip_if_no("ggplot2")
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point() +
+    ggplot2::facet_grid(am ~ cyl, scales = "free")
+  fig <- gloss(p, width = 7, height = 5, context = FALSE)
+  built <- gl_table(fig, "built_layer1")
+  lv <- gl_leaf(fig)
+  pan <- gl_panels(fig)
+  expect_equal(nrow(pan), 6L)
+  for (k in seq_len(nrow(pan))) {
+    rows <- built[built$PANEL == k, ]
+    leaf <- lv$id[grepl("geom_point", lv$path) & lv$panel %in% pan$id[k]]
+    el <- gl_elements(fig, list(leaf = leaf))
+    px <- gl_to_pixel(fig, pan$id[k], rows$x, rows$y)
+    expect_lt(max(abs(px$x - circle_centres(el)$cx)), 0.011)
+    expect_lt(max(abs(px$y - circle_centres(el)$cy)), 0.011)
+  }
+})
+
+test_that("base plot regions use the user coordinates of the replay, also with mfrow and log axes", {
+  fig <- gloss(function() {
+    graphics::par(mfrow = c(1, 2))
+    graphics::plot(1:10, (1:10)^2, log = "y", pch = 19)
+    graphics::plot(mtcars$hp, mtcars$qsec, pch = 19)
+  }, width = 7, height = 4, context = FALSE)
+  pan <- gl_panels(fig)
+  expect_equal(nrow(pan), 2L)
+  lv <- gl_leaf(fig)
+  pts <- lv[lv$class == "plotXY", ]
+  expect_equal(pts$panel, pan$id)
+  el <- gl_elements(fig, list(leaf = pts$id[2]))
+  px <- gl_to_pixel(fig, pan$id[2], mtcars$hp, mtcars$qsec)
+  expect_lt(max(abs(px$x - circle_centres(el)$cx)), 0.011)
+  expect_lt(max(abs(px$y - circle_centres(el)$cy)), 0.011)
+  el1 <- gl_elements(fig, list(leaf = pts$id[1]))
+  px1 <- gl_to_pixel(fig, pan$id[1], 1:10, log10((1:10)^2))
+  expect_lt(max(abs(px1$y - circle_centres(el1)$cy)), 0.011)
+})
+
+test_that("base plot regions use the user coordinates of the replay", {
+  # Panels come from par("usr") and the plot region after each display-list
+  # entry; the points are the plotXY entry (gridGraphics called its leaf
+  # "points" until page-capture plan Task 5).
+  fig <- gloss(function() plot(mtcars$wt, mtcars$mpg, pch = 19), width = 6, height = 4, context = FALSE)
+  pan <- gl_panels(fig)
+  expect_equal(nrow(pan), 1L)
+  lv <- gl_leaf(fig)
+  leaf <- lv$id[lv$class == "plotXY" & lv$panel %in% pan$id]
+  expect_length(leaf, 1L)
+  expect_true(all(is.na(lv$panel[lv$name %in% c("axis", "title")])))
+  el <- gl_elements(fig, list(leaf = leaf[1]))
+  px <- gl_to_pixel(fig, pan$id, mtcars$wt, mtcars$mpg)
+  expect_lt(max(abs(px$x - circle_centres(el)$cx)), 0.011)
+  expect_lt(max(abs(px$y - circle_centres(el)$cy)), 0.011)
+})
+
+test_that("hit testing, neighbours and overlap work in device space", {
+  skip_if_no("ggplot2")
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point(size = 3)
+  fig <- gloss(p, width = 5, height = 4, context = FALSE)
+  lv <- gl_leaf(fig)
+  leaf <- lv$id[grepl("geom_point", lv$path)]
+  el <- gl_elements(fig, list(leaf = leaf))
+  target <- el[1, ]
+  cx <- (target$x0 + target$x1) / 2
+  cy <- (target$y0 + target$y1) / 2
+  hit <- gl_hit(fig, cx, cy)
+  expect_equal(hit$id[1], target$id)
+  expect_true(all(c("circle", "rect") %in% hit$tag))
+  hit_data <- gl_hit(fig, mtcars$wt[1], mtcars$mpg[1], space = "data", panel = "panel1")
+  expect_equal(hit_data$id[1], target$id)
+  near <- gl_near(fig, target$id, k = 3, same_leaf = TRUE)
+  expect_equal(nrow(near), 3L)
+  expect_true(all(diff(near$distance) >= 0))
+  ov <- gl_overlap(fig, target$id)
+  expect_true("below" %in% ov$relation)
+  expect_error(gl_to_pixel(fig, "nope", 1, 1), "No panel")
+})
+
+test_that("gl_leaf and gl_elements describe one leaf", {
+  g <- grid::gTree(children = grid::gList(
+    grid::rectGrob(name = "bg"),
+    grid::pointsGrob(c(0.2, 0.8), c(0.5, 0.5), name = "pts", pch = 19)
+  ), name = "top")
+  fig <- gloss(g, width = 2, height = 2, context = FALSE)
+  pts <- gl_leaf(fig)$id[gl_leaf(fig)$name == "pts"]
+  info <- gl_leaf(fig, pts)
+  expect_equal(info$path, "top/pts")
+  expect_equal(info$n_drawn, 2L)
+  expect_length(info$elements, 2L)
+  expect_equal(gl_elements(fig, list(leaf = pts))$ordinal, 1:2)
+  expect_error(gl_elements(fig, list(nope = 1)), "Unknown element field")
+})

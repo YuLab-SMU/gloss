@@ -1,0 +1,66 @@
+{
+  "id": "tree-045",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "cardelino",
+  "vignette": "vignette-cloneid.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "cardelino",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "BiocStyle",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "cardelino",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "rmarkdown",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "pheatmap",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "Matrix",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 20:11:00 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 7,
+    "expr": 1,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 240303529
+}

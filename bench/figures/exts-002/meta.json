@@ -1,0 +1,40 @@
+{
+  "id": "exts-002",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "ggdibbler",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggdibbler",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "distributional",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:48:55 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 5,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 27806439
+}

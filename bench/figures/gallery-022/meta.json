@@ -1,0 +1,65 @@
+{
+  "id": "gallery-022",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "violin_horizontal_ggplot2.Rmd",
+  "vignette": null,
+  "rewrites": [
+    {
+      "literal": "https://raw.githubusercontent.com/zonination/perceptions/master/probly.csv",
+      "url": "https://raw.githubusercontent.com/zonination/perceptions/master/probly.csv",
+      "file": "data/probly.csv",
+      "ok": true,
+      "bytes": 2465,
+      "md5": "b74079391208154ff0c0a975ae51e133",
+      "companions": []
+    }
+  ],
+  "packages": [
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "forcats",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "hrbrthemes",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "viridis",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:36:49 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 2,
+    "expr": 10,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 208914734
+}

@@ -1,0 +1,152 @@
+run: 2026-11-11-0843-capture-heldout-engine-route.csv | 54 figures | held-out set
+
+Outcomes by engine
+           outcome
+engine      captured refused Sum
+  base             9       0   9
+  ggplot          28       1  29
+  grid             5       0   5
+  heatmap          3       0   3
+  patchwork        8       0   8
+  Sum             53       1  54
+
+Status detail
+
+                    captured refused: custom print method 
+                          53                            1 
+
+Not captured
+       id engine recovered                       status
+ exts-015 ggplot    object refused: custom print method
+                                                                                     message
+ ggsurvfit has a custom print method (print.ggsurvfit); gloss would\ncapture another figure.
+
+Prediction 5 (>= 90% capture without error)
+  captured / figures that rerun: 53/54 = 98% 
+  captured / all held-out figures: 53/54 = 98% 
+  verdict: right 
+
+Prediction 6 (grid scenes fail more often than returned objects)
+  not captured, recovered by grid.grab(): 0/5 = 0% 
+  not captured, returned objects: 1/40 = 2% 
+  not captured, base (recordPlot), for reference: 0/9 = 0% 
+  verdict: wrong (n = 5 grid, 40 objects) 
+
+Prediction 7 (>= 30% of captured figures have a leaf with a count mismatch)
+   35/53 = 66% | verdict: right 
+  by engine:
+     base 7/9 = 78% 
+     ggplot 16/28 = 57% 
+     grid 4/5 = 80% 
+     heatmap 0/3 = 0% 
+     patchwork 8/8 = 100% 
+
+Prediction 8 (>= 95% of captured figures: the only unowned element is the device background)
+   53/53 = 100% | verdict: right 
+
+Capture size and time (captured figures)
+    engine  n median_elements median_leaves median_seconds max_seconds
+      base  9            63.0          25.0           0.17        5.36
+    ggplot 28           126.5          13.5           0.26        1.72
+      grid  5           553.0          35.0           0.28        0.31
+   heatmap  3           455.0          21.0           0.28        1.05
+ patchwork  8           245.5          53.0           0.55        3.30
+
+Fidelity (captured scene = what the code drew on svglite; not predicted)
+  base      faithful 0/9 = 0% | not compared 0 | median primitives differing among the rest 11
+  ggplot    faithful 25/28 = 89% | not compared 0 | median primitives differing among the rest 18810
+  grid      faithful 5/5 = 100% | not compared 0 | median primitives differing among the rest -
+  heatmap   faithful 3/3 = 100% | not compared 0 | median primitives differing among the rest -
+  patchwork faithful 7/8 = 88% | not compared 0 | median primitives differing among the rest 742
+  not faithful:
+            id    engine recovered prims_ref prims_scene prims_differ
+   gallery-003    ggplot    object     18911         103        19006
+   gallery-027      base      base        62          63            1
+   gallery-036      base      base        20          21           13
+   gallery-042      base      base        42          53           11
+   gallery-045      base      base        72          73            3
+   gallery-055      base      base        60          61           25
+   gallery-062      base      base        45          46            1
+   gallery-069    ggplot    object     19011         203        18810
+      exts-002    ggplot    object      1838        1834         1174
+      exts-012      base      base      7234        7259           41
+      bioc-019      base      base       207         208            1
+      bioc-023      base      base      9138        9156           72
+ patchwork-013 patchwork    object      2279        2279          742
+
+Fidelity verdicts (equal / known exception / different)
+           verdict
+engine      equal not_deterministic known_exception different Sum
+  base          0                 0               3         6   9
+  ggplot       25                 0               2         1  28
+  grid          5                 0               0         0   5
+  heatmap       3                 0               0         0   3
+  patchwork     7                 0               0         1   8
+  Sum          40                 0               5         8  53
+
+Known exceptions, with the reason
+          id engine prims_differ
+ gallery-003 ggplot        19006
+ gallery-027   base            1
+ gallery-062   base            1
+ gallery-069 ggplot        18810
+    bioc-019   base            1
+                                                     exception
+                      1 dense leaf drawn as a raster by design
+ gridGraphics background rect: one extra rect, nothing missing
+ gridGraphics background rect: one extra rect, nothing missing
+                      1 dense leaf drawn as a raster by design
+ gridGraphics background rect: one extra rect, nothing missing
+
+Different: first primitives present on only one side
+            id    engine prims_scene prims_ref prims_differ
+   gallery-036      base          21        20           13
+   gallery-042      base          53        42           11
+   gallery-045      base          73        72            3
+   gallery-055      base          61        60           25
+      exts-002    ggplot        1834      1838         1174
+      exts-012      base        7259      7234           41
+      bioc-023      base        9156      9138           72
+ patchwork-013 patchwork        2279      2279          742
+                                                             diff_scene
+ circle cx=168.42 cy=172.80 r=7.35 style=stroke-width: 0.75; fill: #000
+ polyline points=182.92,145.68 182.92,145.68 182.92,145.68  style=strok
+ line x1=72.00 y1=180.00 x2=72.00 y2=180.00 style=stroke-width: 0.75;  
+ rect x=-126.00 y=-90.00 width=756.00 height=540.00 style=stroke-width:
+ polygon points=101.96,301.93 101.96,307.68 95.94,310.55 89.91,307.68 8
+ rect x=-126.00 y=-90.00 width=756.00 height=540.00 style=stroke-width:
+ rect x=-126.00 y=-90.00 width=756.00 height=540.00 style=stroke-width:
+ circle cx=100.06 cy=324.98 r=1.95 style=stroke-width: 0.71; stroke: #C
+                                                               diff_ref
+ circle cx=168.42 cy=172.80 r=7.35 style=stroke-width: 0.75; fill: #E69
+                                                                       
+  line x1=72.00 y1=184.00 x2=72.00 y2=284.00 style=stroke-width: 0.75; 
+ rect x=102.42 y=207.14 width=25.35 height=66.46 style=stroke-width: 0.
+ polygon points=101.96,284.68 101.96,290.43 95.94,293.30 89.91,290.43 8
+ text transform=translate(31.36,268.53) rotate(-90) text-anchor=middle 
+ text transform=translate(286.66,99.86) rotate(-90) text-anchor=middle 
+ circle cx=100.06 cy=334.28 r=1.95 style=stroke-width: 0.71; stroke: #C
+
+Which leaves mismatch: 35/53 = 66% captured figures
+          id    engine leaves_mismatch
+ gallery-009 patchwork               3
+ gallery-012    ggplot               1
+ gallery-014    ggplot               2
+ gallery-016    ggplot               1
+ gallery-017    ggplot               2
+ gallery-019    ggplot               1
+ gallery-022    ggplot               1
+ gallery-031    ggplot               2
+                                                                                                 mismatch_leaves
+ L006:panel.grid.major.y..polyline.91 L007:panel.grid.major.x..polyline.93 L017:panel.grid.major.x..polyline.127
+                                                                            L006:panel.grid.major.x..polyline.71
+                                     L005:panel.grid.major.y..polyline.145 L006:panel.grid.major.x..polyline.147
+                                                                           L004:panel.grid.major.y..polyline.275
+                                                        L004:panel.grid.major.y..polyline.275 L036:GRID.text.292
+                                                                                              L010:GRID.text.152
+                                                                                              L016:GRID.text.102
+                                       L004:panel.grid.major.y..polyline.82 L005:panel.grid.major.x..polyline.84
+Rasterized dense leaves: 2 captured figures
+          id engine dense_leaves
+ gallery-003 ggplot            1
+ gallery-069 ggplot            1

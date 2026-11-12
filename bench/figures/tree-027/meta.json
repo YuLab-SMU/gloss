@@ -1,0 +1,71 @@
+{
+  "id": "tree-027",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "philr",
+  "vignette": "philr-intro.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "philr",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "philr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ape",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "mia",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "glmnet",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidyr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 19:49:31 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 20,
+    "expr": 5,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 40505427
+}

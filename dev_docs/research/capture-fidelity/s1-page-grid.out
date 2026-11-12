@@ -1,0 +1,16 @@
+ggplot print()                     page A   132 prims | scene   132 | identical=TRUE  differ=0    | leaves   60, unowned 1 | 0.53s
+patchwork print()                  page A   266 prims | scene   266 | identical=TRUE  differ=0    | leaves  123, unowned 1 | 0.50s
+ComplexHeatmap draw()              page A   293 prims | scene   293 | identical=TRUE  differ=0    | leaves   16, unowned 1 | 0.19s
+ComplexHeatmap list + split        page A   449 prims | scene   449 | identical=TRUE  differ=0    | leaves   24, unowned 1 | 0.84s
+lattice xyplot print()             page A   102 prims | scene   102 | identical=TRUE  differ=0    | leaves   30, unowned 1 | 0.06s
+lattice levelplot                  page A  5376 prims | scene  5376 | identical=TRUE  differ=0    | leaves   17, unowned 1 | 0.39s
+ggExtra ggMarginal print()         page A    83 prims | scene    83 | identical=TRUE  differ=0    | leaves   19, unowned 1 | 0.16s
+ggExtra p1 then p2, one page       page A   219 prims | scene   219 | identical=TRUE  differ=0    | leaves   34, unowned 1 | 0.31s
+pheatmap                           page A   220 prims | scene   220 | identical=TRUE  differ=0    | leaves    7, unowned 1 | 0.03s
+aplot insert_top print()           page A   139 prims | scene   139 | identical=TRUE  differ=0    | leaves   32, unowned 1 | 0.23s
+gridExtra grid.arrange             page A   153 prims | scene   153 | identical=TRUE  differ=0    | leaves   26, unowned 1 | 0.13s
+cowplot plot_grid print()          page A   155 prims | scene   155 | identical=TRUE  differ=0    | leaves   28, unowned 1 | 0.20s
+grid calls with viewports          page A     6 prims | scene     6 | identical=TRUE  differ=0    | leaves    3, unowned 1 | 0.01s
+ggrepel, no seed, RNG not pinned   page A   115 prims | scene   116 | identical=FALSE differ=77   | leaves   52, unowned 1 | 0.29s
+ggrepel, no seed, RNG pinned       page A   114 prims | scene   114 | identical=TRUE  differ=0    | leaves   50, unowned 1 | 0.28s
+10^4 points                        page A 10034 prims | scene 10034 | identical=TRUE  differ=0    | leaves   13, unowned 1 | 0.83s

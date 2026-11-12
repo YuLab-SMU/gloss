@@ -1,0 +1,22 @@
+== A. incremental reading of the device while replaying by entry ==
+    108 entries: whole page parsed after each entry   0.06 s | page text re-read, new part counted  0.04 s (append-only TRUE, same counts TRUE) | file device, new bytes only  0.01 s (same counts TRUE, same page TRUE)
+   1308 entries: whole page parsed after each entry   3.61 s | page text re-read, new part counted  2.49 s (append-only TRUE, same counts TRUE) | file device, new bytes only  0.08 s (same counts TRUE, same page TRUE)
+   5008 entries: whole page parsed after each entry  50.34 s | page text re-read, new part counted 34.82 s (append-only TRUE, same counts TRUE) | file device, new bytes only  0.31 s (same counts TRUE, same page TRUE)
+  pairs   append-only TRUE | same counts per entry: re-read TRUE, file device TRUE (758 primitives, 192 entries)
+  image   append-only TRUE | same counts per entry: re-read TRUE, file device TRUE (5855 primitives, 10 entries)
+  legend  append-only TRUE | same counts per entry: re-read TRUE, file device TRUE (61 primitives, 24 entries)
+
+== B. a base plot recorded on pdf(NULL), replayed on svglite ==
+  scatter    recorded on svglite: replay on svglite = the code on svglite: TRUE  (differ 0 of 60)
+  scatter    recorded on pdf    : replay on svglite = the code on svglite: FALSE (differ 6 of 60)
+  border_0   recorded on svglite: replay on svglite = the code on svglite: TRUE  (differ 0 of 2)
+  border_0   recorded on pdf    : replay on svglite = the code on svglite: FALSE (differ 2 of 2)
+  mfrow_text recorded on svglite: replay on svglite = the code on svglite: TRUE  (differ 0 of 52)
+  mfrow_text recorded on pdf    : replay on svglite = the code on svglite: TRUE  (differ 0 of 52)
+
+== C. leaves of the page route against gloss(): do name and vp differ only by grid's numbering? ==
+  ggplot_facet  names equal FALSE, after replacing digits TRUE  | vp equal FALSE, after replacing digits TRUE  | paths after replacing digits TRUE
+  patchwork     names equal FALSE, after replacing digits TRUE  | vp equal FALSE, after replacing digits TRUE  | paths after replacing digits TRUE
+  heatmap       names equal FALSE, after replacing digits TRUE  | vp equal FALSE, after replacing digits TRUE  | paths after replacing digits FALSE
+  ggrepel       names equal FALSE, after replacing digits TRUE  | vp equal FALSE, after replacing digits TRUE  | paths after replacing digits TRUE
+  points_1e4    names equal FALSE, after replacing digits TRUE  | vp equal FALSE, after replacing digits TRUE  | paths after replacing digits TRUE

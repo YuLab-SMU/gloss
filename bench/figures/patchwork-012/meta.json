@@ -1,0 +1,30 @@
+{
+  "id": "patchwork-012",
+  "stratum": "patchwork",
+  "kind": "topic",
+  "psu": "patchwork::plot_annotation",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "patchwork",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 05:14:17 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 7,
+    "kind": "object",
+    "class": "patchwork",
+    "engine": "patchwork"
+  },
+  "seed": 76640019
+}

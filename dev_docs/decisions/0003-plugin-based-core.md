@@ -1,6 +1,6 @@
 # ADR-0003: Plugin-based core
 
-- **Status:** Accepted
+- **Status:** Accepted; engine dispatch refined by [ADR-0004](0004-engine-dispatch-through-the-registry.md)
 - **Date:** 2026-11-08
 - **Deciders:** Yonghe Xia
 - **Related:** [design: 插件机制](../design.qmd), [ADR-0002](0002-semantic-substrate-with-append-only-records.md)

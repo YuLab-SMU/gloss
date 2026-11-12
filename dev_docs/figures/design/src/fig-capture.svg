@@ -68,8 +68,8 @@
     <text x="706" y="456">记下 viewport 路径和设备坐标框</text>
     <text x="706" y="500"><tspan class="mono">groupGrob()</tspan>：设备把这个叶子画出的</text>
     <text x="706" y="526">全部图元放进同一个组</text>
-    <text x="706" y="570"><tspan class="mono">vp</tspan> 提到外层：否则 gridGraphics</text>
-    <text x="706" y="596">按名字查找的 viewport 会找不到</text>
+    <text x="706" y="570"><tspan class="mono">vp</tspan> 提到外层：探针和组都画在</text>
+    <text x="706" y="596">叶子自己的 viewport 里</text>
     <text x="706" y="640" fill="#87867F">只用 grid 公开 API，渲染一次</text>
   </g>
 

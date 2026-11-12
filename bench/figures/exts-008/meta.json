@@ -1,0 +1,30 @@
+{
+  "id": "exts-008",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "ggerror",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggerror",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:49:23 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 2,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 18803765
+}

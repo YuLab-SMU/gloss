@@ -1,0 +1,14 @@
+== six inputs: page route (package) against the engine route (tag engine-route-final) ==
+  ggplot_facet elements   134 /   134 identical=TRUE  | leaves  62 /  62 other columns identical=TRUE  name+vp equal up to digits=TRUE  | panels identical=TRUE  | tables identical=TRUE  | clip regions identical=TRUE  | verdict equal | 0.63 s / 0.69 s
+  patchwork    elements   186 /   186 identical=TRUE  | leaves  84 /  84 other columns identical=TRUE  name+vp equal up to digits=TRUE  | panels identical=TRUE  | tables identical=TRUE  | clip regions identical=TRUE  | verdict equal | 0.41 s / 0.47 s
+  base         elements    60 /    60 identical=TRUE  | leaves  14 /  14 other columns identical=TRUE  name+vp equal up to digits=TRUE  | panels identical=TRUE  | tables identical=TRUE  | clip regions identical=TRUE  | verdict equal | 0.04 s / 0.06 s
+  heatmap      elements   293 /   293 identical=TRUE  | leaves  16 /  16 other columns identical=FALSE name+vp equal up to digits=TRUE  | panels identical=TRUE  | tables identical=TRUE  | clip regions identical=TRUE  | verdict equal | 0.49 s / 0.63 s
+  ggrepel      elements   115 /   115 identical=TRUE  | leaves  51 /  51 other columns identical=FALSE name+vp equal up to digits=TRUE  | panels identical=TRUE  | tables identical=TRUE  | clip regions identical=TRUE  | verdict equal | 0.34 s / 0.31 s
+  points_1e4   elements 10040 / 10040 identical=TRUE  | leaves  13 /  13 other columns identical=FALSE name+vp equal up to digits=TRUE  | panels identical=TRUE  | tables identical=TRUE  | clip regions identical=TRUE  | verdict equal | 0.29 s / 0.99 s
+
+== leaf columns that differ, and whether they are equal up to digits ==
+  heatmap      path   differs in 16 of 16 leaves; equal up to digits=FALSE; first: GRID.gTree.1037/GRID.rect.998 -> GRID.rect.998
+  ggrepel      name   differs in 13 of 51 leaves; equal up to digits=TRUE; first: GRID.rect.1122 -> GRID.rect.1121
+  ggrepel      path   differs in 51 of 51 leaves; equal up to digits=TRUE; first: layout/background.1-13-16-1/GRID.rect.1122 -> layout/background.1-13-16-1/GRID.rect.1121
+  points_1e4   name   differs in 13 of 13 leaves; equal up to digits=TRUE; first: GRID.rect.1342 -> GRID.rect.1373
+  points_1e4   path   differs in 13 of 13 leaves; equal up to digits=TRUE; first: layout/background.1-13-16-1/GRID.rect.1342 -> layout/background.1-13-16-1/GRID.rect.1373

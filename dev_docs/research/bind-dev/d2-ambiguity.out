@@ -1,0 +1,18 @@
+exts-022: 11173 ambiguous elements
+  layer      geom    tag alike elements
+1     1 GeomPoint circle FALSE       14
+2     1 GeomPoint circle  TRUE    11159
+
+candidate rows per ambiguous element (quantiles): 2 36 265 689 
+elements whose candidates differ in some aesthetic: 14 
+of those, elements whose own colour matches exactly one candidate: 0 
+gallery-029: 4000 ambiguous elements
+  layer      geom     tag alike elements
+1     2 GeomLabel    text FALSE     1000
+2     4 GeomLabel    text FALSE     1000
+3     2 GeomLabel polygon  TRUE     1000
+4     4 GeomLabel polygon  TRUE     1000
+
+candidate rows per ambiguous element (quantiles): 0 500 1000 1000 
+elements whose candidates differ in some aesthetic: 2000 
+of those, elements whose own colour matches exactly one candidate: 0 

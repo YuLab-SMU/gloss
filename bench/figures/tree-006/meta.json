@@ -1,0 +1,66 @@
+{
+  "id": "tree-006",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "ggtreeSpace",
+  "vignette": "ggtreeSpace.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "ggtreeSpace",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "BiocManager",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtreeSpace",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "phytools",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 19:46:28 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 4,
+    "expr": 10,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 14114377
+}

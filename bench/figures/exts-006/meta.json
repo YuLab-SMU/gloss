@@ -1,0 +1,30 @@
+{
+  "id": "exts-006",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "ggperiodic",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggperiodic",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:49:08 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 6,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 97353257
+}

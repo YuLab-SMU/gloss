@@ -1,0 +1,30 @@
+{
+  "id": "heatmap-041",
+  "stratum": "heatmap",
+  "kind": "topic",
+  "psu": "ComplexHeatmap::attach_annotation-Heatmap-method",
+  "vignette": null,
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "ComplexHeatmap",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 10:30:48 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 8,
+    "kind": "object",
+    "class": "Heatmap",
+    "engine": "heatmap"
+  },
+  "seed": 54755663
+}

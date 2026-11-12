@@ -1,0 +1,35 @@
+{
+  "id": "gallery-052",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "277-marginal-histogram-for-ggplot2.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggExtra",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:43:23 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 4,
+    "expr": 1,
+    "kind": "object",
+    "class": "ggExtraPlot",
+    "engine": "grid"
+  },
+  "seed": 185948611
+}

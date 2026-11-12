@@ -1,0 +1,125 @@
+{
+  "id": "bioc-021",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "MicrobiotaProcess",
+  "vignette": "MicrobiotaProcess.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "MicrobiotaProcess",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "phyloseq",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "shadowtext",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "ggtree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtreeExtra",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "treeio",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidytree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "MicrobiotaProcess",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "curatedMetagenomicData",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "ggstar",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "forcats",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "aplot",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggnewscale",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggh4x",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "ggalluvial",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "ggside",
+      "status": "installed",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 09:24:36 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 6,
+    "expr": 11,
+    "kind": "object",
+    "class": "patchwork",
+    "engine": "patchwork"
+  },
+  "seed": 73272407
+}

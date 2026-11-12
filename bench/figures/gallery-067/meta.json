@@ -1,0 +1,40 @@
+{
+  "id": "gallery-067",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "27-levelplot-with-lattice.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "lattice",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "RColorBrewer",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "viridisLite",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:48:48 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 8,
+    "expr": 7,
+    "kind": "grid",
+    "class": "grid",
+    "engine": "grid"
+  },
+  "seed": 26010789
+}

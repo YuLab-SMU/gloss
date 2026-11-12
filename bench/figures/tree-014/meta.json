@@ -1,0 +1,211 @@
+{
+  "id": "tree-014",
+  "stratum": "tree",
+  "kind": "book",
+  "psu": "13_ggtree_gallery.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "ape",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "Biostrings",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "igraph",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "phylobase",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "emojifont",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "dplyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "kableExtra",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidytree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "treeio",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "cowplot",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "patchwork",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "aplot",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "phytools",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "hexbin",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "TDbook",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggimage",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "phyloseq",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "treemap",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtreeExtra",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggstar",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "MicrobiotaProcess",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tanggle",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "gggenes",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtext",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggbreak",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "rotl",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "gridSVG",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "data.tree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "rsvg",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "conflicted",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "yulab.utils",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tibble",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "tidyr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "badger",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 19:46:55 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 3,
+    "expr": 12,
+    "kind": "object",
+    "class": "ggtree",
+    "engine": "ggplot",
+    "tree": true
+  },
+  "seed": 166334986
+}

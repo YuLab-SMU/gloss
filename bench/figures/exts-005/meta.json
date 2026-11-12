@@ -1,0 +1,40 @@
+{
+  "id": "exts-005",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "ggnetwork",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggnetwork",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "network",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "sna",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:49:07 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 1,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 209173671
+}

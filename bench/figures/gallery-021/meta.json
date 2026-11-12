@@ -1,0 +1,25 @@
+{
+  "id": "gallery-021",
+  "stratum": "gallery",
+  "kind": "gallery",
+  "psu": "23-add-colors-to-specific-groups-of-a-boxplot.Rmd",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:36:47 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 2,
+    "expr": 6,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 143115575
+}

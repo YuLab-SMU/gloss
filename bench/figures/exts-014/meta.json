@@ -1,0 +1,25 @@
+{
+  "id": "exts-014",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "plotROC",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "plotROC",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:49:42 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 5,
+    "kind": "object",
+    "class": "ggplot2::ggplot",
+    "engine": "ggplot"
+  },
+  "seed": 39875467
+}

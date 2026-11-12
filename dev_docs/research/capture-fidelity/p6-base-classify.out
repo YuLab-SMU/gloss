@@ -1,0 +1,24 @@
+== base figure of design §分类, page route: 9 leaves, 60 elements (scene 61, unowned 1)
+   id entry     name elements                 rule                truth
+ L001     4   plotXY       32     data: layer mark     data: layer mark
+ L002     5     axis        9          guide: axis          guide: axis
+ L003     6     axis       11          guide: axis          guide: axis
+ L004     7      box        1 decoration: plot box decoration: plot box
+ L005     8    title        3        guide: titles        guide: titles
+ L006     9   abline        1     data: layer mark     data: layer mark
+ L007    13     rect        1     data: layer mark        guide: legend
+ L008    14 segments        1     data: layer mark        guide: legend
+ L009    15     text        1         UNCLASSIFIED        guide: legend
+      outcome
+        right
+        right
+        right
+        right
+        right
+        right
+        wrong
+        wrong
+ unclassified
+
+elements: right 57, wrong 2, unclassified 1, of 60 (gridGraphics route, classify.out: 57 right, 2 wrong, 1 unclassified, of 60)
+verdict equal; names: plotXY, axis, box, title, abline, rect, segments, text

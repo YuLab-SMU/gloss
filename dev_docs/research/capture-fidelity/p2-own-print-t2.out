@@ -1,0 +1,21 @@
+== exts-018: class ggcut ggplot2::ggplot ggplot ggplot2::gg S7_object gg ==
+  engine ggplot | page grid drawn by the engine, verdict equal | 163 elements, 29 leaves
+  panels returned: 0
+  panel viewports on the page: 4 (panel.9-7-9-7, panel-1.11-9-11-9, panel-2.29-9-29-9, panel-3.47-9-47-9)
+  withheld panels       print.ggcut draws the page, not ggplot2's print method; the built data and panels describe the plot before tha
+  withheld built_layer1 print.ggcut draws the page, not ggplot2's print method; the built data and panels describe the plot before tha
+  table raw              20 rows (plot data)
+  built layout: 1 panel(s); built layer 1: 20 rows
+  geom leaves on the page:
+                                                         path class n_expected
+ layout/panel.9-7-9-7/panel-1.gTree.104/layout 2/panel-1.11-9  rect         20
+ layout/panel.9-7-9-7/panel-1.gTree.104/layout 2/panel-2.29-9  rect         20
+ layout/panel.9-7-9-7/panel-1.gTree.104/layout 2/panel-3.47-9  rect         20
+ n_drawn status
+      20     ok
+      20     ok
+      20     ok
+== gallery-052: class ggExtraPlot gtable gTree grob gDesc ==
+  engine grid | page grid drawn by grid.draw(), verdict equal | 83 elements, 19 leaves
+  panels returned: 0
+  panel viewports on the page: 2 (panel.10-7-10-7, panel.1-1-1-1)

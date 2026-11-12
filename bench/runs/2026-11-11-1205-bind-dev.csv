@@ -1,0 +1,67 @@
+"id","stratum","engine","status","message","gloss_verdict","leaves","elements","el_verified","el_ambiguous","el_failed","el_unbound","el_count_mismatch","el_outside","el_not_paired","leaves_verified","leaves_ambiguous","leaves_partly_failed","leaves_failed","leaves_unbound","leaves_count_mismatch","leaves_outside","leaves_not_paired","seconds","bind_seconds"
+"gallery-001","gallery","ggplot","bound","","equal",15,590,551,0,0,0,0,39,0,1,0,0,0,0,0,14,0,0.459128618240356,0.373709440231323
+"gallery-002","gallery","ggplot","bound","","equal",16,630,600,0,0,0,0,30,0,1,0,0,0,0,0,15,0,0.365164041519165,0.364855051040649
+"gallery-005","gallery","ggplot","bound","","equal",10,121,100,0,0,0,0,21,0,1,0,0,0,0,0,9,0,0.26193642616272,0.258182764053345
+"gallery-006","gallery","ggplot","bound","","equal",18,190,90,60,0,0,0,40,0,0,1,0,0,0,0,17,0,0.333926677703857,0.366161108016968
+"gallery-008","gallery","base","bound","","equal",60,757,0,0,0,757,0,0,0,0,0,0,0,60,0,0,0,0.19314980506897,0.234391450881958
+"gallery-011","gallery","ggplot","bound","","equal",10,182,90,60,0,0,0,32,0,0,1,0,0,0,0,9,0,0.276999473571777,0.254231452941895
+"gallery-013","gallery","base","bound","","equal",129,129,0,0,0,129,0,0,0,0,0,0,0,129,0,0,0,0.184030771255493,0.20787787437439
+"gallery-015","gallery","ggplot","bound","","equal",13,34,0,0,0,1,0,33,0,0,0,0,0,1,0,12,0,0.630804777145386,0.605279922485352
+"gallery-020","gallery","ggplot","bound","","equal",14,22,0,0,0,10,0,12,0,0,0,0,0,2,0,12,0,0.343231439590454,0.286410093307495
+"gallery-021","gallery","base","bound","","equal",36,73,0,0,0,73,0,0,0,0,0,0,0,36,0,0,0,0.151400566101074,0.152947187423706
+"gallery-023","gallery","base","bound","","equal",1296,1296,0,0,0,1296,0,0,0,0,0,0,0,1296,0,0,0,1.0313286781311,1.83503007888794
+"gallery-024","gallery","ggplot","bound","","equal",61,61,30,0,30,0,0,1,0,30,0,0,30,0,0,1,0,0.453762531280518,2.08236598968506
+"gallery-029","gallery","ggplot","bound","","equal",4011,4090,60,0,2000,2000,0,30,0,2,0,0,2000,2000,0,9,0,19.9890460968018,35.1905007362366
+"gallery-032","gallery","ggplot","bound","","equal",14,63,16,0,0,0,0,47,0,2,0,0,0,0,0,12,0,0.391284227371216,0.385858535766602
+"gallery-038","gallery","base","bound","","equal",377,377,0,0,0,377,0,0,0,0,0,0,0,377,0,0,0,0.238197803497314,0.408757448196411
+"gallery-040","gallery","base","bound","","equal",25,38,0,0,0,38,0,0,0,0,0,0,0,25,0,0,0,0.134422063827515,0.154999494552612
+"gallery-047","gallery","ggplot","bound","","equal",11,65,30,2,0,0,0,33,0,0,1,0,0,0,0,10,0,0.237020254135132,0.232914924621582
+"gallery-048","gallery","ggplot","bound","","equal",2,253,248,4,0,0,0,1,0,0,1,0,0,0,0,1,0,1.13346838951111,3.3064079284668
+"gallery-050","gallery","ggplot","bound","","equal",24,57,3,0,0,0,0,54,0,1,0,0,0,0,0,23,0,0.269105911254883,0.270188570022583
+"gallery-052","gallery","grid","bound","","equal",19,82,0,0,0,82,0,0,0,0,0,0,0,19,0,0,0,0.209153890609741,0.216785669326782
+"gallery-053","gallery","ggplot","not captured","<gganim> builds into <gganim_built>, not a built ggplot.
+ℹ Its own `ggplot_build()` method changes what is drawn (an animation, for
+  example); gloss captures one static ggplot.",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,0.214940309524536,NA
+"gallery-054","gallery","ggplot","bound","","equal",30,99,0,0,0,55,0,44,0,0,0,0,0,17,0,13,0,0.552871227264404,0.660093784332275
+"gallery-056","gallery","grid","bind error","Capture integrity check failed: 0 probes drew but the device wrote 7
+groups.
+ℹ A leaf that defines its own graphics group cannot be attributed; please
+  report the figure.","equal",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,0.145745277404785,0.0967113971710205
+"gallery-058","gallery","base","bound","","equal",24,51,0,0,0,51,0,0,0,0,0,0,0,24,0,0,0,0.128138065338135,0.137268781661987
+"gallery-059","gallery","ggplot","bound","","not_deterministic",17,54,4,0,2,1,0,47,0,2,0,0,2,1,0,12,0,0.308032989501953,0.414298534393311
+"gallery-068","gallery","ggplot","bound","","equal",12,179,150,0,0,0,0,29,0,1,0,0,0,0,0,11,0,0.252023220062256,0.257448196411133
+"gallery-070","gallery","ggplot","bound","","equal",13,76,32,0,0,0,0,44,0,1,0,0,0,0,0,12,0,0.365225315093994,0.263147592544556
+"exts-001","exts","ggplot","bound","","equal",11,33,1,0,0,1,0,31,0,1,0,0,0,1,0,9,0,0.289157867431641,0.258512496948242
+"exts-007","exts","grid","bind error","Capture integrity check failed: 0 probes drew but the device wrote 57
+groups.
+ℹ A leaf that defines its own graphics group cannot be attributed; please
+  report the figure.","equal",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,0.497918844223022,0.344800710678101
+"exts-008","exts","ggplot","bound","","equal",12,34,0,0,0,0,9,25,0,0,0,0,0,0,1,11,0,0.272702932357788,0.264399766921997
+"exts-013","exts","ggplot","bound","","equal",14,121,0,0,0,73,6,42,0,0,0,0,0,1,1,12,0,0.25749945640564,0.303988695144653
+"exts-014","exts","ggplot","bound","","equal",34,118,8,0,6,40,12,52,0,4,0,0,2,4,2,22,0,0.498166084289551,0.618095874786377
+"exts-017","exts","ggplot","bound","","equal",21,65,0,0,0,1,0,64,0,0,0,0,0,1,0,20,0,2.68748784065247,3.43716359138489
+"exts-018","exts","ggplot","bound","","equal",29,162,0,0,0,162,0,0,0,0,0,0,0,29,0,0,0,0.593284130096436,0.693846940994263
+"exts-019","exts","ggplot","bound","","equal",16,358,270,0,0,1,0,87,0,1,0,0,0,1,0,14,0,0.331277847290039,0.362215995788574
+"exts-021","exts","ggplot","bound","","equal",15,77,32,0,0,1,0,44,0,1,0,0,0,1,0,13,0,0.249195337295532,0.289797067642212
+"exts-022","exts","ggplot","bound","","equal",29,12346,0,0,0,12275,0,71,0,0,0,0,0,8,0,21,0,31.4255497455597,30.9692363739014
+"exts-024","exts","ggplot","bound","","equal",20,400,0,0,0,20,0,380,0,0,0,0,0,1,0,19,0,0.441703081130981,0.423731327056885
+"exts-027","exts","ggplot","bound","","equal",19,5681,5625,0,0,0,0,56,0,1,0,0,0,0,0,18,0,0.598734617233276,0.888954401016235
+"exts-030","exts","ggplot","bound","","equal",15,56,6,0,0,0,0,50,0,2,0,0,0,0,0,13,0,0.312947750091553,0.400475263595581
+"bioc-001","bioc","grid","bind error","Capture integrity check failed: 0 probes drew but the device wrote 151
+groups.
+ℹ A leaf that defines its own graphics group cannot be attributed; please
+  report the figure.","equal",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,0.452534437179565,0.272971153259277
+"bioc-004","bioc","base","bound","","equal",26,100,0,0,0,100,0,0,0,0,0,0,0,26,0,0,0,0.194740772247314,0.150176048278809
+"bioc-009","bioc","base","bound","","equal",5,37,0,0,0,37,0,0,0,0,0,0,0,5,0,0,0,0.313229084014893,0.211034536361694
+"bioc-013","bioc","base","bound","","equal",65,65,0,0,0,65,0,0,0,0,0,0,0,65,0,0,0,0.176491260528564,0.178999423980713
+"bioc-016","bioc","ggplot","bound","","equal",43,66,10,0,0,0,0,56,0,1,0,0,0,0,0,42,0,0.680454730987549,0.444668769836426
+"bioc-017","bioc","ggplot","bound","","equal",11,39,12,0,0,0,0,27,0,2,0,0,0,0,0,9,0,0.520750045776367,0.415011882781982
+"patchwork-001","patchwork","patchwork","bound","","equal",6,6,0,0,0,6,0,0,0,0,0,0,0,6,0,0,0,0.326891899108887,0.227577447891235
+"patchwork-006","patchwork","patchwork","bound","","equal",38,138,0,0,0,138,0,0,0,0,0,0,0,38,0,0,0,0.387936592102051,0.363769054412842
+"patchwork-008","patchwork","patchwork","bound","","equal",36,136,0,0,0,136,0,0,0,0,0,0,0,36,0,0,0,0.456614255905151,0.417428255081177
+"patchwork-010","patchwork","patchwork","bound","","equal",15,1653,0,0,0,1653,0,0,0,0,0,0,0,15,0,0,0,2.30394530296326,2.59315490722656
+"patchwork-011","patchwork","patchwork","bound","","equal",34,114,0,0,0,114,0,0,0,0,0,0,0,34,0,0,0,0.695631265640259,0.701615810394287
+"patchwork-012","patchwork","patchwork","bound","","equal",73,242,0,0,0,242,0,0,0,0,0,0,0,73,0,0,0,0.71728515625,0.709208011627197
+"heatmap-008","heatmap","heatmap","bound","","equal",28,327,100,0,0,104,0,123,0,2,0,0,0,16,0,10,0,0.301162481307983,0.326084852218628
+"heatmap-026","heatmap","heatmap","bound","","equal",15,71,50,0,0,12,0,9,0,2,0,0,0,6,0,7,0,0.237590074539185,0.306126356124878
+"heatmap-036","heatmap","heatmap","bound","","equal",12,256,100,0,0,40,0,116,0,1,0,0,0,5,0,6,0,0.224272012710571,0.239952325820923

@@ -1,0 +1,71 @@
+{
+  "id": "tree-002",
+  "stratum": "tree",
+  "kind": "vignette",
+  "psu": "scBubbletree",
+  "vignette": "User_manual.Rmd",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "scBubbletree",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "scBubbletree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggplot2",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "ggtree",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "patchwork",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "knitr",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "Seurat",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "cluster",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "reshape2",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-11 19:41:23 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 32,
+    "expr": 1,
+    "kind": "object",
+    "class": "patchwork",
+    "engine": "patchwork",
+    "tree": true
+  },
+  "seed": 151472946
+}

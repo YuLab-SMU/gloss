@@ -1,0 +1,55 @@
+{
+  "id": "bioc-009",
+  "stratum": "bioc",
+  "kind": "vignette",
+  "psu": "Basic4Cseq",
+  "vignette": "vignette.Rnw",
+  "rewrites": [],
+  "environment": {
+    "name": "bioc",
+    "cran": "https://p3m.dev/cran/__linux__/noble/2025-10-29",
+    "bioconductor": "3.21"
+  },
+  "packages": [
+    {
+      "package": "Basic4Cseq",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "Basic4Cseq",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "BSgenome.Mmusculus.UCSC.mm9",
+      "status": "installed",
+      "reason": ""
+    },
+    {
+      "package": "GenomicAlignments",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "caTools",
+      "status": "present",
+      "reason": ""
+    },
+    {
+      "package": "RCircos",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 08:54:41 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 21,
+    "expr": 1,
+    "kind": "base",
+    "class": "base",
+    "engine": "base"
+  },
+  "seed": 264027322
+}

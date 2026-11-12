@@ -1,0 +1,26 @@
+== A. ggExtra (gallery-052): the object against its own print, and against a page holding two figures ==
+  class: ggExtraPlot gtable gTree grob gDesc 
+  print.ggExtraPlot: {     if (newpage)          grid::grid.newpage()     if (isTRUE(getOption("rstudio.notebook.executing"))) {         x <- ggplot2::ggplot() + ggplot2::geom_blank() + ggplot2::annotation_custom(x) +              ggplot2::theme_void()         print(x)     }     else {         grid::grid.draw(x)     } } 
+  captured 83 primitives | print(p2) alone 83: identical=TRUE | print(p1); print(p2) on one page 219: differ=136
+  gloss(p2) today: ggExtraPlot has a custom print method (print.ggExtraPlot); g 
+
+== B. base graphics through gridGraphics against the code drawing on svglite ==
+  par("bg") on svglite: white | on pdf(NULL), gridGraphics' shadow device: transparent
+  plain scatter                      gloss()   56, native   56, identical=TRUE  differ=0
+  rect(border = 0)                   gloss()    2, native    2, identical=FALSE differ=2
+      gloss() only: rect x=151.20 y=109.60 width=230.40 height=126.40 style=stroke-width: 0.75; stroke: none; fill: #FFFFFF; 
+      native only : rect x=151.20 y=109.60 width=230.40 height=126.40 style=stroke-width: 0.75; stroke: #FFFFFF; fill: #FFFFFF; 
+  rect(border = FALSE)               gloss()    2, native    2, identical=FALSE differ=2
+  rect(border = NA)                  gloss()    2, native    2, identical=TRUE  differ=0
+  pairs (as gallery-008)             gloss()  768, native  758, identical=FALSE differ=16
+      gloss() only: text transform=translate(478.34,171.26) rotate(-90) text-anchor=middle style=font-size: 7.92px; font-family: "Arial"; 
+      gloss() only: text transform=translate(478.34,186.73) rotate(-90) text-anchor=middle style=font-size: 7.92px; font-family: "Arial"; 
+      native only : text transform=translate(478.34,178.99) rotate(-90) text-anchor=middle style=font-size: 7.92px; font-family: "Arial"; 
+      native only : text x=241.17 y=334.34 text-anchor=middle style=font-size: 7.92px; font-family: "Arial"; textLength=13.17px lengthAdju
+  scatter, recorded on svglite       gloss()   57, native   56, differ=1: rect x=-126.00 y=-90.00 width=756.00 height=540.00 style=stroke-width:
+
+== C. gloss() on a function that does not draw one base page ==
+  draws with grid                error: EXPR must be a length 1 vector
+  prints a ggplot                error: EXPR must be a length 1 vector
+  base, then grid on top         error: EXPR must be a length 1 vector
+  4 base pages (plot.lm)         captured (engine base); the function draws 4 page(s); warnings: number of items to replace is not a multiple of re

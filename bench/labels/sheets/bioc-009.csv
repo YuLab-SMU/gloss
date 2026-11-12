@@ -1,0 +1,6 @@
+"figure","k","leaf","key","occurrence","class","n_elements","tags","x0","y0","x1","y1","text","fill","stroke","path","elements","role","kind","note"
+"bioc-009",1,"L001","figure-1::plot | base/#/plotXY",1,"plotXY",5,"line",74.4,67.5,458.4,488.8,"","","","base/4/plotXY","all","","",""
+"bioc-009",2,"L002","figure-1 | base/#/axis",1,"axis",15,"line+text",100.6,286.6,465.1,314.9,"2","","","base/5/axis","all","","",""
+"bioc-009",3,"L003","figure-1 | base/#/axis",2,"axis",13,"line+text",32.2,59.1,59,286.5,"1.0","","","base/6/axis","all","","",""
+"bioc-009",4,"L004","figure-1 | base/#/box",1,"box",1,"polygon",59,59,473.8,286.6,"","","","base/7/box","all","","",""
+"bioc-009",5,"L005","figure-1 | base/#/title",1,"title",3,"text",3.4,23.2,341.5,343.7,"Fragment frequencies","","","base/8/title","all","","",""

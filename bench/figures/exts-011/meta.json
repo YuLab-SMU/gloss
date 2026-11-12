@@ -1,0 +1,25 @@
+{
+  "id": "exts-011",
+  "stratum": "exts",
+  "kind": "examples",
+  "psu": "ggalign",
+  "vignette": null,
+  "rewrites": [],
+  "packages": [
+    {
+      "package": "ggalign",
+      "status": "present",
+      "reason": ""
+    }
+  ],
+  "harvested": "2026-11-10 04:49:33 UTC",
+  "nbsp_replaced": 0,
+  "figure": {
+    "chunk": 1,
+    "expr": 6,
+    "kind": "grid",
+    "class": "grid",
+    "engine": "grid"
+  },
+  "seed": 27655778
+}
