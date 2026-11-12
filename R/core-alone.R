@@ -18,9 +18,11 @@
 position_columns <- list(x = c("x", "xmin", "xmax", "xend"), y = c("y", "ymin", "ymax", "yend"))
 
 # Device positions of `rows` of `table`, through the scales of `panel`:
-# linear from the scale's range to the panel's box, y growing down. Returns
-# a data frame (row, then the position columns the table has) or one string,
-# the reason no position can be given.
+# linear from the scale's range to the panel's box, y growing down. In a
+# flipped panel the horizontal scale carries the table's y columns and the
+# vertical one its x columns; the result is named by the page, as the
+# engine's positions are (x horizontal). Returns a data frame (row, then the
+# positions) or one string, the reason no position can be given.
 place_rows <- function(fig, table, rows, panel) {
   t <- fig$tables[[table]]$data
   if (is.null(t)) return(sprintf("the table '%s' has no rows in the figure", table))
@@ -35,13 +37,23 @@ place_rows <- function(fig, table, rows, panel) {
   if (anyNA(rng) || !all(is.finite(rng)) || rng[1] == rng[2] || rng[3] == rng[4]) {
     return(sprintf("the panel's scales are not given as ranges on the page (%s, %s)", p$x_type, p$y_type))
   }
-  xs <- intersect(position_columns$x, names(t))
-  ys <- intersect(position_columns$y, names(t))
+  flipped <- p$flipped
+  if (is.null(flipped) || is.na(flipped)) {
+    return("the panel does not say which of the table's scales is horizontal (captured by an earlier gloss)")
+  }
+  # the table's column behind each position on the page
+  source_of <- function(cols) {
+    # the first letter only: "xmax" holds two
+    src <- if (flipped) paste0(chartr("xy", "yx", substr(cols, 1L, 1L)), substring(cols, 2L)) else cols
+    stats::setNames(src, cols)[src %in% names(t)]
+  }
+  xs <- source_of(position_columns$x)
+  ys <- source_of(position_columns$y)
   if (!length(xs) || !length(ys)) return(sprintf("the table '%s' has no position columns", table))
   num <- function(v) suppressWarnings(as.double(v))
   out <- data.frame(row = rows)
-  for (col in xs) out[[col]] <- p$x0 + (num(t[[col]][rows]) - p$x_min) / (p$x_max - p$x_min) * (p$x1 - p$x0)
-  for (col in ys) out[[col]] <- p$y1 - (num(t[[col]][rows]) - p$y_min) / (p$y_max - p$y_min) * (p$y1 - p$y0)
+  for (col in names(xs)) out[[col]] <- p$x0 + (num(t[[xs[[col]]]][rows]) - p$x_min) / (p$x_max - p$x_min) * (p$x1 - p$x0)
+  for (col in names(ys)) out[[col]] <- p$y1 - (num(t[[ys[[col]]]][rows]) - p$y_min) / (p$y_max - p$y_min) * (p$y1 - p$y0)
   # keep the columns in the engine's order
   out[c("row", intersect(c("x", "y", "xmin", "xmax", "ymin", "ymax", "xend", "yend"), names(out)))]
 }

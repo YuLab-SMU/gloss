@@ -12,7 +12,8 @@ gl_panels(fig)
 \value{
 A data frame with one row per panel: id, facet key, viewport,
 device box and the type, range and transformation of the horizontal (\code{x})
-and vertical (\code{y}) scales.
+and vertical (\code{y}) scales. \code{flipped} is \code{TRUE} when the horizontal scale
+is the one the figure's tables call \code{y} (ggplot2's \code{coord_flip()}).
 }
 \description{
 Panels of a figure

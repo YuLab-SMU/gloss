@@ -1312,7 +1312,7 @@ empty_panels <- function() {
              x0 = double(), y0 = double(), x1 = double(), y1 = double(),
              x_type = character(), x_min = double(), x_max = double(), x_trans = character(),
              y_type = character(), y_min = double(), y_max = double(), y_trans = character(),
-             stringsAsFactors = FALSE)
+             flipped = logical(), stringsAsFactors = FALSE)
 }
 
 num_attr <- function(nodes, a) suppressWarnings(as.numeric(sub("px$", "", xml2::xml_attr(nodes, a))))

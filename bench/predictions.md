@@ -850,3 +850,19 @@ Runs `runs/2026-11-12-1711-alone-dev.*` (55 figures: 54 rechecked, 1 not capture
   - *Heatmap cells:* 250. The binding's row is a cell of the matrix and the table has no positions.
 - **The mutation says less than I wrote.** For an element drawn for a whole group and compared as a set (an area's polygon, a raster), giving every row the next row's place is the same claim: 19 such leaves on v0 "still pass" and prove nothing. Where one element draws one row, 1 of about 21700 moved elements still passes on v0 and 13 of about 22500 on the tree set, all in leaves that are already ambiguous (labels closer than a label's height in tree-011, glyph outlines in tree-061).
 - **Everything above is on development figures,** with the binder's own claims: it says whether a check made after capture reproduces the check made at capture, not whether a proposal from elsewhere is right.
+
+## The flipped panel, measured again (agent-path plan Task 3, first step)
+
+Written 2026-11-12, after looking at runs `2026-11-12-1711-alone-dev` and `-1722-alone-dev-tree` and after the change they led to: a ggplot panel now says when it is flipped, and `place_rows()` puts the table's y columns on the horizontal scale of such a panel. Both sets are development sets; this is tuning on them, reported as such. On the host I have seen a hand-built flipped scatter and flipped bars with labels agree with the engine's positions; I have not run either bench figure.
+
+### How the runs are made and scored (fixed before the runs)
+
+- `bench/R/alone.R dev` and `dev tree` again, container, no network, each once, archived before scoring; `score-alone.R` on each, and `Rscript bench/R/compare-alone.R <old>-leaves.csv <new>-leaves.csv` against the runs above, figure by figure.
+
+### Predictions
+
+117. **bioc-016's 10 bars and tree-045's 22 elements have the same status from the figure alone as with the engine's positions:** v0's ggplot figures that agree go from 23 to 24 of 26, the tree set's from 23 to 24 of 28. v0 ggplot verified from the figure alone 9063 of 9069; tree 13865 of 14112.
+118. **No other figure's counts change, on either set, and no count under the engine's positions changes at all.** The compare script shows exactly two figures with a difference.
+119. **No leaf passes more elements from the figure alone than with the engine's positions.**
+
+**What would change the plan:** a third figure that moves (118 wrong): the change did more than it says, and it is read before anything is built on it. A flipped leaf still placed elsewhere (117 wrong): a flipped coord with something else on top, which `place_rows()` must refuse until it is understood.

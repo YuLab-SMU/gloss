@@ -49,7 +49,8 @@ gl_leaf <- function(fig, id = NULL) {
 #' @param fig A `gloss_figure`.
 #' @return A data frame with one row per panel: id, facet key, viewport,
 #'   device box and the type, range and transformation of the horizontal (`x`)
-#'   and vertical (`y`) scales.
+#'   and vertical (`y`) scales. `flipped` is `TRUE` when the horizontal scale
+#'   is the one the figure's tables call `y` (ggplot2's `coord_flip()`).
 #' @export
 gl_panels <- function(fig) {
   check_figure(fig)

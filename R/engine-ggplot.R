@@ -195,6 +195,10 @@ ggplot_panels <- function(built, substrate, prefix = "", leaf_filter = NULL) {
   } else rep("", nrow(lay))
   coord <- class(built$layout$coord)[1]
   cartesian <- coord %in% c("CoordCartesian", "CoordFlip", "CoordFixed")
+  # coord_flip() draws the plot's y along the page's horizontal: the panel's
+  # `x` scale is then the one the tables call y. The panel says so, so that
+  # rows can be placed from the tables after capture (core-alone.R).
+  flipped <- inherits(built$layout$coord, "CoordFlip")
   rows <- lapply(seq_len(nrow(lay)), function(k) {
     pp <- built$layout$panel_params[[k]]
     b <- box[idx[k], ]
@@ -205,7 +209,7 @@ ggplot_panels <- function(built, substrate, prefix = "", leaf_filter = NULL) {
       x0 = b$x0, y0 = b$y0, x1 = b$x1, y1 = b$y1,
       x_type = sx$type, x_min = sx$min, x_max = sx$max, x_trans = sx$trans,
       y_type = sy$type, y_min = sy$min, y_max = sy$max, y_trans = sy$trans,
-      stringsAsFactors = FALSE
+      flipped = flipped, stringsAsFactors = FALSE
     )
   })
   panels <- do.call(rbind, rows)

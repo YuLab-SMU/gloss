@@ -64,16 +64,50 @@ test_that("a panel whose scales are not ranges on the page gives a reason, not a
   expect_match(place_rows(fig, "built_layer1", 99L, panel), "rows")
 })
 
-test_that("a flipped coord is never verified by mistake", {
+test_that("a flipped panel says so, and its rows are placed where the engine places them", {
   skip_if_no("ggplot2")
+  # bench runs 2026-11-12-1711 and -1722: under coord_flip() the horizontal
+  # range is the plot's y, and nothing in the figure said so; rows landed
+  # thousands of pt off and a right pairing failed (bioc-016, tree-045)
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point() + ggplot2::coord_flip()
+  fig <- gloss(p, width = 7, height = 5, context = FALSE)
+  expect_identical(gl_panels(fig)$flipped, TRUE)
   a <- alone_of(p, width = 7, height = 5)
   expect_equal(a$leaves$engine_status, "verified")
-  # the figure does not say that the horizontal scale is the plot's y, so
-  # its rows land elsewhere: refused, which is the safe side
-  expect_false(any(a$elements$alone == "verified" & a$elements$engine != "verified"))
-  expect_equal(sum(a$elements$alone %in% c("verified", "ambiguous")), 0L)
-  expect_gt(a$leaves$gap, 10)
+  expect_equal(a$leaves$alone_status, "verified")
+  expect_equal(a$leaves$same, 32L)
+  expect_lt(a$leaves$gap, 0.01)
+  # rows with bounds, and labels on them
+  pb <- ggplot2::ggplot(ggplot2::mpg, ggplot2::aes(class)) + ggplot2::geom_bar() +
+    ggplot2::geom_text(ggplot2::aes(label = ggplot2::after_stat(count)), stat = "count", hjust = -0.2) +
+    ggplot2::coord_flip()
+  ab <- alone_of(pb, width = 7, height = 5)$leaves
+  expect_equal(nrow(ab), 2L)
+  expect_identical(ab$alone_status, ab$engine_status)
+  expect_equal(sum(ab$same), sum(ab$n_elements))
+  expect_true(all(ab$gap < 0.01))
+  # a wrong row still fails
+  expect_equal(a$leaves$moved_pass_alone, 0L)
+})
+
+test_that("panels of every engine say whether they are flipped", {
+  skip_if_no("ggplot2")
+  expect_identical(gl_panels(suppressWarnings(gloss(p_facet(), width = 7, height = 4, context = FALSE)))$flipped,
+                   c(FALSE, FALSE))
+  expect_identical(gl_panels(gloss(base_scatter, width = 5, height = 4, context = FALSE))$flipped, FALSE)
+  expect_identical(empty_panels()$flipped, logical())
+  skip_if_no("patchwork")
+  pw <- patchwork::wrap_plots(p_facet(), p_facet() + ggplot2::coord_flip(), ncol = 1)
+  expect_identical(gl_panels(suppressWarnings(gloss(pw, width = 7, height = 8, context = FALSE)))$flipped,
+                   c(FALSE, FALSE, TRUE, TRUE))
+})
+
+test_that("a panel that does not say which scale is horizontal is not placed", {
+  skip_if_no("ggplot2")
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  fig <- gloss(p, width = 7, height = 5, context = FALSE)
+  fig$substrate$panels$flipped <- NULL   # a figure captured before panels said so
+  expect_match(place_rows(fig, "built_layer1", 1:3, "panel1"), "horizontal")
 })
 
 test_that("a leaf the engine does not pair has no row to place", {

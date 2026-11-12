@@ -94,7 +94,7 @@ native_panels <- function(leaves, seg, key_fun = identity) {
     x0 = l$x0, y0 = l$y0, x1 = l$x1, y1 = l$y1,
     x_type = "native", x_min = l$xscale0, x_max = l$xscale1, x_trans = "identity",
     y_type = "native", y_min = l$yscale0, y_max = l$yscale1, y_trans = "identity",
-    stringsAsFactors = FALSE
+    flipped = FALSE, stringsAsFactors = FALSE
   )
   list(panels = panels, leaf_panel = stats::setNames(panels$id[match(seg, vps)], leaves$id))
 }
