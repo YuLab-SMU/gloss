@@ -1,0 +1,58 @@
+2026-11-12-1938-bundle-dev.csv | 55 figures, 54 captured with a round trip (others: not captured 1)
+
+everything embedded: differs 3, identical 49, not written 2
+  differs | tables(raw_layer1,raw_layer2,built_layer2) status: 1 (exts-017)
+  differs | tables(raw) status: 2 (gallery-048 exts-021)
+  not written | Only lists of atomic vectors can be stored, not <XY/MULTIPOLYGON/sfg>.: 1 (patchwork-011)
+  not written | Only lists of atomic vectors can be stored, not <XY/POLYGON/sfg>.: 1 (patchwork-010)
+default embedding: identical 52, not written 2
+  not written | Only lists of atomic vectors can be stored, not <XY/MULTIPOLYGON/sfg>.: 1 (patchwork-011)
+  not written | Only lists of atomic vectors can be stored, not <XY/POLYGON/sfg>.: 1 (patchwork-010)
+
+everything embedded (rows) against the default embedding (columns)
+             default
+all           identical not written
+  differs             3           0
+  identical          49           0
+  not written         0           2
+
+by engine: written with everything embedded, of captured
+    engine captured written identical default_written
+      base       10      10        10              10
+    ggplot       31      31        28              31
+      grid        4       4         4               4
+   heatmap        3       3         3               3
+ patchwork        6       4         4               4
+
+size, everything embedded: median 48 KB, largest 8656 KB (gallery-023); default: median 46 KB, largest 8656 KB
+
+gl_propose() on the default bundle read back: 33 figures with a pairing to try, 165 pairings; accepted 101, rejected 0, refused 64, errors 0
+          id  engine tried accepted rejected refused
+ gallery-008    base     5        0        0       5
+ gallery-013    base     5        0        0       5
+ gallery-020  ggplot     5        0        0       5
+ gallery-021    base     5        0        0       5
+ gallery-038    base     5        0        0       5
+ gallery-040    base     5        0        0       5
+ gallery-058    base     5        0        0       5
+    exts-014  ggplot     5        1        0       4
+    bioc-004    base     5        0        0       5
+    bioc-013    base     5        0        0       5
+ heatmap-008 heatmap     5        0        0       5
+ heatmap-026 heatmap     5        0        0       5
+ heatmap-036 heatmap     5        0        0       5
+                                                                                        reasons
+    bindings are checked on ggplot and patchwork figures so far; this figure's engine is 'base'
+    bindings are checked on ggplot and patchwork figures so far; this figure's engine is 'base'
+              the panel's scales are not given as ranges on the page (unsupported, unsupported)
+    bindings are checked on ggplot and patchwork figures so far; this figure's engine is 'base'
+    bindings are checked on ggplot and patchwork figures so far; this figure's engine is 'base'
+    bindings are checked on ggplot and patchwork figures so far; this figure's engine is 'base'
+    bindings are checked on ggplot and patchwork figures so far; this figure's engine is 'base'
+                                           no comparison for <line> elements paired one per row
+    bindings are checked on ggplot and patchwork figures so far; this figure's engine is 'base'
+    bindings are checked on ggplot and patchwork figures so far; this figure's engine is 'base'
+ bindings are checked on ggplot and patchwork figures so far; this figure's engine is 'heatmap'
+ bindings are checked on ggplot and patchwork figures so far; this figure's engine is 'heatmap'
+ bindings are checked on ggplot and patchwork figures so far; this figure's engine is 'heatmap'
+captured figures with no pairing to try (no element bound one for one row and verified): 21
