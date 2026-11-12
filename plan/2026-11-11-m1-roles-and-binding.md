@@ -45,10 +45,12 @@
 - Time for classification and binding reported at 10^3, 10^4 and 10^5 points; Task 6 decides from it whether they run at capture or on demand.
 - Each number from a run archived in `bench/runs/`; predictions committed before the first run of each task; the suite passes with its counts at every commit that touches `R/` or `tests/`.
 
-**Decisions (the owner's; all three settled 2026-11-11 as recommended, see Scope changes):**
+**Decisions (the owner's; 1 to 3 settled 2026-11-11 as recommended, see Scope changes; 4 and 5 open since 2026-11-12):**
 1. *Who labels the development set.* (a) Claude labels all 54 figures from the rendered page and the leaf sheet, committed before any rule runs on the development set; the owner labels the 5 pilot figures independently for κ. (b) The owner labels all 54. (c) The owner and a second person label all 54, which is the protocol the held-out set needs anyway. Recommended: (a). The development set is for tuning; the held-out labels, which give the reported numbers, need two people whatever is chosen here. The cost of (a): the labeller also writes the rules, so a cue that misleads both (a base legend's `rect` read as data) can agree with itself. The pilot and the blind order (labels before rules) are the guard.
 2. *Where rule roles and engine bindings live.* Appendix A has `gl_classify()` write into the `structure` layer and tbl-layers lists rules as a source of `structure` records, which needs M2's record core. Alternative: roles and bindings are derived tables of the substrate, recomputed whenever it is rebuilt and versioned by the plugin that made them, like leaves and panels; only what code cannot derive (corrections, agent fills, human notes) is a record, and queries lay records over the derived tables. Recommended: the second (principle 2: what code determines is recomputed, not stored as a claim; principle 4: a rebuilt substrate needs no rebase for its own derived facts). Settled by ADR-0007 in Task 6; until then nothing is exported.
 3. *Corrections in M1 or M2.* The milestone puts the correction interface in M1. Recommended: move `gl_reclassify()` to the plan that builds the record core, and say so in design §实施计划 with a dated note; this slice gives the residue list and the flags it will correct.
+4. *Open, 2026-11-12: whether the full development labels wait for the lab.* Task 1's last item, and through it Tasks 3 and 4, wait for lab members to label the fifteen figures; none has. (a) Annotator A labels the 54 figures now, on the pilot as it stands (A against the owner, κ 0.822 on 121 leaves, interval 0.737 to 0.901); the lab's labels are scored against predictions 43-52 when they come, and if they put A's median κ below 0.8 the guideline is revised and the development labels redone. (b) Wait. **Recommended: (a).** Development labels tune rules and report nothing; the held-out labels, which do, are governed by ADR-0008 whichever is chosen. The cost of (a): labels and rules redone if the lab disagrees with A.
+5. *Open, 2026-11-12: whether bindings reach the figure and the API before the role tasks.* Task 6 waits for Tasks 2 to 5 and covers roles and bindings together. Bindings are measured on three sets; roles on none. (a) Split it: 6a now, ADR-0007 for derived tables with bindings as the first one, stored in the figure and queried through one exported function; 6b after Task 4, roles in the same place. (b) Keep Task 6 whole, after Task 4. **Recommended: (a).** Nothing a user or an agent can ask of gloss today returns a binding, and every step toward an agent needs that.
 
 ---
 
@@ -67,8 +69,10 @@
 - When a result contradicts an assumption of this plan or of the design, append a `Scope change` with the evidence and revise the open tasks. Never edit completed ones.
 
 **Current state** _(update as results come in)_
-- Suite: 9 files, 88 tests, 544 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-11, `5ab7784`; also in the bench container, 0 errors, 0 warnings); was 8 / 67 / 438 at `6041c60`.
-- Key numbers: development binding run `2026-11-11-1353` (base scored; patchwork rerun after looking; ggplot and heatmap equal to `1231`): ggplot layer elements checked 98.4% (verified 9050, ambiguous 15328 of 24783), failed 8, unbound 370; heatmap body cells 250 of 250; base data-mark elements 98.6% (2544 + 93 of 2674), failed 0; patchwork 104 checked of 1783, failed 0, the rest unbound with reasons (`sf` 1626). Grid states no bindings. Labels: pilot labels of annotator A committed; annotator B (owner) pending.
+- Suite: 9 files, 109 tests, 807 expectations, 0 failed, 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 2026-11-12, `1f7aa1f`; the bench container the same at `40bbe77`, 0 errors, 0 warnings); was 8 / 67 / 438 at `6041c60`. The tests added since `5ab7784` (88 / 544) came with the tree binding plan.
+- Key numbers, bindings: development binding run `2026-11-12-1116` (binder at `752bb73`, after the tree binding plan's changes; 0 regressions against run `1353` at each step): ggplot layer elements checked 98.4% (verified 9069, ambiguous 15328 of 24783), failed 6, unbound 365, count mismatch 15; every layer element checked in 19 of 31 ggplot figures, none in 5; heatmap body cells 250 of 250; base data-mark elements 98.6% (2544 + 93 of 2674), failed 0; patchwork 104 checked of 1783, failed 0, `sf` paths a count mismatch (1626); grid states no bindings (1056 elements). 3314 layer elements unchecked in 16 classes of reason (`dev_docs/research/bind-dev/d3-residue.out`). Binding time per figure: median 0.37 s with capture, maximum 69.7 s (gallery-029, 4000 label leaves).
+- Key numbers, roles: none. No rule has run. Labels: annotator A's on 15 development figures (the pilot's 5 and a second batch of 10); the owner's on the pilot's 5 (κ on roles 0.822); no lab member has labelled; the 54 figures' full labels are not started.
+- Not moved since 2026-11-11: Tasks 1, 3, 4, the legend item of Task 5, Tasks 6 to 8 (Scope change of 2026-11-12, "Review").
 
 **Overall progress**
 - [~] Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels _(decision 1(a): Claude labels, the owner labels the pilot)_
@@ -224,7 +228,7 @@ Split from Task 2 (Scope changes). The patchwork engine maps no panels (M0 scope
 
 ### Task 5: Base figures: bindings through arguments and `usr`; legend entries
 
-**Status:** `[ ]`
+**Status:** `[~]` (counts and bindings done 2026-11-11; the legend item open, narrowed by the Scope change of 2026-11-12)
 
 **Tests assumption:** 6.
 
@@ -301,6 +305,8 @@ _(append-only; never edit completed tasks above)_
   - *Task 5.* The legend item is narrowed. The cue from the code, checked against the page (calls matched by order, entries inside the legend's `rect`), is a proposal with a check and is measured as planned. A cue from the page alone is kept only if it works as a check with nothing tuned figure by figure; otherwise legend entries are residue with a reason, which the milestone allows.
   - *Task 6.* ADR-0007 also says where a verified proposal lives beside the derived tables.
   - No line under *Done when* changes: each already allows "unbound with a reason" or "residue with a reason". No binding rule is added in this plan to clear v0's unchecked elements. The 1898 that lack a count or a comparison the drawing system itself defines (`sf` paths, heatmap tracks and dendrograms, base types `'h'` and `'o'`) are code's own work under ADR-0009 and wait for a later slice, chosen by the figures they affect.
+
+- 2026-11-12 — **Review at the close of the tree binding plan: the bindings half of this plan is measured, the roles half has not started, and two decisions are open.** **Evidence:** the tree binding plan's [closing notes](done/2026-11-11-tree-binding.md#closing-notes) and the [retrospective](../dev_logs/2026-11-12-retrospective.md); this plan's task list (Tasks 2 and 2b done on 2026-11-11, nothing closed since); `bench/labels/` (A's labels on 15 figures, the owner's on 5, no lab member's; no `bench/labels/dev/`). The work of 2026-11-11 and -12 went to the tree stratum, which changed the binder this plan's Task 2 built and reran this plan's development set after each change (0 regressions; run `2026-11-12-1116` is now the reference, not `1353`). **Effect:** *Current state* rewritten from the latest runs; Task 5's status line agrees with the index; decisions 4 and 5 added above, open, each with a recommendation. No task's content or criterion changes until the owner decides them.
 
 ## Closing notes
 
