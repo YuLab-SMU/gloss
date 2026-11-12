@@ -1,0 +1,160 @@
+2026-11-12-2019 | 540 runs (540 attempts archived, 0 ended in a request error) | models: deepseek-v4.1-flash, glm-5.3-flash, Qwen3.8-27B | gloss 83b398b, 42a4c0e | loop: bench/agent/pilot.R tool_loop()
+
+runs by arm: correct, answered wrongly, no answer
+ group runs correct wrong no_answer request_error
+     A  270     246     6        18             0
+     B  270     269     0         1             0
+
+by model and arm
+                 group runs correct wrong no_answer request_error
+ deepseek-v4.1-flash A   90      83     1         6             0
+ deepseek-v4.1-flash B   90      90     0         0             0
+       glm-5.3-flash A   90      74     5        11             0
+       glm-5.3-flash B   90      89     0         1             0
+         Qwen3.8-27B A   90      89     0         1             0
+         Qwen3.8-27B B   90      90     0         0             0
+
+by figure: correct runs of runs, each arm, all models; then each model
+        figure questions     A     B deepseek A deepseek B glm-5.3- A
+      bioc-016         3 27/27 27/27        9/9        9/9        9/9
+      exts-027         3 18/27 27/27        6/9        9/9        4/9
+      exts-030         3 27/27 27/27        9/9        9/9        9/9
+   gallery-002         3 26/27 26/27        8/9        9/9        9/9
+   gallery-005         3 24/27 27/27        8/9        9/9        7/9
+   gallery-029         3 21/27 27/27        8/9        9/9        4/9
+ patchwork-006         3 26/27 27/27        9/9        9/9        8/9
+      tree-062         3 23/27 27/27        8/9        9/9        6/9
+      tree-068         3 27/27 27/27        9/9        9/9        9/9
+      tree-077         3 27/27 27/27        9/9        9/9        9/9
+ glm-5.3- B Qwen3.8- A Qwen3.8- B
+        9/9        9/9        9/9
+        9/9        8/9        9/9
+        9/9        9/9        9/9
+        8/9        9/9        9/9
+        9/9        9/9        9/9
+        9/9        9/9        9/9
+        9/9        9/9        9/9
+        9/9        9/9        9/9
+        9/9        9/9        9/9
+        9/9        9/9        9/9
+
+questions (30), by the share of their runs that are right: B above A in 12, A above B in 1, equal in 17 (both all right: 17, both all wrong: 0)
+figures (10), by the same share: B above A in 5, A above B in 0, equal in 5; mean over figures A 0.911, B 0.996
+
+B minus A, the share of a figure's runs that are right (figures drawn again 10000 times, seed 20261113)
+  by figure: bioc-016 +0.00, exts-027 +0.33, exts-030 +0.00, gallery-002 +0.00, gallery-005 +0.11, gallery-029 +0.22, patchwork-006 +0.04, tree-062 +0.15, tree-068 +0.00, tree-077 +0.00
+  all models             mean +0.085, sd 0.117, 95% interval +0.022 to +0.159 over 10 figures
+  deepseek-v4.1-flash    mean +0.078, sd 0.105, 95% interval +0.022 to +0.144 over 10 figures
+  glm-5.3-flash          mean +0.167, sd 0.241, 95% interval +0.033 to +0.311 over 10 figures
+  Qwen3.8-27B            mean +0.011, sd 0.035, 95% interval +0.000 to +0.033 over 10 figures
+what a question cost in A over what it cost in B, median over questions (range): tool calls 1.3 (0.9 to 2.7), tokens 3.3 (1.2 to 4.7), seconds 2.9 (1.0 to 5.5)
+
+arm B, 270 runs: first proposal accepted 265, rejected 5; no proposal at all in 0
+  runs with a rejected proposal: 5, of which 4 ended right; proposals refused: 0 in 0 runs
+  wrong acceptances (accepted for the element asked about, and not the answer): 0 in 0 runs; accepted for another element: 0 in 0 runs
+
+arm A, 270 runs: submissions in a run 0 18, 1 198, 2 31, 3 14, 4 7, 5 2; wrong answers 6 (another table: 0; the table, another row: 6)
+
+arm A: 161 of 2701 tool calls failed, in 105 of 270 runs
+    24  run_r: Error: cannot open the connection
+    22  run_r: Error: object <name> not found
+    18  run_r: Error: undefined columns selected
+    15  run_r: Error: arguments imply differing number of rows: <n>, <n>
+    13  run_r: Error: could not find function <name>
+     8  run_r: Error: <n> (non-NA) cases
+     8  run_r: Error: object of type <name> is not subsettable
+     6  run_r: Error: cannot coerce type <name> to vector of type <name>
+     6  run_r: Error: incorrect number of dimensions
+     6  run_r: Error: missing value where TRUE/FALSE needed
+     4  run_r: Error: variable lengths differ (found for <name>)
+     2  run_r: Error: argument <n> (type <name>) cannot be handled by <name>
+    29  in 24 other kinds
+
+arm B: 3 of 1847 tool calls failed, in 3 of 270 runs
+     3  to_data: {<name>:<name>}
+
+how the runs ended: step limit 24, stop 516
+what the runs used (median; the limit on requests to the model is 16)
+               model arm runs calls failed_calls steps at_step_limit seconds
+ deepseek-v4.1-flash   A   90    10           66    11             9    21.3
+ deepseek-v4.1-flash   B   90     8            0     6             0     6.0
+       glm-5.3-flash   A   90     8           51     9            15    38.0
+       glm-5.3-flash   B   90     6            0     7             1    12.3
+         Qwen3.8-27B   A   90    10           44     9             3    24.9
+         Qwen3.8-27B   B   90     6            3     6             0     8.9
+ seconds_max tokens
+       229.2  49983
+        42.9  15284
+       336.7  34532
+        42.6  13152
+        64.4  49243
+        40.0  13358
+total time of the runs: 211.0 min (A 159.4, B 51.6)
+
+runs not right
+               model arm        figure question rep answered answer_table
+ deepseek-v4.1-flash   A      exts-027        1   2    FALSE         <NA>
+       glm-5.3-flash   A      exts-027        1   2    FALSE         <NA>
+       glm-5.3-flash   A      exts-027        1   3    FALSE         <NA>
+         Qwen3.8-27B   A      exts-027        1   2    FALSE         <NA>
+       glm-5.3-flash   A      exts-027        2   1     TRUE built_layer1
+       glm-5.3-flash   A      exts-027        2   2    FALSE         <NA>
+ deepseek-v4.1-flash   A      exts-027        3   2    FALSE         <NA>
+ deepseek-v4.1-flash   A      exts-027        3   3    FALSE         <NA>
+       glm-5.3-flash   A      exts-027        3   1     TRUE built_layer1
+ deepseek-v4.1-flash   A   gallery-002        1   2    FALSE         <NA>
+       glm-5.3-flash   B   gallery-002        3   3    FALSE         <NA>
+       glm-5.3-flash   A   gallery-005        1   1    FALSE         <NA>
+ deepseek-v4.1-flash   A   gallery-005        2   3    FALSE         <NA>
+       glm-5.3-flash   A   gallery-005        2   1    FALSE         <NA>
+ deepseek-v4.1-flash   A   gallery-029        1   3     TRUE built_layer3
+       glm-5.3-flash   A   gallery-029        1   1    FALSE         <NA>
+       glm-5.3-flash   A   gallery-029        2   1    FALSE         <NA>
+       glm-5.3-flash   A   gallery-029        3   1    FALSE         <NA>
+       glm-5.3-flash   A   gallery-029        3   2    FALSE         <NA>
+       glm-5.3-flash   A   gallery-029        3   3    FALSE         <NA>
+       glm-5.3-flash   A patchwork-006        1   3    FALSE         <NA>
+       glm-5.3-flash   A      tree-062        1   2     TRUE built_layer5
+       glm-5.3-flash   A      tree-062        1   3     TRUE built_layer5
+ deepseek-v4.1-flash   A      tree-062        3   1    FALSE         <NA>
+       glm-5.3-flash   A      tree-062        3   2     TRUE built_layer5
+ answer_row        truth_table truth_row tool_calls steps error
+         NA       built_layer1      5107         16    16 FALSE
+         NA       built_layer1      5107         16    16 FALSE
+         NA       built_layer1      5107         16    16 FALSE
+         NA       built_layer1      5107         17    16 FALSE
+        312       built_layer1      3794          9    10 FALSE
+         NA       built_layer1      3794         16    16 FALSE
+         NA       built_layer1        28         16    16 FALSE
+         NA       built_layer1        28         16    16 FALSE
+         32       built_layer1        28         12    13 FALSE
+         NA       built_layer1       511         16    16 FALSE
+         NA       built_layer1        35         16    16 FALSE
+         NA       built_layer1        73         16    16 FALSE
+         NA       built_layer1        37         16    16 FALSE
+         NA       built_layer1        37         16    16 FALSE
+          2       built_layer3         4         12    13 FALSE
+         NA       built_layer3         4         16    16 FALSE
+         NA       built_layer1         2         16    16 FALSE
+         NA       built_layer3        12         16    16 FALSE
+         NA       built_layer3        12         16    16 FALSE
+         NA       built_layer3        12         16    16 FALSE
+         NA plot1_built_layer1         9         16    16 FALSE
+         13       built_layer5         3          6     7 FALSE
+         13       built_layer5         3          7     8 FALSE
+         NA       built_layer5         4         16    16 FALSE
+          1       built_layer5         4          8     9 FALSE
+
+arm S (no model), 2026-11-12-1913-pilot-enumerate.csv: 30 questions; right (the answer accepted and nothing else) 30; the answer accepted 30; questions with another row accepted 0; with a refusal 0; rows tried 26265, median 0.0 s a question
+        figure questions right answer_accepted others_accepted refused tried
+      bioc-016         3     3               3               0       0    30
+      exts-027         3     3               3               0       0 16875
+      exts-030         3     3               3               0       0    18
+   gallery-002         3     3               3               0       0  1800
+   gallery-005         3     3               3               0       0   300
+   gallery-029         3     3               3               0       0  6180
+ patchwork-006         3     3               3               0       0    96
+      tree-062         3     3               3               0       0   264
+      tree-068         3     3               3               0       0   540
+      tree-077         3     3               3               0       0   162
+other rows accepted: 0 in all, 0 of them in the answer's own table
