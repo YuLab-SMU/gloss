@@ -1035,3 +1035,11 @@ Written 2026-11-12, after the changes to `R/core-bundle.R` and `R/propose.R` and
 141. **Right for what was written.** The 8 rejections on the two heatmaps are refusals now, and no other count changes on the 49 figures written before (45 of the 55 rows are the same in every count and stage; the 10 that differ are the 5 without tables, the 3 written for the first time and the 2 heatmaps). Of the figures written for the first time, exts-021 has 5 of 5 pairings accepted; gallery-048 and exts-017 have no element bound one for one row and verified, so nothing was tried, where I expected acceptances on the first and refusals on the second.
 
 **Why two are still not written** (read in the container, as the branch above asked): it is a column of a table after all, but the table would not give it up. The raw table of each is an `sf` data frame, and `[` on an `sf` keeps the geometry column whatever columns are asked for, so leaving the column out by name left it in. Not a new kind of thing to store; a wrong assumption of mine about `[`. Closed test-first with a class made for the test and with `sf` itself: such a table is stored as a plain data frame of what can be stored, and says so.
+
+## The round trip on v0's development set a third time, after the sf fix (agent-path plan, Task 5b)
+
+Written 2026-11-12, after `without_columns()` and its tests, before rerunning `bench/R/bundle.R dev`. What I have seen: the three runs above; in the container, the tables of patchwork-010 (one `sf` raw table, one built table with a geometry column, five plain tables).
+
+142. **All 54 captured figures are written under both embeddings.** patchwork-010 and patchwork-011 come back differing in their partial tables and in the status, as the other three do; every other figure's row is the same as in run `-1938` in every stage and count. The two add no accepted pairing: what they draw from `sf` tables lies in panels whose scales are not ranges, so pairings there are refused, and pairings on their other plots, if any are sampled, are accepted.
+
+**What would change the plan:** a figure still not written. Then I stop patching the writer and the codec's rule is decided in one place (an ADR): what a table may hold, and what the writer does with everything else.
