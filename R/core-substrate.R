@@ -266,8 +266,10 @@ substrate_id <- function(sub) {
 
 # ---- probe -----------------------------------------------------------------
 
-probe_grob <- function(id, rec) {
-  grid::gTree(name = paste0("gloss.probe.", id), cl = "gloss_probe", id = id, rec = rec)
+# A probe drawn just before its leaf, in the leaf's viewport. For a points
+# leaf it carries the grob, to count it with the settings it inherits there.
+probe_grob <- function(id, rec, points = NULL) {
+  grid::gTree(name = paste0("gloss.probe.", id), cl = "gloss_probe", id = id, rec = rec, points = points)
 }
 
 #' @export
@@ -283,7 +285,8 @@ drawDetails.gloss_probe <- function(x, recording) {
   rec$probe[[x$id]] <- list(
     vp = if (is.null(path)) "ROOT" else as.character(path),
     x = xs, y = ys,
-    xscale = as.double(vp$xscale), yscale = as.double(vp$yscale)
+    xscale = as.double(vp$xscale), yscale = as.double(vp$yscale),
+    n_expected = if (!is.null(x$points)) points_expected(x$points, point_context())
   )
   invisible()
 }
@@ -317,7 +320,8 @@ wrap_leaves <- function(x, parent, acc) {
   v <- x$vp
   x$vp <- NULL
   acc$grobs[[id]] <- x
-  grid::gTree(children = grid::gList(probe_grob(id, acc$rec), grid::groupGrob(x)),
+  pts <- if (inherits(x, "points")) x
+  grid::gTree(children = grid::gList(probe_grob(id, acc$rec, pts), grid::groupGrob(x)),
               vp = v, name = x$name, cl = "gloss_wrap", id = id)
 }
 
@@ -330,7 +334,7 @@ expected_count <- function(g) {
     1L
   }
   cls <- class(g)
-  if ("points" %in% cls) return(max(len(g$x), len(g$y)))
+  if ("points" %in% cls) return(points_expected(g))
   if ("text" %in% cls) return(length(g$label))
   if ("rect" %in% cls) return(max(len(g$x), len(g$y), len(g$width), len(g$height)))
   if ("circle" %in% cls) return(max(len(g$x), len(g$y), len(g$r)))
@@ -341,6 +345,116 @@ expected_count <- function(g) {
   if ("lines" %in% cls) return(1L)
   if ("rastergrob" %in% cls) return(1L)
   NA_integer_
+}
+
+# ---- point symbols -----------------------------------------------------------
+
+# The parts R's graphics engine draws for one point symbol (GESymbol), in
+# drawing order, and where the point lies in each part's box, as a share of
+# its height from the top (fy; across, every part is centred). Measured on
+# svglite 2.2.2, host and container: dev_docs/research/point-symbols. The
+# triangles are built from TRC0 and TRC2 = TRC0 / 2, which puts an upward
+# one's point 2/3 of the way down its box; pch 11's base at (TRC0 + TRC2) / 2
+# gives 3/7 and 4/7. "." is a small rect, a character one <text>.
+symbol_parts <- list(
+  `0` = "rect", `1` = "circle", `2` = "polygon", `3` = c("line", "line"), `4` = c("line", "line"),
+  `5` = "polygon", `6` = "polygon", `7` = c("rect", "line", "line"), `8` = rep("line", 4L),
+  `9` = c("line", "line", "polygon"), `10` = c("circle", "line", "line"), `11` = c("polygon", "polygon"),
+  `12` = c("line", "line", "rect"), `13` = c("circle", "line", "line"), `14` = c("polygon", "rect"),
+  `15` = "polygon", `16` = "circle", `17` = "polygon", `18` = "polygon", `19` = "circle", `20` = "circle",
+  `21` = "circle", `22` = "rect", `23` = "polygon", `24` = "polygon", `25` = "polygon",
+  `.` = "rect", text = "text"
+)
+symbol_fy <- local({
+  fy <- lapply(symbol_parts, function(t) rep(0.5, length(t)))
+  for (k in c("2", "17", "24")) fy[[k]] <- 2 / 3
+  for (k in c("6", "25")) fy[[k]] <- 1 / 3
+  fy[["11"]] <- c(3 / 7, 4 / 7)
+  fy
+})
+
+# Which entry of symbol_parts each pch draws, NA for nothing: what
+# GEstring_to_pch() and GESymbol() do with it. A string draws its first
+# character (a code above 127 is Unicode, drawn as text); codes 26-31 and
+# past `maxchar` draw nothing (127 in a multibyte locale unless the font is
+# the symbol font, 5; else 255).
+symbol_kind <- function(pch, font = 1L) {
+  n <- length(pch)
+  if (is.character(pch)) {
+    v <- enc2utf8(pch)
+    u <- unique(v)
+    cu <- vapply(u, function(s) {
+      if (is.na(s) || !nzchar(s)) return(NA_integer_)
+      cp <- suppressWarnings(utf8ToInt(substr(s, 1L, 1L)))
+      if (length(cp) != 1L || is.na(cp)) NA_integer_ else if (cp > 127L) -cp else cp
+    }, 1L, USE.NAMES = FALSE)
+    code <- cu[match(v, u)]
+  } else {
+    code <- suppressWarnings(as.integer(pch))
+  }
+  font <- rep_len(as.integer(font %||% 1L), n)
+  maxchar <- ifelse(isTRUE(l10n_info()$MBCS) & !font %in% 5L, 127L, 255L)
+  kind <- rep(NA_character_, n)
+  ok <- !is.na(code)
+  kind[ok & code < 0L] <- "text"
+  sym <- ok & code >= 0L & code <= 25L
+  kind[sym] <- as.character(code[sym])
+  ch <- ok & code >= 32L & code <= maxchar
+  kind[ch] <- ifelse(code[ch] == 46L, ".", "text")
+  kind
+}
+
+# The settings a points leaf takes from where it is drawn when its own gpar
+# does not set them: R's defaults until the probe reads them (drawDetails.
+# gloss_probe), since a parent gTree or viewport can set them.
+point_context <- function() {
+  gp <- tryCatch(grid::get.gpar(c("lty", "lwd", "lex", "fontsize", "cex", "lineheight", "font")),
+                 error = function(e) NULL)
+  utils::modifyList(point_context_default, Filter(Negate(is.null), unclass(gp %||% list())))
+}
+point_context_default <- list(lty = "solid", lwd = 1, lex = 1, fontsize = 12, cex = 1, lineheight = 1.2, font = 1L)
+
+# How many elements a points grob draws: point by point, the parts of its
+# symbol, less what its settings remove (dev_docs/research/point-symbols):
+# a point whose x, y or size is not finite draws nothing; blank lines
+# (lty 0 or "blank", lwd or lex NA) remove the <line> parts; a size of zero
+# removes the circles. `lty`, `lwd`, `fontsize` and `lineheight` of the
+# leaf replace the context's; `lex` and `cex` multiply it.
+points_expected <- function(g, ctx = point_context_default) {
+  n <- max(length(g$x), length(g$y))
+  if (!n) return(0L)
+  gp <- g$gp %||% list()
+  own <- function(nm, default) rep_len(if (is.null(gp[[nm]])) default else gp[[nm]], n)
+  times <- function(nm, base) base * rep_len(if (is.null(gp[[nm]])) 1 else gp[[nm]], n)
+  lty <- own("lty", ctx$lty)
+  lwd <- suppressWarnings(as.double(own("lwd", ctx$lwd)))
+  lex <- times("lex", ctx$lex)
+  lines_on <- !as.character(lty) %in% c("0", "blank") & !is.na(lwd) & !is.na(lex)
+  size <- unit_values(g$size, n)
+  type <- rep_len(grid::unitType(g$size), n)
+  font_size <- suppressWarnings(as.double(own("fontsize", ctx$fontsize))) * times("cex", ctx$cex)
+  font_size[type == "lines"] <- font_size[type == "lines"] * own("lineheight", ctx$lineheight)[type == "lines"]
+  zero <- !is.na(size) & size <= 0
+  by_font <- type %in% c("char", "lines")
+  zero[by_font] <- zero[by_font] | (!is.na(font_size[by_font]) & font_size[by_font] == 0)
+  drawn <- is.finite(unit_values(g$x, n)) & is.finite(unit_values(g$y, n)) & is.finite(size)
+  kind <- symbol_kind(rep_len(g$pch, n), own("font", ctx$font))
+  k <- match(kind, names(symbol_parts))
+  tags <- symbol_parts
+  n_all <- c(lengths(tags), 0L)[ifelse(is.na(k), length(tags) + 1L, k)]
+  n_line <- c(vapply(tags, function(t) sum(t == "line"), 1L), 0L)[ifelse(is.na(k), length(tags) + 1L, k)]
+  n_circle <- c(vapply(tags, function(t) sum(t == "circle"), 1L), 0L)[ifelse(is.na(k), length(tags) + 1L, k)]
+  per <- n_all - n_line * (!lines_on) - n_circle * zero
+  as.integer(sum(per[drawn]))
+}
+
+# A unit's values, recycled to n; an element of unit arithmetic (sum, min,
+# max) has no single value and is taken as finite and positive.
+unit_values <- function(u, n) {
+  v <- suppressWarnings(as.double(u))
+  arith <- grid::unitType(u) %in% c("sum", "min", "max")
+  v[arith] <- 1
+  rep_len(v, n)
 }
 
 # ---- drawing ---------------------------------------------------------------
@@ -1124,7 +1238,8 @@ leaves_table <- function(cap) {
     xscale1 = vapply(ids, probe, 1, field = "xscale", i = 2L),
     yscale0 = vapply(ids, probe, 1, field = "yscale", i = 1L),
     yscale1 = vapply(ids, probe, 1, field = "yscale", i = 2L),
-    n_expected = vapply(L, function(l) as.integer(l$n_expected), integer(1)),
+    # a points leaf is counted again where it was drawn (probe_grob)
+    n_expected = vapply(ids, function(id) as.integer(cap$probes[[id]]$n_expected %||% L[[id]]$n_expected), integer(1)),
     stringsAsFactors = FALSE, row.names = NULL
   ) |> leaves_to_pt(cap)
 }

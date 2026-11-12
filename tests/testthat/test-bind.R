@@ -554,3 +554,100 @@ test_that("text drawn as glyph outlines is named as such, and never failed", {
   expect_match(many$reason, "glyph outlines")
   expect_match(many$reason, "10 paths for 3 labels with 10 characters other than spaces")
 })
+
+# Points drawn as several elements (plan 2026-11-11-tree-binding, Task 5).
+# Bench tree-014's leaf of 8100 points in shapes 1-8 drew 12690 elements and
+# was a count mismatch. Each row draws the parts its shape draws, in order,
+# and each part's box holds the row's point at the fraction its symbol puts
+# it (dev_docs/research/point-symbols); a dense leaf keeps those boxes.
+
+shapes_plot <- function(n = 40, values = 1:8) {
+  set.seed(4)
+  d <- data.frame(x = stats::runif(n), y = stats::runif(n), k = factor(rep_len(seq_along(values), n)))
+  ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, shape = .data$k)) + ggplot2::geom_point(alpha = 0.6) +
+    ggplot2::scale_shape_manual(values = values, guide = "none")
+}
+
+test_that("points in several shapes bind part by part, and permuted rows fail every part they move", {
+  skip_if_not_installed("ggplot2")
+  for (dense in c(Inf, 30)) {
+    p <- shapes_plot()
+    b <- suppressWarnings(bind_capture(p, dense = dense))
+    lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+    sl <- b$fig$substrate$leaves
+    expect_equal(nrow(lv), 1L, label = paste("dense", dense))
+    expect_equal(sl$dense[sl$id == lv$leaf], is.finite(dense), label = paste("dense", dense))
+    # 40 rows in shapes 1-8, five of each: 5 x (1 + 1 + 2 + 2 + 1 + 1 + 3 + 4)
+    expect_equal(lv$n_elements, 75L, label = paste("dense", dense))
+    expect_equal(lv$n_rows, 40L)
+    expect_equal(lv$mode, "symbol")
+    expect_equal(lv$status, "verified", label = paste("dense", dense, lv$reason))
+    expect_lt(lv$max_dev, 0.05)
+    el <- b$elements[b$elements$leaf == lv$leaf, ]
+    expect_equal(as.vector(table(factor(el$row, levels = 1:40))), rep(c(1, 1, 2, 2, 1, 1, 3, 4), 5))
+  }
+  # the rows permuted: every part of a moved row fails, by place or by tag
+  eng <- gl_plugin("engine", "ggplot")
+  res <- capture_figure(shapes_plot(), eng, context = FALSE)
+  stated <- eng$bind(res$state, res$fig$substrate)
+  cl <- stated$claims[[1]]
+  geo <- scene_geometry(res$fig$substrate)
+  leaf <- res$fig$substrate$leaves[res$fig$substrate$leaves$id == cl$leaf, ]
+  expect_equal(check_claim(cl, leaf, geo)$leaf$status, "verified")
+  # rotate the rows within each shape: parts keep their tags, every one moves
+  bad <- cl
+  for (s in unique(cl$pred$shape)) {
+    k <- which(cl$pred$shape == s)
+    bad$pred[k, c("x", "y")] <- cl$pred[k[c(2:length(k), 1)], c("x", "y")]
+  }
+  r <- check_claim(bad, leaf, geo)
+  expect_equal(r$leaf$status, "failed")
+  expect_equal(r$leaf$failed, 75L)
+  # rows in another order of shapes: every part now paired with another row
+  # than its own fails. A part the shift pairs with its own row again (the
+  # next part of the same symbol) passes when it has the tag the stated
+  # shape draws there, and fails on its tag when it does not.
+  own <- check_claim(cl, leaf, geo)$elements$row
+  bad <- cl
+  bad$pred <- cl$pred[c(2:40, 1), ]
+  r <- check_claim(bad, leaf, geo)
+  moved <- r$elements$row != own
+  want <- unlist(symbol_parts[symbol_kind(bad$pred$shape)], use.names = FALSE)
+  tag <- geo$tag[match(r$elements$element, geo$id)]
+  expect_gte(sum(moved), 40L)
+  expect_true(all(r$elements$status[moved] == "failed"))
+  expect_equal(r$elements$status[!moved], ifelse(tag[!moved] == want[!moved], "verified", "failed"))
+  expect_true(any(tag[!moved] != want[!moved]))
+})
+
+test_that("all 26 shapes bind, and a shape the rows do not draw is not passed", {
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(x = 1:26, y = c(1:13, 13:1), s = 0:25)
+  p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, shape = .data$s)) + ggplot2::geom_point(fill = "grey", size = 4) +
+    ggplot2::scale_shape_identity()
+  b <- suppressWarnings(bind_capture(p))
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_equal(lv$n_elements, 43L)
+  expect_equal(lv$status, "verified", label = lv$reason)
+  # rows that state other shapes than were drawn
+  eng <- gl_plugin("engine", "ggplot")
+  res <- capture_figure(p, eng, context = FALSE)
+  cl <- eng$bind(res$state, res$fig$substrate)$claims[[1]]
+  geo <- scene_geometry(res$fig$substrate)
+  leaf <- res$fig$substrate$leaves[res$fig$substrate$leaves$id == cl$leaf, ]
+  bad <- cl
+  bad$pred$shape[bad$pred$shape == 2] <- 6   # upward triangle stated as downward: same parts, other place
+  r <- check_claim(bad, leaf, geo)
+  expect_equal(r$leaf$failed, 1L)
+  # (a plus stated as a cross passes: both are two lines centred on the
+  # point, and the rule checks where parts are, not what they look like)
+  bad <- cl
+  bad$pred$shape[bad$pred$shape == 3] <- 11  # two lines stated as two triangles: the tags differ
+  r <- check_claim(bad, leaf, geo)
+  expect_equal(r$leaf$failed, 2L)
+  bad <- cl
+  bad$pred$shape[bad$pred$shape == 8] <- 1   # four parts stated as one
+  r <- check_claim(bad, leaf, geo)
+  expect_equal(r$leaf$status, "unbound")
+  expect_match(r$leaf$reason, "shapes .* 40 parts, the leaf drew 43")
+})

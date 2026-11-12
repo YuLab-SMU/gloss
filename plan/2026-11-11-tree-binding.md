@@ -227,7 +227,7 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 
 ### Task 5: Points in several shapes (tree-014)
 
-**Status:** `[ ]` _(written out 2026-11-11, after Tasks 1-4)_
+**Status:** `[~]` _(written out 2026-11-11, after Tasks 1-4; started 2026-11-12)_
 
 **Tests assumption:** a new one, written here before any of it is measured: *every primitive svglite draws for a point symbol (pch 0-25) is centred on the point*, so a row drawn as k elements can be checked element by element against one centre. A symbol whose primitives are not centred (a triangle drawn with its box off the point, as the vertex-mean rule already knows) gets the centre its own family uses; a symbol that cannot be checked this way is listed with its reason, never passed.
 
@@ -239,10 +239,10 @@ Each of Tasks 1-4 ends with a run on the stratum's development half, predictions
 - tree-014's leaf of 8100 points in eight shapes draws 12690 elements and is a count mismatch: half the stratum's layer elements, and why its element-weighted share sits at 41.5% while the median figure is checked whole. v0 has the same class (design §风险与未决问题: shapes drawn with more than one primitive).
 
 **Checklist**
-- [ ] Measure on svglite, host and container, what each `pch` 0-25 draws (tags and count) and where each primitive's centre lies; written to `dev_docs/research/` and read before the rule.
-- [ ] Test that fails first: a points grob with every shape has an expected count equal to what svglite draws, and binds.
-- [ ] Expected count per shape in capture; the comparison for one row as k elements.
-- [ ] Suite on the host; container suite (capture reads what the device wrote).
+- [x] Measure on svglite, host and container, what each `pch` 0-25 draws (tags and count) and where each primitive's centre lies; written to `dev_docs/research/` and read before the rule. — `dev_docs/research/point-symbols/` (`785c807`): host and the container's `bioc` library identical but for the ggplot2 version. Every part is centred across; down its box, every part at 1/2 except the triangles (2, 17, 24 at 2/3; 6, 25 at 1/3; pch 11's two at 3/7 and 4/7), within 0.0075 pt over sizes 3-96 pt. The assumption holds as written for all parts but the triangles, whose share is the symbol's own, as the assumption allowed. What removes parts was measured too: non-finite x, y or size (the point), blank lines (the `<line>` parts), zero size (the circles), with `lty`, `lwd`, `fontsize` inherited and `lex`, `cex` multiplied from parents.
+- [x] Test that fails first: a points grob with every shape has an expected count equal to what svglite draws, and binds. — `test-capture.R`: 45 grobs (pch 0-25, characters, codes that draw nothing, blank lines, zero sizes, non-finite positions) counted against svglite; 7 cases of settings inherited from a parent gTree or viewport; ggplot2 shapes 0-25 and a shape by name. `test-bind.R`: shapes 1-8 (75 parts for 40 rows), vector and dense; rows rotated within a shape fail all 75 parts; rows shifted fail every part paired with another row than its own; shapes 0-25 (43 parts); a stated shape with other parts, other tags or another share fails or is unbound with the reason. Before the change: 34 + 14 expectations failed (one per point, count mismatch, no mode).
+- [x] Expected count per shape in capture; the comparison for one row as k elements. — `R/core-substrate.R`: `symbol_parts`, `symbol_fy`, `symbol_kind()` (what `GEstring_to_pch()` and `GESymbol()` do with a pch), `points_expected()`. Changed from the plan: a points leaf is counted again where its probe is drawn, with the settings it inherits there (`point_context()`), since a parent's `lty` is not on the leaf. `R/core-bind.R`: mode `symbol` for a points leaf whose rows state `shape`, single-part symbols included; parts by their boxes (circles by the centre the scene writes), so a dense leaf binds. `R/engine-ggplot.R` states `shape`, translated as `GeomPoint` does. An expectation of `test-capture.R` was wrong: a point at `x = NA` was expected to count; R's engine does not draw it (the base route never counted it), so the test's mismatch is now its text leaf only.
+- [x] Suite on the host; container suite (capture reads what the device wrote). — Host 9 files / 101 tests / 717 expectations / 0 failed / 0 skipped (was 96 / 620); container (`bench/R/suite.R`) the same, 0 errors, 0 warnings.
 - [ ] Predictions, then `capture.R dev tree`, `bind.R dev tree`, `capture.R dev` and `bind.R dev`; compared with the runs before.
 
 ### Task 6: What remains (tree-054's repelled labels, tree-003's text leaf)

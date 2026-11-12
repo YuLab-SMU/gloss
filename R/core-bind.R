@@ -31,6 +31,12 @@
 #                                     a coord that is not linear, a curve
 #                  polygon, polyline,
 #                  path               centre (vertex mean) at (x, y)
+#   per symbol     a points leaf      each row draws the parts its shape's
+#                  whose rows state   symbol draws, in order; each part's
+#                  their shape        box holds (x, y) where the symbol puts
+#                                     it (the centre; 2/3 or 1/3 down a
+#                                     triangle); boxes only, so dense
+#                                     leaves bind too
 #   one per group  polyline, path     vertices at the group's (x, y), in order
 #                  polygon            vertices and the group's points
 #                                     (x, y), (x, ymin), (x, ymax), (xmin, y),
@@ -171,10 +177,14 @@ check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
   if (!is.null(cl$rect_reason) && all(g$tag %in% c("polygon", "polyline", "path"))) {
     return(done("unbound", cl$rect_reason))
   }
-  if (isTRUE(leaf$dense) && any(!g$tag %in% c("circle", "rect"))) {
+  # points whose rows state their shape: each row draws its symbol's parts
+  # (plan 2026-11-11-tree-binding, Task 5; bench tree-014). Parts are
+  # compared by their boxes, which a dense leaf keeps.
+  symbols <- identical(leaf$class, "points") && "shape" %in% names(pred)
+  if (!symbols && isTRUE(leaf$dense) && any(!g$tag %in% c("circle", "rect"))) {
     return(done("unbound", "a dense leaf keeps only the boxes of its elements, and its tags need more"))
   }
-  mode <- if (n_el == n_rows) "row" else if (n_el == n_groups) "group" else NA_character_
+  mode <- if (symbols) "symbol" else if (n_el == n_rows) "row" else if (n_el == n_groups) "group" else NA_character_
   if (is.na(mode)) {
     return(done("unbound", sprintf("%d element%s for %d row%s in %d group%s: neither one per row nor one per group",
                                    n_el, plural(n_el), n_rows, plural(n_rows), n_groups, plural(n_groups))))
@@ -185,11 +195,15 @@ check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
     return(done("unbound", sprintf("a path through its group's rows is drawn munched along the coord (%s); no comparison for it",
                                    cl$coord %||% "not linear"), mode))
   }
-  res <- if (mode == "row") check_rows(g, pred, all_pred, tol) else check_groups(g, pred, groups, all_pred, all_groups, tol)
+  res <- switch(mode,
+                symbol = check_symbols(g, pred, all_pred, tol),
+                row = check_rows(g, pred, all_pred, tol),
+                group = check_groups(g, pred, groups, all_pred, all_groups, tol))
   if (!is.null(res$reason)) return(done("unbound", res$reason, mode))
   st <- ifelse(!res$pass, "failed", ifelse(res$n_pass > 1L, "ambiguous", "verified"))
-  rows <- if (mode == "row") pred$row else vapply(groups, function(k) pred$row[pred$group == k][1], 1L)
-  nr <- if (mode == "row") 1L else vapply(groups, function(k) sum(pred$group == k), 1L)
+  rows <- switch(mode, symbol = res$rows, row = pred$row,
+                 group = vapply(groups, function(k) pred$row[pred$group == k][1], 1L))
+  nr <- if (mode == "group") vapply(groups, function(k) sum(pred$group == k), 1L) else 1L
   leaf_status <- if (all(st == "verified")) "verified"
                  else if (all(st == "failed")) "failed"
                  else if (any(st == "failed")) "partly_failed"
@@ -205,6 +219,43 @@ check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
 }
 
 plural <- function(n) if (n == 1L) "" else "s"
+
+# One row drawn as the parts of its symbol, rows in drawing order: row k's
+# parts follow row k-1's (dev_docs/research/point-symbols). A part passes
+# when its tag is the one its symbol draws there and its box holds the
+# row's point at the share its symbol puts it (centred, or 2/3, 1/3, 3/7,
+# 4/7 down a triangle's box); a character drawn as text by the text rule.
+# Another row passes too when its point is where the part's box puts this
+# one (ambiguous). The rows' shapes say how many parts each draws; when
+# they do not add up to the elements, the leaf is not paired part by part.
+check_symbols <- function(g, pred, all_pred, tol) {
+  kind <- symbol_kind(pred$shape)
+  k <- match(kind, names(symbol_parts))
+  n_parts <- ifelse(is.na(k), 0L, lengths(symbol_parts)[k])
+  if (sum(n_parts) != nrow(g)) {
+    return(list(reason = sprintf("the rows' shapes draw %d part%s, the leaf drew %d element%s",
+                                 sum(n_parts), plural(sum(n_parts)), nrow(g), plural(nrow(g)))))
+  }
+  at <- rep(seq_len(nrow(pred)), n_parts)
+  want <- unlist(symbol_parts[k[!is.na(k)]], use.names = FALSE)
+  fy <- unlist(symbol_fy[k[!is.na(k)]], use.names = FALSE)
+  # a circle's centre as the scene writes it (scene_geometry: the box's
+  # centre in a dense leaf), as the rule one per row reads it
+  circ <- g$tag == "circle"
+  px <- ifelse(circ, g$cx, (g$x0 + g$x1) / 2)
+  py <- ifelse(circ, g$cy, g$y0 + fy * (g$y1 - g$y0))
+  dev <- pmax(abs(px - pred$x[at]), abs(py - pred$y[at]))
+  n_pass <- near_count(px, py, all_pred$x, all_pred$y, tol)
+  tx <- which(want == "text" & g$tag == "text")
+  if (length(tx)) {
+    f <- row_family("text", pred)
+    ep <- f$element(g[tx, , drop = FALSE])
+    dev[tx] <- f$dev(ep, f$row(pred[at[tx], , drop = FALSE]))
+    n_pass[tx] <- f$count(ep, f$row(all_pred), tol)
+  }
+  pass <- g$tag == want & !is.na(dev) & dev <= tol
+  list(pass = pass, dev = dev, n_pass = n_pass, rows = pred$row[at])
+}
 
 # One element per row: element k against row k, and how many rows of the
 # layer in this panel would pass for element k (more than one: ambiguous).

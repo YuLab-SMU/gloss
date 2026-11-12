@@ -47,11 +47,15 @@ test_that("a count mismatch is reported and the leaf is not bindable", {
   ), vp = grid::viewport(), name = "top")
   fig <- gloss(g, width = 3, height = 3, context = FALSE)
   lv <- fig$substrate$leaves
+  # The points leaf used to be the mismatch here: one expected per point,
+  # the point at x = NA included. R's engine does not draw a point whose
+  # position is not finite, so 2 is what the device draws, and capture now
+  # counts it so (plan 2026-11-11-tree-binding, Task 5; base pages always
+  # did). The text leaf is still the mismatch this test is about.
   pts <- lv[lv$name == "pts", ]
-  expect_equal(pts$n_expected, 3L)
+  expect_equal(pts$n_expected, 2L)
   expect_equal(pts$n_drawn, 2L)
-  expect_equal(pts$status, "count_mismatch")
-  expect_false(pts$bindable)
+  expect_equal(pts$status, "ok")
   lbl <- lv[lv$name == "lbl", ]
   expect_equal(c(lbl$n_expected, lbl$n_drawn), c(1L, 2L))
   expect_false(lbl$bindable)
@@ -683,4 +687,79 @@ test_that("a page with an image over the XML parser's limit is captured and boun
   # base binds its points through their arguments, on the page with the image
   pts <- b$leaves[b$leaves$verified > 0, ]
   expect_equal(sum(pts$verified), 2L)
+})
+
+# Points drawn as several elements (plan 2026-11-11-tree-binding, Task 5).
+# Bench tree-014: 8100 points in shapes 1-8 drew 12690 elements, and capture
+# expected one per point, a count mismatch over half the tree stratum's layer
+# elements. What each symbol draws, and what removes parts:
+# dev_docs/research/point-symbols.
+
+svglite_count <- function(draw) {
+  svg <- plain_svg(function() {
+    grid::grid.newpage()
+    suppressWarnings(draw())
+  }, 3, 3)
+  doc <- read_page(svg)
+  nodes <- xml2::xml_find_all(doc, prim_xpath(), svg_ns(doc))
+  # the device's own background
+  sum(!(xml2::xml_name(nodes) == "rect" & xml2::xml_attr(nodes, "width") %in% "100%"))
+}
+
+test_that("a points grob is expected to draw what svglite draws for its symbols", {
+  x <- grid::unit(c(0.2, 0.5, 0.8), "npc")
+  cases <- c(lapply(0:25, function(p) list(pch = p)), list(
+    list(pch = c(3L, 8L, 7L)), list(pch = 46L), list(pch = "."), list(pch = c("a", "", NA)),
+    list(pch = c(26L, NA, -65L)), list(pch = 200L), list(pch = c(0.5, 2.7, 25.9)),
+    list(pch = 8, gp = grid::gpar(lty = 0)), list(pch = c(7, 10, 13), gp = grid::gpar(lty = c(0, 1, 1))),
+    list(pch = c(9, 12, 14), gp = grid::gpar(lty = "blank")), list(pch = 3, gp = grid::gpar(lwd = NA)),
+    list(pch = c(8, 3, 4), gp = grid::gpar(lwd = c(NA, 1, 0), lex = 1)),
+    list(pch = c(1, 3, 21), size = grid::unit(0, "pt")), list(pch = c(10, 16, 0), gp = grid::gpar(fontsize = 0)),
+    list(pch = c(13, 19, 20), gp = grid::gpar(cex = c(0, 1, 0))), list(pch = "a", gp = grid::gpar(fontsize = 0)),
+    list(pch = 3, x = grid::unit(c(0.2, NA, Inf), "npc")), list(pch = 8, size = grid::unit(c(1, NA, 1), "char"))
+  ))
+  for (cs in cases) {
+    g <- grid::pointsGrob(cs$x %||% x, x, pch = cs$pch, size = cs$size %||% grid::unit(1, "char"),
+                          gp = cs$gp %||% grid::gpar())
+    expect_equal(expected_count(g), svglite_count(function() grid::grid.draw(g)), label = paste(deparse(cs$pch), deparse(unclass(cs$gp)), deparse(cs$size)))
+  }
+})
+
+test_that("settings a points leaf inherits from its parents count where the leaf is drawn", {
+  x <- grid::unit(c(0.2, 0.5, 0.8), "npc")
+  kids <- function(...) grid::gList(grid::pointsGrob(x, x, name = "pts", ...))
+  cases <- list(
+    lty = grid::gTree(gp = grid::gpar(lty = 0), children = kids(pch = 7)),
+    lty_leaf = grid::gTree(gp = grid::gpar(lty = 0), children = kids(pch = 7, gp = grid::gpar(lty = 1))),
+    lex = grid::gTree(gp = grid::gpar(lex = NA), children = kids(pch = c(3, 10, 0))),
+    cex = grid::gTree(gp = grid::gpar(cex = 0), children = kids(pch = c(1, 3, 13), gp = grid::gpar(cex = 2))),
+    fontsize = grid::gTree(gp = grid::gpar(fontsize = 0), children = kids(pch = c(1, 19), gp = grid::gpar(fontsize = c(0, 12)))),
+    viewport = grid::gTree(vp = grid::viewport(gp = grid::gpar(lty = "blank")), children = kids(pch = c(8, 9, 12))),
+    font = grid::gTree(gp = grid::gpar(fontface = 5), children = kids(pch = 200L))
+  )
+  for (nm in names(cases)) {
+    fig <- suppressWarnings(gloss(cases[[nm]], width = 3, height = 3, context = FALSE))
+    lv <- fig$substrate$leaves[fig$substrate$leaves$name == "pts", ]
+    expect_equal(lv$n_drawn, svglite_count(function() grid::grid.draw(cases[[nm]])), label = nm)
+    expect_equal(lv$n_expected, lv$n_drawn, label = nm)
+    expect_equal(lv$status, "ok", label = nm)
+  }
+})
+
+test_that("ggplot2 points in all 26 shapes are counted, and tree-014's eight shapes", {
+  skip_if_no("ggplot2")
+  d <- data.frame(x = 1:26, y = 1:26, s = 0:25)
+  p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y, shape = .data$s)) + ggplot2::geom_point(fill = "grey") +
+    ggplot2::scale_shape_identity()
+  lv <- gloss(p, width = 4, height = 4, context = FALSE)$substrate$leaves
+  pts <- lv[grepl("geom_point", lv$path), ]
+  expect_equal(nrow(pts), 1L)
+  # parts per shape 0-25, from dev_docs/research/point-symbols
+  parts <- c(1, 1, 1, 2, 2, 1, 1, 3, 4, 3, 3, 2, 3, 3, 2, rep(1, 11))
+  expect_equal(pts$n_drawn, sum(parts))
+  expect_equal(pts$status, "ok")
+  # shapes by name, as GeomPoint translates them when it draws
+  p2 <- ggplot2::ggplot(d[1:3, ], ggplot2::aes(.data$x, .data$y)) + ggplot2::geom_point(shape = "asterisk")
+  lv <- gloss(p2, width = 4, height = 4, context = FALSE)$substrate$leaves
+  expect_equal(lv$status[grepl("geom_point", lv$path)], "ok")
 })

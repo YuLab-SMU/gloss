@@ -439,8 +439,18 @@ ggplot_rows_on_device <- function(d, prow, coord, pp) {
   for (col in intersect(c("hjust", "vjust"), names(d))) out[[col]] <- just_value(d[[col]])
   if ("angle" %in% names(d)) out$angle <- num(d$angle)
   if ("label" %in% names(d)) out$label <- as.character(d$label)
+  # A point's shape says which parts its symbol draws (core-bind.R); a shape
+  # by name is turned into a number as GeomPoint$draw_panel() does it.
+  if ("shape" %in% names(d)) out$shape <- ggplot_shape(d$shape)
   attr(out, "linear") <- linear
   out
+}
+
+ggplot_shape <- function(v) {
+  if (!is.character(v)) return(v)
+  tr <- tryCatch(getExportedValue("ggplot2", "translate_shape_string"), error = function(e) NULL)
+  if (is.null(tr)) return(v)
+  tryCatch(tr(v), error = function(e) v)
 }
 
 # Justification as a number: ggplot2 accepts names as well. "inward" and
