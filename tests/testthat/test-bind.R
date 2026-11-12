@@ -651,3 +651,23 @@ test_that("all 26 shapes bind, and a shape the rows do not draw is not passed", 
   expect_equal(r$leaf$status, "unbound")
   expect_match(r$leaf$reason, "shapes .* 40 parts, the leaf drew 43")
 })
+
+test_that("a character symbol drawn as a glyph outline is named, never compared as a shape", {
+  # Bench tree-061 (emojifont turns showtext on): geom_point(shape = "|")
+  # drew each symbol as a path, which the vertex-mean rule passed within
+  # 0.49 pt of a 0.5 pt tolerance (run 2026-11-11-2344). Where a glyph's
+  # outline sits depends on its side bearings; text drawn as outlines is not
+  # compared (plan 2026-11-11-tree-binding, Tasks 4 and 5).
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("showtext")
+  showtext::showtext_auto(TRUE)
+  on.exit(showtext::showtext_auto(FALSE), add = TRUE)
+  d <- data.frame(x = 1:4, y = c(2, 4, 1, 3))
+  p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y)) + ggplot2::geom_point(shape = "|")
+  b <- suppressWarnings(bind_capture(p))
+  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+  expect_equal(lv$status, "unbound")
+  expect_equal(lv$failed, 0L)
+  expect_match(lv$reason, "characters drawn as glyph outlines")
+  expect_match(lv$reason, "4 paths for 4 points")
+})

@@ -230,6 +230,12 @@ plural <- function(n) if (n == 1L) "" else "s"
 # they do not add up to the elements, the leaf is not paired part by part.
 check_symbols <- function(g, pred, all_pred, tol) {
   kind <- symbol_kind(pred$shape)
+  # characters drawn as paths are glyph outlines (showtext: bench tree-061),
+  # which, like text drawn so, are not compared (plan Task 4)
+  if (any(kind %in% "text") && nrow(g) && all(g$tag == "path")) {
+    return(list(reason = sprintf("the symbols are characters drawn as glyph outlines (showtext?): %d path%s for %d point%s; no comparison for outlines",
+                                 nrow(g), plural(nrow(g)), nrow(pred), plural(nrow(pred)))))
+  }
   k <- match(kind, names(symbol_parts))
   n_parts <- ifelse(is.na(k), 0L, lengths(symbol_parts)[k])
   if (sum(n_parts) != nrow(g)) {
