@@ -351,7 +351,9 @@ test_that("base: points, lines, bars, segments, text and symbols bind to their c
   expect_setequal(unique(lv$table), c("base_plotXY", "base_segments", "base_text", "base_rect", "base_symbols"))
   expect_true(all(lv$status %in% c("verified", "ambiguous")))
   expect_equal(sum(lv$verified + lv$ambiguous), 32 + 1 + 1 + 2 + 1 + 1 + 3)
-  expect_equal(lv$mode[cls == "plotXY"], c("row", "group"))
+  # points state their symbol and are paired part by part (plan
+  # 2026-11-11-tree-binding, Task 6); the line through them by its group
+  expect_equal(lv$mode[cls == "plotXY"], c("symbol", "group"))
   # axes, box and titles are not data-mark calls: outside
   expect_true(all(b$leaves$status[sl$class %in% c("axis", "box", "title")] == "outside"))
   # the tables hold the arguments, with the entry each row came from
@@ -680,4 +682,25 @@ test_that("a character symbol drawn as a glyph outline is checked by its box, an
     r <- check_claim(bad, j$leaves[j$leaves$id == cl$leaf, ], j$geo)
     expect_equal(r$elements$status, rep("failed", 4L), label = paste(nm, "permuted"))
   }
+})
+
+test_that("base points in several symbols bind part by part, and reversed rows fail", {
+  x <- c(1, 3, 2, 5, 4, 6, 8, 7)
+  y <- c(2, 1, 4, 3, 6, 5, 7, 8)
+  page <- function() graphics::plot(x, y, pch = c(3, 8, 7, 1, 17, 11, 97, 4), cex = c(1, 2, 1, 0, 1, 1, 1, 1))
+  b <- bind_capture(page)
+  lv <- b$leaves[b$leaves$table %in% "base_plotXY", ]
+  # the point at cex 0 is not drawn and has no row
+  expect_equal(lv$n_rows, 7L)
+  expect_equal(lv$n_elements, 2L + 4L + 3L + 1L + 2L + 1L + 2L)
+  expect_equal(lv$mode, "symbol")
+  expect_equal(lv$status, "verified", label = lv$reason)
+  eng <- gl_plugin("engine", "base")
+  res <- capture_figure(page, eng, context = FALSE)
+  cl <- eng$bind(res$state, res$fig$substrate)$claims[[1]]
+  # every row moved to the next one's place (no row left where it was)
+  cl$pred[, c("x", "y")] <- cl$pred[c(2:nrow(cl$pred), 1L), c("x", "y")]
+  r <- check_claim(cl, res$fig$substrate$leaves[res$fig$substrate$leaves$id == cl$leaf, ], scene_geometry(res$fig$substrate))
+  expect_equal(r$leaf$status, "failed")
+  expect_equal(r$leaf$failed, 15L)
 })

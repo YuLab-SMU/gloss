@@ -279,7 +279,7 @@ Also, from Task 1: ggtree's segments moved by their draw-time `nudge_x` (tree-04
 - Test: `tests/testthat/test-bind.R`, `tests/testthat/test-capture.R`.
 
 **Checklist**
-- [ ] Base points by symbol (Scope change 2026-11-12): measure the recorded `plot.xy()` arguments; a test that fails first; count and pair.
+- [x] Base points by symbol (Scope change 2026-11-12): measure the recorded `plot.xy()` arguments; a test that fails first; count and pair. — `research/point-symbols/base.R`: the same parts as grid; base draws a symbol's lines solid whatever `lty` or `lwd` says, and nothing for a point whose `cex` is not positive. `base_point_parts()` counts types `"p"`, `"b"`, `"o"`; the base engine states each point's symbol as R's integer code (`symbol_code()`), so tables of several calls bind; a plotXY leaf whose rows state a shape is paired in mode `symbol`. Tests: six base plots (pch 0-25, mixed, blank lines, cex 0/NA/negative, non-finite positions, type `"b"`) counted as drawn; mixed symbols bind (15 parts for 7 drawn rows), rows rotated fail all 15. Before: expected 26, 6, 4, 5, 1, 7 against 43, 11, 8, 4, 3, 11 drawn. The old base binding test's points leaf now reads mode `symbol` (was `row`): the mode a stated shape gives, as on ggplot since Task 5. Suite: host 9 / 104 / 743 / 0 failed / 0 skipped; container the same.
 - [ ] tree-003: rows dropped as `Geom$handle_na()` drops them; a test that fails first.
 - [ ] tree-041's nudge: a test with a geom that nudges in `draw_panel()`; fails first.
 - [ ] `<image>`: one per row and one per group; tests that fail first; permuted rows fail.

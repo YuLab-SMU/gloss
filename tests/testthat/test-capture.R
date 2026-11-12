@@ -763,3 +763,25 @@ test_that("ggplot2 points in all 26 shapes are counted, and tree-014's eight sha
   lv <- gloss(p2, width = 4, height = 4, context = FALSE)$substrate$leaves
   expect_equal(lv$status[grepl("geom_point", lv$path)], "ok")
 })
+
+test_that("base points are expected to draw what svglite draws for their symbols", {
+  # Plan 2026-11-11-tree-binding, Task 6: base points were expected to draw
+  # one element each, whatever their pch. Base draws a symbol's lines solid
+  # whatever lty says, and nothing for a point whose cex is not positive
+  # (dev_docs/research/point-symbols, base.R).
+  page <- function() {
+    graphics::par(mfrow = c(2, 3))
+    graphics::plot(1:26, pch = 0:25, bg = "grey")
+    graphics::plot(1:6, pch = c(3, 8, 7, NA, 46, 97))  # numbers: c() with a string would make every pch a string
+    graphics::plot(1:4, pch = 3, lty = 0, lwd = NA)
+    graphics::plot(1:5, pch = c(1, 10, 3, 8, 13), cex = c(1, 0, NA, -1, 2))
+    graphics::plot(c(1, NA, 3, Inf), c(1, 2, NA, 4), pch = 9)
+    graphics::plot(1:4, pch = 4, type = "b")
+  }
+  lv <- suppressWarnings(gloss(page, width = 9, height = 6, context = FALSE))$substrate$leaves
+  pts <- lv[lv$name == "plotXY", ]
+  expect_equal(nrow(pts), 6L)
+  expect_equal(pts$n_drawn, c(43L, 2L + 4L + 3L + 0L + 1L + 1L, 8L, 4L, 3L, 8L + 3L))
+  expect_equal(pts$n_expected, pts$n_drawn)
+  expect_true(all(pts$status == "ok"))
+})

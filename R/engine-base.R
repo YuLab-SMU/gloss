@@ -66,7 +66,13 @@ base_entry_rows <- function(e) {
       type <- a[[3]]
       ok <- fin(xy$x, xy$y)
       if (identical(type, "p")) {
-        data.frame(x = xy$x[ok], y = xy$y[ok])
+        # a point whose cex is not positive draws nothing; the shape says
+        # which parts each drawn one draws (core-bind.R)
+        n <- length(ok)
+        cex <- suppressWarnings(as.double(rep_len(a[[8]] %||% 1, n)))
+        keep <- ok & !is.na(cex) & cex > 0
+        # (as R's integer code, so that tables of several calls bind)
+        data.frame(x = xy$x[keep], y = xy$y[keep], shape = symbol_code(rep_len(a[[4]] %||% 1, n))[keep])
       } else if (identical(type, "l")) {
         # one polyline per run of finite points: the run is the group
         r <- rle(ok)
@@ -241,6 +247,7 @@ base_rows_on_device <- function(d, rows, lf, logs) {
   for (col in intersect(c("x", "xend", "xmin", "xmax"), names(d))) out[[col]] <- tx(d[[col]])
   for (col in intersect(c("y", "yend", "ymin", "ymax"), names(d))) out[[col]] <- ty(d[[col]])
   if (!is.null(d$group)) out$group <- d$group
+  if (!is.null(d$shape)) out$shape <- d$shape
   if (!is.null(d$part)) {
     # one element per polygon: the mean of its vertices on the device
     parts <- unique(d$part)

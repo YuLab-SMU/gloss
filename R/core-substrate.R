@@ -380,18 +380,7 @@ symbol_fy <- local({
 # the symbol font, 5; else 255).
 symbol_kind <- function(pch, font = 1L) {
   n <- length(pch)
-  if (is.character(pch)) {
-    v <- enc2utf8(pch)
-    u <- unique(v)
-    cu <- vapply(u, function(s) {
-      if (is.na(s) || !nzchar(s)) return(NA_integer_)
-      cp <- suppressWarnings(utf8ToInt(substr(s, 1L, 1L)))
-      if (length(cp) != 1L || is.na(cp)) NA_integer_ else if (cp > 127L) -cp else cp
-    }, 1L, USE.NAMES = FALSE)
-    code <- cu[match(v, u)]
-  } else {
-    code <- suppressWarnings(as.integer(pch))
-  }
+  code <- symbol_code(pch)
   font <- rep_len(as.integer(font %||% 1L), n)
   maxchar <- ifelse(isTRUE(l10n_info()$MBCS) & !font %in% 5L, 127L, 255L)
   kind <- rep(NA_character_, n)
@@ -402,6 +391,20 @@ symbol_kind <- function(pch, font = 1L) {
   ch <- ok & code >= 32L & code <= maxchar
   kind[ch] <- ifelse(code[ch] == 46L, ".", "text")
   kind
+}
+
+# The integer R's engine draws for a pch: a number as it is, a string's first
+# character (Unicode above 127 as a negative code, "" and NA as NA).
+symbol_code <- function(pch) {
+  if (!is.character(pch)) return(suppressWarnings(as.integer(pch)))
+  v <- enc2utf8(pch)
+  u <- unique(v)
+  cu <- vapply(u, function(s) {
+    if (is.na(s) || !nzchar(s)) return(NA_integer_)
+    cp <- suppressWarnings(utf8ToInt(substr(s, 1L, 1L)))
+    if (length(cp) != 1L || is.na(cp)) NA_integer_ else if (cp > 127L) -cp else cp
+  }, 1L, USE.NAMES = FALSE)
+  cu[match(v, u)]
 }
 
 # The settings a points leaf takes from where it is drawn when its own gpar
@@ -940,11 +943,13 @@ base_expected <- function(e) {
       type <- a[[3]]
       ok <- ok_xy(a[[2]])
       n <- runs(ok)
+      # points: the parts of each one's symbol (base_point_parts)
+      pts <- if (type %in% c("p", "b", "o")) sum(base_point_parts(a)) else 0L
       switch(type,
-        p = sum(ok),
+        p = pts,
         l = , s = , S = sum(n >= 2L),
-        b = sum(ok) + sum(pmax(n - 1L, 0L)),
-        o = sum(ok) + sum(n >= 2L),
+        b = pts + sum(pmax(n - 1L, 0L)),
+        o = pts + sum(n >= 2L),
         h = sum(ok),
         c = sum(pmax(n - 1L, 0L)),
         n = 0L,
@@ -989,6 +994,25 @@ base_expected <- function(e) {
     NA
   ), error = function(err) NA)
   if (length(out) != 1L) return(NA_integer_)
+  as.integer(out)
+}
+
+# The parts each point of a recorded plot.xy() call draws: its arguments are
+# xy, type, pch, lty, col, bg, cex, lwd, then `font` and other extras when
+# given; pch and cex recycle over the points. Base draws a symbol's lines
+# solid whatever lty says, and nothing for a point whose position is not
+# finite or whose cex is not positive (dev_docs/research/point-symbols,
+# base.R).
+base_point_parts <- function(a) {
+  xy <- a[[2]]
+  n <- max(length(xy$x), length(xy$y))
+  if (!n) return(integer())
+  cex <- suppressWarnings(as.double(rep_len(a[[8]] %||% 1, n)))
+  drawn <- !is.na(xy$x) & !is.na(xy$y) & is.finite(xy$x) & is.finite(xy$y) & !is.na(cex) & cex > 0
+  kind <- symbol_kind(rep_len(a[[4]] %||% 1, n), a$font %||% 1L)
+  k <- match(kind, names(symbol_parts))
+  out <- ifelse(is.na(k), 0L, lengths(symbol_parts)[k])
+  out[!drawn] <- 0L
   as.integer(out)
 }
 

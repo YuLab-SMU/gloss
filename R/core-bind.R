@@ -180,7 +180,8 @@ check_claim <- function(cl, leaf, geo, tol = bind_tolerance) {
   # points whose rows state their shape: each row draws its symbol's parts
   # (plan 2026-11-11-tree-binding, Task 5; bench tree-014). Parts are
   # compared by their boxes, which a dense leaf keeps.
-  symbols <- identical(leaf$class, "points") && "shape" %in% names(pred)
+  # (grid's points grob, or base's plot.xy())
+  symbols <- leaf$class %in% c("points", "plotXY") && "shape" %in% names(pred) && !all(is.na(pred$shape))
   if (!symbols && isTRUE(leaf$dense) && any(!g$tag %in% c("circle", "rect"))) {
     return(done("unbound", "a dense leaf keeps only the boxes of its elements, and its tags need more"))
   }
