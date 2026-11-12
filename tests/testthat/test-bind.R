@@ -652,22 +652,32 @@ test_that("all 26 shapes bind, and a shape the rows do not draw is not passed", 
   expect_match(r$leaf$reason, "shapes .* 40 parts, the leaf drew 43")
 })
 
-test_that("a character symbol drawn as a glyph outline is named, never compared as a shape", {
+test_that("a character symbol drawn as a glyph outline is checked by its box, and permuted rows fail", {
   # Bench tree-061 (emojifont turns showtext on): geom_point(shape = "|")
   # drew each symbol as a path, which the vertex-mean rule passed within
-  # 0.49 pt of a 0.5 pt tolerance (run 2026-11-11-2344). Where a glyph's
-  # outline sits depends on its side bearings; text drawn as outlines is not
-  # compared (plan 2026-11-11-tree-binding, Tasks 4 and 5).
+  # 0.49 pt of a 0.5 pt tolerance (run 2026-11-11-2344): luck, since the
+  # vertex mean of an outline is 1.15 pt off at a larger size. R's engine
+  # centres the character by its glyph's box, so the outline's box is
+  # centred on the point across, and holds it along (side bearings):
+  # dev_docs/research/point-symbols, glyph.R.
   skip_if_not_installed("ggplot2")
   skip_if_not_installed("showtext")
   showtext::showtext_auto(TRUE)
   on.exit(showtext::showtext_auto(FALSE), add = TRUE)
   d <- data.frame(x = 1:4, y = c(2, 4, 1, 3))
-  p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y)) + ggplot2::geom_point(shape = "|")
-  b <- suppressWarnings(bind_capture(p))
-  lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
-  expect_equal(lv$status, "unbound")
-  expect_equal(lv$failed, 0L)
-  expect_match(lv$reason, "characters drawn as glyph outlines")
-  expect_match(lv$reason, "4 paths for 4 points")
+  for (ch in c("|", "j")) for (sz in c(1.5, 10)) {
+    p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y)) + ggplot2::geom_point(shape = ch, size = sz)
+    nm <- paste(ch, sz)
+    b <- suppressWarnings(bind_capture(p))
+    lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+    expect_equal(lv$mode, "symbol", label = nm)
+    expect_equal(lv$status, "verified", label = paste(nm, lv$reason))
+    expect_lt(lv$max_dev, 0.05, label = nm)
+    j <- justified_claim(p)
+    cl <- j$claims[[1]]
+    bad <- cl
+    bad$pred <- cl$pred[c(2, 3, 4, 1), ]
+    r <- check_claim(bad, j$leaves[j$leaves$id == cl$leaf, ], j$geo)
+    expect_equal(r$elements$status, rep("failed", 4L), label = paste(nm, "permuted"))
+  }
 })

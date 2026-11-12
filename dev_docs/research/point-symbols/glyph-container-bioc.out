@@ -1,0 +1,21 @@
+library: bioc (the tree stratum's)
+showtext 0.9.7 | svglite 2.2.2 | Linux 
+dx, dy: the measure minus the row's point, pt (y down), over 6 points
+'|' size  1.5, tags path: vertex mean dx -0.05..-0.04 dy +0.48..+0.49 | box centre dx -0.00..+0.00 dy -0.00..+0.00 | box width 0.42 | point inside the box along: 6 of 6
+'|' size  4.0, tags path: vertex mean dx -0.11..-0.10 dy +1.15..+1.15 | box centre dx -0.01..+0.00 dy -0.00..+0.00 | box width 1.00 | point inside the box along: 6 of 6
+'|' size 10.0, tags path: vertex mean dx -0.24..-0.24 dy +2.75..+2.75 | box centre dx -0.00..+0.00 dy -0.00..+0.00 | box width 2.38 | point inside the box along: 6 of 6
+'A' size  1.5, tags path: vertex mean dx +0.02..+0.02 dy -0.97..-0.97 | box centre dx -0.00..+0.00 dy -0.00..+0.00 | box width 3.46 | point inside the box along: 6 of 6
+'A' size  4.0, tags path: vertex mean dx +0.04..+0.05 dy -2.29..-2.29 | box centre dx -0.01..+0.00 dy -0.01..+0.00 | box width 8.17 | point inside the box along: 6 of 6
+'A' size 10.0, tags path: vertex mean dx +0.11..+0.12 dy -5.47..-5.47 | box centre dx -0.01..+0.00 dy -0.00..+0.00 | box width 19.49 | point inside the box along: 6 of 6
+'o' size  1.5, tags path: vertex mean dx +0.04..+0.04 dy +0.03..+0.04 | box centre dx -0.01..+0.00 dy -0.00..+0.00 | box width 2.46 | point inside the box along: 6 of 6
+'o' size  4.0, tags path: vertex mean dx +0.09..+0.10 dy +0.08..+0.09 | box centre dx -0.01..+0.00 dy -0.00..+0.00 | box width 5.82 | point inside the box along: 6 of 6
+'o' size 10.0, tags path: vertex mean dx +0.22..+0.23 dy +0.20..+0.20 | box centre dx -0.01..+0.00 dy -0.00..+0.00 | box width 13.88 | point inside the box along: 6 of 6
+'+' size  1.5, tags path: vertex mean dx +0.01..+0.01 dy +0.01..+0.02 | box centre dx -0.01..-0.00 dy -0.00..+0.00 | box width 2.53 | point inside the box along: 6 of 6
+'+' size  4.0, tags path: vertex mean dx +0.03..+0.03 dy +0.03..+0.03 | box centre dx -0.01..-0.00 dy -0.00..+0.00 | box width 5.99 | point inside the box along: 6 of 6
+'+' size 10.0, tags path: vertex mean dx +0.07..+0.08 dy +0.08..+0.08 | box centre dx -0.01..-0.01 dy -0.00..+0.00 | box width 14.28 | point inside the box along: 6 of 6
+'x' size  1.5, tags path: vertex mean dx +0.05..+0.05 dy +0.09..+0.10 | box centre dx -0.01..+0.00 dy -0.00..+0.00 | box width 2.49 | point inside the box along: 6 of 6
+'x' size  4.0, tags path: vertex mean dx +0.12..+0.12 dy +0.22..+0.22 | box centre dx -0.00..+0.01 dy -0.00..+0.00 | box width 5.89 | point inside the box along: 6 of 6
+'x' size 10.0, tags path: vertex mean dx +0.29..+0.29 dy +0.53..+0.54 | box centre dx +0.00..+0.01 dy -0.00..+0.00 | box width 14.05 | point inside the box along: 6 of 6
+'j' size  1.5, tags path: vertex mean dx -0.28..-0.27 dy +1.90..+1.90 | box centre dx -0.24..-0.24 dy -0.00..+0.00 | box width 0.94 | point inside the box along: 6 of 6
+'j' size  4.0, tags path: vertex mean dx -0.65..-0.65 dy +4.50..+4.50 | box centre dx -0.57..-0.56 dy -0.00..+0.00 | box width 2.21 | point inside the box along: 6 of 6
+'j' size 10.0, tags path: vertex mean dx -1.55..-1.54 dy +10.73..+10.73 | box centre dx -1.36..-1.35 dy -0.00..+0.00 | box width 5.27 | point inside the box along: 6 of 6

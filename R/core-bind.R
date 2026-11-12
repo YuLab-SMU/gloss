@@ -230,12 +230,6 @@ plural <- function(n) if (n == 1L) "" else "s"
 # they do not add up to the elements, the leaf is not paired part by part.
 check_symbols <- function(g, pred, all_pred, tol) {
   kind <- symbol_kind(pred$shape)
-  # characters drawn as paths are glyph outlines (showtext: bench tree-061),
-  # which, like text drawn so, are not compared (plan Task 4)
-  if (any(kind %in% "text") && nrow(g) && all(g$tag == "path")) {
-    return(list(reason = sprintf("the symbols are characters drawn as glyph outlines (showtext?): %d path%s for %d point%s; no comparison for outlines",
-                                 nrow(g), plural(nrow(g)), nrow(pred), plural(nrow(pred)))))
-  }
   k <- match(kind, names(symbol_parts))
   n_parts <- ifelse(is.na(k), 0L, lengths(symbol_parts)[k])
   if (sum(n_parts) != nrow(g)) {
@@ -258,6 +252,25 @@ check_symbols <- function(g, pred, all_pred, tol) {
     ep <- f$element(g[tx, , drop = FALSE])
     dev[tx] <- f$dev(ep, f$row(pred[at[tx], , drop = FALSE]))
     n_pass[tx] <- f$count(ep, f$row(all_pred), tol)
+  }
+  # A character drawn as a glyph outline (showtext: bench tree-061). R's
+  # engine centres a symbol's character on its point by the glyph's metric
+  # box, which showtext takes from the outline: across the baseline the
+  # outline's box is centred on the point (0.01 pt); along it the side
+  # bearings are not on the page (a "j": 0.24-1.36 pt off the centre), so
+  # the point need only lie inside the box. dev_docs/research/point-symbols,
+  # glyph.R. The vertex mean of an outline is not its point (0.49-10.7 pt).
+  gl <- which(want == "text" & g$tag == "path")
+  if (length(gl)) {
+    cy <- (g$y0[gl] + g$y1[gl]) / 2
+    glyph_dev <- function(i, x, y) pmax(abs(cy[i] - y), g$x0[gl[i]] - x, x - g$x1[gl[i]], 0)
+    dev[gl] <- glyph_dev(seq_along(gl), pred$x[at[gl]], pred$y[at[gl]])
+    reach <- max((g$x1[gl] - g$x0[gl]) / 2, 0, na.rm = TRUE) + tol
+    pr <- pairs_within(px[gl], cy, all_pred$x, all_pred$y, reach)
+    ok <- glyph_dev(pr$p, all_pred$x[pr$q], all_pred$y[pr$q]) <= tol
+    ok[is.na(ok)] <- FALSE
+    n_pass[gl] <- tabulate(pr$p[ok], nbins = length(gl))
+    want[gl] <- "path"
   }
   pass <- g$tag == want & !is.na(dev) & dev <= tol
   list(pass = pass, dev = dev, n_pass = n_pass, rows = pred$row[at])
