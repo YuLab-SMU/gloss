@@ -275,8 +275,23 @@ args <- commandArgs(trailingOnly = TRUE)
 mode <- if (length(args)) args[1] else ""
 
 if (mode == "questions") {
+  # The sampled figures; one whose material could not be made is replaced by
+  # the next of its stratum in the seeded order (plan, Task 5), and named.
   figs <- utils::read.csv(figures_file, stringsAsFactors = FALSE)
-  ids <- sort(figs$id[figs$sampled %in% TRUE])
+  has_material <- file.exists(file.path(material_root, figs$id, "figure.html"))
+  ids <- character()
+  for (s in unique(figs$stratum)) {
+    k <- which(figs$stratum == s)
+    k <- k[order(figs$order[k])]
+    want <- sum(figs$sampled[k] %in% TRUE)
+    got <- utils::head(k[has_material[k]], want)
+    out <- k[figs$sampled[k] %in% TRUE & !has_material[k]]
+    if (length(out)) cat(sprintf("%s: no material for %s; standing in: %s\n", s, paste(figs$id[out], collapse = ", "),
+                                 paste(setdiff(figs$id[got], figs$id[k[figs$sampled[k] %in% TRUE]]), collapse = ", ")))
+    if (length(got) < want) cat(sprintf("%s: %d of %d figures have material\n", s, length(got), want))
+    ids <- c(ids, figs$id[got])
+  }
+  ids <- sort(ids)
   set.seed(seed)
   rows <- list()
   for (id in ids) {
