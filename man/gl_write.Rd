@@ -46,7 +46,9 @@ attributes. A column or an attribute of a table that is something else (a
 column of geometries, a nested list, a model's terms) is left out with a
 warning that names it; the figure itself is not changed. Read back, that
 table has the status \code{partial_data}, and its \code{not_stored} says what it
-lacks and why.
+lacks and why. A table whose class does not let such a column go (an \code{sf}
+table and its geometry) is stored as a plain data frame, which is said
+there too.
 }
 \examples{
 fig <- gloss(grid::rectGrob(), width = 2, height = 2, context = FALSE)

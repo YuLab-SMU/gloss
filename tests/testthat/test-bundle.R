@@ -248,3 +248,58 @@ test_that("what a table holds that a bundle cannot store is left out, named and 
   plain <- gloss(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point(), context = FALSE)
   expect_no_warning(gl_write(plain, withr::local_tempfile(fileext = ".html"), embed = "all"))
 })
+
+test_that("a table whose class will not let go of a column that cannot be stored is written as a plain data frame, and says so", {
+  # Bench run 2026-11-12-1938-bundle-dev: after the change above, two figures
+  # (patchwork-010, patchwork-011) were still not written. Their raw tables
+  # are `sf` data frames, and `[` on an sf keeps the geometry column whatever
+  # columns are asked for. Shown here with a class made for the test.
+  skip_if_no("ggplot2")
+  registerS3method("[", "gloss_test_sticky", function(x, i, j, ...) {
+    cls <- class(x)
+    class(x) <- "data.frame"
+    out <- if (nargs() == 2L && is.character(i)) x[union(i, "geom")] else x[i, j, ...]
+    class(out) <- cls
+    out
+  })
+  fig <- gloss(ggplot2::ggplot(mtcars[1:5, ], ggplot2::aes(wt, mpg)) + ggplot2::geom_point(), context = FALSE)
+  d <- fig$tables$raw$data
+  d$geom <- lapply(1:5, function(i) list(i, "not a vector"))
+  class(d) <- c("gloss_test_sticky", class(d))
+  expect_true("geom" %in% names(d["wt"]))   # the class keeps its column
+  fig$tables$raw$data <- d
+  for (embed in c("all", "default")) {
+    f <- withr::local_tempfile(fileext = ".html")
+    expect_warning(gl_write(fig, f, embed = embed), "plain data frame", label = embed)
+    raw <- gl_read(f)$tables$raw
+    expect_equal(class(raw$data), "data.frame", label = embed)
+    expect_false("geom" %in% names(raw$data))
+    expect_equal(raw$data$wt, mtcars$wt[1:5])
+    expect_equal(raw$status, "partial_data")
+    expect_true(any(grepl("column geom", raw$not_stored)))
+    expect_true(any(grepl("class gloss_test_sticky", raw$not_stored)))
+  }
+})
+
+test_that("a figure drawn from an sf table is written and read back, without its geometries", {
+  skip_if_no("ggplot2", "sf")
+  # polygons: a polygon is a list of rings, which a bundle has no case for
+  # (a point is a plain numeric vector and is stored)
+  tri <- function(dx) sf::st_polygon(list(rbind(c(dx, 0), c(dx + 1, 0), c(dx + 0.5, 1), c(dx, 0))))
+  pts <- sf::st_sf(v = c(1, 2, 3), geometry = sf::st_sfc(tri(0), tri(2), tri(4)))
+  fig <- suppressWarnings(gloss(ggplot2::ggplot(pts) + ggplot2::geom_sf(), context = FALSE))
+  expect_s3_class(fig$tables$raw$data, "sf")
+  for (embed in c("all", "default")) {
+    f <- withr::local_tempfile(fileext = ".html")
+    expect_warning(gl_write(fig, f, embed = embed), "cannot be stored", label = embed)
+    back <- gl_read(f)
+    expect_identical(back$substrate, fig$substrate, label = embed)
+    expect_identical(back$derived, fig$derived, label = embed)
+    expect_equal(class(back$tables$raw$data), "data.frame", label = embed)
+    expect_true(any(grepl("geometry", back$tables$raw$not_stored)), label = embed)
+    expect_true(all(c("raw", "built_layer1") %in% back$status$partial_data), label = embed)
+  }
+  f <- withr::local_tempfile(fileext = ".html")
+  suppressWarnings(gl_write(fig, f, embed = "all"))
+  expect_equal(gl_read(f)$tables$raw$data$v, c(1, 2, 3))
+})

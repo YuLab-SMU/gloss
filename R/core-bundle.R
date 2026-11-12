@@ -36,7 +36,9 @@ embed_modes <- c("default", "all", "summary", "none")
 #' column of geometries, a nested list, a model's terms) is left out with a
 #' warning that names it; the figure itself is not changed. Read back, that
 #' table has the status `partial_data`, and its `not_stored` says what it
-#' lacks and why.
+#' lacks and why. A table whose class does not let such a column go (an `sf`
+#' table and its geometry) is stored as a plain data frame, which is said
+#' there too.
 #'
 #' @param fig A `gloss_figure`.
 #' @param path A directory (no extension, or `.gloss`), or a file ending in
@@ -264,7 +266,13 @@ encode_tables <- function(tables, embed) {
     # (bench run 2026-11-12-1918-bundle-dev).
     cant <- unstorable(data)
     if (length(cant$what)) {
-      data <- data[setdiff(names(data), cant$columns)]
+      was <- class(data)
+      data <- without_columns(data, cant$columns)
+      if (!identical(class(data), was)) {
+        cant$what <- c(cant$what, sprintf(
+          "class %s: it keeps a column that cannot be stored whatever columns are asked for, so the table is stored as a plain data frame",
+          paste(was, collapse = "/")))
+      }
       for (an in cant$attrs) attr(data, an) <- NULL
       dropped <- c(dropped, cant$columns)
       meta$not_stored <- as.list(cant$what)
@@ -291,6 +299,22 @@ encode_tables <- function(tables, embed) {
                     i = "Read back, such a table has the status {.val partial_data} and lists what it lacks."))
   }
   files
+}
+
+# A table without some of its columns. The table's own `[` is asked first; a
+# class that keeps a column whatever is asked for (an `sf` table its
+# geometry: bench patchwork-010, patchwork-011) is taken off, and what is
+# left is a plain data frame with the table's other attributes.
+without_columns <- function(data, cols) {
+  keep <- setdiff(names(data), cols)
+  out <- tryCatch(data[keep], error = function(e) NULL)
+  if (is.data.frame(out) && identical(names(out), keep)) return(out)
+  a <- attributes(data)
+  bare <- unclass(data)[keep]
+  a$names <- keep
+  a$class <- "data.frame"
+  attributes(bare) <- a
+  bare
 }
 
 # What of a table's data the codec cannot store: columns, and attributes of
