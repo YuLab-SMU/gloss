@@ -1,0 +1,39 @@
+                   geom elements checked figures      from state
+         GeomTextGGtree     4674     560      34 extension  part
+        GeomPointGGtree      608     608      11 extension   all
+           GeomEpicurve      270     270       1 extension   all
+             GeomCircle      252     252       1 extension   all
+               GeomStar      200     200       2 extension   all
+         GeomLabelRepel      195       0       3 extension  none
+        GeomLabelGGtree      105      34       2 extension  part
+          GeomTextcurve       79       0       1 extension  none
+      GeomSegmentGGtree       60      60       5 extension   all
+     GeomLabeldensity2d       55       0       1 extension  none
+                GeomRoc       42       2       1 extension  part
+         GeomShadowText       34      14       1 extension  part
+              GeomRocci       24      18       1 extension  part
+              GeomImage       17      17       1 extension   all
+          GeomErrorStat        9       0       1 extension  none
+        GeomHilightRect        2       2       1 extension   all
+ GeomTerraSpatRasterRGB        1       1       1 extension   all
+              GeomPoint    30242   30242      20   ggplot2   all
+            GeomSegment    14923   14923      56   ggplot2   all
+               GeomTile     5703    5703       4   ggplot2   all
+              GeomLabel     4009    4009       2   ggplot2   all
+                 GeomSf     1626       0       2   ggplot2  none
+                GeomHex      551     551       1   ggplot2   all
+                GeomCol      530     230       2   ggplot2  part
+                GeomBar      409      84       7   ggplot2  part
+               GeomText      131      37      10   ggplot2  part
+               GeomPath       91      91       2   ggplot2   all
+               GeomArea       60      60       1   ggplot2   all
+            GeomBoxplot       53       0       2   ggplot2  none
+               GeomLine        7       7       2   ggplot2   all
+               GeomRect        2       2       1   ggplot2   all
+             GeomAbline        1       0       1   ggplot2  none
+             GeomRaster        1       1       1   ggplot2   all
+
+ggplot2 4.0.3.9000; figures with a layer leaf: 92
+ggplot2   16 classes: all checked 10, part 3, none 3, no element 0; 55940 of 58339 elements checked
+extension 17 classes: all checked 8, part 5, none 4, no element 0; 2038 of 6627 elements checked
+lines of R/ outside comments that name a geom class other than ggplot2::Geom itself: 0

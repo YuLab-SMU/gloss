@@ -1,6 +1,6 @@
 # Where ggimage puts a justified image (2026-11-12)
 
-Evidence for [plan 2026-11-11-tree-binding](../../../plan/2026-11-11-tree-binding.md), Task 6. It was written after a rule it overturned (`897bedc`) and before the rule that replaced it. Nothing here is package code.
+Evidence for [plan 2026-11-11-tree-binding](../../../plan/done/2026-11-11-tree-binding.md), Task 6. It was written after a rule it overturned (`897bedc`) and before the rule that replaced it. Nothing here is package code.
 
 **Question.** In bench tree-041, `geom_tiplab(geom = "image")` passes ggimage `hjust = 0`, a parameter of `GeomImage$draw_panel()`, not a column of the rows. `imageGrob()` then moves the image right by `width / 2`, where `width` is its own estimate. That estimate is `size * adj` for `by = "width"` and `size * asp * adj` for `by = "height"`, with `adj = size / diff(x.range)` from `build_adjust()`. The raster itself is drawn with a height and no width, so grid gives it the width its aspect ratio implies. Where does the image lie relative to its row?
 

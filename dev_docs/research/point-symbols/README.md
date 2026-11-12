@@ -1,6 +1,6 @@
 # What svglite draws for a point symbol (2026-11-12)
 
-Evidence for [plan 2026-11-11-tree-binding](../../../plan/2026-11-11-tree-binding.md), Task 5, written before the rule it informs. Nothing here is package code.
+Evidence for [plan 2026-11-11-tree-binding](../../../plan/done/2026-11-11-tree-binding.md), Task 5, written before the rule it informs. Nothing here is package code.
 
 **Question.** Bench tree-014 draws 8100 points in eight shapes (`scale_shape_manual(values = 1:8)`) as 12690 SVG elements. Capture expected one element per point, so the leaf, half the tree stratum's layer elements, is a count mismatch. What does each `pch` draw, and where does each part lie relative to its point, so that a point drawn as k elements can be counted and checked part by part?
 
