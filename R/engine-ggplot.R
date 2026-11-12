@@ -437,7 +437,7 @@ ggplot_rows_drawn <- function(d, layer) {
   # A geom whose draw_panel() takes hjust or vjust as a parameter, not as an
   # aesthetic of its rows, justifies what it draws by the layer's value or
   # the parameter's default (ggimage's GeomImage: geom_tiplab(geom = "image")
-  # passes hjust = 0, so each image starts at its tip; bench tree-041).
+  # passes hjust = 0; bench tree-041). core-bind.R says what it means there.
   fm <- formals(inner(geom$draw_panel) %||% function() NULL)
   for (nm in c("hjust", "vjust")) {
     if (!nm %in% args || nm %in% names(d)) next

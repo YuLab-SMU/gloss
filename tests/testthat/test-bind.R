@@ -782,25 +782,34 @@ test_that("images bind: one per row by their box, one raster per group by its ce
   }
   # An image justified by the layer's hjust, a parameter of the geom's
   # draw_panel(), not a column of its rows: geom_tiplab(geom = "image")
-  # gives ggimage hjust = 0, so each tip's image starts at its row (bench
-  # tree-041). Its box is the row moved by (0.5 - hjust) of its width.
-  GeomPicJ <- ggplot2::ggproto("GeomPicJ", ggplot2::Geom, required_aes = c("x", "y"),
-    draw_panel = function(data, panel_params, coord, hjust = 0.5) {
-      co <- coord$transform(data, panel_params)
-      kids <- lapply(seq_len(nrow(co)), function(i) grid::rasterGrob(img, x = co$x[i], y = co$y[i], height = grid::unit(0.1, "npc"), hjust = hjust))
-      grid::gTree(children = do.call(grid::gList, kids))
-    })
-  for (h in c(0, 1)) {
-    p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y)) + ggplot2::xlim(0, 6) + ggplot2::ylim(0, 5) +
-      ggplot2::layer(geom = GeomPicJ, stat = "identity", position = "identity", params = list(hjust = h))
-    b <- suppressWarnings(bind_capture(p))
-    lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
-    expect_true(all(lv$status == "verified"), label = paste(h, lv$status, lv$reason, collapse = "; "))
-    j <- justified_claim(p)
-    for (cl in j$claims) {
-      bad <- cl
-      bad$pred$hjust <- 1 - h
-      expect_equal(check_claim(bad, j$leaves[j$leaves$id == cl$leaf, ], j$geo)$leaf$status, "failed", label = h)
+  # gives ggimage hjust = 0 (bench tree-041). Where the image lies along x
+  # then depends on the geom: grid's rasterGrob() starts it at its row;
+  # ggimage moves it by its own estimate of the width, 0.07-2.76 pt for
+  # images 16-83 pt wide (research/image-justification). Either way the row
+  # lies inside the box along x and at its centre across.
+  shifts <- list(grid = function(h) list(hjust = h, dx = 0), ggimage = function(h) list(hjust = 0.5, dx = (0.5 - h) * 2))
+  for (how in names(shifts)) {
+    GeomPicJ <- ggplot2::ggproto("GeomPicJ", ggplot2::Geom, required_aes = c("x", "y"),
+      draw_panel = function(data, panel_params, coord, hjust = 0.5) {
+        co <- coord$transform(data, panel_params)
+        s <- shifts[[how]](hjust)
+        kids <- lapply(seq_len(nrow(co)), function(i) grid::rasterGrob(img, x = grid::unit(co$x[i], "npc") + grid::unit(s$dx, "bigpts"),
+                                                                       y = co$y[i], height = grid::unit(0.1, "npc"), hjust = s$hjust))
+        grid::gTree(children = do.call(grid::gList, kids))
+      })
+    for (h in c(0, 1)) {
+      p <- ggplot2::ggplot(d, ggplot2::aes(.data$x, .data$y)) + ggplot2::xlim(0, 6) + ggplot2::ylim(0, 5) +
+        ggplot2::layer(geom = GeomPicJ, stat = "identity", position = "identity", params = list(hjust = h))
+      b <- suppressWarnings(bind_capture(p))
+      lv <- b$leaves[b$leaves$table %in% "built_layer1", ]
+      expect_true(all(lv$status == "verified"), label = paste(how, h, lv$status, lv$reason, collapse = "; "))
+      # each image against another row fails
+      j <- justified_claim(p)
+      for (cl in j$claims) {
+        bad <- cl
+        bad$pred[, c("x", "y")] <- cl$pred[c(2:4, 1), c("x", "y")]
+        expect_equal(check_claim(bad, j$leaves[j$leaves$id == cl$leaf, ], j$geo)$leaf$status, "failed", label = paste(how, h))
+      }
     }
   }
   # a raster over a grid of cells

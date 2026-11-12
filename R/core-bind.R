@@ -445,15 +445,34 @@ row_family <- function(tag, pred) {
                   tabulate(pr$p[ok], nbins = nrow(e))
                 }))
   }
+  # An image whose rows state a justification other than the centre: grid's
+  # rasterGrob() starts or ends it at its row, ggimage moves it by its own
+  # estimate of the width (0.07-2.76 pt for images 16-83 pt wide, ggimage
+  # 0.3.4: research/image-justification), so along that axis the row must
+  # lie inside the box; across, at its centre (within 0.01 pt in all 72
+  # cases measured). Bench tree-041: geom_tiplab(geom = "image") gives
+  # ggimage hjust = 0.
+  if (tag == "image" && (has("hjust") || has("vjust"))) {
+    just <- function(p, col) { v <- col_or(p, col, 0.5); !is.na(v) & abs(v - 0.5) > 1e-9 }
+    along <- function(a0, a1, v, inside) ifelse(inside, pmax(a0 - v, v - a1, 0), abs((a0 + a1) / 2 - v))
+    img_dev <- function(e, r) pmax(along(e$x0, e$x1, r$x, r$jx), along(e$y0, e$y1, r$y, r$jy))
+    return(list(need = c("x", "y"), cols = c("x", "y"),
+                element = function(e) e,
+                row = function(p) data.frame(x = p$x, y = p$y, jx = just(p, "hjust"), jy = just(p, "vjust")),
+                dev = img_dev,
+                count = function(e, r, tol) {
+                  size <- max(e$x1 - e$x0, e$y1 - e$y0, na.rm = TRUE)
+                  pr <- pairs_within((e$x0 + e$x1) / 2, (e$y0 + e$y1) / 2, r$x, r$y, size + tol)
+                  ok <- img_dev(e[pr$p, , drop = FALSE], r[pr$q, , drop = FALSE]) <= tol
+                  ok[is.na(ok)] <- FALSE
+                  tabulate(pr$p[ok], nbins = nrow(e))
+                }))
+  }
   # A label's box (ggplot2's labelGrob): its centre is the row moved by
   # (0.5 - hjust) of its width and (0.5 - vjust) of its height, in the
   # row's angle. The vertex mean of a rounded rectangle is not its centre:
   # bench tree-041 and tree-045, boxes 0.67-0.74 pt off with hjust = .5.
-  # An image whose rows state a justification is placed the same way, as
-  # grid justifies a rasterGrob (ggimage's tip images, hjust = 0: bench
-  # tree-041). ggimage moves an image only for hjust 0 and 1 and centres it
-  # for any other value; such an image would fail here.
-  if ((tag == "polygon" && has(c("hjust", "vjust"))) || (tag == "image" && (has("hjust") || has("vjust")))) {
+  if (tag == "polygon" && has(c("hjust", "vjust"))) {
     return(list(need = c("x", "y"), cols = c("x", "y"),
                 element = function(e) e,
                 row = function(p) data.frame(x = p$x, y = p$y, hjust = col_or(p, "hjust", 0.5),
