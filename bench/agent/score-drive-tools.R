@@ -1,4 +1,5 @@
-# Score a run of bench/agent/drive-tools.R against predictions 102-107:
+# Score a run of bench/agent/drive-tools.R (predictions 102-107) or of
+# bench/agent/drive-gl-tools.R (predictions 120-123):
 #   Rscript bench/agent/score-drive-tools.R bench/runs/<stamp>-drive-tools.json
 # Reads the archive only; calls no model.
 
@@ -18,6 +19,7 @@ d <- data.frame(
   tool_calls = field("tool_calls", "integer"),
   failed_calls = field("failed_calls", "integer"),
   rejected = field("rejected", "integer"),
+  refused = field("refused", "integer"),   # NA in archives of drive-tools.R, whose submit never refuses
   seconds = field("seconds", "numeric"),
   error = !is.na(field("error", "character")),
   finish = field("finish", "character"),
@@ -58,6 +60,12 @@ cat(sprintf("seconds per run: median %.1f, 90th percentile %.1f, max %.1f; total
 cat(sprintf("variant M runs with a rejected submission followed by an accepted one: %d of %d; runs with any rejection: L %d, M %d\n",
             sum(d$recovered & d$variant == "M"), sum(d$variant == "M"),
             sum(d$rejected > 0 & d$variant == "L"), sum(d$rejected > 0 & d$variant == "M")))
+if (any(!is.na(d$refused))) {
+  cat(sprintf("proposals refused: %d, in %d runs; runs with a rejected proposal: %d of %d; failed calls by model: %s\n",
+              sum(d$refused), sum(d$refused > 0), sum(d$rejected > 0), nrow(d),
+              paste(sprintf("%s %d of %d", unique(d$model), tapply(d$failed_calls, d$model, sum)[unique(d$model)],
+                            tapply(d$tool_calls, d$model, sum)[unique(d$model)]), collapse = ", ")))
+}
 if (any(!is.na(tokens))) {
   cat(sprintf("total tokens per run, where the gateway gave them (%d runs): median %.0f, max %.0f\n",
               sum(!is.na(tokens)), med(tokens), max(tokens, na.rm = TRUE)))

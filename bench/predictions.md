@@ -879,3 +879,21 @@ Runs `runs/2026-11-12-1737-alone-dev.*` and `-1748-alone-dev-tree.*`, each once,
 
 - 3 right of 3. This is a change made after looking at the two development runs, checked on the same figures: it shows the change does what it says there and nothing else, not that flipped panels in general are handled.
 - What the figure alone still does not reproduce is unchanged: polar and `sf` panels (247 elements in 5 figures, not placed), the two draw-time rules (12 elements of tree-041), base polygons and paths, base text outside a panel, heatmap cells.
+
+## Task 1's questions through the package's tools (agent-path plan Task 3, step 4)
+
+Written 2026-11-12, before any run of `bench/agent/drive-gl-tools.R` with a model. What I have seen: Task 1's run (60 of 60 with the harness's own tools), the suite's scripted-model test of `gl_tools()`, and this script's dry run, which uses no model. The tools differ from the harness's: nine instead of five or six, arguments checked against a schema, `propose` in place of `submit`, `get_binding` present in both variants and answering "hidden" in the masked one, a longer `overview`.
+
+### How the runs are made and scored (fixed before the runs)
+
+- The figure, the five elements, the three models, the two variants, two runs each, `temperature = 0`, 12 steps at most: all as in Task 1. 60 runs, host, the gateway, aisdk's internet probe off.
+- Correct: `propose` accepted a binding for the element asked about. Archived before scoring; scored with `bench/agent/score-drive-tools.R`.
+
+### Predictions
+
+120. **Each model is correct in at least 9 of its 10 runs, in both variants.** Point guess 10 everywhere.
+121. **Failed calls are under 5% of all calls.** Task 1 had none; here a mistyped argument is refused by the schema and counts.
+122. **No proposal is refused, and at most 3 of the 60 runs have a rejected one.**
+123. **Median tool calls in correct runs: at most 6 in variant L and at most 8 in variant M.** More tools on offer, and in M a `get_binding` that answers "hidden" before the model works the row out.
+
+**What would change the plan:** a model under 8 of 10 with the package's tools where the harness's gave 10: the tools' descriptions or answers differ in a way that matters, and the transcripts are read before the pilot uses them.
