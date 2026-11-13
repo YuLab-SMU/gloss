@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="gloss 技术路径、里程碑与当前项目状态的交互式线稿。">
-  <title>gloss · 技术路径线稿</title>
+  <meta name="description" content="gloss Explore：从图形元素追踪到数据行，并提交可核验提议。">
+  <title>gloss · Explore</title>
   <style>
     :root {
       --ink: #14284b;
@@ -468,11 +468,216 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
     }
+
+    /* Explore workspace: monochrome semantic inspector */
+    body { color: #111; background: #f7f7f5; }
+    .page { width: min(1680px, calc(100% - 1.5rem)); padding: .75rem 0 2.5rem; }
+    .page > .topbar, .page > main, .page > .footer { display: none; }
+    .explore-view { display: block; }
+    .x-topbar { display: flex; align-items: center; gap: 1rem; min-height: 70px; padding: .65rem 0; border-bottom: 1px solid #111; }
+    .x-brand { display: inline-flex; align-items: center; gap: .7rem; min-width: 188px; color: #111; font-size: 1.55rem; font-weight: 950; letter-spacing: -.06em; text-decoration: none; }
+    .x-brand-mark { position: relative; display: inline-block; width: 38px; height: 28px; border-left: 1.5px solid #111; border-bottom: 1.5px solid #111; transform: skewY(-15deg); }
+    .x-brand-mark::before, .x-brand-mark::after { content: ""; position: absolute; width: 7px; height: 7px; border: 1.5px solid #111; border-radius: 50%; background: #f7f7f5; }
+    .x-brand-mark::before { top: 1px; left: 18px; }
+    .x-brand-mark::after { right: -1px; bottom: 2px; }
+    .x-top-title { min-width: 0; flex: 1; }
+    .x-top-title strong { display: block; font-size: .96rem; letter-spacing: -.02em; }
+    .x-top-title span { display: block; color: #6f6f6f; font-size: .74rem; }
+    .x-mode-tabs { display: flex; gap: .2rem; padding: .22rem; border: 1px solid #777; border-radius: 10px; background: #fff; }
+    .x-mode-tab { min-width: 82px; padding: .45rem .65rem; border: 0; border-radius: 7px; background: transparent; cursor: pointer; font-size: .78rem; font-weight: 850; }
+    .x-mode-tab:hover, .x-mode-tab:focus-visible, .x-mode-tab[aria-selected="true"] { background: #111; color: #fff; outline: none; }
+    .x-header-action { width: 38px; height: 38px; border: 1px solid #777; border-radius: 9px; background: #fff; cursor: pointer; font-size: 1.2rem; }
+    .x-app-grid { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: .8rem; padding-top: .8rem; }
+    .x-rail { display: flex; flex-direction: column; justify-content: space-between; min-height: 820px; padding: .5rem; border: 1px solid #c9c9c9; border-radius: 16px; background: rgba(255,255,255,.75); box-shadow: 0 12px 26px rgba(0,0,0,.08); }
+    .x-rail-stack { display: grid; gap: .35rem; }
+    .x-rail-btn { display: grid; gap: .2rem; justify-items: center; padding: .55rem .2rem; border: 1px solid transparent; border-radius: 10px; background: transparent; cursor: pointer; font-size: .63rem; font-weight: 800; }
+    .x-rail-btn span:first-child { font-size: 1.1rem; line-height: 1; }
+    .x-rail-btn:hover, .x-rail-btn:focus-visible, .x-rail-btn[aria-selected="true"] { border-color: #111; background: #111; color: #fff; outline: none; }
+    .x-rail-divider { height: 1px; margin: .4rem 0; background: #c9c9c9; }
+    .x-workspace { min-width: 0; }
+    .x-workspace-head { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: .4rem 0 .8rem; }
+    .x-eyebrow { margin: 0 0 .3rem; color: #6f6f6f; font-size: .68rem; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
+    .x-workspace-head h1 { margin: 0 0 .25rem; font-size: clamp(1.45rem,2.8vw,2.8rem); line-height: 1; letter-spacing: -.045em; }
+    .x-workspace-head p { margin: 0; color: #6f6f6f; font-size: .82rem; }
+    .x-meta { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; color: #6f6f6f; font-size: .72rem; }
+    .x-pill { display: inline-flex; align-items: center; gap: .35rem; padding: .38rem .55rem; border: 1px solid #c9c9c9; border-radius: 999px; background: #fff; }
+    .x-pill input { accent-color: #111; }
+    .x-explorer-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(270px,315px); gap: .8rem; align-items: stretch; }
+    .x-canvas-panel, .x-inspector, .x-table-panel, .x-drawer { border: 1px solid #111; border-radius: 16px; background: rgba(255,255,255,.94); box-shadow: 0 12px 26px rgba(0,0,0,.08); }
+    .x-canvas-panel { overflow: hidden; }
+    .x-panel-bar { display: flex; align-items: center; justify-content: space-between; gap: .6rem; min-height: 54px; padding: .65rem .75rem; border-bottom: 1px solid #c9c9c9; }
+    .x-panel-label { display: flex; align-items: center; gap: .55rem; min-width: 0; }
+    .x-panel-label strong { font-size: .86rem; }
+    .x-panel-label span { color: #6f6f6f; font-size: .68rem; }
+    .x-toolbar { display: flex; flex-wrap: wrap; gap: .25rem; justify-content: flex-end; }
+    .x-tool-btn { width: 32px; height: 32px; border: 1px solid #c9c9c9; border-radius: 7px; background: #fff; cursor: pointer; font-size: .9rem; }
+    .x-tool-btn:hover, .x-tool-btn:focus-visible, .x-tool-btn[aria-pressed="true"] { border-color: #111; background: #111; color: #fff; outline: none; }
+    .x-search { display: none; }
+    .x-search.is-open { display: block; }
+    .x-search input { width: 150px; padding: .35rem .5rem; border: 1px solid #777; border-radius: 7px; background: #fff; color: #111; font-size: .75rem; }
+    .x-canvas { position: relative; min-height: 535px; overflow: hidden; background: linear-gradient(rgba(0,0,0,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.04) 1px,transparent 1px),#fbfbfa; background-size: 28px 28px; }
+    .x-canvas::before { content: "PAGE · SUBSTRATE VIEW"; position: absolute; top: .65rem; left: .75rem; z-index: 2; color: #6f6f6f; font-size: .62rem; font-weight: 900; letter-spacing: .12em; }
+    .x-canvas svg { display: block; width: 100%; height: 535px; }
+    .x-scene { transform-origin: 50% 50%; transition: transform .22s ease; }
+    .x-grid { stroke: #e7e7e5; stroke-width: 1; }
+    .x-axis { stroke: #8c8c8c; stroke-width: 1.1; }
+    .x-frame { fill: none; stroke: #b4b4b4; stroke-width: 1.1; stroke-dasharray: 5 6; }
+    .x-relation { fill: none; stroke: #8b8b8b; stroke-width: 1.25; opacity: .8; transition: stroke .18s ease,stroke-width .18s ease,opacity .18s ease; }
+    .x-relation.is-active { stroke: #111; stroke-width: 2.4; opacity: 1; }
+    .x-particle { cursor: pointer; outline: none; }
+    .x-particle circle { fill: #fff; stroke: #111; stroke-width: 1.7; transition: r .16s ease,stroke-width .16s ease,fill .16s ease; }
+    .x-particle.is-muted circle { opacity: .22; }
+    .x-particle.is-unresolved circle { stroke-dasharray: 3 3; }
+    .x-particle.is-rejected circle { stroke-width: 2.5; }
+    .x-particle:hover circle, .x-particle:focus circle, .x-particle.is-selected circle { fill: #111; stroke: #111; }
+    .x-particle.is-selected .x-selection-ring { display: block; }
+    .x-selection-ring { display: none; fill: none; stroke: #111; stroke-width: 1.2; stroke-dasharray: 5 5; }
+    .x-particle-label { fill: #555; font-size: 11px; font-weight: 800; pointer-events: none; }
+    .x-note { fill: #6f6f6f; font-size: 10px; letter-spacing: .08em; }
+    .x-cursor { fill: none; stroke: #111; stroke-width: 1; stroke-dasharray: 4 4; pointer-events: none; }
+    .x-tooltip { position: absolute; z-index: 3; max-width: 190px; padding: .5rem .6rem; border: 1px solid #111; border-radius: 8px; background: rgba(255,255,255,.96); box-shadow: 5px 5px 0 rgba(0,0,0,.09); font-size: .72rem; pointer-events: none; }
+    .x-tooltip[hidden] { display: none; }
+    .x-caption { position: absolute; right: .75rem; bottom: .65rem; color: #6f6f6f; font-size: .65rem; }
+    .x-zoom { position: absolute; right: .7rem; top: .8rem; display: grid; gap: .25rem; }
+    .x-zoom button { width: 30px; height: 30px; border: 1px solid #777; border-radius: 7px; background: rgba(255,255,255,.92); cursor: pointer; font-size: 1rem; }
+    .x-zoom-readout { color: #6f6f6f; font-size: .62rem; text-align: center; }
+    .x-inspector { min-height: 589px; padding-bottom: .75rem; }
+    .x-inspector-head { display: flex; justify-content: space-between; gap: .5rem; padding: .85rem .9rem .7rem; border-bottom: 1px solid #c9c9c9; }
+    .x-inspector-head h2 { margin: .1rem 0 0; font-size: 1rem; }
+    .x-inspector-head p { margin: 0; color: #6f6f6f; font-size: .68rem; }
+    .x-inspector-index { font-size: .72rem; font-weight: 900; }
+    .x-inspector-body { padding: .8rem .9rem; }
+    .x-fields { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; }
+    .x-field { padding: .55rem; border-bottom: 1px dashed #c9c9c9; }
+    .x-field dt { color: #6f6f6f; font-size: .64rem; }
+    .x-field dd { margin: .15rem 0 0; font-size: .78rem; font-weight: 850; word-break: break-word; }
+    .x-field.full { grid-column: 1 / -1; }
+    .x-status-mark { display: inline-flex; align-items: center; gap: .35rem; }
+    .x-status-symbol { display: inline-flex; align-items: center; justify-content: center; width: 1rem; height: 1rem; border: 1px solid #111; border-radius: 50%; font-size: .65rem; }
+    .x-status-symbol.unresolved { border-style: dashed; }
+    .x-status-symbol.rejected { border-radius: 3px; }
+    .x-inspector-actions { display: grid; gap: .45rem; margin-top: 1rem; }
+    .x-outline, .x-solid { width: 100%; padding: .55rem .7rem; border: 1px solid #111; border-radius: 8px; cursor: pointer; font-size: .74rem; font-weight: 850; text-align: left; }
+    .x-outline { background: #fff; }
+    .x-solid { background: #111; color: #fff; }
+    .x-outline:hover, .x-outline:focus-visible, .x-solid:hover, .x-solid:focus-visible { box-shadow: 3px 3px 0 rgba(0,0,0,.22); outline: none; }
+    .x-inspector-note { margin: 1rem 0 0; padding: .6rem; border: 1px dashed #777; color: #6f6f6f; font-size: .68rem; }
+    .x-table-panel { margin-top: .8rem; overflow: hidden; }
+    .x-table-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .7rem .8rem; border-bottom: 1px solid #c9c9c9; }
+    .x-table-head h2 { margin: 0; font-size: .88rem; }
+    .x-table-head span { color: #6f6f6f; font-size: .68rem; }
+    .x-table-scroll { overflow-x: auto; }
+    .x-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: .73rem; }
+    .x-table th, .x-table td { padding: .58rem .7rem; border-bottom: 1px solid #e5e5e3; text-align: left; white-space: nowrap; }
+    .x-table th { color: #6f6f6f; font-size: .63rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+    .x-table tbody tr { cursor: pointer; transition: background .15s ease; }
+    .x-table tbody tr:hover, .x-table tbody tr:focus-visible, .x-table tbody tr.is-selected { background: #f0f0ee; outline: none; }
+    .x-table tbody tr.is-pulse { animation: x-row-pulse .7s ease; }
+    @keyframes x-row-pulse { 0%,100% { background: #f0f0ee; } 50% { background: #dededb; } }\n+    .x-row-number { color: #6f6f6f; font-variant-numeric: tabular-nums; }\n+    .x-row-chip { display: inline-flex; align-items: center; gap: .35rem; font-weight: 800; }\n+    .x-drawer { margin-top: .8rem; overflow: hidden; }\n+    .x-drawer-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .85rem .9rem; border-bottom: 1px solid #c9c9c9; }\n+    .x-drawer-head h2 { margin: .1rem 0 0; font-size: 1rem; }\n+    .x-drawer-head p { margin: 0; color: #6f6f6f; font-size: .68rem; }\n+    .x-drawer-toggle { width: 32px; height: 32px; border: 1px solid #111; border-radius: 7px; background: #fff; cursor: pointer; font-size: 1rem; }\n+    .x-drawer-body { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(260px,.9fr); gap: 1rem; padding: .9rem; }\n+    .x-drawer.is-collapsed .x-drawer-body { display: none; }\n+    .x-proposal-card, .x-verdict-card { border: 1px dashed #777; border-radius: 12px; padding: .8rem; background: #fcfcfb; }\n+    .x-card-kicker { margin-bottom: .35rem; color: #6f6f6f; font-size: .65rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }\n+    .x-proposal-card h3, .x-verdict-card h3 { margin-bottom: .7rem; font-size: .95rem; }\n+    .x-proposal-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem; }\n+    .x-proposal-field { display: grid; gap: .25rem; }\n+    .x-proposal-field label { color: #6f6f6f; font-size: .64rem; font-weight: 850; }\n+    .x-proposal-field input, .x-proposal-field select, .x-proposal-field textarea { width: 100%; padding: .45rem .5rem; border: 1px solid #777; border-radius: 7px; background: #fff; color: #111; font-size: .72rem; }\n+    .x-proposal-field textarea { min-height: 55px; resize: vertical; }\n+    .x-proposal-field.full { grid-column: 1 / -1; }\n+    .x-proposal-actions { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .7rem; }\n+    .x-proposal-actions button { width: auto; }\n+    .x-verdict-layout { display: grid; grid-template-columns: 58px minmax(0,1fr); gap: .7rem; align-items: start; }\n+    .x-verdict-icon { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border: 1.5px solid #111; border-radius: 50%; font-size: 1.45rem; font-weight: 900; }\n+    .x-verdict-icon.rejected { border-radius: 7px; }\n+    .x-verdict-icon.unresolved { border-style: dashed; }\n+    .x-verdict-title { margin: .05rem 0 .15rem; font-size: 1rem; }\n+    .x-verdict-reason { margin: 0; color: #6f6f6f; font-size: .72rem; }\n+    .x-history { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .85rem; padding-top: .65rem; border-top: 1px dashed #c9c9c9; }\n+    .x-history-node { display: inline-flex; align-items: center; gap: .3rem; color: #6f6f6f; font-size: .65rem; }\n+    .x-history-node i { display: inline-block; width: 9px; height: 9px; border: 1px solid #111; border-radius: 50%; background: #fff; }\n+    .x-history-node.current { color: #111; font-weight: 850; }\n+    .x-history-node.current i { background: #111; }\n+    .x-history-arrow { color: #777; }\n+    .x-toast { position: fixed; right: 1rem; bottom: 1rem; z-index: 10; max-width: 300px; padding: .7rem .8rem; border: 1px solid #111; border-radius: 9px; background: #111; color: #fff; box-shadow: 5px 5px 0 rgba(0,0,0,.18); font-size: .75rem; }\n+    .x-toast[hidden] { display: none; }\n+    @media (max-width: 1120px) { .x-explorer-grid { grid-template-columns: minmax(0,1fr) 275px; } .x-mode-tab { min-width: 72px; } .x-brand { min-width: 150px; } }\n+    @media (max-width: 860px) { .x-topbar, .x-workspace-head { align-items: flex-start; flex-wrap: wrap; } .x-top-title { flex-basis: calc(100% - 200px); } .x-mode-tabs { order: 3; width: 100%; } .x-mode-tab { flex: 1; } .x-app-grid { grid-template-columns: 1fr; } .x-rail { min-height: auto; flex-direction: row; align-items: center; padding: .45rem; } .x-rail-stack { display: flex; flex-wrap: wrap; } .x-rail-divider { width: 1px; height: 28px; margin: 0 .35rem; } .x-explorer-grid { grid-template-columns: 1fr; } .x-inspector { min-height: 0; } .x-drawer-body { grid-template-columns: 1fr; } }\n+    @media (max-width: 600px) { .page { width: min(100% - .75rem, 600px); } .x-brand { min-width: 0; } .x-top-title { display: none; } .x-meta { justify-content: flex-start; } .x-canvas, .x-canvas svg { min-height: 430px; height: 430px; } .x-proposal-grid { grid-template-columns: 1fr; } .x-proposal-field.full { grid-column: auto; } }\n+    @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }\n   </style>
   </style>
 </head>
 <body>
-  <a class="skip-link" href="#content">跳到主要内容</a>
+  <a class="skip-link" href="#x-workspace">跳到 Explore 工作区</a>
   <div class="page">
+    <div class="explore-view" id="exploreView">
+      <header class="x-topbar">
+        <a class="x-brand" href="#x-workspace" aria-label="gloss Explore 首页"><span>gloss</span><i class="x-brand-mark" aria-hidden="true"></i></a>
+        <div class="x-top-title"><strong>Semantic figure inspector</strong><span>从元素、关系线到数据行：每个结论都留在可核验的路径上。</span></div>
+        <nav class="x-mode-tabs" aria-label="工作区模式" role="tablist">
+          <button class="x-mode-tab" role="tab" aria-selected="false" data-x-mode="overview">overview</button>
+          <button class="x-mode-tab" role="tab" aria-selected="true" data-x-mode="explore">explore</button>
+          <button class="x-mode-tab" role="tab" aria-selected="false" data-x-mode="propose">propose</button>
+        </nav>
+        <button class="x-header-action" id="xHelp" type="button" aria-label="帮助">?</button>
+      </header>
+
+      <div class="x-app-grid">
+        <aside class="x-rail" aria-label="Explore 工具栏">
+          <div class="x-rail-stack">
+            <button class="x-rail-btn" type="button" data-x-mode="overview" aria-selected="false" aria-disabled="true"><span>⌂</span><span>overview</span></button>
+            <button class="x-rail-btn" type="button" data-x-mode="explore" aria-selected="true"><span>⌘</span><span>explore</span></button>
+            <button class="x-rail-btn" type="button" data-x-mode="propose" aria-selected="false" aria-disabled="true"><span>✦</span><span>propose</span></button>
+            <div class="x-rail-divider"></div>
+            <button class="x-rail-btn" type="button" data-x-tool="select" aria-pressed="true"><span>↖</span><span>select</span></button>
+            <button class="x-rail-btn" type="button" data-x-tool="relation" aria-pressed="false"><span>⌁</span><span>relation</span></button>
+            <button class="x-rail-btn" type="button" data-x-tool="search" aria-pressed="false"><span>⌕</span><span>search</span></button>
+          </div>
+          <div class="x-rail-stack">
+            <button class="x-rail-btn" type="button" id="xOpenEvidenceRail"><span>▱</span><span>evidence</span></button>
+            <button class="x-rail-btn" type="button" id="xResetView"><span>⟳</span><span>reset</span></button>
+          </div>
+        </aside>
+
+        <main class="x-workspace" id="x-workspace">
+          <header class="x-workspace-head">
+            <div><p class="x-eyebrow">Explore / semantic figure inspector</p><h1>从图元读到数据行</h1><p>选择一个元素，查看它的叶子、图层、面板和绑定，再把提议交给核验路径。</p></div>
+            <div class="x-meta"><span class="x-pill">figure · gallery-029</span><label class="x-pill"><input id="xHideBinding" type="checkbox"> hide binding</label></div>
+          </header>
+
+          <section class="x-explorer-grid" aria-label="语义探索工作区">
+            <article class="x-canvas-panel">
+              <header class="x-panel-bar">
+                <div class="x-panel-label"><strong>figure canvas</strong><span>page · substrate view</span></div>
+                <div class="x-toolbar">
+                  <div class="x-search" id="xSearchWrap"><input id="xSearchInput" type="search" placeholder="E-05 / layer" aria-label="搜索元素"></div>
+                  <button class="x-tool-btn" type="button" data-x-tool="select" aria-label="选择元素" aria-pressed="true">↖</button>
+                  <button class="x-tool-btn" type="button" data-x-tool="pan" aria-label="拖动画布" aria-pressed="false">✋</button>
+                  <button class="x-tool-btn" type="button" data-x-tool="relation" aria-label="查看关系线" aria-pressed="false">⌁</button>
+                  <button class="x-tool-btn" type="button" data-x-tool="search" aria-label="搜索元素" aria-pressed="false">⌕</button>
+                </div>
+              </header>
+              <div class="x-canvas" id="xCanvas">
+                <div class="x-tooltip" id="xTooltip" hidden></div>
+                <svg viewBox="0 0 840 535" role="img" aria-label="可交互的图元关系画布">
+                  <defs><pattern id="xSvgGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0L0 0 0 28" fill="none" stroke="#e8e8e6" stroke-width="1"/></pattern></defs>
+                  <rect x="0" y="0" width="840" height="535" fill="url(#xSvgGrid)"/>
+                  <g id="xScene" class="x-scene">
+                    <rect class="x-frame" x="86" y="70" width="600" height="350" rx="12"/>
+                    <line class="x-axis" x1="125" y1="380" x2="650" y2="380"/>
+                    <line class="x-axis" x1="125" y1="380" x2="125" y2="110"/>
+                    <text class="x-note" x="125" y="104">PANEL 1 · DATA MARKS</text>
+                    <text class="x-note" x="651" y="399">x</text><text class="x-note" x="110" y="112">y</text>
+                    <g id="xRelationLayer"></g><g id="xParticleLayer"></g>
+                    <line id="xCursorX" class="x-cursor" x1="0" y1="0" x2="0" y2="0"/><line id="xCursorY" class="x-cursor" x1="0" y1="0" x2="0" y2="0"/>
+                  </g>
+                </svg>
+                <div class="x-zoom" aria-label="缩放"><button type="button" data-x-zoom="in" aria-label="放大">+</button><button type="button" data-x-zoom="out" aria-label="缩小">−</button><span class="x-zoom-readout" id="xZoomReadout">100%</span></div>
+                <span class="x-caption">504 × 360 pt · 32 rows · 12 visible elements</span>
+              </div>
+            </article>
+
+            <aside class="x-inspector" aria-live="polite">
+              <header class="x-inspector-head"><div><p>selected element</p><h2 id="xInspectorTitle">E-05</h2></div><span class="x-inspector-index" id="xInspectorTag">circle</span></header>
+              <div class="x-inspector-body" id="xInspectorBody"></div>
+            </aside>
+          </section>
+
+          <section class="x-table-panel" aria-labelledby="xTableTitle">
+            <header class="x-table-head"><div><h2 id="xTableTitle">built_layer1 · data rows</h2><span>选中一行，画布中的对应元素会被定位。</span></div><span id="xTableSelection">row 5 selected</span></header>
+            <div class="x-table-scroll"><table class="x-table"><thead><tr><th>#</th><th>row</th><th>element</th><th>x</th><th>y</th><th>layer</th><th>status</th></tr></thead><tbody id="xDataRows"></tbody></table></div>
+          </section>
+
+          <aside class="x-drawer" id="xDrawer" aria-live="polite">
+            <header class="x-drawer-head"><div><p>verification drawer</p><h2>提交一条绑定提议</h2></div><button class="x-drawer-toggle" type="button" id="xToggleDrawer" aria-expanded="true" aria-label="折叠核验抽屉">⌃</button></header>
+            <div class="x-drawer-body">
+              <section class="x-proposal-card"><p class="x-card-kicker">structured proposal</p><h3>把元素和一行数据交给代码检查</h3>
+                <div class="x-proposal-grid">
+                  <div class="x-proposal-field"><label for="xProposalElement">element</label><input id="xProposalElement" readonly></div>
+                  <div class="x-proposal-field"><label for="xProposalTable">table</label><input id="xProposalTable" value="built_layer1" readonly></div>
+                  <div class="x-proposal-field"><label for="xProposalRow">row</label><select id="xProposalRow"></select></div>
+                  <div class="x-proposal-field full"><label for="xProposalBasis">basis</label><textarea id="xProposalBasis">row placed through panel scales; element compared on page</textarea></div>
+                </div>
+                <div class="x-proposal-actions"><button class="x-solid" id="xSubmitProposal" type="button">→ 提交核验</button><button class="x-outline" id="xResetProposal" type="button">重置为选中行</button></div>
+              </section>
+              <section class="x-verdict-card"><p class="x-card-kicker">check result</p>
+                <div class="x-verdict-layout"><div class="x-verdict-icon" id="xVerdictIcon">✓</div><div><h3 class="x-verdict-title" id="xVerdictTitle">verified · row 5</h3><p class="x-verdict-reason" id="xVerdictReason">the proposed row is where the element is drawn, within 0.5 pt.</p></div></div>
+                <div class="x-history" id="xHistory"><span class="x-history-node"><i></i>look up</span><span class="x-history-arrow">→</span><span class="x-history-node"><i></i>inspect</span><span class="x-history-arrow">→</span><span class="x-history-node current"><i></i>verified</span></div>
+              </section>
+            </div>
+          </aside>
+        </main>
+      </div>
+    </div>
     <header class="topbar">
       <div>
         <p class="eyebrow">Interactive wireframe · gloss</p>
@@ -778,6 +983,181 @@
     selectRoute("source");
     selectMilestone("M1");
     document.querySelector('[data-filter="all"]').click();
+  </script>
+  <script>
+    (function () {
+      var elements = [
+        {id:"E-01",tag:"circle",x:188,y:292,row:1,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Mazda RX4"},
+        {id:"E-02",tag:"circle",x:252,y:255,row:2,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Mazda RX4 Wag"},
+        {id:"E-03",tag:"circle",x:314,y:324,row:3,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Datsun 710"},
+        {id:"E-04",tag:"circle",x:365,y:218,row:4,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Hornet 4 Drive"},
+        {id:"E-05",tag:"circle",x:424,y:270,row:5,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Valiant"},
+        {id:"E-06",tag:"circle",x:472,y:197,row:6,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Merc 280"},
+        {id:"E-07",tag:"circle",x:516,y:236,row:7,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Merc 280C"},
+        {id:"E-08",tag:"circle",x:565,y:164,row:8,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Merc 450SE"},
+        {id:"E-09",tag:"circle",x:607,y:188,row:9,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"ambiguous",basis:"two rows within 0.5 pt",label:"Merc 450SL"},
+        {id:"E-10",tag:"circle",x:585,y:292,row:10,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Merc 450SLC"},
+        {id:"E-11",tag:"circle",x:342,y:154,row:null,leaf:"L-08",layer:"built_layer2",panel:"panel1",status:"unresolved",basis:"layer emits a moved copy",label:"shadow mark"},
+        {id:"E-12",tag:"circle",x:245,y:365,row:null,leaf:"L-08",layer:"built_layer2",panel:"panel1",status:"rejected",basis:"no stable row comparison",label:"unbound mark"}
+      ];
+      var relations = [["E-01","E-02"],["E-02","E-03"],["E-02","E-04"],["E-04","E-05"],["E-05","E-06"],["E-05","E-07"],["E-07","E-08"],["E-08","E-09"],["E-05","E-10"],["E-04","E-11"],["E-03","E-12"]];
+      var state = {selected:"E-05",tool:"select",zoom:1,hideBinding:false};
+      var byId = {};
+      elements.forEach(function (item) { byId[item.id] = item; });
+      var particleLayer = document.getElementById("xParticleLayer");
+      var relationLayer = document.getElementById("xRelationLayer");
+      var canvasScene = document.getElementById("xScene");
+      var canvas = document.getElementById("xCanvas");
+      var tooltip = document.getElementById("xTooltip");
+      var inspectorBody = document.getElementById("xInspectorBody");
+      var dataRows = document.getElementById("xDataRows");
+      var proposalRow = document.getElementById("xProposalRow");
+      var proposalElement = document.getElementById("xProposalElement");
+      var toast = document.getElementById("xToast");
+
+      function symbol(status) { return status === "verified" || status === "ambiguous" ? "✓" : status === "rejected" ? "×" : "·"; }
+      function particle(item) {
+        var selected = item.id === state.selected;
+        var muted = state.hideBinding && item.row !== null;
+        var classes = ["x-particle", selected ? "is-selected" : "", item.status === "unresolved" ? "is-unresolved" : "", item.status === "rejected" ? "is-rejected" : "", muted ? "is-muted" : ""].filter(Boolean).join(" ");
+        return '<g class="' + classes + '" data-x-element="' + item.id + '" tabindex="0" role="button" aria-label="' + item.id + ' ' + item.label + '">' +
+          '<circle cx="' + item.x + '" cy="' + item.y + '" r="' + (selected ? 7 : 5) + '"/>' +
+          '<circle class="x-selection-ring" cx="' + item.x + '" cy="' + item.y + '" r="18"/>' +
+          '<text class="x-particle-label" x="' + (item.x + 10) + '" y="' + (item.y - 8) + '">' + item.id + '</text></g>';
+      }
+      function relation(pair) {
+        var from = byId[pair[0]], to = byId[pair[1]];
+        var active = pair.indexOf(state.selected) > -1 ? "is-active" : "";
+        return '<line class="x-relation ' + active + '" x1="' + from.x + '" y1="' + from.y + '" x2="' + to.x + '" y2="' + to.y + '"/>';
+      }
+      function renderScene() {
+        relationLayer.innerHTML = relations.map(relation).join("");
+        particleLayer.innerHTML = elements.map(particle).join("");
+        canvasScene.classList.toggle("is-relation-mode", state.tool === "relation");
+      }
+      function renderInspector() {
+        var item = byId[state.selected];
+        var binding = state.hideBinding && item.row !== null ? "hidden for this run" : item.row === null ? "not available" : "row " + item.row;
+        inspectorBody.innerHTML =
+          '<div class="x-fields">' +
+          field("element", item.id) + field("tag", item.tag) + field("leaf", item.leaf) + field("layer", item.layer) +
+          field("panel", item.panel) + field("binding", binding) +
+          '<dl class="x-field full"><dt>status</dt><dd><span class="x-status-mark"><i class="x-status-symbol ' + item.status + '">' + symbol(item.status) + '</i>' + item.status + '</span></dd></dl>' +
+          field("basis", item.basis, true) + '</div>' +
+          '<div class="x-inspector-actions"><button class="x-solid" type="button" id="xOpenVerification">open verification drawer →</button><button class="x-outline" type="button" id="xFocusTableRow">focus row in data table</button></div>' +
+          '<p class="x-inspector-note">This inspector exposes only what the figure and its derived tables can state. Unresolved elements keep their reason instead of being silently assigned.</p>';
+        document.getElementById("xInspectorTitle").textContent = item.id;
+        document.getElementById("xInspectorTag").textContent = item.tag;
+        document.getElementById("xOpenVerification").addEventListener("click", openDrawer);
+        document.getElementById("xFocusTableRow").addEventListener("click", focusTableRow);
+      }
+      function field(label, value, full) { return '<dl class="x-field' + (full ? ' full' : '') + '"><dt>' + label + '</dt><dd>' + value + '</dd></dl>'; }
+      function renderTable() {
+        dataRows.innerHTML = elements.map(function (item) {
+          var selected = item.id === state.selected ? "is-selected" : "";
+          var row = item.row === null ? "—" : item.row;
+          return '<tr class="' + selected + '" tabindex="0" data-x-row="' + item.id + '">' +
+            '<td class="x-row-number">' + String(item.row === null ? "—" : item.row).padStart(3,"0") + '</td><td>' + row + '</td><td>' + item.id + '</td>' +
+            '<td>' + (1.8 + item.x / 110).toFixed(2) + '</td><td>' + (9 + (380 - item.y) / 11).toFixed(1) + '</td><td>' + item.layer + '</td>' +
+            '<td><span class="x-row-chip"><i class="x-status-symbol ' + item.status + '">' + symbol(item.status) + '</i>' + item.status + '</span></td></tr>';
+        }).join("");
+        document.querySelectorAll("[data-x-row]").forEach(function (row) {
+          row.addEventListener("click", function () { selectElement(row.dataset.xRow); });
+          row.addEventListener("keydown", function (event) { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectElement(row.dataset.xRow); } });
+        });
+        var item = byId[state.selected];
+        document.getElementById("xTableSelection").textContent = item.row === null ? item.id + " · no stable row" : "row " + item.row + " selected";
+      }
+      function renderProposal() {
+        var item = byId[state.selected];
+        proposalElement.value = item.id;
+        proposalRow.innerHTML = elements.filter(function (candidate) { return candidate.row !== null; }).map(function (candidate) {
+          return '<option value="' + candidate.row + '"' + (candidate.row === item.row ? " selected" : "") + '>' + candidate.row + ' · ' + candidate.label + '</option>';
+        }).join("");
+        updateVerdict(item.row === null ? "unresolved" : "verified", item.row === null ? "This element has no stable row comparison yet." : "the proposed row is where " + item.id + " is drawn, within 0.5 pt.");
+      }
+      function selectElement(id) {
+        if (!byId[id]) return;
+        state.selected = id;
+        renderScene(); renderInspector(); renderTable(); renderProposal();
+      }
+      function updateVerdict(status, reason) {
+        var icon = document.getElementById("xVerdictIcon");
+        var item = byId[state.selected];
+        icon.className = "x-verdict-icon " + status;
+        icon.textContent = status === "verified" ? "✓" : status === "rejected" ? "×" : "·";
+        document.getElementById("xVerdictTitle").textContent = status === "verified" ? "verified · row " + item.row : status;
+        document.getElementById("xVerdictReason").textContent = reason;
+        document.getElementById("xHistory").innerHTML = '<span class="x-history-node"><i></i>look up</span><span class="x-history-arrow">→</span><span class="x-history-node"><i></i>inspect</span><span class="x-history-arrow">→</span><span class="x-history-node current"><i></i>' + status + '</span>';
+      }
+      function openDrawer() {
+        var drawer = document.getElementById("xDrawer");
+        drawer.classList.remove("is-collapsed");
+        document.getElementById("xToggleDrawer").setAttribute("aria-expanded", "true");
+        drawer.scrollIntoView({behavior:"smooth",block:"nearest"});
+      }
+      function focusTableRow() {
+        var row = document.querySelector('[data-x-row="' + state.selected + '"]');
+        if (!row) return;
+        row.scrollIntoView({behavior:"smooth",block:"center"});
+        row.classList.remove("is-pulse");
+        requestAnimationFrame(function () { row.classList.add("is-pulse"); });
+      }
+      function showToast(message) {
+        if (!toast) return;
+        toast.textContent = message; toast.hidden = false;
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(function () { toast.hidden = true; }, 2200);
+      }
+
+      particleLayer.addEventListener("click", function (event) { var target = event.target.closest("[data-x-element]"); if (target) selectElement(target.dataset.xElement); });
+      particleLayer.addEventListener("keydown", function (event) { var target = event.target.closest("[data-x-element]"); if (target && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); selectElement(target.dataset.xElement); } });
+      particleLayer.addEventListener("pointerover", function (event) {
+        var target = event.target.closest("[data-x-element]"); if (!target) return;
+        var item = byId[target.dataset.xElement];
+        tooltip.innerHTML = "<strong>" + item.id + "</strong><br>" + item.label + "<br><span>" + item.layer + " · " + item.status + "</span>";
+        tooltip.style.left = Math.min(event.offsetX + 12, canvas.clientWidth - 205) + "px";
+        tooltip.style.top = Math.max(event.offsetY - 18, 36) + "px"; tooltip.hidden = false;
+      });
+      particleLayer.addEventListener("pointerout", function (event) { if (!event.relatedTarget || !event.relatedTarget.closest || !event.relatedTarget.closest("[data-x-element]")) tooltip.hidden = true; });
+
+      document.querySelectorAll("[data-x-tool]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var tool = button.dataset.xTool;
+          if (tool === "search") { document.getElementById("xSearchWrap").classList.toggle("is-open"); document.getElementById("xSearchInput").focus(); }
+          state.tool = tool;
+          document.querySelectorAll("[data-x-tool]").forEach(function (item) { item.setAttribute("aria-pressed", String(item.dataset.xTool === tool)); });
+          renderScene();
+          if (tool === "pan") showToast("Pan mode is ready; select mode keeps element inspection active.");
+        });
+      });
+      document.getElementById("xSearchInput").addEventListener("input", function (event) {
+        var query = event.target.value.trim().toLowerCase();
+        document.querySelectorAll("[data-x-element]").forEach(function (node) {
+          var item = byId[node.dataset.xElement];
+          node.classList.toggle("is-muted", Boolean(query) && !((item.id + " " + item.label + " " + item.layer).toLowerCase().includes(query)));
+        });
+      });
+      document.getElementById("xHideBinding").addEventListener("change", function (event) { state.hideBinding = event.target.checked; renderScene(); renderInspector(); });
+      document.querySelectorAll("[data-x-zoom]").forEach(function (button) { button.addEventListener("click", function () { state.zoom = Math.max(.8, Math.min(1.35, state.zoom + (button.dataset.xZoom === "in" ? .1 : -.1))); canvasScene.style.transform = "scale(" + state.zoom + ")"; document.getElementById("xZoomReadout").textContent = Math.round(state.zoom * 100) + "%"; }); });
+      document.getElementById("xToggleDrawer").addEventListener("click", function () { var drawer = document.getElementById("xDrawer"); drawer.classList.toggle("is-collapsed"); document.getElementById("xToggleDrawer").setAttribute("aria-expanded", String(!drawer.classList.contains("is-collapsed"))); });
+      document.getElementById("xOpenEvidenceRail").addEventListener("click", openDrawer);
+      document.getElementById("xResetView").addEventListener("click", function () { state.zoom = 1; state.tool = "select"; document.getElementById("xSearchInput").value = ""; document.getElementById("xSearchWrap").classList.remove("is-open"); document.getElementById("xZoomReadout").textContent = "100%"; canvasScene.style.transform = "scale(1)"; document.querySelectorAll("[data-x-tool]").forEach(function (item) { item.setAttribute("aria-pressed", String(item.dataset.xTool === "select")); }); selectElement("E-05"); showToast("Explore view reset."); });
+      document.getElementById("xSubmitProposal").addEventListener("click", function () {
+        var item = byId[state.selected], proposed = Number(proposalRow.value);
+        if (item.row === null) updateVerdict("unresolved", "This element has no stable row comparison; the proposal is refused.");
+        else if (proposed === item.row) updateVerdict("verified", "row " + proposed + " lands on " + item.id + " within the page tolerance.");
+        else updateVerdict("rejected", "row " + proposed + " is not where " + item.id + " is drawn; inspect the selected row and try again.");
+        showToast("Proposal checked by the local prototype.");
+      });
+      document.getElementById("xResetProposal").addEventListener("click", renderProposal);
+      document.getElementById("xHelp").addEventListener("click", function () { showToast("Explore: select a particle, inspect its fields, then submit a proposal."); });
+      document.querySelectorAll("[data-x-mode]").forEach(function (button) { button.addEventListener("click", function () { var mode = button.dataset.xMode; if (mode !== "explore") showToast(mode + " is the next workspace; Explore is implemented first."); }); });
+
+      var initial = document.createElement("div");
+      initial.className = "x-toast"; initial.id = "xToast"; initial.hidden = true; document.body.appendChild(initial); toast = initial;
+      renderScene(); selectElement("E-05");
+    }());
   </script>
 </body>
 </html>
