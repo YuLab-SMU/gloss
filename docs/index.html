@@ -474,6 +474,7 @@
     .page { width: min(1680px, calc(100% - 1.5rem)); padding: .75rem 0 2.5rem; }
     .page > .topbar, .page > main, .page > .footer { display: none; }
     .explore-view { display: block; }
+    .explore-view.is-hidden { display: none; }
     .x-topbar { display: flex; align-items: center; gap: 1rem; min-height: 70px; padding: .65rem 0; border-bottom: 1px solid #111; }
     .x-brand { display: inline-flex; align-items: center; gap: .7rem; min-width: 188px; color: #111; font-size: 1.55rem; font-weight: 950; letter-spacing: -.06em; text-decoration: none; }
     .x-brand-mark { position: relative; display: inline-block; width: 38px; height: 28px; border-left: 1.5px solid #111; border-bottom: 1.5px solid #111; transform: skewY(-15deg); }
@@ -656,6 +657,75 @@
     .x-status-icon.ambiguous { color: var(--x-ambiguous); }
     .x-status-icon.unresolved { color: var(--x-unresolved); }
     .x-status-icon.rejected { color: var(--x-rejected); }
+    .p-view { display: none; }
+    .p-view.is-active { display: block; }
+    .p-workspace-head { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: .4rem 0 .8rem; }
+    .p-workspace-head h1 { margin: 0 0 .25rem; font-size: clamp(1.45rem, 2.8vw, 2.8rem); line-height: 1; letter-spacing: -.045em; }
+    .p-workspace-head p { margin: 0; color: #6f6f6f; font-size: .82rem; }
+    .p-meta { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; color: #6f6f6f; font-size: .72rem; }
+    .p-stage { display: grid; grid-template-columns: minmax(210px,.72fr) minmax(330px,1.2fr) minmax(250px,.9fr); gap: .8rem; align-items: stretch; }
+    .p-card { border: 1px solid #111; border-radius: 16px; background: rgba(255,255,255,.95); box-shadow: 0 12px 26px rgba(0,0,0,.08); overflow: hidden; }
+    .p-card-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .8rem .85rem; border-bottom: 1px solid #c9c9c9; }
+    .p-card-head h2 { margin: 0; font-size: .95rem; }
+    .p-card-head p { margin: 0; color: #6f6f6f; font-size: .66rem; }
+    .p-card-body { padding: .85rem; }
+    .p-context-canvas { display: block; width: 100%; height: 175px; border: 1px dashed #777; border-radius: 11px; background: linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px),#fbfbfa; background-size: 22px 22px; }
+    .p-context-canvas .p-link { fill: none; stroke: #9a9a9a; stroke-width: 1.3; }
+    .p-context-canvas .p-node { fill: #fff; stroke: #111; stroke-width: 1.6; }
+    .p-context-canvas .p-node.selected { fill: var(--x-blue); stroke: var(--x-blue); }
+    .p-context-canvas .p-ring { fill: none; stroke: var(--x-blue); stroke-width: 1.2; stroke-dasharray: 4 4; }
+    .p-context-caption { display: flex; justify-content: space-between; gap: .5rem; margin: .65rem 0 0; color: #6f6f6f; font-size: .68rem; }
+    .p-context-fields { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; margin-top: .8rem; }
+    .p-context-field { padding: .45rem; border-bottom: 1px dashed #c9c9c9; }
+    .p-context-field small { display: block; color: #6f6f6f; font-size: .62rem; }
+    .p-context-field strong { display: block; margin-top: .12rem; font-size: .76rem; }
+    .p-form-card { border-top: 5px solid var(--x-blue); }
+    .p-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; }
+    .p-field { display: grid; gap: .25rem; }
+    .p-field.full { grid-column: 1 / -1; }
+    .p-field label { color: #6f6f6f; font-size: .65rem; font-weight: 850; }
+    .p-field input, .p-field select, .p-field textarea { width: 100%; padding: .55rem .55rem; border: 1px solid #777; border-radius: 8px; background: #fff; color: #111; font-size: .75rem; }
+    .p-field textarea { min-height: 90px; resize: vertical; }
+    .p-form-actions { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .8rem; }
+    .p-form-actions button { width: auto; }
+    .p-button-primary, .p-button-secondary { padding: .55rem .72rem; border: 1px solid #111; border-radius: 8px; cursor: pointer; font-size: .74rem; font-weight: 850; }
+    .p-button-primary { border-color: var(--x-blue); background: var(--x-blue); color: #fff; }
+    .p-button-secondary { background: #fff; }
+    .p-button-secondary:hover, .p-button-secondary:focus-visible { border-color: var(--x-blue); background: var(--x-blue-bg); color: var(--x-blue); outline: none; }
+    .p-result-card { border-top: 5px solid var(--x-verified); }
+    .p-result-card.is-rejected { border-top-color: var(--x-rejected); }
+    .p-result-card.is-unresolved { border-top-color: var(--x-unresolved); }
+    .p-gate { position: relative; display: flex; align-items: center; justify-content: center; min-height: 175px; margin-bottom: .75rem; border: 1px dashed #c9c9c9; border-radius: 12px; background: #fbfbfa; }
+    .p-gate::before, .p-gate::after { content: ""; position: absolute; top: 50%; width: 30%; height: 1px; background: #c9c9c9; }
+    .p-gate::before { left: 0; }
+    .p-gate::after { right: 0; }
+    .p-diamond { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; width: 62px; height: 62px; border: 1.8px solid var(--x-blue); background: var(--x-blue-bg); transform: rotate(45deg); }
+    .p-diamond span { transform: rotate(-45deg); color: var(--x-blue); font-size: 1.6rem; font-weight: 900; }
+    .p-branches { display: grid; gap: .45rem; }
+    .p-branch { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .5rem .6rem; border: 1px solid #c9c9c9; border-radius: 8px; color: #6f6f6f; font-size: .7rem; }
+    .p-branch.is-active { border-color: var(--x-verified); background: var(--x-verified-bg); color: var(--x-verified); font-weight: 850; }
+    .p-branch.is-rejected { border-color: var(--x-rejected); background: var(--x-rejected-bg); color: var(--x-rejected); }
+    .p-branch.is-unresolved { border-style: dashed; border-color: var(--x-unresolved); background: var(--x-unresolved-bg); color: var(--x-unresolved); }
+    .p-branch-icon { display: inline-flex; align-items: center; justify-content: center; width: 1rem; height: 1rem; }
+    .p-result-title { margin: .7rem 0 .2rem; font-size: 1.1rem; }
+    .p-result-reason { margin: 0; color: #6f6f6f; font-size: .72rem; }
+    .p-history { margin-top: .8rem; border: 1px solid #111; border-radius: 16px; background: #fff; box-shadow: 0 12px 26px rgba(0,0,0,.08); overflow: hidden; }
+    .p-history-head { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .75rem .85rem; border-bottom: 1px solid #c9c9c9; }
+    .p-history-head h2 { margin: 0; font-size: .9rem; }
+    .p-history-head span { color: #6f6f6f; font-size: .68rem; }
+    .p-history-list { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .7rem; padding: .85rem; }
+    .p-history-item { position: relative; min-height: 92px; padding: .6rem; border: 1px dashed #c9c9c9; border-radius: 10px; background: #fbfbfa; }
+    .p-history-item::after { content: "→"; position: absolute; top: 50%; right: -.65rem; color: #8b8b8b; font-weight: 900; }
+    .p-history-item:last-child::after { content: ""; }
+    .p-history-item strong { display: block; margin-bottom: .25rem; font-size: .75rem; }
+    .p-history-item span { display: block; color: #6f6f6f; font-size: .66rem; }
+    .p-history-item.is-current { border-color: var(--x-blue); background: var(--x-blue-bg); }
+    .p-history-item.is-current strong { color: var(--x-blue); }
+    .p-bottom-bar { display: flex; align-items: center; justify-content: space-between; gap: .7rem; margin-top: .8rem; padding: .65rem .8rem; border: 1px dashed #777; border-radius: 12px; background: rgba(255,255,255,.75); }
+    .p-bottom-bar p { margin: 0; color: #6f6f6f; font-size: .7rem; }
+    .p-bottom-bar button { width: auto; }
+    @media (max-width: 1120px) { .p-stage { grid-template-columns: 1fr 1fr; } .p-context-card { grid-column: 1 / -1; } .p-history-list { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+    @media (max-width: 860px) { .p-workspace-head { align-items: flex-start; flex-wrap: wrap; } .p-stage { grid-template-columns: 1fr; } .p-context-card { grid-column: auto; } .p-history-list { grid-template-columns: 1fr; } .p-history-item::after { content: "↓"; top: auto; right: 50%; bottom: -.72rem; transform: translateX(50%); } .p-history-item:last-child::after { content: ""; } }
    </style>
 </head>
 <body>
@@ -757,6 +827,71 @@
               </section>
             </div>
           </aside>
+        </main>
+      </div>
+    </div>
+    <div class="p-view" id="proposeView">
+      <header class="x-topbar">
+        <a class="x-brand" href="#p-workspace" aria-label="gloss Propose 首页"><span>gloss</span><i class="x-brand-mark" aria-hidden="true"></i></a>
+        <div class="x-top-title"><strong>Proposal verification workspace</strong><span>把一个可读的假设变成结构化提议，再把它交给代码核验。</span></div>
+        <nav class="x-mode-tabs" aria-label="工作区模式" role="tablist">
+          <button class="x-mode-tab" role="tab" aria-selected="false" data-x-mode="overview">overview</button>
+          <button class="x-mode-tab" role="tab" aria-selected="false" data-x-mode="explore">explore</button>
+          <button class="x-mode-tab" role="tab" aria-selected="true" data-x-mode="propose">propose</button>
+        </nav>
+        <button class="x-header-action" id="pHelp" type="button" aria-label="帮助">?</button>
+      </header>
+      <div class="x-app-grid">
+        <aside class="x-rail" aria-label="Propose 工具栏">
+          <div class="x-rail-stack">
+            <button class="x-rail-btn" type="button" data-x-mode="overview" aria-selected="false" aria-disabled="true"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10.5v8h11v-8"/><path d="M10 18.5v-4h4v4"/></svg></span><span>overview</span></button>
+            <button class="x-rail-btn" type="button" data-x-mode="explore" aria-selected="false"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="6" r="2.2"/><circle cx="19" cy="14" r="2.2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span><span>explore</span></button>
+            <button class="x-rail-btn" type="button" data-x-mode="propose" aria-selected="true"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5"/><path d="m13 6 5 5"/><path d="m4 20 3.5-1 9-9-3.5-3.5-9 9L4 20Z"/><path d="m15 15 4 4M18 3v4M16 5h4"/></svg></span><span>propose</span></button>
+          </div>
+          <div class="x-rail-stack"><button class="x-rail-btn" type="button" id="pBackExplore"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span><span>back</span></button></div>
+        </aside>
+        <main class="x-workspace" id="p-workspace">
+          <header class="p-workspace-head">
+            <div><p class="x-eyebrow">Propose / verification workspace</p><h1>从提议到核验</h1><p>左侧保留元素上下文，中间提交结构化假设，右侧显示代码检查的结果。</p></div>
+            <div class="p-meta"><span class="x-pill">selected · <strong id="pSelectedMeta">E-05</strong></span><span class="x-pill">basis · figure position</span></div>
+          </header>
+          <section class="p-stage">
+            <article class="p-card p-context-card">
+              <header class="p-card-head"><div><p>local context</p><h2 id="pContextTitle">E-05 · circle</h2></div><span class="x-status-mark" id="pContextStatus"></span></header>
+              <div class="p-card-body">
+                <svg class="p-context-canvas" viewBox="0 0 300 175" role="img" aria-label="选中元素的局部上下文">
+                  <path class="p-link" d="M55 108 102 75 155 105 204 56 250 86"/><path class="p-link" d="M102 75 123 34"/>
+                  <circle class="p-node" cx="55" cy="108" r="5"/><circle class="p-node" cx="102" cy="75" r="5"/><circle class="p-node selected" id="pSelectedNode" cx="155" cy="105" r="7"/><circle class="p-ring" cx="155" cy="105" r="20"/><circle class="p-node" cx="204" cy="56" r="5"/><circle class="p-node" cx="250" cy="86" r="5"/><circle class="p-node" cx="123" cy="34" r="4"/>
+                  <text x="166" y="101" font-size="11" font-weight="800" fill="#315bb6">E-05</text><text x="15" y="162" font-size="10" fill="#6f6f6f">leaf · L-07 / panel1</text>
+                </svg>
+                <div class="p-context-caption"><span>local relation field</span><span id="pContextRow">row 5</span></div>
+                <div class="p-context-fields"><div class="p-context-field"><small>element</small><strong id="pContextElement">E-05</strong></div><div class="p-context-field"><small>layer</small><strong id="pContextLayer">built_layer1</strong></div><div class="p-context-field"><small>panel</small><strong id="pContextPanel">panel1</strong></div><div class="p-context-field"><small>status</small><strong id="pContextStatusText">verified</strong></div></div>
+              </div>
+            </article>
+            <article class="p-card p-form-card">
+              <header class="p-card-head"><div><p>structured proposal</p><h2>提交绑定假设</h2></div><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></header>
+              <div class="p-card-body">
+                <div class="p-form-grid">
+                  <div class="p-field"><label for="pElement">element</label><input id="pElement" readonly></div>
+                  <div class="p-field"><label for="pTable">table</label><input id="pTable" value="built_layer1" readonly></div>
+                  <div class="p-field"><label for="pRow">row</label><select id="pRow"></select></div>
+                  <div class="p-field"><label for="pKind">kind</label><select id="pKind"><option value="binding">binding</option><option value="relation">relation (next)</option></select></div>
+                  <div class="p-field full"><label for="pBasis">basis</label><textarea id="pBasis">row placed through panel scales; element compared on page</textarea></div>
+                </div>
+                <div class="p-form-actions"><button class="p-button-primary" type="button" id="pSubmit">提交并核验</button><button class="p-button-secondary" type="button" id="pReset">重置为选中行</button></div>
+              </div>
+            </article>
+            <article class="p-card p-result-card" id="pResultCard">
+              <header class="p-card-head"><div><p>check result</p><h2>verification gate</h2></div><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg></span></header>
+              <div class="p-card-body">
+                <div class="p-gate"><div class="p-diamond"><span id="pGateMark">✓</span></div></div>
+                <div class="p-branches"><div class="p-branch is-active" id="pVerifiedBranch"><span><span class="p-branch-icon" id="pVerifiedIcon"></span>verified</span><span>accepted</span></div><div class="p-branch" id="pRejectedBranch"><span><span class="p-branch-icon" id="pRejectedIcon"></span>rejected</span><span>reason</span></div><div class="p-branch" id="pUnresolvedBranch"><span><span class="p-branch-icon" id="pUnresolvedIcon"></span>unresolved</span><span>refused</span></div></div>
+                <h2 class="p-result-title" id="pResultTitle">verified · row 5</h2><p class="p-result-reason" id="pResultReason">the proposed row is where E-05 is drawn, within 0.5 pt.</p>
+              </div>
+            </article>
+          </section>
+          <section class="p-history" aria-labelledby="pHistoryTitle"><header class="p-history-head"><h2 id="pHistoryTitle">attempt history</h2><span id="pHistoryCount">3 checks recorded locally</span></header><div class="p-history-list" id="pHistoryList"></div></section>
+          <div class="p-bottom-bar"><p><strong>写入边界：</strong>propose 只提交结构化数据；图形几何和检查仍由代码负责。</p><button class="p-button-secondary" type="button" id="pOpenExplore">在 Explore 中检查元素</button></div>
         </main>
       </div>
     </div>
@@ -1244,11 +1379,124 @@
       });
       document.getElementById("xResetProposal").addEventListener("click", renderProposal);
       document.getElementById("xHelp").addEventListener("click", function () { showToast("Explore: select a particle, inspect its fields, then submit a proposal."); });
-      document.querySelectorAll("[data-x-mode]").forEach(function (button) { button.addEventListener("click", function () { var mode = button.dataset.xMode; if (mode !== "explore") showToast(mode + " is the next workspace; Explore is implemented first."); }); });
+      document.querySelectorAll("[data-x-mode]").forEach(function (button) { button.addEventListener("click", function () { var mode = button.dataset.xMode; if (window.glossSwitchWorkspace) window.glossSwitchWorkspace(mode); else if (mode !== "explore") showToast(mode + " is the next workspace; Explore is implemented first."); }); });
 
       var initial = document.createElement("div");
       initial.className = "x-toast"; initial.id = "xToast"; initial.hidden = true; document.body.appendChild(initial); toast = initial;
+      window.glossExplore = { getSelected: function () { return byId[state.selected]; }, select: selectElement, data: elements };
+      window.glossStatusIcon = statusIcon;
       renderScene(); selectElement("E-05");
+    }());
+  </script>
+  <script>
+    (function () {
+      var exploreView = document.getElementById("exploreView");
+      var proposeView = document.getElementById("proposeView");
+      var history = [
+        {kind:"look up", status:"inspect", detail:"element selected"},
+        {kind:"inspect", status:"inspect", detail:"derived fields read"},
+        {kind:"verified", status:"verified", detail:"row 5 accepted"}
+      ];
+      var pRow = document.getElementById("pRow");
+      var pKind = document.getElementById("pKind");
+      var pStatus = function (status) { return window.glossStatusIcon ? window.glossStatusIcon(status) : ""; };
+
+      function selected() {
+        return window.glossExplore ? window.glossExplore.getSelected() : null;
+      }
+      function renderContext(item) {
+        if (!item) return;
+        document.getElementById("pSelectedMeta").textContent = item.id;
+        document.getElementById("pContextTitle").textContent = item.id + " · " + item.tag;
+        document.getElementById("pContextElement").textContent = item.id;
+        document.getElementById("pContextLayer").textContent = item.layer;
+        document.getElementById("pContextPanel").textContent = item.panel;
+        document.getElementById("pContextRow").textContent = item.row === null ? "no stable row" : "row " + item.row;
+        document.getElementById("pContextStatusText").textContent = item.status;
+        document.getElementById("pContextStatus").innerHTML = pStatus(item.status) + item.status;
+        document.getElementById("pElement").value = item.id;
+        pRow.innerHTML = (window.glossExplore ? window.glossExplore.data : []).filter(function (candidate) { return candidate.row !== null; }).map(function (candidate) {
+          return '<option value="' + candidate.row + '"' + (candidate.row === item.row ? " selected" : "") + '>' + candidate.row + ' · ' + candidate.label + '</option>';
+        }).join("");
+        var node = document.getElementById("pSelectedNode");
+        if (node) node.setAttribute("data-selected", item.id);
+      }
+      function renderHistory() {
+        document.getElementById("pHistoryCount").textContent = history.length + " checks recorded locally";
+        document.getElementById("pHistoryList").innerHTML = history.slice(-4).map(function (entry, index, list) {
+          var current = index === list.length - 1 ? " is-current" : "";
+          return '<article class="p-history-item' + current + '"><strong>' + pStatus(entry.status) + entry.kind + '</strong><span>' + entry.detail + '</span></article>';
+        }).join("");
+      }
+      function updateResult(status, reason) {
+        var item = selected();
+        var card = document.getElementById("pResultCard");
+        card.classList.toggle("is-rejected", status === "rejected");
+        card.classList.toggle("is-unresolved", status === "unresolved");
+        document.getElementById("pGateMark").textContent = status === "verified" ? "✓" : status === "rejected" ? "×" : "·";
+        document.getElementById("pResultTitle").textContent = status === "verified" ? "verified · row " + item.row : status;
+        document.getElementById("pResultReason").textContent = reason;
+        ["verified","rejected","unresolved"].forEach(function (name) {
+          var branch = document.getElementById("p" + name.charAt(0).toUpperCase() + name.slice(1) + "Branch");
+          branch.classList.toggle("is-active", status === name);
+          branch.classList.toggle("is-rejected", status === "rejected" && name === "rejected");
+          branch.classList.toggle("is-unresolved", status === "unresolved" && name === "unresolved");
+        });
+        document.getElementById("pVerifiedIcon").innerHTML = pStatus("verified");
+        document.getElementById("pRejectedIcon").innerHTML = pStatus("rejected");
+        document.getElementById("pUnresolvedIcon").innerHTML = pStatus("unresolved");
+      }
+      function populate() {
+        var item = selected();
+        if (!item) return;
+        renderContext(item);
+        updateResult(item.row === null ? "unresolved" : "verified", item.row === null ? "This element has no stable row comparison yet." : "the proposed row is where " + item.id + " is drawn, within 0.5 pt.");
+        renderHistory();
+      }
+      function switchWorkspace(mode) {
+        if (mode === "propose") {
+          exploreView.classList.add("is-hidden");
+          proposeView.classList.add("is-active");
+          populate();
+        } else {
+          proposeView.classList.remove("is-active");
+          exploreView.classList.remove("is-hidden");
+          if (mode === "explore" && window.glossExplore && selected()) window.glossExplore.select(selected().id);
+        }
+        document.querySelectorAll("[data-x-mode]").forEach(function (button) { button.setAttribute("aria-selected", String(button.dataset.xMode === (mode === "overview" ? "explore" : mode))); });
+      }
+      window.glossSwitchWorkspace = switchWorkspace;
+
+      document.getElementById("pSubmit").addEventListener("click", function () {
+        var item = selected();
+        var proposed = Number(pRow.value);
+        var status;
+        var reason;
+        if (pKind.value !== "binding") {
+          status = "unresolved";
+          reason = "relation proposals are reserved for the next workspace; this form currently checks bindings.";
+        } else if (!item || item.row === null) {
+          status = "unresolved";
+          reason = "This element has no stable row comparison; the proposal is refused.";
+        } else if (proposed === item.row) {
+          status = "verified";
+          reason = "row " + proposed + " lands on " + item.id + " within the page tolerance.";
+        } else {
+          status = "rejected";
+          reason = "row " + proposed + " is not where " + item.id + " is drawn; inspect the context and revise.";
+        }
+        history.push({kind:status, status:status, detail:reason});
+        updateResult(status, reason);
+        renderHistory();
+      });
+      document.getElementById("pReset").addEventListener("click", populate);
+      document.getElementById("pOpenExplore").addEventListener("click", function () { switchWorkspace("explore"); });
+      document.getElementById("pBackExplore").addEventListener("click", function () { switchWorkspace("explore"); });
+      document.getElementById("pHelp").addEventListener("click", function () {
+        var drawer = document.getElementById("pResultReason");
+        drawer.textContent = "Select an element, choose a row, and let the verification gate explain the result.";
+      });
+      populate();
     }());
   </script>
 </body>

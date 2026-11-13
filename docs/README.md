@@ -24,6 +24,6 @@ python3 -m http.server 4173 --directory docs
 - \`hide binding\`、关系模式、搜索和缩放均在本地原型中可用；
 - 核验抽屉支持正确行、错误行和无稳定比较三种结果；
 - 结构颜色保持克制：蓝色表示当前结构焦点，绿色表示 verified，琥珀表示 ambiguous，红色表示 rejected，灰色虚线表示 unresolved；工具栏和状态均使用内联 SVG 图标；
-- overview / propose 入口保留为后续工作区提示，当前不伪装成已完成能力。
+- Propose 工作区复用同一选中元素，提供上下文卡、结构化表单、verification gate 和 attempt history；\`relation (next)\` 会明确返回 unresolved，不伪装成已完成能力。
 
 下一版可以在保留这个信息架构的前提下，替换为正式视觉系统、项目数据驱动的状态卡和可展开的证据详情。
