@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="gloss 技术路径、里程碑与当前项目状态的交互式线稿。">
+  <title>gloss · 技术路径线稿</title>
+  <style>
+    :root {
+      --ink: #14284b;
+      --muted: #5c6b83;
+      --paper: #f7f5ef;
+      --panel: #fffdf8;
+      --line: #aab6c8;
+      --soft-blue: #dceafd;
+      --soft-teal: #d8f2e9;
+      --teal: #0b987e;
+      --soft-orange: #fff0cf;
+      --orange: #c96f08;
+      --soft-gray: #eef1f5;
+      --gray: #667085;
+      --shadow: 0 12px 28px rgba(20, 40, 75, .08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(20, 40, 75, .04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(20, 40, 75, .04) 1px, transparent 1px),
+        var(--paper);
+      background-size: 24px 24px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      line-height: 1.55;
+    }
+
+    button, a { font: inherit; }
+
+    button { color: inherit; }
+
+    .skip-link {
+      position: absolute;
+      left: 1rem;
+      top: -4rem;
+      z-index: 10;
+      padding: .65rem .9rem;
+      border-radius: 10px;
+      background: var(--ink);
+      color: white;
+    }
+
+    .skip-link:focus { top: 1rem; }
+
+    .page {
+      width: min(1440px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 1rem 0 4rem;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: .5rem 0 1rem;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .eyebrow {
+      margin: 0 0 .35rem;
+      color: var(--orange);
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 900px;
+      margin-bottom: .35rem;
+      font-size: clamp(2rem, 4vw, 4.35rem);
+      line-height: .98;
+      letter-spacing: -.045em;
+    }
+
+    .subtitle {
+      max-width: 760px;
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: clamp(.92rem, 1.8vw, 1.15rem);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: .5rem;
+      min-width: 260px;
+      padding: .8rem;
+      border: 1px solid var(--ink);
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: 4px 4px 0 rgba(20, 40, 75, .12);
+      font-size: .82rem;
+      font-weight: 750;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 1.15rem;
+      height: .78rem;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+    }
+
+    .status-dot.complete { background: #52c6a9; color: #08745e; }
+    .status-dot.partial { background: #ffdca0; color: #ad5f00; }
+    .status-dot.todo { background: transparent; border-style: dashed; color: var(--gray); }
+
+    main { display: grid; gap: 1.1rem; }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 1rem;
+      margin: 2rem 0 .85rem;
+    }
+
+    .section-kicker {
+      display: inline-block;
+      margin-bottom: .45rem;
+      padding: .3rem .75rem;
+      border-radius: 999px;
+      background: var(--soft-blue);
+      font-weight: 850;
+    }
+
+    .section-head h2 { margin-bottom: 0; font-size: clamp(1.35rem, 2.5vw, 2.2rem); }
+
+    .section-note {
+      max-width: 520px;
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: .9rem;
+      text-align: right;
+    }
+
+    .route {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: .85rem;
+      align-items: stretch;
+    }
+
+    .route-node {
+      position: relative;
+      min-height: 180px;
+      padding: 1rem;
+      border: 2px solid var(--teal);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, #f5fffb 0 70%, var(--soft-teal) 70%);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      text-align: left;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .route-node:hover, .route-node:focus-visible, .route-node[aria-selected="true"] {
+      transform: translateY(-4px);
+      border-color: var(--orange);
+      box-shadow: 0 16px 32px rgba(20, 40, 75, .14);
+      outline: none;
+    }
+
+    .route-node::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -.95rem;
+      color: var(--ink);
+      font-size: 1.5rem;
+      font-weight: 900;
+    }
+
+    .route-node:last-child::after { content: ""; }
+
+    .route-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      margin-bottom: .8rem;
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+      background: var(--panel);
+      font-weight: 900;
+    }
+
+    .route-node h3 { margin-bottom: .35rem; font-size: 1.12rem; }
+    .route-node p { margin-bottom: 0; color: var(--muted); font-size: .84rem; }
+
+    .route-callout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 1rem;
+      align-items: center;
+      margin-top: .9rem;
+      padding: .85rem 1rem;
+      border: 1px dashed var(--orange);
+      border-radius: 14px;
+      background: var(--soft-orange);
+    }
+
+    .route-callout strong { font-size: 1rem; }
+    .route-callout span { color: var(--muted); font-size: .85rem; }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(280px, .75fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .detail-panel, .status-panel, .focus-panel, .evidence-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, .92);
+      box-shadow: var(--shadow);
+    }
+
+    .detail-panel { padding: 1.2rem; }
+    .detail-panel h3 { margin-bottom: .3rem; font-size: 1.5rem; }
+    .detail-panel p { color: var(--muted); }
+
+    .detail-facts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .65rem;
+      margin: 1rem 0;
+    }
+
+    .fact {
+      padding: .7rem;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      background: white;
+    }
+
+    .fact small { display: block; color: var(--muted); font-size: .73rem; }
+    .fact strong { display: block; margin-top: .15rem; font-size: 1.05rem; }
+
+    .detail-list { margin: 0; padding-left: 1.1rem; color: var(--muted); }
+
+    .detail-list li + li { margin-top: .4rem; }
+
+    .mini-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .45rem;
+      margin-top: 1rem;
+    }
+
+    .mini-nav button, .filter button {
+      padding: .45rem .7rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      cursor: pointer;
+      font-size: .8rem;
+      font-weight: 750;
+    }
+
+    .mini-nav button:hover, .mini-nav button:focus-visible, .filter button:hover, .filter button:focus-visible,
+    .filter button[aria-pressed="true"] {
+      border-color: var(--ink);
+      background: var(--soft-blue);
+      outline: none;
+    }
+
+    .status-panel { padding: 1rem; }
+    .status-panel h3 { margin-bottom: .7rem; font-size: 1rem; }
+
+    .status-list { display: grid; gap: .65rem; }
+
+    .status-row {
+      display: grid;
+      grid-template-columns: 2.5rem 1fr auto;
+      gap: .6rem;
+      align-items: center;
+      padding: .65rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+    }
+
+    .status-row strong { font-size: .95rem; }
+    .status-row span { display: block; color: var(--muted); font-size: .74rem; }
+
+    .badge {
+      padding: .25rem .5rem;
+      border-radius: 999px;
+      font-size: .7rem;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .badge.complete { background: var(--soft-teal); color: #08745e; }
+    .badge.partial { background: var(--soft-orange); color: #975300; }
+    .badge.todo { border: 1px dashed var(--gray); color: var(--gray); }
+
+    .milestone-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: .8rem;
+      align-items: center;
+      margin-bottom: .8rem;
+    }
+
+    .filter { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+    .milestones {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: .7rem;
+    }
+
+    .milestone {
+      position: relative;
+      min-height: 185px;
+      padding: .9rem;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, opacity .18s ease;
+    }
+
+    .milestone:hover, .milestone:focus-visible, .milestone[aria-selected="true"] {
+      transform: translateY(-3px);
+      border-color: var(--ink);
+      outline: none;
+    }
+
+    .milestone.is-hidden { display: none; }
+
+    .milestone.complete { border-top: 5px solid var(--teal); }
+    .milestone.partial { border-top: 5px solid var(--orange); }
+    .milestone.todo { border-top: 5px dashed var(--gray); }
+
+    .milestone-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .4rem;
+      margin-bottom: .7rem;
+    }
+
+    .milestone-code { font-size: 1.2rem; font-weight: 950; }
+    .milestone h3 { margin-bottom: .35rem; font-size: 1rem; }
+    .milestone p { margin-bottom: 0; color: var(--muted); font-size: .78rem; }
+
+    .focus-panel {
+      display: grid;
+      grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+      gap: 1rem;
+      padding: 1rem;
+      border-color: var(--orange);
+      background: linear-gradient(135deg, #fff8e8, #fffdf8 62%);
+    }
+
+    .focus-label {
+      color: var(--orange);
+      font-size: .76rem;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .focus-panel h3 { margin: .35rem 0; font-size: clamp(1.35rem, 3vw, 2.2rem); }
+    .focus-panel p { margin-bottom: .7rem; color: var(--muted); }
+
+    .focus-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 140px;
+      border: 1px dashed var(--orange);
+      border-radius: 14px;
+      color: var(--orange);
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 900;
+    }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .8rem;
+    }
+
+    .evidence-panel { padding: 1rem; }
+    .evidence-panel h3 { margin-bottom: .2rem; font-size: 1rem; }
+    .evidence-panel p { margin-bottom: .75rem; color: var(--muted); font-size: .82rem; }
+
+    .metric {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: .5rem;
+      margin-top: .55rem;
+      padding-top: .55rem;
+      border-top: 1px dashed var(--line);
+    }
+
+    .metric strong { font-size: 1.5rem; line-height: 1; }
+    .metric span { color: var(--muted); font-size: .7rem; text-align: right; }
+
+    .footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: .7rem;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .footer strong { color: var(--ink); }
+
+    @media (max-width: 1100px) {
+      .route { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .route-node:nth-child(3)::after { content: ""; }
+      .route-node:nth-child(4)::after { content: "→"; }
+      .milestones { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .page { width: min(100% - 1rem, 680px); }
+      .topbar, .section-head { display: block; }
+      .legend { justify-content: flex-start; margin-top: 1rem; }
+      .section-note { margin-top: .5rem; text-align: left; }
+      .route, .milestones, .evidence-grid, .detail-grid, .focus-panel { grid-template-columns: 1fr; }
+      .route-node::after { content: "↓"; top: auto; right: 50%; bottom: -.95rem; transform: translateX(50%); }
+      .route-node:nth-child(3)::after, .route-node:nth-child(4)::after { content: "↓"; }
+      .route-node:last-child::after { content: ""; }
+      .detail-facts { grid-template-columns: 1fr; }
+      .focus-arrow { min-height: 90px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到主要内容</a>
+  <div class="page">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Interactive wireframe · gloss</p>
+        <h1>技术路径、里程碑与当前位置</h1>
+        <p class="subtitle">把一张静态路线图拆成可以阅读、筛选和追踪的项目页面。先看路径，再看证据，最后看下一步。</p>
+      </div>
+      <div class="legend" aria-label="状态图例">
+        <span class="legend-item"><i class="status-dot complete"></i>已完成</span>
+        <span class="legend-item"><i class="status-dot partial"></i>部分或试验</span>
+        <span class="legend-item"><i class="status-dot todo"></i>待完成</span>
+      </div>
+    </header>
+
+    <main id="content">
+      <section aria-labelledby="route-title">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">01 · 技术路径</span>
+            <h2 id="route-title">从一张 R 图，到可核验的语义页面</h2>
+          </div>
+          <p class="section-note">点击任意节点，右侧详情会切换；这是线稿阶段的交互骨架。</p>
+        </div>
+
+        <div class="route" role="tablist" aria-label="技术路径">
+          <button class="route-node" role="tab" aria-selected="true" data-route="source">
+            <span class="route-index">01</span>
+            <h3>R 图与数据</h3>
+            <p>绘图代码、原始数据、构建表</p>
+          </button>
+          <button class="route-node" role="tab" aria-selected="false" data-route="capture">
+            <span class="route-index">02</span>
+            <h3>原绘图设备</h3>
+            <p>让图自己画出页面，记录元素归属</p>
+          </button>
+          <button class="route-node" role="tab" aria-selected="false" data-route="substrate">
+            <span class="route-index">03</span>
+            <h3>语义底座</h3>
+            <p>元素、图层、面板、数据行</p>
+          </button>
+          <button class="route-node" role="tab" aria-selected="false" data-route="verify">
+            <span class="route-index">04</span>
+            <h3>提交即核验</h3>
+            <p>提议进入代码检查，失败返回理由</p>
+          </button>
+          <button class="route-node" role="tab" aria-selected="false" data-route="projection">
+            <span class="route-index">05</span>
+            <h3>记录与投影</h3>
+            <p>批注、交互、更新与无障碍输出</p>
+          </button>
+        </div>
+
+        <div class="route-callout">
+          <div><strong>几何与检查由代码负责</strong><br><span>模型只能提交结构化提议，不能改图、写 SVG 或绕过核验。</span></div>
+          <span aria-hidden="true">↘</span>
+        </div>
+
+        <div class="detail-grid">
+          <article class="detail-panel" id="route-detail" aria-live="polite"></article>
+          <aside class="status-panel">
+            <h3>当前页面怎么读</h3>
+            <div class="status-list">
+              <div class="status-row"><strong>1</strong><div><b>路径</b><span>理解系统怎样工作</span></div><span class="badge complete">先看</span></div>
+              <div class="status-row"><strong>2</strong><div><b>能力地图</b><span>定位已完成和缺口</span></div><span class="badge partial">再筛</span></div>
+              <div class="status-row"><strong>3</strong><div><b>证据</b><span>阅读数字和试验限度</span></div><span class="badge todo">最后核对</span></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section aria-labelledby="milestone-title">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">02 · M0—M5 能力地图</span>
+            <h2 id="milestone-title">项目现在走到哪里</h2>
+          </div>
+          <p class="section-note">筛选只改变卡片显示，不改变项目事实；点击卡片可聚焦该里程碑。</p>
+        </div>
+
+        <div class="milestone-toolbar">
+          <div class="filter" role="group" aria-label="筛选里程碑状态">
+            <button data-filter="all" aria-pressed="true">全部</button>
+            <button data-filter="complete" aria-pressed="false">已完成</button>
+            <button data-filter="partial" aria-pressed="false">部分或试验</button>
+            <button data-filter="todo" aria-pressed="false">待完成</button>
+          </div>
+          <span id="milestone-count" class="section-note" aria-live="polite"></span>
+        </div>
+
+        <div class="milestones" role="list" aria-label="里程碑列表">
+          <article class="milestone complete" tabindex="0" role="listitem" data-status="complete" data-milestone="M0">
+            <div class="milestone-top"><span class="milestone-code">M0</span><span class="badge complete">已完成</span></div>
+            <h3>可靠底座</h3><p>捕获、查询、图包与基准集。</p>
+          </article>
+          <article class="milestone partial" tabindex="0" role="listitem" data-status="partial" data-milestone="M1">
+            <div class="milestone-top"><span class="milestone-code">M1</span><span class="badge partial">部分完成</span></div>
+            <h3>识别与绑定</h3><p>绑定已做，角色规则与完整标签待做。</p>
+          </article>
+          <article class="milestone todo" tabindex="0" role="listitem" data-status="todo" data-milestone="M2">
+            <div class="milestone-top"><span class="milestone-code">M2</span><span class="badge todo">待完成</span></div>
+            <h3>记录与锚点</h3><p>批注可追溯，图更新后可重挂。</p>
+          </article>
+          <article class="milestone todo" tabindex="0" role="listitem" data-status="todo" data-milestone="M3">
+            <div class="milestone-top"><span class="milestone-code">M3</span><span class="badge todo">待完成</span></div>
+            <h3>核验与交互</h3><p>声明检查、交互、无障碍投影。</p>
+          </article>
+          <article class="milestone partial" tabindex="0" role="listitem" data-status="partial" data-milestone="M4">
+            <div class="milestone-top"><span class="milestone-code">M4</span><span class="badge partial">前置试验</span></div>
+            <h3>agent 工具</h3><p>工具调用已试，公开 API 仍在早期。</p>
+          </article>
+          <article class="milestone todo" tabindex="0" role="listitem" data-status="todo" data-milestone="M5">
+            <div class="milestone-top"><span class="milestone-code">M5</span><span class="badge todo">待完成</span></div>
+            <h3>价值评测</h3><p>同模型、同预算、同问题的对照。</p>
+          </article>
+        </div>
+
+        <div class="detail-grid">
+          <article class="detail-panel" id="milestone-detail" aria-live="polite"></article>
+          <aside class="status-panel">
+            <h3>当前位置</h3>
+            <div class="status-list">
+              <div class="status-row"><strong>01</strong><div><b>底座 + 部分绑定</b><span>当前稳定能力</span></div><span class="badge partial">当前</span></div>
+              <div class="status-row"><strong>02</strong><div><b>gl_tools + propose</b><span>近期主线的试验入口</span></div><span class="badge partial">试验</span></div>
+              <div class="status-row"><strong>03</strong><div><b>声明核验</b><span>下一条最薄的研究路径</span></div><span class="badge todo">下一步</span></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section aria-labelledby="focus-title">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">03 · 近期主线</span>
+            <h2 id="focus-title">先验证核心增益，再扩完整系统</h2>
+          </div>
+        </div>
+        <article class="focus-panel">
+          <div>
+            <span class="focus-label">Current focus</span>
+            <h3>gl_tools + propose</h3>
+            <p>用只读工具让模型查图，再用代码核验提交。当前线稿把它当成可展开的研究入口，而不是已经完成的产品终点。</p>
+            <div class="mini-nav">
+              <button data-scroll="evidence">看证据</button>
+              <button data-scroll="route-title">回到技术路径</button>
+            </div>
+          </div>
+          <div class="focus-arrow" aria-hidden="true">工具 → 核验 → 证据</div>
+        </article>
+      </section>
+
+      <section id="evidence" aria-labelledby="evidence-title">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">04 · 证据与限度</span>
+            <h2 id="evidence-title">试验告诉我们什么</h2>
+          </div>
+          <p class="section-note">这些是开发集 pilot，用来决定下一步怎么问，不是最终报告数字。</p>
+        </div>
+        <div class="evidence-grid">
+          <article class="evidence-panel">
+            <h3>模型 + 原始材料</h3>
+            <p>条件 A：绘图代码、数据、构建表、SVG 与只读 R 沙箱。</p>
+            <div class="metric"><strong>91.1%</strong><span>246 / 270 次答对</span></div>
+            <div class="metric"><strong>44,094</strong><span>中位 token / 次</span></div>
+          </article>
+          <article class="evidence-panel">
+            <h3>模型 + gloss</h3>
+            <p>条件 B：只读工具、隐藏绑定、提交即核验。</p>
+            <div class="metric"><strong>99.6%</strong><span>269 / 270 次答对</span></div>
+            <div class="metric"><strong>14,108</strong><span>中位 token / 次</span></div>
+          </article>
+          <article class="evidence-panel">
+            <h3>纯代码枚举</h3>
+            <p>条件 S：逐行尝试，不用模型。</p>
+            <div class="metric"><strong>30 / 30</strong><span>问题全部答对</span></div>
+            <div class="metric"><strong>≈ 30 s</strong><span>共试 26,265 行</span></div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span><strong>线稿版本：</strong>网页骨架，不使用原图作为素材。</span>
+      <span><strong>信息基线：</strong>gloss 项目状态 · 2026-11-13</span>
+      <span><strong>部署方式：</strong>GitHub Pages / docs</span>
+    </footer>
+  </div>
+
+  <script>
+    const routeData = {
+      source: {
+        title: "R 图与数据",
+        summary: "系统从一张已经画好的 R 图开始，保留绘图代码、原始数据与构建后的表格作为可追溯输入。",
+        facts: [["入口", "R 图"], ["材料", "代码 + 数据"], ["原则", "不重画"]],
+        bullets: ["输入可以是 ggplot、patchwork、Heatmap、base graphics 或 grid。", "原始材料作为对照条件保留，不被网页层改写。", "后续所有语义都围绕已画出的几何建立。"]
+      },
+      capture: {
+        title: "原绘图设备",
+        summary: "让图自己在设备上画出它的页面，再从设备结果中记录元素归属。",
+        facts: [["负责", "图形设备"], ["记录", "叶子 / 面板"], ["产出", "页面"]],
+        bullets: ["几何来自原图形设备，而不是网页重画或 SVG 猜测。", "每个元素追溯到叶子、viewport 和 panel。", "捕获不可靠时，系统拒绝或标记原因。"]
+      },
+      substrate: {
+        title: "语义底座",
+        summary: "把页面上的元素、图层、面板、数据表和数据行组织成可查询的只读底座。",
+        facts: [["对象", "元素"], ["结构", "图层 / 面板"], ["关系", "数据行"]],
+        bullets: ["`gl_bindings()` 读取代码计算并核验过的绑定。", "底座与图形几何分离，语义可以逐层追加。", "无法安全归属或核验时，保留拒绝理由。"]
+      },
+      verify: {
+        title: "提交即核验",
+        summary: "人或 agent 提交结构化提议，代码在提交时核对；通过才进入下一步。",
+        facts: [["工具", "gl_tools"], ["入口", "propose"], ["结果", "通过 / 拒绝"]],
+        bullets: ["模型输出是 schema 约束的数据，不是 HTML、JS 或自由文本。", "错误提议返回具体原因，让下一轮可以修正。", "本阶段的试验焦点是成本、收尾方式和可核验性。"]
+      },
+      projection: {
+        title: "记录与投影",
+        summary: "未来把通过核验的批注、关系和声明作为记录叠加，再投影到交互式与无障碍页面。",
+        facts: [["记录", "追加"], ["交互", "浏览器"], ["更新", "重新挂接"]],
+        bullets: ["记录与底座分开，图形几何保持不变。", "M2 负责记录与锚点，M3 负责核验、交互与投影。", "这一层目前属于设计，尚未形成完整产品链。"]
+      }
+    };
+
+    const milestoneData = {
+      M0: { title: "M0 · 可靠底座", status: "已完成", summary: "捕获、几何查询、数据表、上下文、bundle 与基准集已经形成可复核的底座。", facts: [["状态", "已完成"], ["重点", "捕获 / 查询 / 图包"], ["证据", "开发集 + 留出集"]], bullets: ["捕获图自己画出的页面，并进行一致性检查。", "目录与单文件图包可往返，数据缺失会被说明。", "这一层不依赖模型。"] },
+      M1: { title: "M1 · 识别与绑定", status: "部分完成", summary: "绑定已进入图和 API；角色规则、完整标签和若干残余类仍未完成。", facts: [["状态", "部分完成"], ["已做", "绑定推导表"], ["待做", "角色 / 标签"]], bullets: ["`gl_bindings()` 读取捕获时生成的派生表。", "base、heatmap、极坐标和部分扩展图层保留明确拒绝或未绑定理由。", "活动 M1 计划仍在这里。"] },
+      M2: { title: "M2 · 记录与锚点", status: "待完成", summary: "把人和 agent 的语义写入可追加、可追溯、可重新解析的记录层。", facts: [["状态", "待完成"], ["核心", "JSONL 记录"], ["风险", "更新后命中"]], bullets: ["记录需要多个选择器，而不是只依赖元素 id。", "图或数据变化后，失效记录进入修复路径。", "当前 `propose` 只在运行状态里保留结果。"] },
+      M3: { title: "M3 · 核验与交互", status: "待完成", summary: "声明检查、关系核验、交互操作和无障碍投影组成语义产品层。", facts: [["状态", "待完成"], ["焦点", "声明核验"], ["输出", "HTML / ARIA"]], bullets: ["每条可计算声明都要有确定性检查。", "网页操作必须共享同一套底座语义。", "声明路径是下一条最薄的研究验证线。"] },
+      M4: { title: "M4 · agent 工具", status: "前置试验", summary: "工具和提交入口已经有第一版，真实 agent 流程仍需要在更开放的问题上验证。", facts: [["状态", "前置试验"], ["已做", "gl_tools + propose"], ["限制", "绑定问题"]], bullets: ["试验使用相同模型、相同预算和自定义循环。", "绑定问题上，代码枚举已经可以得到全部答案。", "下一步应转向代码无法枚举的声明或关系。"] },
+      M5: { title: "M5 · 价值评测", status: "待完成", summary: "在留出集、扰动集和反事实子集上比较结构、核验、成本与覆盖率。", facts: [["状态", "待完成"], ["条件", "A / B / 2×2"], ["要求", "预测先提交"]], bullets: ["报告准确率、拒答、误拒、预算曲线与人工标注对照。", "开发集 pilot 不能直接替代最终报告数字。", "在声明路径试跑后再决定样本量。"] }
+    };
+
+    const detailPanel = document.querySelector("#route-detail");
+    const routeButtons = [...document.querySelectorAll("[data-route]")];
+    const milestonePanel = document.querySelector("#milestone-detail");
+    const milestoneCards = [...document.querySelectorAll("[data-milestone]")];
+    const countLabel = document.querySelector("#milestone-count");
+
+    function renderDetail(target, data, label) {
+      target.innerHTML = `
+        <span class="focus-label">${label}</span>
+        <h3>${data.title}</h3>
+        <p>${data.summary}</p>
+        <div class="detail-facts">${data.facts.map(([key, value]) => `<div class="fact"><small>${key}</small><strong>${value}</strong></div>`).join("")}</div>
+        <ul class="detail-list">${data.bullets.map(item => `<li>${item}</li>`).join("")}</ul>
+      `;
+    }
+
+    function selectRoute(key) {
+      routeButtons.forEach(button => button.setAttribute("aria-selected", String(button.dataset.route === key)));
+      renderDetail(detailPanel, routeData[key], "Selected route node");
+    }
+
+    function selectMilestone(key) {
+      milestoneCards.forEach(card => card.setAttribute("aria-selected", String(card.dataset.milestone === key)));
+      renderDetail(milestonePanel, milestoneData[key], "Selected milestone");
+    }
+
+    routeButtons.forEach(button => {
+      button.addEventListener("click", () => selectRoute(button.dataset.route));
+      button.addEventListener("keydown", event => {
+        if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+          event.preventDefault();
+          const next = routeButtons[(routeButtons.indexOf(button) + 1) % routeButtons.length];
+          next.focus();
+          selectRoute(next.dataset.route);
+        }
+        if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+          event.preventDefault();
+          const next = routeButtons[(routeButtons.indexOf(button) - 1 + routeButtons.length) % routeButtons.length];
+          next.focus();
+          selectRoute(next.dataset.route);
+        }
+      });
+    });
+
+    milestoneCards.forEach(card => {
+      card.addEventListener("click", () => selectMilestone(card.dataset.milestone));
+      card.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          selectMilestone(card.dataset.milestone);
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-filter]").forEach(button => {
+      button.addEventListener("click", () => {
+        const filter = button.dataset.filter;
+        document.querySelectorAll("[data-filter]").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+        let visible = 0;
+        milestoneCards.forEach(card => {
+          const show = filter === "all" || card.dataset.status === filter;
+          card.classList.toggle("is-hidden", !show);
+          if (show) visible += 1;
+        });
+        countLabel.textContent = `${visible} / ${milestoneCards.length} 个里程碑显示中`;
+      });
+    });
+
+    document.querySelectorAll("[data-scroll]").forEach(button => {
+      button.addEventListener("click", () => document.getElementById(button.dataset.scroll).scrollIntoView({ behavior: "smooth", block: "start" }));
+    });
+
+    selectRoute("source");
+    selectMilestone("M1");
+    document.querySelector('[data-filter="all"]').click();
+  </script>
+</body>
+</html>
