@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="gloss Explore：从图形元素追踪到数据行，并提交可核验提议。">
+  <meta name="description" content="gloss：从图形、数据和元素追踪到可核验提议的 Overview、Explore 与 Propose 工作区。">
   <title>gloss · Explore</title>
   <style>
     :root {
@@ -726,6 +726,137 @@
     .p-bottom-bar button { width: auto; }
     @media (max-width: 1120px) { .p-stage { grid-template-columns: 1fr 1fr; } .p-context-card { grid-column: 1 / -1; } .p-history-list { grid-template-columns: repeat(2,minmax(0,1fr)); } }
     @media (max-width: 860px) { .p-workspace-head { align-items: flex-start; flex-wrap: wrap; } .p-stage { grid-template-columns: 1fr; } .p-context-card { grid-column: auto; } .p-history-list { grid-template-columns: 1fr; } .p-history-item::after { content: "↓"; top: auto; right: 50%; bottom: -.72rem; transform: translateX(50%); } .p-history-item:last-child::after { content: ""; } }
+
+    /* Overview workspace: the control room for the semantic path */
+    .o-view { display: none; }
+    .o-view.is-active { display: block; }
+    .o-workspace-head { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: .4rem 0 .8rem; }
+    .o-workspace-head h1 { margin: 0 0 .3rem; font-size: clamp(1.65rem, 3.2vw, 3.2rem); line-height: .98; letter-spacing: -.055em; }
+    .o-workspace-head p { max-width: 680px; margin: 0; color: #6f6f6f; font-size: .82rem; }
+    .o-meta { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; color: #6f6f6f; font-size: .72rem; }
+    .o-meta .x-pill strong { color: var(--x-blue); }
+    .o-hero { border: 1px solid #111; border-radius: 18px; background: rgba(255,255,255,.94); box-shadow: 0 14px 32px rgba(0,0,0,.08); overflow: hidden; }
+    .o-hero-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .85rem 1rem; border-bottom: 1px solid #c9c9c9; }
+    .o-hero-title { display: flex; align-items: center; gap: .7rem; min-width: 0; }
+    .o-hero-title h2 { margin: 0; font-size: 1rem; letter-spacing: -.02em; }
+    .o-hero-title p { margin: .12rem 0 0; color: #6f6f6f; font-size: .67rem; }
+    .o-kicker { margin: 0 0 .25rem; color: #6f6f6f; font-size: .64rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+    .o-legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .55rem; color: #6f6f6f; font-size: .66rem; }
+    .o-legend-item { display: inline-flex; align-items: center; gap: .28rem; white-space: nowrap; }
+    .o-legend-mark { display: inline-flex; align-items: center; justify-content: center; width: 1.15rem; height: 1.15rem; border: 1px solid currentColor; border-radius: 50%; font-size: .7rem; font-weight: 900; }
+    .o-legend-mark.verified { color: var(--x-verified); background: var(--x-verified-bg); }
+    .o-legend-mark.rejected { color: var(--x-rejected); background: var(--x-rejected-bg); border-radius: 4px; }
+    .o-legend-mark.unresolved { color: var(--x-unresolved); background: var(--x-unresolved-bg); border-style: dashed; }
+    .o-flow-viewport { overflow-x: auto; padding: .8rem; background: linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px),#fbfbfa; background-size: 28px 28px; }
+    .o-flow-svg { display: block; width: 100%; min-width: 940px; height: auto; min-height: 330px; }
+    .o-flow-svg text { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .o-flow-grid { fill: none; stroke: #e6e6e3; stroke-width: 1; }
+    .o-flow-line { fill: none; stroke: #777; stroke-width: 1.6; marker-end: url(#oArrow); }
+    .o-flow-line.is-active { stroke: var(--x-blue); stroke-width: 2.4; }
+    .o-flow-node { cursor: pointer; outline: none; }
+    .o-flow-node > rect, .o-flow-node > path.o-node-frame { fill: rgba(255,255,255,.96); stroke: #111; stroke-width: 1.35; transition: fill .18s ease, stroke .18s ease, stroke-width .18s ease; }
+    .o-flow-node:hover > rect, .o-flow-node:focus > rect, .o-flow-node:hover > path.o-node-frame, .o-flow-node:focus > path.o-node-frame, .o-flow-node.is-current > rect, .o-flow-node.is-current > path.o-node-frame { fill: var(--x-blue-bg); stroke: var(--x-blue); stroke-width: 2; }
+    .o-node-label { fill: #111; font-size: 14px; font-weight: 900; }
+    .o-node-sub { fill: #6f6f6f; font-size: 10px; }
+    .o-node-kicker { fill: #6f6f6f; font-size: 9px; font-weight: 900; letter-spacing: .14em; }
+    .o-node-icon { fill: none; stroke: #111; stroke-width: 1.45; stroke-linecap: round; stroke-linejoin: round; }
+    .o-node-icon.blue { stroke: var(--x-blue); }
+    .o-layer { fill: var(--x-blue-bg); stroke: var(--x-blue); stroke-width: 1.35; }
+    .o-node-icon.verified { stroke: var(--x-verified); }
+    .o-node-icon.rejected { stroke: var(--x-rejected); }
+    .o-node-icon.unresolved { stroke: var(--x-unresolved); }
+    .o-particle { fill: #fff; stroke: #111; stroke-width: 1.2; }
+    .o-particle.selected { fill: var(--x-blue); stroke: var(--x-blue); }
+    .o-particle.verified { fill: var(--x-verified-bg); stroke: var(--x-verified); }
+    .o-particle.ambiguous { fill: var(--x-ambiguous-bg); stroke: var(--x-ambiguous); }
+    .o-particle.unresolved { fill: var(--x-unresolved-bg); stroke: var(--x-unresolved); stroke-dasharray: 3 2; }
+    .o-particle.rejected { fill: var(--x-rejected-bg); stroke: var(--x-rejected); stroke-width: 1.8; }
+    .o-selected-ring { fill: none; stroke: var(--x-blue); stroke-width: 1.1; stroke-dasharray: 4 4; }
+    .o-table-line { stroke: #111; stroke-width: 1; }
+    .o-flow-status { fill: #6f6f6f; font-size: 10px; font-weight: 850; }
+    .o-flow-status.verified { fill: var(--x-verified); }
+    .o-flow-status.rejected { fill: var(--x-rejected); }
+    .o-flow-status.unresolved { fill: var(--x-unresolved); }
+    .o-status-card { fill: #fff; stroke: #c9c9c9; stroke-width: 1.2; }
+    .o-status-card.is-current.verified { fill: var(--x-verified-bg); stroke: var(--x-verified); stroke-width: 1.8; }
+    .o-status-card.is-current.rejected { fill: var(--x-rejected-bg); stroke: var(--x-rejected); stroke-width: 1.8; }
+    .o-status-card.is-current.unresolved { fill: var(--x-unresolved-bg); stroke: var(--x-unresolved); stroke-width: 1.8; stroke-dasharray: 5 3; }
+    .o-gate { cursor: pointer; }
+    .o-gate-diamond { fill: var(--x-blue-bg); stroke: var(--x-blue); stroke-width: 1.7; }
+    .o-gate:hover .o-gate-diamond, .o-gate:focus .o-gate-diamond { fill: #dce5ff; stroke-width: 2.4; }
+    .o-gate-check { fill: var(--x-blue); font-size: 19px; font-weight: 950; }
+    .o-gate-label { fill: #111; font-size: 11px; font-weight: 900; }
+    .o-flow-caption { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .55rem .9rem .7rem; border-top: 1px dashed #c9c9c9; color: #6f6f6f; font-size: .68rem; }
+    .o-flow-caption strong { color: #111; }
+    .o-flow-caption .o-live { display: inline-flex; align-items: center; gap: .35rem; }
+    .o-live-dot { width: .48rem; height: .48rem; border-radius: 50%; background: var(--x-verified); box-shadow: 0 0 0 4px var(--x-verified-bg); }
+    .o-lower-grid { display: grid; grid-template-columns: minmax(0,1.45fr) minmax(300px,.75fr); gap: .8rem; margin-top: .8rem; }
+    .o-card { border: 1px solid #111; border-radius: 16px; background: rgba(255,255,255,.94); box-shadow: 0 12px 26px rgba(0,0,0,.08); overflow: hidden; }
+    .o-card-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .75rem .85rem; border-bottom: 1px solid #c9c9c9; }
+    .o-card-head h2 { margin: 0; font-size: .9rem; }
+    .o-card-head p { margin: .1rem 0 0; color: #6f6f6f; font-size: .66rem; }
+    .o-card-body { padding: .85rem; }
+    .o-milestone-track { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: .35rem; align-items: stretch; }
+    .o-milestone { position: relative; min-height: 104px; padding: .6rem .55rem .55rem; border: 1px solid #c9c9c9; border-radius: 11px; background: #fbfbfa; cursor: pointer; text-align: left; transition: transform .16s ease,border-color .16s ease,background .16s ease; }
+    .o-milestone::after { content: ""; position: absolute; top: 28px; right: -.42rem; width: .45rem; height: 1px; background: #999; }
+    .o-milestone:last-child::after { display: none; }
+    .o-milestone:hover, .o-milestone:focus-visible { transform: translateY(-2px); border-color: var(--x-blue); outline: none; }
+    .o-milestone.is-active { border-color: var(--x-blue); background: var(--x-blue-bg); box-shadow: inset 0 3px 0 var(--x-blue); }
+    .o-milestone.complete { border-top: 3px solid var(--x-verified); }
+    .o-milestone.partial { border-top: 3px solid var(--x-ambiguous); }
+    .o-milestone.todo { border-top: 3px dashed #777; }
+    .o-milestone-top { display: flex; align-items: center; justify-content: space-between; gap: .25rem; }
+    .o-milestone-code { font-size: .72rem; font-weight: 950; }
+    .o-milestone-mark { display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border: 1px solid currentColor; border-radius: 50%; font-size: .67rem; font-weight: 900; }
+    .o-milestone.complete .o-milestone-mark { color: var(--x-verified); background: var(--x-verified-bg); }
+    .o-milestone.partial .o-milestone-mark { color: var(--x-ambiguous); background: var(--x-ambiguous-bg); border-radius: 4px; }
+    .o-milestone.todo .o-milestone-mark { color: #777; background: #fff; border-style: dashed; }
+    .o-milestone strong { display: block; margin-top: .55rem; font-size: .76rem; }
+    .o-milestone span:last-child { display: block; margin-top: .2rem; color: #6f6f6f; font-size: .63rem; line-height: 1.35; }
+    .o-milestone-note { display: flex; align-items: center; gap: .45rem; min-height: 2rem; margin-top: .7rem; padding: .5rem .6rem; border: 1px dashed #777; color: #6f6f6f; font-size: .68rem; }
+    .o-milestone-note strong { color: #111; }
+    .o-focus-card { border-top: 5px solid var(--x-blue); }
+    .o-focus-head { display: flex; align-items: start; justify-content: space-between; gap: .5rem; }
+    .o-focus-head h2 { margin: 0; font-size: 1rem; }
+    .o-focus-head p { margin: .12rem 0 0; color: #6f6f6f; font-size: .66rem; }
+    .o-focus-status { display: inline-flex; align-items: center; gap: .25rem; padding: .28rem .45rem; border: 1px solid currentColor; border-radius: 999px; font-size: .66rem; font-weight: 900; white-space: nowrap; }
+    .o-focus-status.verified { color: var(--x-verified); background: var(--x-verified-bg); }
+    .o-focus-status.rejected { color: var(--x-rejected); background: var(--x-rejected-bg); }
+    .o-focus-status.unresolved { color: var(--x-unresolved); background: var(--x-unresolved-bg); border-style: dashed; }
+    .o-focus-figure { display: grid; grid-template-columns: 92px minmax(0,1fr); gap: .75rem; align-items: center; margin-top: .8rem; }
+    .o-focus-mini { display: block; width: 92px; height: 92px; border: 1px dashed #777; border-radius: 12px; background: linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px),#fbfbfa; background-size: 18px 18px; }
+    .o-focus-mini line { stroke: #888; stroke-width: 1.1; }
+    .o-focus-mini circle { fill: #fff; stroke: #111; stroke-width: 1.2; }
+    .o-focus-mini circle.selected { fill: var(--x-blue); stroke: var(--x-blue); }
+    .o-focus-mini circle.status-verified { fill: var(--x-verified-bg); stroke: var(--x-verified); }
+    .o-focus-mini circle.status-rejected { fill: var(--x-rejected-bg); stroke: var(--x-rejected); }
+    .o-focus-mini circle.status-unresolved { fill: var(--x-unresolved-bg); stroke: var(--x-unresolved); stroke-dasharray: 3 2; }
+    .o-focus-facts { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .6rem; }
+    .o-focus-fact { padding-bottom: .35rem; border-bottom: 1px dashed #c9c9c9; }
+    .o-focus-fact small { display: block; color: #6f6f6f; font-size: .61rem; }
+    .o-focus-fact strong { display: block; margin-top: .1rem; font-size: .72rem; word-break: break-word; }
+    .o-focus-reason { margin: .75rem 0 0; padding: .55rem .6rem; border: 1px dashed #777; color: #6f6f6f; font-size: .68rem; line-height: 1.45; }
+    .o-action-row { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .75rem; }
+    .o-action-primary, .o-action-secondary { display: inline-flex; align-items: center; gap: .3rem; width: auto; padding: .5rem .62rem; border: 1px solid #111; border-radius: 8px; cursor: pointer; font-size: .7rem; font-weight: 850; }
+    .o-action-primary { border-color: var(--x-blue); background: var(--x-blue); color: #fff; }
+    .o-action-secondary { background: #fff; }
+    .o-action-secondary:hover, .o-action-secondary:focus-visible { border-color: var(--x-blue); background: var(--x-blue-bg); color: var(--x-blue); outline: none; }
+    .o-evidence-card { margin-top: .8rem; border: 1px solid #111; border-radius: 16px; background: rgba(255,255,255,.94); box-shadow: 0 12px 26px rgba(0,0,0,.08); overflow: hidden; }
+    .o-evidence-head { display: flex; align-items: end; justify-content: space-between; gap: .8rem; padding: .75rem .85rem; border-bottom: 1px solid #c9c9c9; }
+    .o-evidence-head h2 { margin: 0; font-size: .9rem; }
+    .o-evidence-head p { margin: .1rem 0 0; color: #6f6f6f; font-size: .66rem; }
+    .o-scope { padding: .3rem .45rem; border: 1px solid var(--x-ambiguous); border-radius: 999px; background: var(--x-ambiguous-bg); color: var(--x-ambiguous); font-size: .62rem; font-weight: 850; white-space: nowrap; }
+    .o-evidence-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .55rem; padding: .8rem .85rem .7rem; }
+    .o-evidence-metric { display: grid; grid-template-columns: 1.55rem minmax(0,1fr); gap: .5rem; align-items: center; min-height: 58px; padding: .55rem .6rem; border: 1px solid #c9c9c9; border-radius: 10px; background: #fbfbfa; }
+    .o-evidence-icon { display: inline-flex; align-items: center; justify-content: center; width: 1.55rem; height: 1.55rem; border: 1px solid #111; border-radius: 7px; color: var(--x-blue); }
+    .o-evidence-icon svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .o-evidence-metric small { display: block; color: #6f6f6f; font-size: .61rem; }
+    .o-evidence-metric strong { display: block; margin-top: .1rem; font-size: .78rem; }
+    .o-evidence-footer { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .55rem .85rem .7rem; border-top: 1px dashed #c9c9c9; color: #6f6f6f; font-size: .66rem; }
+    .o-evidence-footer strong { color: #111; }
+    @media (max-width: 1120px) { .o-lower-grid { grid-template-columns: 1fr; } .o-evidence-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+    @media (max-width: 860px) { .o-workspace-head, .o-hero-head, .o-evidence-head { align-items: flex-start; flex-wrap: wrap; } .o-meta, .o-legend { justify-content: flex-start; } .o-milestone-track { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+    @media (max-width: 600px) { .o-milestone-track, .o-evidence-grid { grid-template-columns: 1fr 1fr; } .o-focus-figure { grid-template-columns: 1fr; } .o-focus-mini { width: 100%; height: 120px; } .o-evidence-footer, .o-flow-caption { align-items: flex-start; flex-direction: column; } }
    </style>
 </head>
 <body>
@@ -746,9 +877,9 @@
       <div class="x-app-grid">
         <aside class="x-rail" aria-label="Explore 工具栏">
           <div class="x-rail-stack">
-            <button class="x-rail-btn" type="button" data-x-mode="overview" aria-selected="false" aria-disabled="true"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10.5v8h11v-8"/><path d="M10 18.5v-4h4v4"/></svg></span><span>overview</span></button>
+            <button class="x-rail-btn" type="button" data-x-mode="overview" aria-selected="false"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10.5v8h11v-8"/><path d="M10 18.5v-4h4v4"/></svg></span><span>overview</span></button>
             <button class="x-rail-btn" type="button" data-x-mode="explore" aria-selected="true"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="6" r="2.2"/><circle cx="19" cy="14" r="2.2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span><span>explore</span></button>
-            <button class="x-rail-btn" type="button" data-x-mode="propose" aria-selected="false" aria-disabled="true"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5"/><path d="m13 6 5 5"/><path d="m4 20 3.5-1 9-9-3.5-3.5-9 9L4 20Z"/><path d="m15 15 4 4"/><path d="M18 3v4M16 5h4"/></svg></span><span>propose</span></button>
+            <button class="x-rail-btn" type="button" data-x-mode="propose" aria-selected="false"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5"/><path d="m13 6 5 5"/><path d="m4 20 3.5-1 9-9-3.5-3.5-9 9L4 20Z"/><path d="m15 15 4 4"/><path d="M18 3v4M16 5h4"/></svg></span><span>propose</span></button>
             <div class="x-rail-divider"></div>
             <button class="x-rail-btn" type="button" data-x-tool="select" aria-pressed="true"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 4 15 3-6 6-3L5 4Z"/></svg></span><span>select</span></button>
             <button class="x-rail-btn" type="button" data-x-tool="relation" aria-pressed="false"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="15" r="2"/><path d="m6.8 10.8 3.4-3.4M13.8 7.3l3.4 6"/></svg></span><span>relation</span></button>
@@ -844,7 +975,7 @@
       <div class="x-app-grid">
         <aside class="x-rail" aria-label="Propose 工具栏">
           <div class="x-rail-stack">
-            <button class="x-rail-btn" type="button" data-x-mode="overview" aria-selected="false" aria-disabled="true"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10.5v8h11v-8"/><path d="M10 18.5v-4h4v4"/></svg></span><span>overview</span></button>
+            <button class="x-rail-btn" type="button" data-x-mode="overview" aria-selected="false"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10.5v8h11v-8"/><path d="M10 18.5v-4h4v4"/></svg></span><span>overview</span></button>
             <button class="x-rail-btn" type="button" data-x-mode="explore" aria-selected="false"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="6" r="2.2"/><circle cx="19" cy="14" r="2.2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span><span>explore</span></button>
             <button class="x-rail-btn" type="button" data-x-mode="propose" aria-selected="true"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5"/><path d="m13 6 5 5"/><path d="m4 20 3.5-1 9-9-3.5-3.5-9 9L4 20Z"/><path d="m15 15 4 4M18 3v4M16 5h4"/></svg></span><span>propose</span></button>
           </div>
@@ -892,6 +1023,162 @@
           </section>
           <section class="p-history" aria-labelledby="pHistoryTitle"><header class="p-history-head"><h2 id="pHistoryTitle">attempt history</h2><span id="pHistoryCount">3 checks recorded locally</span></header><div class="p-history-list" id="pHistoryList"></div></section>
           <div class="p-bottom-bar"><p><strong>写入边界：</strong>propose 只提交结构化数据；图形几何和检查仍由代码负责。</p><button class="p-button-secondary" type="button" id="pOpenExplore">在 Explore 中检查元素</button></div>
+        </main>
+      </div>
+    </div>
+    <div class="o-view" id="overviewView">
+      <header class="x-topbar">
+        <a class="x-brand" href="#o-workspace" aria-label="gloss Overview 首页"><span>gloss</span><i class="x-brand-mark" aria-hidden="true"></i></a>
+        <div class="x-top-title"><strong>Semantic observatory</strong><span>从输入图形到可核验语义：一张可以继续工作的系统地图。</span></div>
+        <nav class="x-mode-tabs" aria-label="工作区模式" role="tablist">
+          <button class="x-mode-tab" role="tab" aria-selected="true" data-x-mode="overview">overview</button>
+          <button class="x-mode-tab" role="tab" aria-selected="false" data-x-mode="explore">explore</button>
+          <button class="x-mode-tab" role="tab" aria-selected="false" data-x-mode="propose">propose</button>
+        </nav>
+        <button class="x-header-action" id="oHelp" type="button" aria-label="帮助">?</button>
+      </header>
+
+      <div class="x-app-grid">
+        <aside class="x-rail" aria-label="Overview 工具栏">
+          <div class="x-rail-stack">
+            <button class="x-rail-btn" type="button" data-x-mode="overview" aria-selected="true"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10.5v8h11v-8"/><path d="M10 18.5v-4h4v4"/></svg></span><span>overview</span></button>
+            <button class="x-rail-btn" type="button" data-x-mode="explore" aria-selected="false"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="6" r="2.2"/><circle cx="19" cy="14" r="2.2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span><span>explore</span></button>
+            <button class="x-rail-btn" type="button" data-x-mode="propose" aria-selected="false"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5"/><path d="m13 6 5 5"/><path d="m4 20 3.5-1 9-9-3.5-3.5-9 9L4 20Z"/><path d="m15 15 4 4M18 3v4M16 5h4"/></svg></span><span>propose</span></button>
+            <div class="x-rail-divider"></div>
+            <button class="x-rail-btn" type="button" data-o-jump="o-flow-card"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="12" r="2"/><path d="m6.8 10.8 3.4-3.4M13.8 7.3l3.4 3.4"/></svg></span><span>path</span></button>
+            <button class="x-rail-btn" type="button" data-o-jump="oMilestones"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span><span>roadmap</span></button>
+          </div>
+          <div class="x-rail-stack">
+            <button class="x-rail-btn" type="button" data-o-jump="oEvidence"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v4H5zM5 12h14v4H5zM5 18h14v2H5z"/></svg></span><span>evidence</span></button>
+          </div>
+        </aside>
+
+        <main class="x-workspace o-workspace" id="o-workspace">
+          <header class="o-workspace-head">
+            <div><p class="x-eyebrow">Overview / semantic control room</p><h1>看见语义如何流动</h1><p>把图形、数据、绑定、核验和投影放在一条可追踪的路径上；选中元素和最新检查结果会实时进入这张地图。</p></div>
+            <div class="o-meta"><span class="x-pill">figure · gallery-029</span><span class="x-pill">selected · <strong id="oSelectionPill">E-05</strong></span></div>
+          </header>
+
+          <section class="o-hero" id="o-flow-card" aria-labelledby="o-flow-title">
+            <header class="o-hero-head">
+              <div class="o-hero-title"><span class="x-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="12" r="2"/><path d="m6.8 10.8 3.4-3.4M13.8 7.3l3.4 3.4"/></svg></span><div><p class="o-kicker">semantic path</p><h2 id="o-flow-title">从原始图形到可记录的语义</h2><p>点击一个节点，进入对应的工作区继续检查。</p></div></div>
+              <div class="o-legend" aria-label="核验状态图例"><span class="o-legend-item"><i class="o-legend-mark verified">✓</i>verified</span><span class="o-legend-item"><i class="o-legend-mark rejected">×</i>rejected</span><span class="o-legend-item"><i class="o-legend-mark unresolved">·</i>unresolved</span></div>
+            </header>
+            <div class="o-flow-viewport">
+              <svg class="o-flow-svg" viewBox="0 0 1240 410" role="img" aria-label="从图形输入、语义底座、提交核验到记录投影的流程图">
+                <defs>
+                  <pattern id="oSvgGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#e8e8e6" stroke-width="1"/></pattern>
+                  <marker id="oArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#777"/></marker>
+                </defs>
+                <rect x="0" y="0" width="1240" height="410" fill="url(#oSvgGrid)"/>
+                <text class="o-node-kicker" x="24" y="30">FIGURE → SEMANTICS → RECORDS</text>
+                <text class="o-node-sub" x="24" y="49">代码给出几何，提议只能在核验后留下。</text>
+
+                <path class="o-flow-line" id="oLineSource" d="M244 190H289"/>
+                <path class="o-flow-line" id="oLineSubstrate" d="M525 190H576"/>
+                <path class="o-flow-line" id="oLineGate" d="M744 190H779"/>
+                <path class="o-flow-line" id="oLineProjection" d="M930 105H965M930 190H965M930 275H965"/>
+
+                <g class="o-flow-node" id="oSourceNode" data-o-route="explore" tabindex="0" role="button" aria-label="打开 Explore，查看 R 图与数据">
+                  <rect x="24" y="74" width="220" height="235" rx="16"/>
+                  <text class="o-node-kicker" x="43" y="101">01 · SOURCE</text>
+                  <text class="o-node-label" x="43" y="127">R 图与数据</text>
+                  <text class="o-node-sub" x="43" y="145">原始材料 · 已画出的页面</text>
+                  <path class="o-node-icon" d="M54 174h92l18 18v70H54zM146 174v20h18M70 219h54M70 233h35"/>
+                  <path class="o-node-icon blue" d="M73 257v-42M73 257h70M83 244l10-13 13 9 14-24 12 13"/>
+                  <circle class="o-particle" cx="83" cy="244" r="4"/><circle class="o-particle" cx="93" cy="231" r="4"/><circle class="o-particle" cx="106" cy="240" r="4"/><circle class="o-particle" cx="120" cy="216" r="4"/><circle class="o-particle" cx="132" cy="229" r="4"/>
+                  <rect x="174" y="224" width="48" height="36" rx="4" fill="#fff" stroke="#111" stroke-width="1.2"/><path class="o-table-line" d="M174 236h48M174 248h48M190 224v36M206 224v36"/>
+                  <text class="o-node-sub" x="43" y="291">figure device · data · table</text>
+                </g>
+
+                <g class="o-flow-node is-current" id="oSubstrateNode" data-o-route="explore" tabindex="0" role="button" aria-label="打开 Explore，查看语义底座">
+                  <rect x="289" y="74" width="236" height="235" rx="16"/>
+                  <text class="o-node-kicker" x="309" y="101">02 · SUBSTRATE</text>
+                  <text class="o-node-label" x="309" y="127">语义底座</text>
+                  <text class="o-node-sub" x="309" y="145">元素 · 图层 · 面板 · 数据行</text>
+                  <path class="o-layer" d="M316 208 428 178v72l-112 30Z" opacity=".42"/><path class="o-layer" d="M329 196 441 166v72l-112 30Z" opacity=".7"/><path class="o-layer" d="M342 184 454 154v72l-112 30Z"/>
+                  <circle class="o-particle verified" cx="370" cy="219" r="4"/><circle class="o-particle verified" cx="393" cy="205" r="4"/><circle class="o-particle selected" id="oSelectedParticle" cx="415" cy="225" r="5"/><circle class="o-selected-ring" id="oSelectedRing" cx="415" cy="225" r="17"/>
+                  <rect x="449" y="205" width="52" height="48" rx="5" fill="#fff" stroke="#111" stroke-width="1.2"/><path class="o-table-line" d="M449 217h52M449 229h52M449 241h52M466 205v48M483 205v48"/>
+                  <text class="o-flow-status" id="oFlowSelected" x="309" y="278">E-05 · row 5</text><text class="o-node-sub" x="309" y="294">selected binding · <tspan id="oFlowStatusText">verified</tspan></text>
+                </g>
+
+                <g class="o-gate" id="oGateNode" data-o-route="propose" tabindex="0" role="button" aria-label="打开 Propose，提交并核验提议">
+                  <rect x="576" y="108" width="168" height="164" rx="16" fill="#fff" stroke="#111" stroke-width="1.35"/>
+                  <text class="o-node-kicker" x="597" y="135">03 · PROPOSE</text>
+                  <text class="o-node-label" x="597" y="160">提交即核验</text>
+                  <polygon class="o-gate-diamond" points="659,169 684,194 659,219 634,194"/>
+                  <text class="o-gate-check" x="648" y="202">✓</text>
+                  <text class="o-gate-label" x="597" y="244">结构化提议</text><text class="o-node-sub" x="597" y="259">代码决定能否写入</text>
+                  <text class="o-flow-status" id="oFlowLatest" x="597" y="286">latest · verified</text>
+                </g>
+
+                <g class="o-flow-node o-status-node" id="oStatusVerified" data-o-route="propose" tabindex="0" role="button" aria-label="打开 Propose，查看 verified 结果">
+                  <rect class="o-status-card is-current verified" x="779" y="76" width="151" height="58" rx="10"/>
+                  <circle cx="801" cy="105" r="13" fill="var(--x-verified-bg)" stroke="var(--x-verified)" stroke-width="1.3"/><path d="m794 105 5 5 9-10" fill="none" stroke="var(--x-verified)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <text class="o-flow-status verified" x="824" y="101">verified</text><text class="o-node-sub" x="824" y="117">accepted</text>
+                </g>
+                <g class="o-flow-node o-status-node" id="oStatusRejected" data-o-route="propose" tabindex="0" role="button" aria-label="打开 Propose，查看 rejected 结果">
+                  <rect class="o-status-card" x="779" y="161" width="151" height="58" rx="10"/>
+                  <rect x="789" y="194" width="24" height="24" rx="5" fill="var(--x-rejected-bg)" stroke="var(--x-rejected)" stroke-width="1.3"/><path d="m795 199 12 12m0-12-12 12" fill="none" stroke="var(--x-rejected)" stroke-width="1.8" stroke-linecap="round"/>
+                  <text class="o-flow-status rejected" x="824" y="186">rejected</text><text class="o-node-sub" x="824" y="202">reason returned</text>
+                </g>
+                <g class="o-flow-node o-status-node" id="oStatusUnresolved" data-o-route="propose" tabindex="0" role="button" aria-label="打开 Propose，查看 unresolved 结果">
+                  <rect class="o-status-card" x="779" y="246" width="151" height="58" rx="10"/>
+                  <circle cx="801" cy="275" r="13" fill="var(--x-unresolved-bg)" stroke="var(--x-unresolved)" stroke-width="1.3" stroke-dasharray="3 2"/><circle cx="801" cy="275" r="1.5" fill="var(--x-unresolved)"/>
+                  <text class="o-flow-status unresolved" x="824" y="271">unresolved</text><text class="o-node-sub" x="824" y="287">refused safely</text>
+                </g>
+
+                <g class="o-flow-node" id="oProjectionNode" data-o-route="propose" tabindex="0" role="button" aria-label="打开 Propose，查看记录与投影">
+                  <rect x="965" y="74" width="247" height="235" rx="16"/>
+                  <text class="o-node-kicker" x="986" y="101">04 · RECORD / PROJECT</text>
+                  <text class="o-node-label" x="986" y="127">记录与投影</text>
+                  <text class="o-node-sub" x="986" y="145">批注 · 交互 · 更新 · 无障碍</text>
+                  <rect x="990" y="170" width="196" height="110" rx="9" fill="#fbfbfa" stroke="#111" stroke-width="1.2"/><path d="M990 191h196" fill="none" stroke="#111" stroke-width="1.2"/><circle cx="1005" cy="181" r="3" fill="var(--x-verified)"/><circle cx="1016" cy="181" r="3" fill="var(--x-ambiguous)"/><circle cx="1027" cy="181" r="3" fill="var(--x-rejected)"/>
+                  <path class="o-node-icon blue" d="M1010 257v-47M1010 257h151M1022 246l18-21 18 11 19-33 21 18"/><circle class="o-particle verified" cx="1022" cy="246" r="4"/><circle class="o-particle selected" cx="1040" cy="225" r="4"/><circle class="o-particle verified" cx="1058" cy="236" r="4"/><circle class="o-particle verified" cx="1077" cy="203" r="4"/><circle class="o-particle ambiguous" cx="1098" cy="221" r="4"/>
+                  <rect x="1107" y="203" width="50" height="38" rx="5" fill="#fff" stroke="#111" stroke-width="1.2"/><path class="o-table-line" d="M1107 215h50M1107 228h50M1124 203v38M1140 203v38"/>
+                  <path class="o-node-icon verified" d="m1117 258 7 7 14-16"/><text class="o-node-sub" x="1139" y="268">append-only record</text>
+                </g>
+              </svg>
+            </div>
+            <div class="o-flow-caption"><span><strong>当前焦点：</strong><span id="oFlowCaption">E-05 is selected; row 5 is the latest checked binding.</span></span><span class="o-live"><i class="o-live-dot"></i>live local state</span></div>
+          </section>
+
+          <section class="o-lower-grid">
+            <article class="o-card" id="oMilestones" aria-labelledby="oMilestoneTitle">
+              <header class="o-card-head"><div><p class="o-kicker">capability map</p><h2 id="oMilestoneTitle">M0—M5 · 能力地图</h2><p>已完成、试验中和下一步都留在同一条时间线上。</p></div><span class="x-pill"><span class="o-live-dot"></span>当前 M1 / M4</span></header>
+              <div class="o-card-body"><div class="o-milestone-track" role="list" aria-label="M0 到 M5 能力地图">
+                <button class="o-milestone complete" type="button" data-o-milestone="M0" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M0</b><i class="o-milestone-mark">✓</i></span><strong>可靠底座</strong><span>捕获 · 查询 · 图包</span></button>
+                <button class="o-milestone partial is-active" type="button" data-o-milestone="M1" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M1</b><i class="o-milestone-mark">◐</i></span><strong>识别与绑定</strong><span>绑定已做，角色待补</span></button>
+                <button class="o-milestone todo" type="button" data-o-milestone="M2" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M2</b><i class="o-milestone-mark">·</i></span><strong>记录与锚点</strong><span>批注可追溯、可重挂</span></button>
+                <button class="o-milestone todo" type="button" data-o-milestone="M3" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M3</b><i class="o-milestone-mark">·</i></span><strong>核验与交互</strong><span>声明检查、无障碍</span></button>
+                <button class="o-milestone partial" type="button" data-o-milestone="M4" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M4</b><i class="o-milestone-mark">◐</i></span><strong>agent 工具</strong><span>工具试验、API 待做</span></button>
+                <button class="o-milestone todo" type="button" data-o-milestone="M5" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M5</b><i class="o-milestone-mark">·</i></span><strong>价值评测</strong><span>同模型、同预算对照</span></button>
+              </div><div class="o-milestone-note" id="oMilestoneNote"><strong>M1 当前：</strong><span>底座和部分绑定已经可检查，完整角色语义还没有进入系统。</span></div></div>
+            </article>
+
+            <aside class="o-card o-focus-card" aria-labelledby="oFocusTitle">
+              <header class="o-card-head"><div><p class="o-kicker">current focus</p><h2 id="oFocusTitle">选中元素 · <span id="oFocusElement">E-05</span></h2><p id="oFocusTag">circle · built_layer1</p></div><span class="o-focus-status verified" id="oFocusStatus"><span class="x-status-mark">✓</span>verified</span></header>
+              <div class="o-card-body">
+                <div class="o-focus-figure">
+                  <svg class="o-focus-mini" viewBox="0 0 92 92" role="img" aria-label="当前选中元素的小型关系图"><line x1="10" y1="65" x2="32" y2="40"/><line x1="32" y1="40" x2="57" y2="56"/><line x1="57" y1="56" x2="78" y2="28"/><line x1="32" y1="40" x2="47" y2="17"/><circle cx="10" cy="65" r="3"/><circle cx="32" cy="40" r="3"/><circle class="selected" id="oFocusParticle" cx="57" cy="56" r="5"/><circle cx="78" cy="28" r="3"/><circle cx="47" cy="17" r="3"/></svg>
+                  <div class="o-focus-facts"><div class="o-focus-fact"><small>row</small><strong id="oFocusRow">row 5</strong></div><div class="o-focus-fact"><small>layer</small><strong id="oFocusLayer">built_layer1</strong></div><div class="o-focus-fact"><small>panel</small><strong id="oFocusPanel">panel1</strong></div><div class="o-focus-fact"><small>attempts</small><strong id="oAttemptCount">3 checks</strong></div></div>
+                </div>
+                <p class="o-focus-reason" id="oFocusReason">the proposed row is where E-05 is drawn, within 0.5 pt.</p>
+                <div class="o-action-row"><button class="o-action-primary" type="button" data-x-mode="explore"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="14" r="2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span>打开 Explore</button><button class="o-action-secondary" type="button" data-x-mode="propose"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5M13 6l5 5M4 20l3.5-1 9-9-3.5-3.5-9 9L4 20Z"/></svg></span>提交提议</button></div>
+              </div>
+            </aside>
+          </section>
+
+          <section class="o-evidence-card" id="oEvidence" aria-labelledby="oEvidenceTitle">
+            <header class="o-evidence-head"><div><p class="o-kicker">evidence pulse</p><h2 id="oEvidenceTitle">当前工作区的可核验摘要</h2><p>状态来自本地 Explore / Propose 交互；研究数字仍属于开发集 pilot。</p></div><span class="o-scope">development set · local prototype</span></header>
+            <div class="o-evidence-grid">
+              <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20c.8-3.8 3.1-5.7 7-5.7s6.2 1.9 7 5.7"/></svg></span><div><small>selected element</small><strong id="oEvidenceElement">E-05 · circle</strong></div></div>
+              <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span><div><small>bound row</small><strong id="oEvidenceRow">row 5 · panel1</strong></div></div>
+              <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/><circle cx="12" cy="12" r="9"/></svg></span><div><small>latest gate</small><strong id="oEvidenceStatus">verified</strong></div></div>
+              <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 5v7h7"/></svg></span><div><small>attempt history</small><strong id="oEvidenceAttempts">3 checks recorded</strong></div></div>
+            </div>
+            <footer class="o-evidence-footer"><span><strong>边界：</strong>图形几何仍由原设备和代码负责；这里展示的是可读、可追踪的语义状态。</span><span id="oHistoryDots">look up → inspect → verified</span></footer>
+          </section>
         </main>
       </div>
     </div>
@@ -1301,12 +1588,18 @@
         proposalRow.innerHTML = elements.filter(function (candidate) { return candidate.row !== null; }).map(function (candidate) {
           return '<option value="' + candidate.row + '"' + (candidate.row === item.row ? " selected" : "") + '>' + candidate.row + ' · ' + candidate.label + '</option>';
         }).join("");
-        updateVerdict(item.row === null ? "unresolved" : "verified", item.row === null ? "This element has no stable row comparison yet." : "the proposed row is where " + item.id + " is drawn, within 0.5 pt.");
+        var existing = window.glossVerification;
+        if (!existing || !existing.item || existing.item.id !== item.id) {
+          updateVerdict(item.row === null ? "unresolved" : "verified", item.row === null ? "This element has no stable row comparison yet." : "the proposed row is where " + item.id + " is drawn, within 0.5 pt.");
+        } else {
+          updateVerdict(existing.status, existing.reason);
+        }
       }
       function selectElement(id) {
         if (!byId[id]) return;
         state.selected = id;
         renderScene(); renderInspector(); renderTable(); renderProposal();
+        if (window.glossOverviewRender) window.glossOverviewRender();
       }
       function updateVerdict(status, reason) {
         var icon = document.getElementById("xVerdictIcon");
@@ -1316,6 +1609,9 @@
         document.getElementById("xVerdictTitle").textContent = status === "verified" ? "verified · row " + item.row : status;
         document.getElementById("xVerdictReason").textContent = reason;
         document.getElementById("xHistory").innerHTML = '<span class="x-history-node"><i></i>look up</span><span class="x-history-arrow">→</span><span class="x-history-node"><i></i>inspect</span><span class="x-history-arrow">→</span><span class="x-history-node current"><i></i>' + status + '</span>';
+        var prior = window.glossVerification && window.glossVerification.item && window.glossVerification.item.id === item.id ? window.glossVerification.history : null;
+        window.glossVerification = {status: status, reason: reason, item: item, history: prior || [{kind:"look up", status:"inspect"}, {kind:"inspect", status:"inspect"}, {kind:status, status:status}]};
+        if (window.glossOverviewRender) window.glossOverviewRender();
       }
       function openDrawer() {
         var drawer = document.getElementById("xDrawer");
@@ -1392,6 +1688,7 @@
     (function () {
       var exploreView = document.getElementById("exploreView");
       var proposeView = document.getElementById("proposeView");
+      var overviewView = document.getElementById("overviewView");
       var history = [
         {kind:"look up", status:"inspect", detail:"element selected"},
         {kind:"inspect", status:"inspect", detail:"derived fields read"},
@@ -1445,25 +1742,44 @@
         document.getElementById("pVerifiedIcon").innerHTML = pStatus("verified");
         document.getElementById("pRejectedIcon").innerHTML = pStatus("rejected");
         document.getElementById("pUnresolvedIcon").innerHTML = pStatus("unresolved");
+        window.glossVerification = {status: status, reason: reason, item: item, history: history.slice()};
+        if (window.glossOverviewRender) window.glossOverviewRender();
       }
       function populate() {
         var item = selected();
         if (!item) return;
         renderContext(item);
-        updateResult(item.row === null ? "unresolved" : "verified", item.row === null ? "This element has no stable row comparison yet." : "the proposed row is where " + item.id + " is drawn, within 0.5 pt.");
+        var existing = window.glossVerification;
+        if (existing && existing.item && existing.item.id === item.id) {
+          updateResult(existing.status, existing.reason);
+        } else {
+          updateResult(item.row === null ? "unresolved" : "verified", item.row === null ? "This element has no stable row comparison yet." : "the proposed row is where " + item.id + " is drawn, within 0.5 pt.");
+        }
         renderHistory();
       }
       function switchWorkspace(mode) {
-        if (mode === "propose") {
+        if (mode === "overview") {
           exploreView.classList.add("is-hidden");
+          proposeView.classList.remove("is-active");
+          overviewView.classList.add("is-active");
+          if (window.glossOverviewRender) window.glossOverviewRender();
+          document.title = "gloss · Overview";
+        } else if (mode === "propose") {
+          exploreView.classList.add("is-hidden");
+          overviewView.classList.remove("is-active");
           proposeView.classList.add("is-active");
           populate();
+          document.title = "gloss · Propose";
         } else {
+          overviewView.classList.remove("is-active");
           proposeView.classList.remove("is-active");
           exploreView.classList.remove("is-hidden");
           if (mode === "explore" && window.glossExplore && selected()) window.glossExplore.select(selected().id);
+          document.title = "gloss · Explore";
         }
-        document.querySelectorAll("[data-x-mode]").forEach(function (button) { button.setAttribute("aria-selected", String(button.dataset.xMode === (mode === "overview" ? "explore" : mode))); });
+        document.querySelectorAll("[data-x-mode]").forEach(function (button) { button.setAttribute("aria-selected", String(button.dataset.xMode === mode)); });
+        var modeHash = mode === "overview" ? "#overview" : mode === "propose" ? "#propose" : "#explore";
+        if (window.location.hash !== modeHash && window.history && window.history.replaceState) window.history.replaceState(null, "", modeHash);
       }
       window.glossSwitchWorkspace = switchWorkspace;
 
@@ -1497,6 +1813,116 @@
         drawer.textContent = "Select an element, choose a row, and let the verification gate explain the result.";
       });
       populate();
+      if (window.location.hash === "#overview" || window.location.hash === "#o-workspace") switchWorkspace("overview");
+      else if (window.location.hash === "#propose" || window.location.hash === "#p-workspace") switchWorkspace("propose");
+      else if (window.location.hash === "#explore" || window.location.hash === "#x-workspace") switchWorkspace("explore");
+    }());
+  </script>
+  <script>
+    (function () {
+      var milestoneNotes = {
+        M0: "可靠底座已经可复核：捕获、查询、图包和基准集不依赖模型。",
+        M1: "底座和部分绑定已经可检查，完整角色语义还没有进入系统。",
+        M2: "下一步把批注和锚点做成追加记录，让图更新后仍可重挂。",
+        M3: "核验、交互和无障碍投影需要在声明层完成一条更薄的验证路径。",
+        M4: "agent 工具已有前置试验；公开 API 和边界仍在收敛。",
+        M5: "价值评测待做：同模型、同预算、同问题的对照才会给出报告数字。"
+      };
+
+      function selected() {
+        return window.glossExplore ? window.glossExplore.getSelected() : null;
+      }
+      function statusIcon(status) {
+        return window.glossStatusIcon ? window.glossStatusIcon(status) : "";
+      }
+      function latestFor(item) {
+        var latest = window.glossVerification;
+        return latest && latest.item && latest.item.id === item.id ? latest : null;
+      }
+      function renderOverview() {
+        var item = selected();
+        if (!item) return;
+        var latest = latestFor(item);
+        var status = latest ? latest.status : item.status;
+        var reason = latest ? latest.reason : item.basis;
+        var history = latest && latest.history ? latest.history : [{kind:"look up"}, {kind:"inspect"}, {kind:status}];
+        var row = item.row === null ? "no stable row" : "row " + item.row;
+        var statusText = status === "verified" ? "verified" : status;
+
+        document.getElementById("oSelectionPill").textContent = item.id;
+        document.getElementById("oFocusElement").textContent = item.id;
+        document.getElementById("oFocusTag").textContent = item.tag + " · " + item.layer;
+        document.getElementById("oFocusRow").textContent = row;
+        document.getElementById("oFocusLayer").textContent = item.layer;
+        document.getElementById("oFocusPanel").textContent = item.panel;
+        document.getElementById("oAttemptCount").textContent = history.length + " checks";
+        document.getElementById("oFocusReason").textContent = reason;
+        document.getElementById("oEvidenceElement").textContent = item.id + " · " + item.tag;
+        document.getElementById("oEvidenceRow").textContent = row + " · " + item.panel;
+        document.getElementById("oEvidenceStatus").innerHTML = statusIcon(status) + statusText;
+        document.getElementById("oEvidenceAttempts").textContent = history.length + " checks recorded";
+        document.getElementById("oHistoryDots").textContent = history.map(function (entry) { return entry.kind; }).join(" → ");
+        document.getElementById("oFlowSelected").textContent = item.id + " · " + row;
+        document.getElementById("oFlowStatusText").textContent = statusText;
+        document.getElementById("oFlowLatest").textContent = "latest · " + statusText;
+        document.getElementById("oFlowCaption").textContent = item.id + " is selected; " + row + " is the latest checked binding.";
+
+        var focusStatus = document.getElementById("oFocusStatus");
+        focusStatus.className = "o-focus-status " + status;
+        focusStatus.innerHTML = statusIcon(status) + statusText;
+        var selectedParticle = document.getElementById("oSelectedParticle");
+        selectedParticle.setAttribute("class", "o-particle selected " + status);
+        var focusParticle = document.getElementById("oFocusParticle");
+        focusParticle.setAttribute("class", "" + (status === "verified" ? "selected" : "status-" + status));
+
+        ["verified", "rejected", "unresolved"].forEach(function (name) {
+          var card = document.getElementById("oStatus" + name.charAt(0).toUpperCase() + name.slice(1)).querySelector(".o-status-card");
+          card.classList.toggle("is-current", status === name);
+        });
+        document.getElementById("oLineSource").classList.add("is-active");
+        document.getElementById("oLineSubstrate").classList.add("is-active");
+        document.getElementById("oLineGate").classList.toggle("is-active", Boolean(latest));
+        document.getElementById("oLineProjection").classList.toggle("is-active", status === "verified");
+      }
+
+      function toast(message) {
+        var node = document.getElementById("xToast");
+        if (!node) return;
+        node.textContent = message;
+        node.hidden = false;
+        window.clearTimeout(toast.timer);
+        toast.timer = window.setTimeout(function () { node.hidden = true; }, 2200);
+      }
+
+      document.querySelectorAll("[data-o-route]").forEach(function (node) {
+        node.addEventListener("click", function () {
+          if (window.glossSwitchWorkspace) window.glossSwitchWorkspace(node.dataset.oRoute);
+        });
+        node.addEventListener("keydown", function (event) {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            if (window.glossSwitchWorkspace) window.glossSwitchWorkspace(node.dataset.oRoute);
+          }
+        });
+      });
+      document.querySelectorAll("[data-o-jump]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var target = document.getElementById(button.dataset.oJump);
+          if (target) target.scrollIntoView({behavior:"smooth", block:"start"});
+        });
+      });
+      document.querySelectorAll("[data-o-milestone]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          document.querySelectorAll("[data-o-milestone]").forEach(function (item) { item.classList.toggle("is-active", item === button); });
+          var code = button.dataset.oMilestone;
+          document.getElementById("oMilestoneNote").innerHTML = "<strong>" + code + "：</strong><span>" + milestoneNotes[code] + "</span>";
+          toast(code + " focused in the capability map.");
+        });
+      });
+      document.getElementById("oHelp").addEventListener("click", function () { toast("Overview maps the path; click a node to continue in Explore or Propose."); });
+
+      window.glossOverviewRender = renderOverview;
+      renderOverview();
     }());
   </script>
 </body>
