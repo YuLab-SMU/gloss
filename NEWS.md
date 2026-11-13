@@ -3,6 +3,7 @@
 ## Interactive docs site (2026-11-13)
 
 - The static `docs/` site now has linked Overview, Explore and Propose workspaces. Overview renders the semantic path with inline SVG, semantic status colors, a live M0—M5 capability map and evidence summary synchronized with the selected element and latest local verification result.
+- The site now frames element-to-row binding as a substrate fact rather than the research problem: Overview exposes six higher semantic layers (structure, meaning, relation, claim, narrative and behavior), while Explore and Propose label binding as the first checked proposal.
 
 ## Proposals checked from the figure alone (2026-11-12, agent-path plan Tasks 2 and 3)
 

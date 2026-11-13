@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="gloss：从图形、数据和元素追踪到可核验提议的 Overview、Explore 与 Propose 工作区。">
+  <meta name="description" content="gloss：以图形底座为入口，追加角色、含义、关系、声明、叙事和交互语义，并在 Overview、Explore 与 Propose 工作区中核验。">
   <title>gloss · Explore</title>
   <style>
     :root {
@@ -854,9 +854,52 @@
     .o-evidence-metric strong { display: block; margin-top: .1rem; font-size: .78rem; }
     .o-evidence-footer { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .55rem .85rem .7rem; border-top: 1px dashed #c9c9c9; color: #6f6f6f; font-size: .66rem; }
     .o-evidence-footer strong { color: #111; }
+    .o-semantic-card { margin-top: .8rem; border: 1px solid #111; border-radius: 18px; background: rgba(255,255,255,.94); box-shadow: 0 14px 30px rgba(0,0,0,.07); overflow: hidden; }
+    .o-semantic-head { display: flex; align-items: end; justify-content: space-between; gap: .8rem; padding: .85rem 1rem; border-bottom: 1px solid #c9c9c9; }
+    .o-semantic-head h2 { margin: 0; font-size: 1.05rem; letter-spacing: -.025em; }
+    .o-semantic-head p { max-width: 690px; margin: .18rem 0 0; color: #6f6f6f; font-size: .7rem; line-height: 1.45; }
+    .o-semantic-badge { display: inline-flex; align-items: center; gap: .35rem; padding: .34rem .5rem; border: 1px solid var(--x-blue); border-radius: 999px; background: var(--x-blue-bg); color: var(--x-blue); font-size: .64rem; font-weight: 900; white-space: nowrap; }
+    .o-semantic-grid { display: grid; grid-template-columns: minmax(0,1.28fr) minmax(290px,.72fr); gap: .8rem; padding: .85rem; }
+    .o-layer-stack { position: relative; display: grid; gap: .45rem; }
+    .o-layer-stack::before { content: ""; position: absolute; top: 1.25rem; bottom: 1.25rem; left: 1.02rem; width: 1px; background: linear-gradient(var(--x-blue),#c9c9c9); }
+    .o-layer-row { position: relative; z-index: 1; display: grid; grid-template-columns: 2rem 2rem minmax(0,1fr) auto; align-items: center; gap: .55rem; min-height: 57px; padding: .55rem .65rem .55rem .45rem; border: 1px solid #c9c9c9; border-left: 3px solid #999; border-radius: 11px; background: #fbfbfa; cursor: pointer; text-align: left; transition: transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease; }
+    .o-layer-row:hover, .o-layer-row:focus-visible { transform: translateX(3px); border-color: var(--x-blue); outline: none; box-shadow: 3px 3px 0 rgba(49,91,182,.12); }
+    .o-layer-row.is-selected { border-color: var(--x-blue); background: var(--x-blue-bg); box-shadow: inset 3px 0 0 var(--x-blue); }
+    .o-layer-row.structure { border-left-color: var(--x-verified); }
+    .o-layer-row.meaning { border-left-color: var(--x-ambiguous); }
+    .o-layer-row.relation, .o-layer-row.claim, .o-layer-row.narrative, .o-layer-row.behavior { border-left-color: #777; }
+    .o-layer-number { display: inline-flex; align-items: center; justify-content: center; width: 1.75rem; height: 1.75rem; border: 1px solid #111; border-radius: 50%; background: #fff; font-size: .72rem; font-weight: 950; }
+    .o-layer-row.is-selected .o-layer-number { border-color: var(--x-blue); color: var(--x-blue); }
+    .o-layer-icon { display: inline-flex; align-items: center; justify-content: center; width: 1.7rem; height: 1.7rem; color: #555; }
+    .o-layer-icon svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .o-layer-row.structure .o-layer-icon { color: var(--x-verified); }
+    .o-layer-row.meaning .o-layer-icon { color: var(--x-ambiguous); }
+    .o-layer-copy strong { display: block; font-size: .78rem; }
+    .o-layer-copy span { display: block; margin-top: .12rem; color: #6f6f6f; font-size: .65rem; line-height: 1.35; }
+    .o-layer-state { display: inline-flex; align-items: center; gap: .28rem; padding: .26rem .4rem; border: 1px solid #999; border-radius: 999px; color: #6f6f6f; font-size: .6rem; font-weight: 900; white-space: nowrap; }
+    .o-layer-state.ready { border-color: var(--x-verified); background: var(--x-verified-bg); color: var(--x-verified); }
+    .o-layer-state.proposed { border-color: var(--x-ambiguous); background: var(--x-ambiguous-bg); color: var(--x-ambiguous); }
+    .o-layer-state.design { border-style: dashed; }
+    .o-layer-detail { display: flex; flex-direction: column; min-height: 100%; padding: .85rem; border: 1px dashed #777; border-radius: 13px; background: #fbfbfa; }
+    .o-layer-detail-kicker { margin: 0 0 .35rem; color: #6f6f6f; font-size: .63rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+    .o-layer-detail h3 { margin: 0; font-size: 1.05rem; }
+    .o-layer-detail-lead { margin: .35rem 0 0; color: #6f6f6f; font-size: .72rem; line-height: 1.5; }
+    .o-layer-detail-facts { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; margin-top: .8rem; }
+    .o-layer-detail-fact { padding: .5rem; border-bottom: 1px dashed #c9c9c9; }
+    .o-layer-detail-fact small { display: block; color: #6f6f6f; font-size: .6rem; }
+    .o-layer-detail-fact strong { display: block; margin-top: .14rem; font-size: .72rem; }
+    .o-layer-detail-note { margin: .8rem 0 0; padding: .55rem .6rem; border: 1px solid var(--x-blue); border-radius: 9px; background: var(--x-blue-bg); color: #32477a; font-size: .68rem; line-height: 1.45; }
+    .o-layer-detail .o-action-row { margin-top: auto; padding-top: .8rem; }
+    .o-layer-boundary { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); gap: .55rem; padding: 0 .85rem .85rem; }
+    .o-boundary-box { display: flex; align-items: start; gap: .45rem; padding: .55rem .6rem; border: 1px dashed #777; border-radius: 10px; color: #6f6f6f; font-size: .66rem; line-height: 1.4; }
+    .o-boundary-box strong { display: block; color: #111; font-size: .68rem; }
+    .o-boundary-mark { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 1.35rem; height: 1.35rem; border: 1px solid currentColor; border-radius: 50%; font-size: .72rem; font-weight: 950; }
+    .o-boundary-mark.fact { color: var(--x-verified); background: var(--x-verified-bg); }
+    .o-boundary-mark.semantic { color: var(--x-ambiguous); background: var(--x-ambiguous-bg); border-radius: 4px; }
     @media (max-width: 1120px) { .o-lower-grid { grid-template-columns: 1fr; } .o-evidence-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-    @media (max-width: 860px) { .o-workspace-head, .o-hero-head, .o-evidence-head { align-items: flex-start; flex-wrap: wrap; } .o-meta, .o-legend { justify-content: flex-start; } .o-milestone-track { grid-template-columns: repeat(3,minmax(0,1fr)); } }
-    @media (max-width: 600px) { .o-milestone-track, .o-evidence-grid { grid-template-columns: 1fr 1fr; } .o-focus-figure { grid-template-columns: 1fr; } .o-focus-mini { width: 100%; height: 120px; } .o-evidence-footer, .o-flow-caption { align-items: flex-start; flex-direction: column; } }
+    @media (max-width: 1120px) { .o-semantic-grid { grid-template-columns: 1fr; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
+    @media (max-width: 860px) { .o-workspace-head, .o-hero-head, .o-evidence-head, .o-semantic-head { align-items: flex-start; flex-wrap: wrap; } .o-meta, .o-legend { justify-content: flex-start; } .o-milestone-track { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+    @media (max-width: 600px) { .o-milestone-track, .o-evidence-grid, .o-layer-boundary { grid-template-columns: 1fr 1fr; } .o-layer-row { grid-template-columns: 1.75rem 1.75rem minmax(0,1fr); } .o-layer-state { grid-column: 3; justify-self: start; } .o-focus-figure { grid-template-columns: 1fr; } .o-focus-mini { width: 100%; height: 120px; } .o-evidence-footer, .o-flow-caption { align-items: flex-start; flex-direction: column; } }
    </style>
 </head>
 <body>
@@ -893,7 +936,7 @@
 
         <main class="x-workspace" id="x-workspace">
           <header class="x-workspace-head">
-            <div><p class="x-eyebrow">Explore / semantic figure inspector</p><h1>从图元读到数据行</h1><p>选择一个元素，查看它的叶子、图层、面板和绑定，再把提议交给核验路径。</p></div>
+            <div><p class="x-eyebrow">Explore / semantic figure inspector</p><h1>从底座看见语义入口</h1><p>选择一个元素，查看它的结构和数据入口；绑定是可核验的底座事实，角色、关系和声明在此之上继续追加。</p></div>
             <div class="x-meta"><span class="x-pill">figure · gallery-029</span><label class="x-pill"><input id="xHideBinding" type="checkbox"> hide binding</label></div>
           </header>
 
@@ -936,14 +979,14 @@
           </section>
 
           <section class="x-table-panel" aria-labelledby="xTableTitle">
-            <header class="x-table-head"><div><h2 id="xTableTitle">built_layer1 · data rows</h2><span>选中一行，画布中的对应元素会被定位。</span></div><span id="xTableSelection">row 5 selected</span></header>
+            <header class="x-table-head"><div><h2 id="xTableTitle">built_layer1 · substrate rows</h2><span>选中一行，画布中的对应元素会被定位；这只是语义底座。</span></div><span id="xTableSelection">row 5 selected</span></header>
             <div class="x-table-scroll"><table class="x-table"><thead><tr><th>#</th><th>row</th><th>element</th><th>x</th><th>y</th><th>layer</th><th>status</th></tr></thead><tbody id="xDataRows"></tbody></table></div>
           </section>
 
           <aside class="x-drawer" id="xDrawer" aria-live="polite">
-            <header class="x-drawer-head"><div><p>verification drawer</p><h2>提交一条绑定提议</h2></div><button class="x-drawer-toggle" type="button" id="xToggleDrawer" aria-expanded="true" aria-label="折叠核验抽屉">⌃</button></header>
+            <header class="x-drawer-head"><div><p>verification drawer</p><h2>提交一条可核验提议</h2></div><button class="x-drawer-toggle" type="button" id="xToggleDrawer" aria-expanded="true" aria-label="折叠核验抽屉">⌃</button></header>
             <div class="x-drawer-body">
-              <section class="x-proposal-card"><p class="x-card-kicker">structured proposal</p><h3>把元素和一行数据交给代码检查</h3>
+              <section class="x-proposal-card"><p class="x-card-kicker">structured proposal</p><h3>把底座事实交给代码检查</h3>
                 <div class="x-proposal-grid">
                   <div class="x-proposal-field"><label for="xProposalElement">element</label><input id="xProposalElement" readonly></div>
                   <div class="x-proposal-field"><label for="xProposalTable">table</label><input id="xProposalTable" value="built_layer1" readonly></div>
@@ -953,7 +996,7 @@
                 <div class="x-proposal-actions"><button class="x-solid" id="xSubmitProposal" type="button">→ 提交核验</button><button class="x-outline" id="xResetProposal" type="button">重置为选中行</button></div>
               </section>
               <section class="x-verdict-card"><p class="x-card-kicker">check result</p>
-                <div class="x-verdict-layout"><div class="x-verdict-icon" id="xVerdictIcon">✓</div><div><h3 class="x-verdict-title" id="xVerdictTitle">verified · row 5</h3><p class="x-verdict-reason" id="xVerdictReason">the proposed row is where the element is drawn, within 0.5 pt.</p></div></div>
+                <div class="x-verdict-layout"><div class="x-verdict-icon" id="xVerdictIcon">✓</div><div><h3 class="x-verdict-title" id="xVerdictTitle">verified · substrate row 5</h3><p class="x-verdict-reason" id="xVerdictReason">the proposed substrate row is where the element is drawn, within 0.5 pt.</p></div></div>
                 <div class="x-history" id="xHistory"><span class="x-history-node"><i></i>look up</span><span class="x-history-arrow">→</span><span class="x-history-node"><i></i>inspect</span><span class="x-history-arrow">→</span><span class="x-history-node current"><i></i>verified</span></div>
               </section>
             </div>
@@ -983,7 +1026,7 @@
         </aside>
         <main class="x-workspace" id="p-workspace">
           <header class="p-workspace-head">
-            <div><p class="x-eyebrow">Propose / verification workspace</p><h1>从提议到核验</h1><p>左侧保留元素上下文，中间提交结构化假设，右侧显示代码检查的结果。</p></div>
+            <div><p class="x-eyebrow">Propose / verification workspace</p><h1>从语义提议到核验</h1><p>左侧保留底座上下文，中间提交结构化语义假设，右侧显示代码检查的结果；绑定只是第一种提议。</p></div>
             <div class="p-meta"><span class="x-pill">selected · <strong id="pSelectedMeta">E-05</strong></span><span class="x-pill">basis · figure position</span></div>
           </header>
           <section class="p-stage">
@@ -995,18 +1038,18 @@
                   <circle class="p-node" cx="55" cy="108" r="5"/><circle class="p-node" cx="102" cy="75" r="5"/><circle class="p-node selected" id="pSelectedNode" cx="155" cy="105" r="7"/><circle class="p-ring" cx="155" cy="105" r="20"/><circle class="p-node" cx="204" cy="56" r="5"/><circle class="p-node" cx="250" cy="86" r="5"/><circle class="p-node" cx="123" cy="34" r="4"/>
                   <text x="166" y="101" font-size="11" font-weight="800" fill="#315bb6">E-05</text><text x="15" y="162" font-size="10" fill="#6f6f6f">leaf · L-07 / panel1</text>
                 </svg>
-                <div class="p-context-caption"><span>local relation field</span><span id="pContextRow">row 5</span></div>
+                <div class="p-context-caption"><span>local substrate context</span><span id="pContextRow">row 5</span></div>
                 <div class="p-context-fields"><div class="p-context-field"><small>element</small><strong id="pContextElement">E-05</strong></div><div class="p-context-field"><small>layer</small><strong id="pContextLayer">built_layer1</strong></div><div class="p-context-field"><small>panel</small><strong id="pContextPanel">panel1</strong></div><div class="p-context-field"><small>status</small><strong id="pContextStatusText">verified</strong></div></div>
               </div>
             </article>
             <article class="p-card p-form-card">
-              <header class="p-card-head"><div><p>structured proposal</p><h2>提交绑定假设</h2></div><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></header>
+              <header class="p-card-head"><div><p>structured proposal</p><h2>提交一个语义提议</h2></div><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></header>
               <div class="p-card-body">
                 <div class="p-form-grid">
                   <div class="p-field"><label for="pElement">element</label><input id="pElement" readonly></div>
                   <div class="p-field"><label for="pTable">table</label><input id="pTable" value="built_layer1" readonly></div>
                   <div class="p-field"><label for="pRow">row</label><select id="pRow"></select></div>
-                  <div class="p-field"><label for="pKind">kind</label><select id="pKind"><option value="binding">binding</option><option value="relation">relation (next)</option></select></div>
+                  <div class="p-field"><label for="pKind">kind</label><select id="pKind"><option value="binding">binding · substrate fact</option><option value="relation">relation · semantic layer</option><option value="meaning">meaning · semantic layer</option><option value="claim">claim · semantic layer</option></select></div>
                   <div class="p-field full"><label for="pBasis">basis</label><textarea id="pBasis">row placed through panel scales; element compared on page</textarea></div>
                 </div>
                 <div class="p-form-actions"><button class="p-button-primary" type="button" id="pSubmit">提交并核验</button><button class="p-button-secondary" type="button" id="pReset">重置为选中行</button></div>
@@ -1017,12 +1060,12 @@
               <div class="p-card-body">
                 <div class="p-gate"><div class="p-diamond"><span id="pGateMark">✓</span></div></div>
                 <div class="p-branches"><div class="p-branch is-active" id="pVerifiedBranch"><span><span class="p-branch-icon" id="pVerifiedIcon"></span>verified</span><span>accepted</span></div><div class="p-branch" id="pRejectedBranch"><span><span class="p-branch-icon" id="pRejectedIcon"></span>rejected</span><span>reason</span></div><div class="p-branch" id="pUnresolvedBranch"><span><span class="p-branch-icon" id="pUnresolvedIcon"></span>unresolved</span><span>refused</span></div></div>
-                <h2 class="p-result-title" id="pResultTitle">verified · row 5</h2><p class="p-result-reason" id="pResultReason">the proposed row is where E-05 is drawn, within 0.5 pt.</p>
+                <h2 class="p-result-title" id="pResultTitle">verified · substrate row 5</h2><p class="p-result-reason" id="pResultReason">the proposed substrate row is where E-05 is drawn, within 0.5 pt.</p>
               </div>
             </article>
           </section>
           <section class="p-history" aria-labelledby="pHistoryTitle"><header class="p-history-head"><h2 id="pHistoryTitle">attempt history</h2><span id="pHistoryCount">3 checks recorded locally</span></header><div class="p-history-list" id="pHistoryList"></div></section>
-          <div class="p-bottom-bar"><p><strong>写入边界：</strong>propose 只提交结构化数据；图形几何和检查仍由代码负责。</p><button class="p-button-secondary" type="button" id="pOpenExplore">在 Explore 中检查元素</button></div>
+          <div class="p-bottom-bar"><p><strong>写入边界：</strong>propose 只提交结构化语义；图形几何和底座事实仍由代码负责。</p><button class="p-button-secondary" type="button" id="pOpenExplore">在 Explore 中检查底座</button></div>
         </main>
       </div>
     </div>
@@ -1055,13 +1098,13 @@
 
         <main class="x-workspace o-workspace" id="o-workspace">
           <header class="o-workspace-head">
-            <div><p class="x-eyebrow">Overview / semantic control room</p><h1>看见语义如何流动</h1><p>把图形、数据、绑定、核验和投影放在一条可追踪的路径上；选中元素和最新检查结果会实时进入这张地图。</p></div>
+            <div><p class="x-eyebrow">Overview / semantic control room</p><h1>从可见图元，到可解释的知识载体</h1><p>元素 ↔ 数据行只是底座事实；gloss 继续把角色、领域含义、关系、声明、叙事和交互叠加到图上。</p></div>
             <div class="o-meta"><span class="x-pill">figure · gallery-029</span><span class="x-pill">selected · <strong id="oSelectionPill">E-05</strong></span></div>
           </header>
 
           <section class="o-hero" id="o-flow-card" aria-labelledby="o-flow-title">
             <header class="o-hero-head">
-              <div class="o-hero-title"><span class="x-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="12" r="2"/><path d="m6.8 10.8 3.4-3.4M13.8 7.3l3.4 3.4"/></svg></span><div><p class="o-kicker">semantic path</p><h2 id="o-flow-title">从原始图形到可记录的语义</h2><p>点击一个节点，进入对应的工作区继续检查。</p></div></div>
+              <div class="o-hero-title"><span class="x-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="12" r="2"/><path d="m6.8 10.8 3.4-3.4M13.8 7.3l3.4 3.4"/></svg></span><div><p class="o-kicker">semantic path</p><h2 id="o-flow-title">底座给事实，记录层给含义</h2><p>点击一个节点，进入对应的工作区继续检查或追加语义。</p></div></div>
               <div class="o-legend" aria-label="核验状态图例"><span class="o-legend-item"><i class="o-legend-mark verified">✓</i>verified</span><span class="o-legend-item"><i class="o-legend-mark rejected">×</i>rejected</span><span class="o-legend-item"><i class="o-legend-mark unresolved">·</i>unresolved</span></div>
             </header>
             <div class="o-flow-viewport">
@@ -1072,7 +1115,7 @@
                 </defs>
                 <rect x="0" y="0" width="1240" height="410" fill="url(#oSvgGrid)"/>
                 <text class="o-node-kicker" x="24" y="30">FIGURE → SEMANTICS → RECORDS</text>
-                <text class="o-node-sub" x="24" y="49">代码给出几何，提议只能在核验后留下。</text>
+                <text class="o-node-sub" x="24" y="49">点位对应不是终点；可解释、可追问、可复用才是上层目标。</text>
 
                 <path class="o-flow-line" id="oLineSource" d="M244 190H289"/>
                 <path class="o-flow-line" id="oLineSubstrate" d="M525 190H576"/>
@@ -1083,7 +1126,7 @@
                   <rect x="24" y="74" width="220" height="235" rx="16"/>
                   <text class="o-node-kicker" x="43" y="101">01 · SOURCE</text>
                   <text class="o-node-label" x="43" y="127">R 图与数据</text>
-                  <text class="o-node-sub" x="43" y="145">原始材料 · 已画出的页面</text>
+                  <text class="o-node-sub" x="43" y="145">原始材料 · 可见事实</text>
                   <path class="o-node-icon" d="M54 174h92l18 18v70H54zM146 174v20h18M70 219h54M70 233h35"/>
                   <path class="o-node-icon blue" d="M73 257v-42M73 257h70M83 244l10-13 13 9 14-24 12 13"/>
                   <circle class="o-particle" cx="83" cy="244" r="4"/><circle class="o-particle" cx="93" cy="231" r="4"/><circle class="o-particle" cx="106" cy="240" r="4"/><circle class="o-particle" cx="120" cy="216" r="4"/><circle class="o-particle" cx="132" cy="229" r="4"/>
@@ -1095,11 +1138,11 @@
                   <rect x="289" y="74" width="236" height="235" rx="16"/>
                   <text class="o-node-kicker" x="309" y="101">02 · SUBSTRATE</text>
                   <text class="o-node-label" x="309" y="127">语义底座</text>
-                  <text class="o-node-sub" x="309" y="145">元素 · 图层 · 面板 · 数据行</text>
+                  <text class="o-node-sub" x="309" y="145">元素 · 结构 · 数据 · 上下文</text>
                   <path class="o-layer" d="M316 208 428 178v72l-112 30Z" opacity=".42"/><path class="o-layer" d="M329 196 441 166v72l-112 30Z" opacity=".7"/><path class="o-layer" d="M342 184 454 154v72l-112 30Z"/>
                   <circle class="o-particle verified" cx="370" cy="219" r="4"/><circle class="o-particle verified" cx="393" cy="205" r="4"/><circle class="o-particle selected" id="oSelectedParticle" cx="415" cy="225" r="5"/><circle class="o-selected-ring" id="oSelectedRing" cx="415" cy="225" r="17"/>
                   <rect x="449" y="205" width="52" height="48" rx="5" fill="#fff" stroke="#111" stroke-width="1.2"/><path class="o-table-line" d="M449 217h52M449 229h52M449 241h52M466 205v48M483 205v48"/>
-                  <text class="o-flow-status" id="oFlowSelected" x="309" y="278">E-05 · row 5</text><text class="o-node-sub" x="309" y="294">selected binding · <tspan id="oFlowStatusText">verified</tspan></text>
+                  <text class="o-flow-status" id="oFlowSelected" x="309" y="278">E-05 · row 5</text><text class="o-node-sub" x="309" y="294">substrate fact · <tspan id="oFlowStatusText">verified</tspan></text>
                 </g>
 
                 <g class="o-gate" id="oGateNode" data-o-route="propose" tabindex="0" role="button" aria-label="打开 Propose，提交并核验提议">
@@ -1108,7 +1151,7 @@
                   <text class="o-node-label" x="597" y="160">提交即核验</text>
                   <polygon class="o-gate-diamond" points="659,169 684,194 659,219 634,194"/>
                   <text class="o-gate-check" x="648" y="202">✓</text>
-                  <text class="o-gate-label" x="597" y="244">结构化提议</text><text class="o-node-sub" x="597" y="259">代码决定能否写入</text>
+                  <text class="o-gate-label" x="597" y="244">结构化语义提议</text><text class="o-node-sub" x="597" y="259">角色 · 关系 · 声明都要核验</text>
                   <text class="o-flow-status" id="oFlowLatest" x="597" y="286">latest · verified</text>
                 </g>
 
@@ -1131,8 +1174,8 @@
                 <g class="o-flow-node" id="oProjectionNode" data-o-route="propose" tabindex="0" role="button" aria-label="打开 Propose，查看记录与投影">
                   <rect x="965" y="74" width="247" height="235" rx="16"/>
                   <text class="o-node-kicker" x="986" y="101">04 · RECORD / PROJECT</text>
-                  <text class="o-node-label" x="986" y="127">记录与投影</text>
-                  <text class="o-node-sub" x="986" y="145">批注 · 交互 · 更新 · 无障碍</text>
+                  <text class="o-node-label" x="986" y="127">记录与多种呈现</text>
+                  <text class="o-node-sub" x="986" y="145">联动 · 讲解 · 无障碍 · 审阅</text>
                   <rect x="990" y="170" width="196" height="110" rx="9" fill="#fbfbfa" stroke="#111" stroke-width="1.2"/><path d="M990 191h196" fill="none" stroke="#111" stroke-width="1.2"/><circle cx="1005" cy="181" r="3" fill="var(--x-verified)"/><circle cx="1016" cy="181" r="3" fill="var(--x-ambiguous)"/><circle cx="1027" cy="181" r="3" fill="var(--x-rejected)"/>
                   <path class="o-node-icon blue" d="M1010 257v-47M1010 257h151M1022 246l18-21 18 11 19-33 21 18"/><circle class="o-particle verified" cx="1022" cy="246" r="4"/><circle class="o-particle selected" cx="1040" cy="225" r="4"/><circle class="o-particle verified" cx="1058" cy="236" r="4"/><circle class="o-particle verified" cx="1077" cy="203" r="4"/><circle class="o-particle ambiguous" cx="1098" cy="221" r="4"/>
                   <rect x="1107" y="203" width="50" height="38" rx="5" fill="#fff" stroke="#111" stroke-width="1.2"/><path class="o-table-line" d="M1107 215h50M1107 228h50M1124 203v38M1140 203v38"/>
@@ -1140,7 +1183,33 @@
                 </g>
               </svg>
             </div>
-            <div class="o-flow-caption"><span><strong>当前焦点：</strong><span id="oFlowCaption">E-05 is selected; row 5 is the latest checked binding.</span></span><span class="o-live"><i class="o-live-dot"></i>live local state</span></div>
+            <div class="o-flow-caption"><span><strong>当前焦点：</strong><span id="oFlowCaption">E-05 is selected; row 5 is the substrate fact, not the final semantic claim.</span></span><span class="o-live"><i class="o-live-dot"></i>live local state</span></div>
+          </section>
+
+          <section class="o-semantic-card" id="oSemanticLayers" aria-labelledby="oSemanticTitle">
+            <header class="o-semantic-head">
+              <div><p class="o-kicker">semantic layers</p><h2 id="oSemanticTitle">绑定只是起点，真正要追加的是多层语义</h2><p>元素和数据行的对应是底座事实；gloss 的核心工作，是让图继续承载角色、领域含义、关系、声明、叙事和可用知识。</p></div>
+              <span class="o-semantic-badge"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h12M4 9h16M6 13h12M4 17h16"/></svg></span>substrate ≠ semantics</span>
+            </header>
+            <div class="o-semantic-grid">
+              <div class="o-layer-stack" role="list" aria-label="六层语义">
+                <button class="o-layer-row structure is-selected" type="button" data-o-layer="structure" aria-selected="true" role="listitem"><span class="o-layer-number">1</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="7" height="6" rx="1"/><rect x="13" y="5" width="7" height="6" rx="1"/><path d="M12 11v4M8 15h8M8 15v4M16 15v4"/></svg></span><span class="o-layer-copy"><strong>角色与结构</strong><span>元素是什么、属于哪个图层、怎样组成面板与分组</span></span><span class="o-layer-state ready">底座可查</span></button>
+                <button class="o-layer-row meaning" type="button" data-o-layer="meaning" aria-selected="false" role="listitem"><span class="o-layer-number">2</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5C5 5.6 8.1 4 12 4s7 1.6 7 3.5S15.9 11 12 11 5 9.4 5 7.5Z"/><path d="M5 7.5V12c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5V7.5M5 12v4.5c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5V12"/></svg></span><span class="o-layer-copy"><strong>数据与领域含义</strong><span>样本、基因、物种、条件，以及它们来自什么研究语境</span></span><span class="o-layer-state proposed">待提议</span></button>
+                <button class="o-layer-row relation" type="button" data-o-layer="relation" aria-selected="false" role="listitem"><span class="o-layer-number">3</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="7" r="2.5"/><circle cx="19" cy="17" r="2.5"/><path d="m7.4 11.1 9-3.2M7.4 12.9l9 3.2"/></svg></span><span class="o-layer-copy"><strong>关系与语义分组</strong><span>图例 ↔ 系列、标签 ↔ 分支、注释 ↔ 变化与比较</span></span><span class="o-layer-state design">待记录</span></button>
+                <button class="o-layer-row claim" type="button" data-o-layer="claim" aria-selected="false" role="listitem"><span class="o-layer-number">4</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h9l3 3v13H6zM15 4v4h3"/><path d="M9 12h6M9 15h4"/><path d="m14 18 2 2 4-5"/></svg></span><span class="o-layer-copy"><strong>声明与证据</strong><span>“两组存在差异”这类主张，必须带可重跑的检查</span></span><span class="o-layer-state design">待核验</span></button>
+                <button class="o-layer-row narrative" type="button" data-o-layer="narrative" aria-selected="false" role="listitem"><span class="o-layer-number">5</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h6v14H5zM13 5h6v14h-6z"/><path d="M7.5 9h1.8M15.5 9h1.8M7.5 12h1.8M15.5 12h1.8"/></svg></span><span class="o-layer-copy"><strong>叙事与无障碍</strong><span>阅读顺序、关键结论、文字描述，让人和机器都能理解</span></span><span class="o-layer-state design">待投影</span></button>
+                <button class="o-layer-row behavior" type="button" data-o-layer="behavior" aria-selected="false" role="listitem"><span class="o-layer-number">6</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 4 15 3-6 6-3L5 4Z"/><circle cx="18" cy="17" r="3"/><path d="M18 15.5v3M16.5 17h3"/></svg></span><span class="o-layer-copy"><strong>交互与协作</strong><span>联动高亮、批注、复核、修订，以及保留来源和历史</span></span><span class="o-layer-state design">待实现</span></button>
+              </div>
+              <aside class="o-layer-detail" aria-live="polite">
+                <p class="o-layer-detail-kicker" id="oLayerDetailKicker">layer 01 · structure</p>
+                <h3 id="oLayerDetailTitle">角色与结构</h3>
+                <p class="o-layer-detail-lead" id="oLayerDetailLead">代码能给出元素种类、叶子、图层、面板和数据行；角色语义仍需要记录层补上。</p>
+                <div class="o-layer-detail-facts"><div class="o-layer-detail-fact"><small>source</small><strong id="oLayerDetailSource">substrate + rules</strong></div><div class="o-layer-detail-fact"><small>current state</small><strong id="oLayerDetailState">substrate ready</strong></div><div class="o-layer-detail-fact"><small>anchor</small><strong id="oLayerAnchor">E-05 · row 5</strong></div><div class="o-layer-detail-fact"><small>check</small><strong id="oLayerDetailCheck">geometry + structure</strong></div></div>
+                <p class="o-layer-detail-note" id="oLayerDetailNote">E-05 ↔ row 5 confirms a substrate fact. It does not yet say what this mark means in the surrounding figure.</p>
+                <div class="o-action-row"><button class="o-action-primary" type="button" data-x-mode="explore"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="14" r="2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span>查看底座</button><button class="o-action-secondary" type="button" data-x-mode="propose"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5M13 6l5 5M4 20l3.5-1 9-9-3.5-3.5-9 9L4 20Z"/></svg></span>追加语义提议</button></div>
+              </aside>
+            </div>
+            <div class="o-layer-boundary"><div class="o-boundary-box"><span class="o-boundary-mark fact">✓</span><div><strong>底座事实</strong><span>元素、坐标、图层、面板和数据行由原图形设备与代码核验。</span></div></div><div class="o-boundary-box"><span class="o-boundary-mark semantic">+</span><div><strong>语义记录</strong><span>角色、含义、关系、声明、叙事和交互由记录层追加，并各自携带来源与检查。</span></div></div></div>
           </section>
 
           <section class="o-lower-grid">
@@ -1148,7 +1217,7 @@
               <header class="o-card-head"><div><p class="o-kicker">capability map</p><h2 id="oMilestoneTitle">M0—M5 · 能力地图</h2><p>已完成、试验中和下一步都留在同一条时间线上。</p></div><span class="x-pill"><span class="o-live-dot"></span>当前 M1 / M4</span></header>
               <div class="o-card-body"><div class="o-milestone-track" role="list" aria-label="M0 到 M5 能力地图">
                 <button class="o-milestone complete" type="button" data-o-milestone="M0" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M0</b><i class="o-milestone-mark">✓</i></span><strong>可靠底座</strong><span>捕获 · 查询 · 图包</span></button>
-                <button class="o-milestone partial is-active" type="button" data-o-milestone="M1" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M1</b><i class="o-milestone-mark">◐</i></span><strong>识别与绑定</strong><span>绑定已做，角色待补</span></button>
+                <button class="o-milestone partial is-active" type="button" data-o-milestone="M1" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M1</b><i class="o-milestone-mark">◐</i></span><strong>识别与绑定</strong><span>底座已做，角色待补</span></button>
                 <button class="o-milestone todo" type="button" data-o-milestone="M2" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M2</b><i class="o-milestone-mark">·</i></span><strong>记录与锚点</strong><span>批注可追溯、可重挂</span></button>
                 <button class="o-milestone todo" type="button" data-o-milestone="M3" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M3</b><i class="o-milestone-mark">·</i></span><strong>核验与交互</strong><span>声明检查、无障碍</span></button>
                 <button class="o-milestone partial" type="button" data-o-milestone="M4" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M4</b><i class="o-milestone-mark">◐</i></span><strong>agent 工具</strong><span>工具试验、API 待做</span></button>
@@ -1559,7 +1628,7 @@
           '<dl class="x-field full"><dt>status</dt><dd><span class="x-status-mark">' + statusIcon(item.status) + item.status + '</span></dd></dl>' +
           field("basis", item.basis, true) + '</div>' +
           '<div class="x-inspector-actions"><button class="x-solid" type="button" id="xOpenVerification">open verification drawer →</button><button class="x-outline" type="button" id="xFocusTableRow">focus row in data table</button></div>' +
-          '<p class="x-inspector-note">This inspector exposes only what the figure and its derived tables can state. Unresolved elements keep their reason instead of being silently assigned.</p>';
+          '<p class="x-inspector-note">Binding is a substrate fact, not the final meaning. Higher-level roles, relations and claims enter as records with provenance and their own checks. Unresolved elements keep their reason instead of being silently assigned.</p>';
         document.getElementById("xInspectorTitle").textContent = item.id;
         document.getElementById("xInspectorTag").textContent = item.tag;
         document.getElementById("xOpenVerification").addEventListener("click", openDrawer);
@@ -1606,7 +1675,7 @@
         var item = byId[state.selected];
         icon.className = "x-verdict-icon " + status;
         icon.innerHTML = statusIcon(status);
-        document.getElementById("xVerdictTitle").textContent = status === "verified" ? "verified · row " + item.row : status;
+        document.getElementById("xVerdictTitle").textContent = status === "verified" ? "verified · substrate row " + item.row : status;
         document.getElementById("xVerdictReason").textContent = reason;
         document.getElementById("xHistory").innerHTML = '<span class="x-history-node"><i></i>look up</span><span class="x-history-arrow">→</span><span class="x-history-node"><i></i>inspect</span><span class="x-history-arrow">→</span><span class="x-history-node current"><i></i>' + status + '</span>';
         var prior = window.glossVerification && window.glossVerification.item && window.glossVerification.item.id === item.id ? window.glossVerification.history : null;
@@ -1731,7 +1800,7 @@
         card.classList.toggle("is-rejected", status === "rejected");
         card.classList.toggle("is-unresolved", status === "unresolved");
         document.getElementById("pGateMark").textContent = status === "verified" ? "✓" : status === "rejected" ? "×" : "·";
-        document.getElementById("pResultTitle").textContent = status === "verified" ? "verified · row " + item.row : status;
+        document.getElementById("pResultTitle").textContent = status === "verified" ? "verified · substrate row " + item.row : status;
         document.getElementById("pResultReason").textContent = reason;
         ["verified","rejected","unresolved"].forEach(function (name) {
           var branch = document.getElementById("p" + name.charAt(0).toUpperCase() + name.slice(1) + "Branch");
@@ -1790,7 +1859,7 @@
         var reason;
         if (pKind.value !== "binding") {
           status = "unresolved";
-          reason = "relation proposals are reserved for the next workspace; this form currently checks bindings.";
+          reason = pKind.value + " proposals live above the substrate binding layer; this pilot has no checker for that semantic record yet, so it stays unresolved instead of pretending a point-row check answers it.";
         } else if (!item || item.row === null) {
           status = "unresolved";
           reason = "This element has no stable row comparison; the proposal is refused.";
@@ -1810,7 +1879,7 @@
       document.getElementById("pBackExplore").addEventListener("click", function () { switchWorkspace("explore"); });
       document.getElementById("pHelp").addEventListener("click", function () {
         var drawer = document.getElementById("pResultReason");
-        drawer.textContent = "Select an element, choose a row, and let the verification gate explain the result.";
+        drawer.textContent = "Choose binding to check a substrate fact. Relation, meaning and claim are higher layers; this pilot keeps them pending until their own checker exists.";
       });
       populate();
       if (window.location.hash === "#overview" || window.location.hash === "#o-workspace") switchWorkspace("overview");
@@ -1828,6 +1897,15 @@
         M4: "agent 工具已有前置试验；公开 API 和边界仍在收敛。",
         M5: "价值评测待做：同模型、同预算、同问题的对照才会给出报告数字。"
       };
+      var layerData = {
+        structure: {kicker:"layer 01 · structure", title:"角色与结构", lead:"代码能给出元素种类、叶子、图层、面板和数据行；角色语义仍需要记录层补上。", source:"substrate + rules", state:"substrate ready", check:"geometry + structure", note:"当前选中元素的行绑定是底座事实。它告诉我们这个标记从哪里来，还没有回答它在图中扮演什么角色。"},
+        meaning: {kicker:"layer 02 · meaning", title:"数据与领域含义", lead:"样本、基因、物种、条件等领域对象要保留来源，不能从一个坐标点的外观里臆测。", source:"agent / human", state:"proposal needed", check:"schema + anchor", note:"含义不是点位匹配的副产品；它要作为带来源的记录挂回元素或分组，并允许人和 agent 共同修订。"},
+        relation: {kicker:"layer 03 · relation", title:"关系与语义分组", lead:"图例、系列、标签、分支、注释和比较对象之间的关系，才是图能否被追问的关键。", source:"record layer", state:"design", check:"anchor + consistency", note:"关系可以跨越多个元素。下一步需要让提议明确写出关系类型、目标集合和锚点，而不是只提交一个 row。"},
+        claim: {kicker:"layer 04 · claim", title:"声明与证据", lead:"“两组存在差异”这类声明必须带可重跑的检查，核验失败就不能投影成事实。", source:"agent / human", state:"not implemented", check:"claim predicate", note:"真正高价值的核验对象是声明，不是点位本身。绑定只是让声明找到可检查的数据入口。"},
+        narrative: {kicker:"layer 05 · narrative", title:"叙事与无障碍", lead:"阅读顺序、关键结论、文字描述和可用知识，让人和机器都能读懂同一张图。", source:"record + projection", state:"design", check:"order + access", note:"叙事层会把分散的记录组织成可读的解释，并生成无障碍树、文字摘要和其他投影。"},
+        behavior: {kicker:"layer 06 · behavior", title:"交互与协作", lead:"联动高亮、批注、复核、修订、历史和来源，让图成为可以继续工作的知识载体。", source:"agent + human", state:"design", check:"target + provenance", note:"交互不改动原图几何；它只把已核验的记录和协作历史投影到同一个可追踪界面。"}
+      };
+      var activeLayer = "structure";
 
       function selected() {
         return window.glossExplore ? window.glossExplore.getSelected() : null;
@@ -1838,6 +1916,23 @@
       function latestFor(item) {
         var latest = window.glossVerification;
         return latest && latest.item && latest.item.id === item.id ? latest : null;
+      }
+      function renderLayerDetail(item) {
+        var layer = layerData[activeLayer];
+        var row = item && item.row !== null ? "row " + item.row : "no stable row";
+        document.querySelectorAll("[data-o-layer]").forEach(function (button) {
+          var active = button.dataset.oLayer === activeLayer;
+          button.classList.toggle("is-selected", active);
+          button.setAttribute("aria-selected", String(active));
+        });
+        document.getElementById("oLayerDetailKicker").textContent = layer.kicker;
+        document.getElementById("oLayerDetailTitle").textContent = layer.title;
+        document.getElementById("oLayerDetailLead").textContent = layer.lead;
+        document.getElementById("oLayerDetailSource").textContent = layer.source;
+        document.getElementById("oLayerDetailState").textContent = layer.state;
+        document.getElementById("oLayerAnchor").textContent = item ? item.id + " · " + row : "current selection";
+        document.getElementById("oLayerDetailCheck").textContent = layer.check;
+        document.getElementById("oLayerDetailNote").textContent = item ? item.id + " ↔ " + row + " is the substrate anchor. " + layer.note : layer.note;
       }
       function renderOverview() {
         var item = selected();
@@ -1865,7 +1960,7 @@
         document.getElementById("oFlowSelected").textContent = item.id + " · " + row;
         document.getElementById("oFlowStatusText").textContent = statusText;
         document.getElementById("oFlowLatest").textContent = "latest · " + statusText;
-        document.getElementById("oFlowCaption").textContent = item.id + " is selected; " + row + " is the latest checked binding.";
+        document.getElementById("oFlowCaption").textContent = item.id + " is selected; " + row + " is the substrate fact, not the final semantic claim.";
 
         var focusStatus = document.getElementById("oFocusStatus");
         focusStatus.className = "o-focus-status " + status;
@@ -1883,6 +1978,7 @@
         document.getElementById("oLineSubstrate").classList.add("is-active");
         document.getElementById("oLineGate").classList.toggle("is-active", Boolean(latest));
         document.getElementById("oLineProjection").classList.toggle("is-active", status === "verified");
+        renderLayerDetail(item);
       }
 
       function toast(message) {
@@ -1917,6 +2013,13 @@
           var code = button.dataset.oMilestone;
           document.getElementById("oMilestoneNote").innerHTML = "<strong>" + code + "：</strong><span>" + milestoneNotes[code] + "</span>";
           toast(code + " focused in the capability map.");
+        });
+      });
+      document.querySelectorAll("[data-o-layer]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          activeLayer = button.dataset.oLayer;
+          renderLayerDetail(selected());
+          toast(layerData[activeLayer].title + " focused; binding remains the substrate anchor.");
         });
       });
       document.getElementById("oHelp").addEventListener("click", function () { toast("Overview maps the path; click a node to continue in Explore or Propose."); });
