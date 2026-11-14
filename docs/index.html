@@ -568,7 +568,7 @@
     .x-table-head h2 { margin: 0; font-size: .88rem; }
     .x-table-head span { color: #6f6f6f; font-size: .68rem; }
     .x-table-scroll { overflow-x: auto; }
-    .x-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: .73rem; }
+    .x-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: .73rem; }
     .x-table th, .x-table td { padding: .58rem .7rem; border-bottom: 1px solid #e5e5e3; text-align: left; white-space: nowrap; }
     .x-table th { color: #6f6f6f; font-size: .63rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
     .x-table tbody tr { cursor: pointer; transition: background .15s ease; }
@@ -896,8 +896,68 @@
     .o-boundary-mark { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 1.35rem; height: 1.35rem; border: 1px solid currentColor; border-radius: 50%; font-size: .72rem; font-weight: 950; }
     .o-boundary-mark.fact { color: var(--x-verified); background: var(--x-verified-bg); }
     .o-boundary-mark.semantic { color: var(--x-ambiguous); background: var(--x-ambiguous-bg); border-radius: 4px; }
+    .o-proposal-shell { display: none; margin-top: .8rem; border: 1px solid #111; border-radius: 18px; background: rgba(255,255,255,.96); box-shadow: 0 16px 34px rgba(0,0,0,.1); overflow: hidden; }
+    .o-proposal-shell.is-open { display: block; }
+    .o-proposal-head { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .8rem 1rem; border-bottom: 1px solid #c9c9c9; background: #fbfbfa; }
+    .o-proposal-head h2 { margin: 0; font-size: 1rem; }
+    .o-proposal-head p { margin: .15rem 0 0; color: #6f6f6f; font-size: .68rem; }
+    .o-proposal-head-actions { display: flex; align-items: center; gap: .45rem; }
+    .o-proposal-layer-badge { padding: .3rem .45rem; border: 1px solid var(--x-blue); border-radius: 999px; background: var(--x-blue-bg); color: var(--x-blue); font-size: .63rem; font-weight: 900; }
+    .o-proposal-close { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 1px solid #777; border-radius: 7px; background: #fff; cursor: pointer; font-size: 1.1rem; }
+    .o-proposal-close:hover, .o-proposal-close:focus-visible { border-color: var(--x-blue); color: var(--x-blue); outline: none; }
+    .o-proposal-grid { display: grid; grid-template-columns: minmax(190px,.7fr) minmax(300px,1.2fr) minmax(250px,.9fr); gap: .7rem; padding: .8rem; }
+    .o-proposal-context, .o-proposal-form, .o-proposal-gate { min-width: 0; padding: .75rem; border: 1px dashed #777; border-radius: 12px; background: #fbfbfa; }
+    .o-proposal-context h3, .o-proposal-form h3, .o-proposal-gate h3 { margin: 0; font-size: .88rem; }
+    .o-proposal-kicker { margin: 0 0 .3rem; color: #6f6f6f; font-size: .62rem; font-weight: 900; letter-spacing: .11em; text-transform: uppercase; }
+    .o-proposal-context p { margin: .35rem 0 0; color: #6f6f6f; font-size: .68rem; line-height: 1.45; }
+    .o-proposal-context-figure { display: block; width: 100%; height: 118px; margin-top: .6rem; border: 1px dashed #999; border-radius: 10px; background: linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px),#fff; background-size: 18px 18px; }
+    .o-proposal-context-figure line { stroke: #888; stroke-width: 1.1; }
+    .o-proposal-context-figure circle { fill: #fff; stroke: #111; stroke-width: 1.25; }
+    .o-proposal-context-figure circle.selected { fill: var(--x-blue); stroke: var(--x-blue); }
+    .o-proposal-facts { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .5rem; margin-top: .65rem; }
+    .o-proposal-fact { padding-bottom: .35rem; border-bottom: 1px dashed #c9c9c9; }
+    .o-proposal-fact small { display: block; color: #6f6f6f; font-size: .59rem; }
+    .o-proposal-fact strong { display: block; margin-top: .1rem; font-size: .7rem; }
+    .o-proposal-tabs { display: flex; gap: .25rem; margin: .65rem 0 .75rem; padding: .2rem; border: 1px solid #c9c9c9; border-radius: 8px; background: #fff; }
+    .o-proposal-tab { flex: 1; padding: .42rem .5rem; border: 0; border-radius: 6px; background: transparent; cursor: pointer; font-size: .68rem; font-weight: 900; }
+    .o-proposal-tab[aria-selected="true"], .o-proposal-tab:hover, .o-proposal-tab:focus-visible { background: var(--x-blue); color: #fff; outline: none; }
+    .o-proposal-form.is-hidden { display: none; }
+    .o-proposal-fields { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+    .o-proposal-field { display: grid; gap: .24rem; }
+    .o-proposal-field.full { grid-column: 1 / -1; }
+    .o-proposal-field label { color: #6f6f6f; font-size: .61rem; font-weight: 850; }
+    .o-proposal-field input, .o-proposal-field select, .o-proposal-field textarea { width: 100%; padding: .48rem .5rem; border: 1px solid #777; border-radius: 7px; background: #fff; color: #111; font-size: .7rem; }
+    .o-proposal-field textarea { min-height: 66px; resize: vertical; }
+    .o-proposal-form-note { margin: .65rem 0 0; padding: .5rem .55rem; border-left: 3px solid var(--x-blue); background: var(--x-blue-bg); color: #32477a; font-size: .64rem; line-height: 1.4; }
+    .o-proposal-submit { display: inline-flex; align-items: center; gap: .3rem; margin-top: .7rem; padding: .52rem .65rem; border: 1px solid var(--x-blue); border-radius: 8px; background: var(--x-blue); color: #fff; cursor: pointer; font-size: .7rem; font-weight: 900; }
+    .o-proposal-submit:hover, .o-proposal-submit:focus-visible { box-shadow: 3px 3px 0 rgba(49,91,182,.18); outline: none; }
+    .o-proposal-gate { border-top: 4px solid var(--x-verified); }
+    .o-proposal-gate.is-rejected { border-top-color: var(--x-rejected); }
+    .o-proposal-gate.is-unresolved { border-top-color: var(--x-unresolved); }
+    .o-proposal-verdict { display: grid; grid-template-columns: 42px minmax(0,1fr); gap: .55rem; align-items: start; }
+    .o-proposal-verdict-icon { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border: 1px solid var(--x-verified); border-radius: 50%; background: var(--x-verified-bg); color: var(--x-verified); font-size: 1rem; }
+    .o-proposal-gate.is-rejected .o-proposal-verdict-icon { border-color: var(--x-rejected); background: var(--x-rejected-bg); color: var(--x-rejected); border-radius: 6px; }
+    .o-proposal-gate.is-unresolved .o-proposal-verdict-icon { border-color: var(--x-unresolved); background: var(--x-unresolved-bg); color: var(--x-unresolved); border-style: dashed; }
+    .o-proposal-verdict h3 { margin: .05rem 0 .18rem; font-size: .85rem; }
+    .o-proposal-verdict p { margin: 0; color: #6f6f6f; font-size: .66rem; line-height: 1.4; }
+    .o-record-history { margin-top: .8rem; padding-top: .6rem; border-top: 1px dashed #c9c9c9; }
+    .o-record-history > p { margin: 0 0 .4rem; color: #6f6f6f; font-size: .62rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .o-record-list { display: grid; gap: .35rem; max-height: 170px; overflow: auto; }
+    .o-record-item { display: grid; grid-template-columns: 1.3rem minmax(0,1fr); gap: .4rem; padding: .4rem; border: 1px solid #c9c9c9; border-radius: 8px; background: #fff; }
+    .o-record-mark { display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border: 1px solid currentColor; border-radius: 50%; font-size: .65rem; font-weight: 900; }
+    .o-record-item.verified .o-record-mark { color: var(--x-verified); background: var(--x-verified-bg); }
+    .o-record-item.rejected .o-record-mark { color: var(--x-rejected); background: var(--x-rejected-bg); border-radius: 4px; }
+    .o-record-item.unresolved .o-record-mark { color: var(--x-unresolved); background: var(--x-unresolved-bg); border-style: dashed; }
+    .o-record-item strong { display: block; font-size: .65rem; }
+    .o-record-item span { display: block; margin-top: .1rem; color: #6f6f6f; font-size: .6rem; line-height: 1.35; }
+    .o-layer-records { margin-top: .75rem; padding-top: .6rem; border-top: 1px dashed #c9c9c9; }
+    .o-layer-records > p { margin: 0 0 .35rem; color: #6f6f6f; font-size: .61rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .o-layer-records-list { display: grid; gap: .3rem; max-height: 92px; overflow: auto; }
+    .o-layer-record-chip { display: flex; align-items: center; justify-content: space-between; gap: .4rem; padding: .32rem .4rem; border: 1px solid #c9c9c9; border-radius: 7px; background: #fff; font-size: .61rem; }
+    .o-layer-record-chip strong { font-size: .62rem; }
+    .o-layer-record-chip span { color: #6f6f6f; }
     @media (max-width: 1120px) { .o-lower-grid { grid-template-columns: 1fr; } .o-evidence-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-    @media (max-width: 1120px) { .o-semantic-grid { grid-template-columns: 1fr; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
+    @media (max-width: 1120px) { .o-semantic-grid, .o-proposal-grid { grid-template-columns: 1fr; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
     @media (max-width: 860px) { .o-workspace-head, .o-hero-head, .o-evidence-head, .o-semantic-head { align-items: flex-start; flex-wrap: wrap; } .o-meta, .o-legend { justify-content: flex-start; } .o-milestone-track { grid-template-columns: repeat(3,minmax(0,1fr)); } }
     @media (max-width: 600px) { .o-milestone-track, .o-evidence-grid, .o-layer-boundary { grid-template-columns: 1fr 1fr; } .o-layer-row { grid-template-columns: 1.75rem 1.75rem minmax(0,1fr); } .o-layer-state { grid-column: 3; justify-self: start; } .o-focus-figure { grid-template-columns: 1fr; } .o-focus-mini { width: 100%; height: 120px; } .o-evidence-footer, .o-flow-caption { align-items: flex-start; flex-direction: column; } }
    </style>
@@ -908,7 +968,7 @@
     <div class="explore-view" id="exploreView">
       <header class="x-topbar">
         <a class="x-brand" href="#x-workspace" aria-label="gloss Explore 首页"><span>gloss</span><i class="x-brand-mark" aria-hidden="true"></i></a>
-        <div class="x-top-title"><strong>Semantic figure inspector</strong><span>从元素、关系线到数据行：每个结论都留在可核验的路径上。</span></div>
+        <div class="x-top-title"><strong>语义图形检查器</strong><span>从元素、关系线到数据入口：每个结论都留在可核验的路径上。</span></div>
         <nav class="x-mode-tabs" aria-label="工作区模式" role="tablist">
           <button class="x-mode-tab" role="tab" aria-selected="false" data-x-mode="overview">overview</button>
           <button class="x-mode-tab" role="tab" aria-selected="true" data-x-mode="explore">explore</button>
@@ -937,7 +997,7 @@
         <main class="x-workspace" id="x-workspace">
           <header class="x-workspace-head">
             <div><p class="x-eyebrow">Explore / semantic figure inspector</p><h1>从底座看见语义入口</h1><p>选择一个元素，查看它的结构和数据入口；绑定是可核验的底座事实，角色、关系和声明在此之上继续追加。</p></div>
-            <div class="x-meta"><span class="x-pill">figure · gallery-029</span><label class="x-pill"><input id="xHideBinding" type="checkbox"> hide binding</label></div>
+            <div class="x-meta"><span class="x-pill">figure · penguins-relationships</span><label class="x-pill"><input id="xHideBinding" type="checkbox"> hide binding</label></div>
           </header>
 
           <section class="x-explorer-grid" aria-label="语义探索工作区">
@@ -968,7 +1028,7 @@
                   </g>
                 </svg>
                 <div class="x-zoom" aria-label="缩放"><button type="button" data-x-zoom="in" aria-label="放大">+</button><button type="button" data-x-zoom="out" aria-label="缩小">−</button><span class="x-zoom-readout" id="xZoomReadout">100%</span></div>
-                <span class="x-caption">504 × 360 pt · 32 rows · 12 visible elements</span>
+                <span class="x-caption">504 × 360 pt · Palmer Penguins · 12 visible elements</span>
               </div>
             </article>
 
@@ -979,8 +1039,8 @@
           </section>
 
           <section class="x-table-panel" aria-labelledby="xTableTitle">
-            <header class="x-table-head"><div><h2 id="xTableTitle">built_layer1 · substrate rows</h2><span>选中一行，画布中的对应元素会被定位；这只是语义底座。</span></div><span id="xTableSelection">row 5 selected</span></header>
-            <div class="x-table-scroll"><table class="x-table"><thead><tr><th>#</th><th>row</th><th>element</th><th>x</th><th>y</th><th>layer</th><th>status</th></tr></thead><tbody id="xDataRows"></tbody></table></div>
+            <header class="x-table-head"><div><h2 id="xTableTitle">penguins.points · substrate rows</h2><span>选中一行，画布中的对应元素会被定位；这只是语义底座。</span></div><span id="xTableSelection">row 5 selected</span></header>
+            <div class="x-table-scroll"><table class="x-table"><thead><tr><th>#</th><th>row</th><th>element</th><th>species</th><th>island</th><th>bill mm</th><th>flipper mm</th><th>status</th></tr></thead><tbody id="xDataRows"></tbody></table></div>
           </section>
 
           <aside class="x-drawer" id="xDrawer" aria-live="polite">
@@ -989,14 +1049,14 @@
               <section class="x-proposal-card"><p class="x-card-kicker">structured proposal</p><h3>把底座事实交给代码检查</h3>
                 <div class="x-proposal-grid">
                   <div class="x-proposal-field"><label for="xProposalElement">element</label><input id="xProposalElement" readonly></div>
-                  <div class="x-proposal-field"><label for="xProposalTable">table</label><input id="xProposalTable" value="built_layer1" readonly></div>
+                  <div class="x-proposal-field"><label for="xProposalTable">table</label><input id="xProposalTable" value="penguins.points" readonly></div>
                   <div class="x-proposal-field"><label for="xProposalRow">row</label><select id="xProposalRow"></select></div>
                   <div class="x-proposal-field full"><label for="xProposalBasis">basis</label><textarea id="xProposalBasis">row placed through panel scales; element compared on page</textarea></div>
                 </div>
                 <div class="x-proposal-actions"><button class="x-solid" id="xSubmitProposal" type="button">→ 提交核验</button><button class="x-outline" id="xResetProposal" type="button">重置为选中行</button></div>
               </section>
               <section class="x-verdict-card"><p class="x-card-kicker">check result</p>
-                <div class="x-verdict-layout"><div class="x-verdict-icon" id="xVerdictIcon">✓</div><div><h3 class="x-verdict-title" id="xVerdictTitle">verified · substrate row 5</h3><p class="x-verdict-reason" id="xVerdictReason">the proposed substrate row is where the element is drawn, within 0.5 pt.</p></div></div>
+                <div class="x-verdict-layout"><div class="x-verdict-icon" id="xVerdictIcon">✓</div><div><h3 class="x-verdict-title" id="xVerdictTitle">verified · substrate row 5</h3><p class="x-verdict-reason" id="xVerdictReason">提交的 substrate row 对应当前元素，误差在 0.5 pt 内。</p></div></div>
                 <div class="x-history" id="xHistory"><span class="x-history-node"><i></i>look up</span><span class="x-history-arrow">→</span><span class="x-history-node"><i></i>inspect</span><span class="x-history-arrow">→</span><span class="x-history-node current"><i></i>verified</span></div>
               </section>
             </div>
@@ -1007,7 +1067,7 @@
     <div class="p-view" id="proposeView">
       <header class="x-topbar">
         <a class="x-brand" href="#p-workspace" aria-label="gloss Propose 首页"><span>gloss</span><i class="x-brand-mark" aria-hidden="true"></i></a>
-        <div class="x-top-title"><strong>Proposal verification workspace</strong><span>把一个可读的假设变成结构化提议，再把它交给代码核验。</span></div>
+        <div class="x-top-title"><strong>提议核验工作区</strong><span>把一个可读的假设变成结构化提议，再把它交给代码核验。</span></div>
         <nav class="x-mode-tabs" aria-label="工作区模式" role="tablist">
           <button class="x-mode-tab" role="tab" aria-selected="false" data-x-mode="overview">overview</button>
           <button class="x-mode-tab" role="tab" aria-selected="false" data-x-mode="explore">explore</button>
@@ -1027,7 +1087,7 @@
         <main class="x-workspace" id="p-workspace">
           <header class="p-workspace-head">
             <div><p class="x-eyebrow">Propose / verification workspace</p><h1>从语义提议到核验</h1><p>左侧保留底座上下文，中间提交结构化语义假设，右侧显示代码检查的结果；绑定只是第一种提议。</p></div>
-            <div class="p-meta"><span class="x-pill">selected · <strong id="pSelectedMeta">E-05</strong></span><span class="x-pill">basis · figure position</span></div>
+            <div class="p-meta"><span class="x-pill">selected · <strong id="pSelectedMeta">E-05</strong></span><span class="x-pill">figure · penguins-relationships</span></div>
           </header>
           <section class="p-stage">
             <article class="p-card p-context-card">
@@ -1039,7 +1099,7 @@
                   <text x="166" y="101" font-size="11" font-weight="800" fill="#315bb6">E-05</text><text x="15" y="162" font-size="10" fill="#6f6f6f">leaf · L-07 / panel1</text>
                 </svg>
                 <div class="p-context-caption"><span>local substrate context</span><span id="pContextRow">row 5</span></div>
-                <div class="p-context-fields"><div class="p-context-field"><small>element</small><strong id="pContextElement">E-05</strong></div><div class="p-context-field"><small>layer</small><strong id="pContextLayer">built_layer1</strong></div><div class="p-context-field"><small>panel</small><strong id="pContextPanel">panel1</strong></div><div class="p-context-field"><small>status</small><strong id="pContextStatusText">verified</strong></div></div>
+                <div class="p-context-fields"><div class="p-context-field"><small>element</small><strong id="pContextElement">E-05</strong></div><div class="p-context-field"><small>species</small><strong id="pContextSpecies">Adelie</strong></div><div class="p-context-field"><small>island</small><strong id="pContextIsland">Dream</strong></div><div class="p-context-field"><small>layer</small><strong id="pContextLayer">penguins.points</strong></div><div class="p-context-field"><small>panel</small><strong id="pContextPanel">panel1</strong></div><div class="p-context-field"><small>status</small><strong id="pContextStatusText">verified</strong></div></div>
               </div>
             </article>
             <article class="p-card p-form-card">
@@ -1047,7 +1107,7 @@
               <div class="p-card-body">
                 <div class="p-form-grid">
                   <div class="p-field"><label for="pElement">element</label><input id="pElement" readonly></div>
-                  <div class="p-field"><label for="pTable">table</label><input id="pTable" value="built_layer1" readonly></div>
+                  <div class="p-field"><label for="pTable">table</label><input id="pTable" value="penguins.points" readonly></div>
                   <div class="p-field"><label for="pRow">row</label><select id="pRow"></select></div>
                   <div class="p-field"><label for="pKind">kind</label><select id="pKind"><option value="binding">binding · substrate fact</option><option value="relation">relation · semantic layer</option><option value="meaning">meaning · semantic layer</option><option value="claim">claim · semantic layer</option></select></div>
                   <div class="p-field full"><label for="pBasis">basis</label><textarea id="pBasis">row placed through panel scales; element compared on page</textarea></div>
@@ -1060,7 +1120,7 @@
               <div class="p-card-body">
                 <div class="p-gate"><div class="p-diamond"><span id="pGateMark">✓</span></div></div>
                 <div class="p-branches"><div class="p-branch is-active" id="pVerifiedBranch"><span><span class="p-branch-icon" id="pVerifiedIcon"></span>verified</span><span>accepted</span></div><div class="p-branch" id="pRejectedBranch"><span><span class="p-branch-icon" id="pRejectedIcon"></span>rejected</span><span>reason</span></div><div class="p-branch" id="pUnresolvedBranch"><span><span class="p-branch-icon" id="pUnresolvedIcon"></span>unresolved</span><span>refused</span></div></div>
-                <h2 class="p-result-title" id="pResultTitle">verified · substrate row 5</h2><p class="p-result-reason" id="pResultReason">the proposed substrate row is where E-05 is drawn, within 0.5 pt.</p>
+                <h2 class="p-result-title" id="pResultTitle">verified · substrate row 5</h2><p class="p-result-reason" id="pResultReason">提交的 substrate row 对应 E-05，误差在 0.5 pt 内。</p>
               </div>
             </article>
           </section>
@@ -1072,7 +1132,7 @@
     <div class="o-view" id="overviewView">
       <header class="x-topbar">
         <a class="x-brand" href="#o-workspace" aria-label="gloss Overview 首页"><span>gloss</span><i class="x-brand-mark" aria-hidden="true"></i></a>
-        <div class="x-top-title"><strong>Semantic observatory</strong><span>从输入图形到可核验语义：一张可以继续工作的系统地图。</span></div>
+        <div class="x-top-title"><strong>语义观测台</strong><span>从输入图形到可核验语义：一张可以继续工作的系统地图。</span></div>
         <nav class="x-mode-tabs" aria-label="工作区模式" role="tablist">
           <button class="x-mode-tab" role="tab" aria-selected="true" data-x-mode="overview">overview</button>
           <button class="x-mode-tab" role="tab" aria-selected="false" data-x-mode="explore">explore</button>
@@ -1098,13 +1158,13 @@
 
         <main class="x-workspace o-workspace" id="o-workspace">
           <header class="o-workspace-head">
-            <div><p class="x-eyebrow">Overview / semantic control room</p><h1>从可见图元，到可解释的知识载体</h1><p>元素 ↔ 数据行只是底座事实；gloss 继续把角色、领域含义、关系、声明、叙事和交互叠加到图上。</p></div>
-            <div class="o-meta"><span class="x-pill">figure · gallery-029</span><span class="x-pill">selected · <strong id="oSelectionPill">E-05</strong></span></div>
+            <div><p class="x-eyebrow">Overview / 语义控制台</p><h1>从可见图元，到可解释的知识载体</h1><p>元素 ↔ 数据行只是底座事实；gloss 继续把角色、领域含义、关系、声明、叙事和交互叠加到图上。</p></div>
+            <div class="o-meta"><span class="x-pill">figure · penguins-relationships</span><span class="x-pill">selected · <strong id="oSelectionPill">E-05</strong></span></div>
           </header>
 
           <section class="o-hero" id="o-flow-card" aria-labelledby="o-flow-title">
             <header class="o-hero-head">
-              <div class="o-hero-title"><span class="x-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="12" r="2"/><path d="m6.8 10.8 3.4-3.4M13.8 7.3l3.4 3.4"/></svg></span><div><p class="o-kicker">semantic path</p><h2 id="o-flow-title">底座给事实，记录层给含义</h2><p>点击一个节点，进入对应的工作区继续检查或追加语义。</p></div></div>
+              <div class="o-hero-title"><span class="x-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="12" r="2"/><path d="m6.8 10.8 3.4-3.4M13.8 7.3l3.4 3.4"/></svg></span><div><p class="o-kicker">语义路径</p><h2 id="o-flow-title">底座给事实，记录层给含义</h2><p>点击一个节点，进入对应的工作区继续检查或追加语义。</p></div></div>
               <div class="o-legend" aria-label="核验状态图例"><span class="o-legend-item"><i class="o-legend-mark verified">✓</i>verified</span><span class="o-legend-item"><i class="o-legend-mark rejected">×</i>rejected</span><span class="o-legend-item"><i class="o-legend-mark unresolved">·</i>unresolved</span></div>
             </header>
             <div class="o-flow-viewport">
@@ -1122,16 +1182,16 @@
                 <path class="o-flow-line" id="oLineGate" d="M744 190H779"/>
                 <path class="o-flow-line" id="oLineProjection" d="M930 105H965M930 190H965M930 275H965"/>
 
-                <g class="o-flow-node" id="oSourceNode" data-o-route="explore" tabindex="0" role="button" aria-label="打开 Explore，查看 R 图与数据">
+                <g class="o-flow-node" id="oSourceNode" data-o-route="explore" tabindex="0" role="button" aria-label="打开 Explore，查看企鹅图与数据">
                   <rect x="24" y="74" width="220" height="235" rx="16"/>
                   <text class="o-node-kicker" x="43" y="101">01 · SOURCE</text>
-                  <text class="o-node-label" x="43" y="127">R 图与数据</text>
-                  <text class="o-node-sub" x="43" y="145">原始材料 · 可见事实</text>
+                  <text class="o-node-label" x="43" y="127">企鹅图与数据</text>
+                  <text class="o-node-sub" x="43" y="145">Palmer Penguins · 可见事实</text>
                   <path class="o-node-icon" d="M54 174h92l18 18v70H54zM146 174v20h18M70 219h54M70 233h35"/>
                   <path class="o-node-icon blue" d="M73 257v-42M73 257h70M83 244l10-13 13 9 14-24 12 13"/>
                   <circle class="o-particle" cx="83" cy="244" r="4"/><circle class="o-particle" cx="93" cy="231" r="4"/><circle class="o-particle" cx="106" cy="240" r="4"/><circle class="o-particle" cx="120" cy="216" r="4"/><circle class="o-particle" cx="132" cy="229" r="4"/>
                   <rect x="174" y="224" width="48" height="36" rx="4" fill="#fff" stroke="#111" stroke-width="1.2"/><path class="o-table-line" d="M174 236h48M174 248h48M190 224v36M206 224v36"/>
-                  <text class="o-node-sub" x="43" y="291">figure device · data · table</text>
+                  <text class="o-node-sub" x="43" y="291">bill · flipper · species</text>
                 </g>
 
                 <g class="o-flow-node is-current" id="oSubstrateNode" data-o-route="explore" tabindex="0" role="button" aria-label="打开 Explore，查看语义底座">
@@ -1152,7 +1212,7 @@
                   <polygon class="o-gate-diamond" points="659,169 684,194 659,219 634,194"/>
                   <text class="o-gate-check" x="648" y="202">✓</text>
                   <text class="o-gate-label" x="597" y="244">结构化语义提议</text><text class="o-node-sub" x="597" y="259">角色 · 关系 · 声明都要核验</text>
-                  <text class="o-flow-status" id="oFlowLatest" x="597" y="286">latest · verified</text>
+                  <text class="o-flow-status" id="oFlowLatest" x="597" y="286">最新 · verified</text>
                 </g>
 
                 <g class="o-flow-node o-status-node" id="oStatusVerified" data-o-route="propose" tabindex="0" role="button" aria-label="打开 Propose，查看 verified 结果">
@@ -1179,11 +1239,11 @@
                   <rect x="990" y="170" width="196" height="110" rx="9" fill="#fbfbfa" stroke="#111" stroke-width="1.2"/><path d="M990 191h196" fill="none" stroke="#111" stroke-width="1.2"/><circle cx="1005" cy="181" r="3" fill="var(--x-verified)"/><circle cx="1016" cy="181" r="3" fill="var(--x-ambiguous)"/><circle cx="1027" cy="181" r="3" fill="var(--x-rejected)"/>
                   <path class="o-node-icon blue" d="M1010 257v-47M1010 257h151M1022 246l18-21 18 11 19-33 21 18"/><circle class="o-particle verified" cx="1022" cy="246" r="4"/><circle class="o-particle selected" cx="1040" cy="225" r="4"/><circle class="o-particle verified" cx="1058" cy="236" r="4"/><circle class="o-particle verified" cx="1077" cy="203" r="4"/><circle class="o-particle ambiguous" cx="1098" cy="221" r="4"/>
                   <rect x="1107" y="203" width="50" height="38" rx="5" fill="#fff" stroke="#111" stroke-width="1.2"/><path class="o-table-line" d="M1107 215h50M1107 228h50M1124 203v38M1140 203v38"/>
-                  <path class="o-node-icon verified" d="m1117 258 7 7 14-16"/><text class="o-node-sub" x="1139" y="268">append-only record</text>
+                  <path class="o-node-icon verified" d="m1117 258 7 7 14-16"/><text class="o-node-sub" x="1139" y="268">只追加记录</text>
                 </g>
               </svg>
             </div>
-            <div class="o-flow-caption"><span><strong>当前焦点：</strong><span id="oFlowCaption">E-05 is selected; row 5 is the substrate fact, not the final semantic claim.</span></span><span class="o-live"><i class="o-live-dot"></i>live local state</span></div>
+            <div class="o-flow-caption"><span><strong>当前焦点：</strong><span id="oFlowCaption">E-05 已选中；row 5 是 substrate fact，不是最终 semantic claim。</span></span><span class="o-live"><i class="o-live-dot"></i>本地实时状态</span></div>
           </section>
 
           <section class="o-semantic-card" id="oSemanticLayers" aria-labelledby="oSemanticTitle">
@@ -1201,20 +1261,52 @@
                 <button class="o-layer-row behavior" type="button" data-o-layer="behavior" aria-selected="false" role="listitem"><span class="o-layer-number">6</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 4 15 3-6 6-3L5 4Z"/><circle cx="18" cy="17" r="3"/><path d="M18 15.5v3M16.5 17h3"/></svg></span><span class="o-layer-copy"><strong>交互与协作</strong><span>联动高亮、批注、复核、修订，以及保留来源和历史</span></span><span class="o-layer-state design">待实现</span></button>
               </div>
               <aside class="o-layer-detail" aria-live="polite">
-                <p class="o-layer-detail-kicker" id="oLayerDetailKicker">layer 01 · structure</p>
+                <p class="o-layer-detail-kicker" id="oLayerDetailKicker">第 1 层 · structure</p>
                 <h3 id="oLayerDetailTitle">角色与结构</h3>
                 <p class="o-layer-detail-lead" id="oLayerDetailLead">代码能给出元素种类、叶子、图层、面板和数据行；角色语义仍需要记录层补上。</p>
-                <div class="o-layer-detail-facts"><div class="o-layer-detail-fact"><small>source</small><strong id="oLayerDetailSource">substrate + rules</strong></div><div class="o-layer-detail-fact"><small>current state</small><strong id="oLayerDetailState">substrate ready</strong></div><div class="o-layer-detail-fact"><small>anchor</small><strong id="oLayerAnchor">E-05 · row 5</strong></div><div class="o-layer-detail-fact"><small>check</small><strong id="oLayerDetailCheck">geometry + structure</strong></div></div>
-                <p class="o-layer-detail-note" id="oLayerDetailNote">E-05 ↔ row 5 confirms a substrate fact. It does not yet say what this mark means in the surrounding figure.</p>
-                <div class="o-action-row"><button class="o-action-primary" type="button" data-x-mode="explore"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="14" r="2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span>查看底座</button><button class="o-action-secondary" type="button" data-x-mode="propose"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5M13 6l5 5M4 20l3.5-1 9-9-3.5-3.5-9 9L4 20Z"/></svg></span>追加语义提议</button></div>
+                <div class="o-layer-detail-facts"><div class="o-layer-detail-fact"><small>来源</small><strong id="oLayerDetailSource">substrate + rules</strong></div><div class="o-layer-detail-fact"><small>当前状态</small><strong id="oLayerDetailState">substrate ready</strong></div><div class="o-layer-detail-fact"><small>锚点</small><strong id="oLayerAnchor">E-05 · row 5</strong></div><div class="o-layer-detail-fact"><small>核验</small><strong id="oLayerDetailCheck">geometry + structure</strong></div></div>
+                <p class="o-layer-detail-note" id="oLayerDetailNote">E-05 ↔ row 5 证实了一个 substrate fact，但还没有说明这个标记在图中扮演什么角色。</p>
+                <div class="o-layer-records"><p>记录历史</p><div class="o-layer-records-list" id="oLayerRecords"></div></div>
+                <div class="o-action-row"><button class="o-action-primary" type="button" data-x-mode="explore"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="14" r="2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span>查看底座</button><button class="o-action-secondary" type="button" data-o-open-proposal="relation"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5M13 6l5 5M4 20l3.5-1 9-9-3.5-3.5-9 9L4 20Z"/></svg></span>追加 Relation</button></div>
               </aside>
             </div>
             <div class="o-layer-boundary"><div class="o-boundary-box"><span class="o-boundary-mark fact">✓</span><div><strong>底座事实</strong><span>元素、坐标、图层、面板和数据行由原图形设备与代码核验。</span></div></div><div class="o-boundary-box"><span class="o-boundary-mark semantic">+</span><div><strong>语义记录</strong><span>角色、含义、关系、声明、叙事和交互由记录层追加，并各自携带来源与检查。</span></div></div></div>
           </section>
 
+          <section class="o-proposal-shell" id="oProposalShell" aria-labelledby="oProposalTitle">
+            <header class="o-proposal-head">
+              <div><p class="o-kicker">语义提议 · 本地记录</p><h2 id="oProposalTitle">在当前界面追加一条 Relation</h2><p id="oProposalSubtitle">把选中元素的上下文、关系类型和目标一起交给核验，不离开 Overview。</p></div>
+              <div class="o-proposal-head-actions"><span class="o-proposal-layer-badge" id="oProposalLayerBadge">relation</span><button class="o-proposal-close" type="button" id="oCloseProposal" aria-label="关闭语义提议">×</button></div>
+            </header>
+            <div class="o-proposal-grid">
+              <aside class="o-proposal-context">
+                <p class="o-proposal-kicker">锚点上下文</p><h3 id="oProposalContextTitle">E-05 · Adelie</h3><p id="oProposalContextLead">这条记录会继续锚定选中元素和 penguins 表。</p>
+                <svg class="o-proposal-context-figure" viewBox="0 0 220 118" role="img" aria-label="语义提议锚点上下文"><line x1="18" y1="83" x2="62" y2="48"/><line x1="62" y1="48" x2="111" y2="68"/><line x1="111" y1="68" x2="158" y2="32"/><line x1="62" y1="48" x2="88" y2="18"/><circle cx="18" cy="83" r="4"/><circle cx="62" cy="48" r="4"/><circle class="selected" id="oProposalContextNode" cx="111" cy="68" r="6"/><circle cx="158" cy="32" r="4"/><circle cx="88" cy="18" r="4"/></svg>
+                <div class="o-proposal-facts"><div class="o-proposal-fact"><small>species</small><strong id="oProposalSpecies">Adelie</strong></div><div class="o-proposal-fact"><small>island</small><strong id="oProposalIsland">Dream</strong></div><div class="o-proposal-fact"><small>row</small><strong id="oProposalRow">row 5</strong></div><div class="o-proposal-fact"><small>anchor</small><strong id="oProposalAnchor">E-05</strong></div></div>
+              </aside>
+              <div class="o-proposal-editor">
+                <div class="o-proposal-tabs" role="tablist" aria-label="语义提议类型"><button class="o-proposal-tab" type="button" role="tab" aria-selected="true" data-o-proposal-type="relation">Relation</button><button class="o-proposal-tab" type="button" role="tab" aria-selected="false" data-o-proposal-type="claim">Claim</button></div>
+                <form class="o-proposal-form" id="oRelationForm">
+                  <p class="o-proposal-kicker">Relation 记录</p><h3>把元素放回关系网络</h3>
+                  <div class="o-proposal-fields"><div class="o-proposal-field"><label for="oRelationType">关系类型</label><select id="oRelationType"><option value="belongs_to">belongs_to · 分组归属</option><option value="compares_with">compares_with · 比较对象</option><option value="annotates">annotates · 注释指向</option></select></div><div class="o-proposal-field"><label for="oRelationSource">来源锚点</label><input id="oRelationSource" readonly value="E-05"></div><div class="o-proposal-field"><label for="oRelationTarget">目标</label><select id="oRelationTarget"><option value="species:Adelie">species · Adelie</option><option value="species:Chinstrap">species · Chinstrap</option><option value="species:Gentoo">species · Gentoo</option></select></div><div class="o-proposal-field full"><label for="oRelationBasis">依据</label><textarea id="oRelationBasis">E-05 归属于 penguins 表中的 Adelie 分组。</textarea></div></div>
+                  <p class="o-proposal-form-note">Relation 会检查锚点和目标词表，但不会把点位绑定自动升级成科学声明。</p><button class="o-proposal-submit" type="submit">提交 Relation 并核验 →</button>
+                </form>
+                <form class="o-proposal-form is-hidden" id="oClaimForm">
+                  <p class="o-proposal-kicker">Claim 记录</p><h3>让声明带着证据进入记录层</h3>
+                  <div class="o-proposal-fields"><div class="o-proposal-field"><label for="oClaimSubject">主体分组</label><select id="oClaimSubject"><option>Gentoo</option><option>Chinstrap</option><option>Adelie</option></select></div><div class="o-proposal-field"><label for="oClaimComparator">比较分组</label><select id="oClaimComparator"><option>Adelie</option><option>Chinstrap</option><option>Gentoo</option></select></div><div class="o-proposal-field"><label for="oClaimMeasure">证据指标</label><select id="oClaimMeasure"><option value="flipper">mean flipper_length_mm</option><option value="bill">mean bill_length_mm</option><option value="mass">mean body_mass_g</option></select></div><div class="o-proposal-field"><label for="oClaimCheck">检查</label><select id="oClaimCheck"><option value="greater">主体均值 &gt; 比较均值</option><option value="less">主体均值 &lt; 比较均值</option></select></div><div class="o-proposal-field full"><label for="oClaimText">声明</label><textarea id="oClaimText">Gentoo 企鹅的 flipper 长度均值高于 Adelie 企鹅。</textarea></div></div>
+                  <p class="o-proposal-form-note">Claim 会在本地 penguins fixture 上运行确定性的分组汇总。检查失败会记录为 rejected，不会静默升级为事实。</p><button class="o-proposal-submit" type="submit">提交 Claim 并核验 →</button>
+                </form>
+              </div>
+              <aside class="o-proposal-gate" id="oProposalGate">
+                <p class="o-proposal-kicker">记录核验门</p><div class="o-proposal-verdict"><div class="o-proposal-verdict-icon" id="oProposalVerdictIcon">·</div><div><h3 id="oProposalVerdictTitle">等待提交</h3><p id="oProposalVerdictReason">选择一种语义记录，提交后结果会写入 Overview 的历史。</p></div></div>
+                <div class="o-record-history"><p>记录历史</p><div class="o-record-list" id="oRecordList"></div></div>
+              </aside>
+            </div>
+          </section>
+
           <section class="o-lower-grid">
             <article class="o-card" id="oMilestones" aria-labelledby="oMilestoneTitle">
-              <header class="o-card-head"><div><p class="o-kicker">capability map</p><h2 id="oMilestoneTitle">M0—M5 · 能力地图</h2><p>已完成、试验中和下一步都留在同一条时间线上。</p></div><span class="x-pill"><span class="o-live-dot"></span>当前 M1 / M4</span></header>
+              <header class="o-card-head"><div><p class="o-kicker">能力地图</p><h2 id="oMilestoneTitle">M0—M5 · 能力地图</h2><p>已完成、试验中和下一步都留在同一条时间线上。</p></div><span class="x-pill"><span class="o-live-dot"></span>当前 M1 / M4</span></header>
               <div class="o-card-body"><div class="o-milestone-track" role="list" aria-label="M0 到 M5 能力地图">
                 <button class="o-milestone complete" type="button" data-o-milestone="M0" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M0</b><i class="o-milestone-mark">✓</i></span><strong>可靠底座</strong><span>捕获 · 查询 · 图包</span></button>
                 <button class="o-milestone partial is-active" type="button" data-o-milestone="M1" role="listitem"><span class="o-milestone-top"><b class="o-milestone-code">M1</b><i class="o-milestone-mark">◐</i></span><strong>识别与绑定</strong><span>底座已做，角色待补</span></button>
@@ -1226,25 +1318,25 @@
             </article>
 
             <aside class="o-card o-focus-card" aria-labelledby="oFocusTitle">
-              <header class="o-card-head"><div><p class="o-kicker">current focus</p><h2 id="oFocusTitle">选中元素 · <span id="oFocusElement">E-05</span></h2><p id="oFocusTag">circle · built_layer1</p></div><span class="o-focus-status verified" id="oFocusStatus"><span class="x-status-mark">✓</span>verified</span></header>
+              <header class="o-card-head"><div><p class="o-kicker">当前焦点</p><h2 id="oFocusTitle">选中元素 · <span id="oFocusElement">E-05</span></h2><p id="oFocusTag">circle · penguins.points</p></div><span class="o-focus-status verified" id="oFocusStatus"><span class="x-status-mark">✓</span>verified</span></header>
               <div class="o-card-body">
                 <div class="o-focus-figure">
                   <svg class="o-focus-mini" viewBox="0 0 92 92" role="img" aria-label="当前选中元素的小型关系图"><line x1="10" y1="65" x2="32" y2="40"/><line x1="32" y1="40" x2="57" y2="56"/><line x1="57" y1="56" x2="78" y2="28"/><line x1="32" y1="40" x2="47" y2="17"/><circle cx="10" cy="65" r="3"/><circle cx="32" cy="40" r="3"/><circle class="selected" id="oFocusParticle" cx="57" cy="56" r="5"/><circle cx="78" cy="28" r="3"/><circle cx="47" cy="17" r="3"/></svg>
                   <div class="o-focus-facts"><div class="o-focus-fact"><small>row</small><strong id="oFocusRow">row 5</strong></div><div class="o-focus-fact"><small>layer</small><strong id="oFocusLayer">built_layer1</strong></div><div class="o-focus-fact"><small>panel</small><strong id="oFocusPanel">panel1</strong></div><div class="o-focus-fact"><small>attempts</small><strong id="oAttemptCount">3 checks</strong></div></div>
                 </div>
-                <p class="o-focus-reason" id="oFocusReason">the proposed row is where E-05 is drawn, within 0.5 pt.</p>
-                <div class="o-action-row"><button class="o-action-primary" type="button" data-x-mode="explore"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="14" r="2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span>打开 Explore</button><button class="o-action-secondary" type="button" data-x-mode="propose"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5M13 6l5 5M4 20l3.5-1 9-9-3.5-3.5-9 9L4 20Z"/></svg></span>提交提议</button></div>
+                <p class="o-focus-reason" id="oFocusReason">提交的 row 对应 E-05，误差在 0.5 pt 内。</p>
+                <div class="o-action-row"><button class="o-action-primary" type="button" data-x-mode="explore"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="14" r="2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span>打开 Explore</button><button class="o-action-secondary" type="button" data-o-open-proposal="claim"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5M13 6l5 5M4 20l3.5-1 9-9-3.5-3.5-9 9L4 20Z"/></svg></span>追加 Claim</button></div>
               </div>
             </aside>
           </section>
 
           <section class="o-evidence-card" id="oEvidence" aria-labelledby="oEvidenceTitle">
-            <header class="o-evidence-head"><div><p class="o-kicker">evidence pulse</p><h2 id="oEvidenceTitle">当前工作区的可核验摘要</h2><p>状态来自本地 Explore / Propose 交互；研究数字仍属于开发集 pilot。</p></div><span class="o-scope">development set · local prototype</span></header>
+            <header class="o-evidence-head"><div><p class="o-kicker">证据脉冲</p><h2 id="oEvidenceTitle">当前工作区的可核验摘要</h2><p>状态来自本地 Explore / Propose 交互；研究数字仍属于开发集 pilot。</p></div><span class="o-scope">开发集 · 本地原型</span></header>
             <div class="o-evidence-grid">
-              <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20c.8-3.8 3.1-5.7 7-5.7s6.2 1.9 7 5.7"/></svg></span><div><small>selected element</small><strong id="oEvidenceElement">E-05 · circle</strong></div></div>
-              <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span><div><small>bound row</small><strong id="oEvidenceRow">row 5 · panel1</strong></div></div>
-              <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/><circle cx="12" cy="12" r="9"/></svg></span><div><small>latest gate</small><strong id="oEvidenceStatus">verified</strong></div></div>
-              <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 5v7h7"/></svg></span><div><small>attempt history</small><strong id="oEvidenceAttempts">3 checks recorded</strong></div></div>
+              <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20c.8-3.8 3.1-5.7 7-5.7s6.2 1.9 7 5.7"/></svg></span><div><small>选中元素</small><strong id="oEvidenceElement">E-05 · circle</strong></div></div>
+              <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span><div><small>绑定行</small><strong id="oEvidenceRow">row 5 · panel1</strong></div></div>
+              <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/><circle cx="12" cy="12" r="9"/></svg></span><div><small>最新核验</small><strong id="oEvidenceStatus">verified</strong></div></div>
+              <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 5v7h7"/></svg></span><div><small>尝试历史</small><strong id="oEvidenceAttempts">3 checks recorded</strong></div></div>
             </div>
             <footer class="o-evidence-footer"><span><strong>边界：</strong>图形几何仍由原设备和代码负责；这里展示的是可读、可追踪的语义状态。</span><span id="oHistoryDots">look up → inspect → verified</span></footer>
           </section>
@@ -1559,19 +1651,34 @@
   </script>
   <script>
     (function () {
+      var penguinRows = [
+        {row:1,sample:"P-01",species:"Adelie",island:"Torgersen",bill:39.1,flipper:181,mass:3750},
+        {row:2,sample:"P-02",species:"Adelie",island:"Torgersen",bill:39.5,flipper:186,mass:3800},
+        {row:3,sample:"P-03",species:"Adelie",island:"Dream",bill:40.3,flipper:195,mass:3250},
+        {row:4,sample:"P-04",species:"Adelie",island:"Biscoe",bill:36.7,flipper:193,mass:3450},
+        {row:5,sample:"P-05",species:"Adelie",island:"Dream",bill:39.3,flipper:190,mass:3650},
+        {row:6,sample:"P-06",species:"Chinstrap",island:"Dream",bill:46.5,flipper:192,mass:3500},
+        {row:7,sample:"P-07",species:"Chinstrap",island:"Dream",bill:50.0,flipper:196,mass:3900},
+        {row:8,sample:"P-08",species:"Chinstrap",island:"Dream",bill:51.3,flipper:195,mass:3550},
+        {row:9,sample:"P-09",species:"Chinstrap",island:"Dream",bill:45.2,flipper:198,mass:3950},
+        {row:10,sample:"P-10",species:"Gentoo",island:"Biscoe",bill:46.1,flipper:211,mass:4500},
+        {row:11,sample:"P-11",species:"Gentoo",island:"Biscoe",bill:50.0,flipper:230,mass:5700},
+        {row:12,sample:"P-12",species:"Gentoo",island:"Biscoe",bill:48.7,flipper:210,mass:5350}
+      ];
+      function penguinForRow(row) { return penguinRows.filter(function (candidate) { return candidate.row === row; })[0] || null; }
       var elements = [
-        {id:"E-01",tag:"circle",x:188,y:292,row:1,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Mazda RX4"},
-        {id:"E-02",tag:"circle",x:252,y:255,row:2,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Mazda RX4 Wag"},
-        {id:"E-03",tag:"circle",x:314,y:324,row:3,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Datsun 710"},
-        {id:"E-04",tag:"circle",x:365,y:218,row:4,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Hornet 4 Drive"},
-        {id:"E-05",tag:"circle",x:424,y:270,row:5,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Valiant"},
-        {id:"E-06",tag:"circle",x:472,y:197,row:6,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Merc 280"},
-        {id:"E-07",tag:"circle",x:516,y:236,row:7,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Merc 280C"},
-        {id:"E-08",tag:"circle",x:565,y:164,row:8,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Merc 450SE"},
-        {id:"E-09",tag:"circle",x:607,y:188,row:9,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"ambiguous",basis:"two rows within 0.5 pt",label:"Merc 450SL"},
-        {id:"E-10",tag:"circle",x:585,y:292,row:10,leaf:"L-07",layer:"built_layer1",panel:"panel1",status:"verified",basis:"page position",label:"Merc 450SLC"},
-        {id:"E-11",tag:"circle",x:342,y:154,row:null,leaf:"L-08",layer:"built_layer2",panel:"panel1",status:"unresolved",basis:"layer emits a moved copy",label:"shadow mark"},
-        {id:"E-12",tag:"circle",x:245,y:365,row:null,leaf:"L-08",layer:"built_layer2",panel:"panel1",status:"rejected",basis:"no stable row comparison",label:"unbound mark"}
+        {id:"E-01",tag:"circle",x:188,y:292,row:1,leaf:"L-07",layer:"penguins.points",panel:"panel1",status:"verified",basis:"page position",label:"Adelie · P-01",species:"Adelie",sample:"P-01",island:"Torgersen",bill:39.1,flipper:181},
+        {id:"E-02",tag:"circle",x:252,y:255,row:2,leaf:"L-07",layer:"penguins.points",panel:"panel1",status:"verified",basis:"page position",label:"Adelie · P-02",species:"Adelie",sample:"P-02",island:"Torgersen",bill:39.5,flipper:186},
+        {id:"E-03",tag:"circle",x:314,y:324,row:3,leaf:"L-07",layer:"penguins.points",panel:"panel1",status:"verified",basis:"page position",label:"Adelie · P-03",species:"Adelie",sample:"P-03",island:"Dream",bill:40.3,flipper:195},
+        {id:"E-04",tag:"circle",x:365,y:218,row:4,leaf:"L-07",layer:"penguins.points",panel:"panel1",status:"verified",basis:"page position",label:"Adelie · P-04",species:"Adelie",sample:"P-04",island:"Biscoe",bill:36.7,flipper:193},
+        {id:"E-05",tag:"circle",x:424,y:270,row:5,leaf:"L-07",layer:"penguins.points",panel:"panel1",status:"verified",basis:"page position",label:"Adelie · P-05",species:"Adelie",sample:"P-05",island:"Dream",bill:39.3,flipper:190},
+        {id:"E-06",tag:"circle",x:472,y:197,row:6,leaf:"L-07",layer:"penguins.points",panel:"panel1",status:"verified",basis:"page position",label:"Chinstrap · P-06",species:"Chinstrap",sample:"P-06",island:"Dream",bill:46.5,flipper:192},
+        {id:"E-07",tag:"circle",x:516,y:236,row:7,leaf:"L-07",layer:"penguins.points",panel:"panel1",status:"verified",basis:"page position",label:"Chinstrap · P-07",species:"Chinstrap",sample:"P-07",island:"Dream",bill:50.0,flipper:196},
+        {id:"E-08",tag:"circle",x:565,y:164,row:8,leaf:"L-07",layer:"penguins.points",panel:"panel1",status:"verified",basis:"page position",label:"Chinstrap · P-08",species:"Chinstrap",sample:"P-08",island:"Dream",bill:51.3,flipper:195},
+        {id:"E-09",tag:"circle",x:607,y:188,row:9,leaf:"L-07",layer:"penguins.points",panel:"panel1",status:"ambiguous",basis:"two rows within 0.5 pt",label:"Chinstrap · P-09",species:"Chinstrap",sample:"P-09",island:"Dream",bill:45.2,flipper:198},
+        {id:"E-10",tag:"circle",x:585,y:292,row:10,leaf:"L-07",layer:"penguins.points",panel:"panel1",status:"verified",basis:"page position",label:"Gentoo · P-10",species:"Gentoo",sample:"P-10",island:"Biscoe",bill:46.1,flipper:211},
+        {id:"E-11",tag:"circle",x:342,y:154,row:null,leaf:"L-08",layer:"penguins.shadow",panel:"panel1",status:"unresolved",basis:"layer emits a moved copy",label:"Gentoo · P-11 shadow",species:"Gentoo",sample:"P-11",island:"Biscoe",bill:50.0,flipper:230},
+        {id:"E-12",tag:"circle",x:245,y:365,row:null,leaf:"L-08",layer:"penguins.shadow",panel:"panel1",status:"rejected",basis:"no stable row comparison",label:"Gentoo · P-12 unbound",species:"Gentoo",sample:"P-12",island:"Biscoe",bill:48.7,flipper:210}
       ];
       var relations = [["E-01","E-02"],["E-02","E-03"],["E-02","E-04"],["E-04","E-05"],["E-05","E-06"],["E-05","E-07"],["E-07","E-08"],["E-08","E-09"],["E-05","E-10"],["E-04","E-11"],["E-03","E-12"]];
       var state = {selected:"E-05",tool:"select",zoom:1,hideBinding:false};
@@ -1623,8 +1730,8 @@
         var binding = state.hideBinding && item.row !== null ? "hidden for this run" : item.row === null ? "not available" : "row " + item.row;
         inspectorBody.innerHTML =
           '<div class="x-fields">' +
-          field("element", item.id) + field("tag", item.tag) + field("leaf", item.leaf) + field("layer", item.layer) +
-          field("panel", item.panel) + field("binding", binding) +
+          field("element", item.id) + field("sample", item.sample || "—") + field("species", item.species || "—") + field("leaf", item.leaf) + field("layer", item.layer) +
+          field("panel", item.panel) + field("binding", binding) + field("island", item.island || "—") + field("features", item.bill ? item.bill + " mm bill · " + item.flipper + " mm flipper" : "—") +
           '<dl class="x-field full"><dt>status</dt><dd><span class="x-status-mark">' + statusIcon(item.status) + item.status + '</span></dd></dl>' +
           field("basis", item.basis, true) + '</div>' +
           '<div class="x-inspector-actions"><button class="x-solid" type="button" id="xOpenVerification">open verification drawer →</button><button class="x-outline" type="button" id="xFocusTableRow">focus row in data table</button></div>' +
@@ -1641,7 +1748,7 @@
           var row = item.row === null ? "—" : item.row;
           return '<tr class="' + selected + '" tabindex="0" data-x-row="' + item.id + '">' +
             '<td class="x-row-number">' + String(item.row === null ? "—" : item.row).padStart(3,"0") + '</td><td>' + row + '</td><td>' + item.id + '</td>' +
-            '<td>' + (1.8 + item.x / 110).toFixed(2) + '</td><td>' + (9 + (380 - item.y) / 11).toFixed(1) + '</td><td>' + item.layer + '</td>' +
+            '<td>' + (item.species || "—") + '</td><td>' + (item.island || "—") + '</td><td>' + (item.bill ? item.bill.toFixed(1) : "—") + '</td><td>' + (item.flipper || "—") + '</td>' +
             '<td><span class="x-row-chip">' + statusIcon(item.status) + item.status + '</span></td></tr>';
         }).join("");
         document.querySelectorAll("[data-x-row]").forEach(function (row) {
@@ -1659,7 +1766,7 @@
         }).join("");
         var existing = window.glossVerification;
         if (!existing || !existing.item || existing.item.id !== item.id) {
-          updateVerdict(item.row === null ? "unresolved" : "verified", item.row === null ? "This element has no stable row comparison yet." : "the proposed row is where " + item.id + " is drawn, within 0.5 pt.");
+          updateVerdict(item.row === null ? "unresolved" : "verified", item.row === null ? "这个元素没有稳定的 row 对照。" : "提交的 row 对应 " + item.id + "，误差在 0.5 pt 内。");
         } else {
           updateVerdict(existing.status, existing.reason);
         }
@@ -1737,9 +1844,9 @@
       document.getElementById("xResetView").addEventListener("click", function () { state.zoom = 1; state.tool = "select"; document.getElementById("xSearchInput").value = ""; document.getElementById("xSearchWrap").classList.remove("is-open"); document.getElementById("xZoomReadout").textContent = "100%"; canvasScene.style.transform = "scale(1)"; document.querySelectorAll("[data-x-tool]").forEach(function (item) { item.setAttribute("aria-pressed", String(item.dataset.xTool === "select")); }); selectElement("E-05"); showToast("Explore view reset."); });
       document.getElementById("xSubmitProposal").addEventListener("click", function () {
         var item = byId[state.selected], proposed = Number(proposalRow.value);
-        if (item.row === null) updateVerdict("unresolved", "This element has no stable row comparison; the proposal is refused.");
-        else if (proposed === item.row) updateVerdict("verified", "row " + proposed + " lands on " + item.id + " within the page tolerance.");
-        else updateVerdict("rejected", "row " + proposed + " is not where " + item.id + " is drawn; inspect the selected row and try again.");
+        if (item.row === null) updateVerdict("unresolved", "这个元素没有稳定的 row 对照，提议被拒绝。");
+        else if (proposed === item.row) updateVerdict("verified", "row " + proposed + " 对应 " + item.id + "，误差在页面容差内。");
+        else updateVerdict("rejected", "row " + proposed + " 不是 " + item.id + " 所在行，请检查后重试。");
         showToast("Proposal checked by the local prototype.");
       });
       document.getElementById("xResetProposal").addEventListener("click", renderProposal);
@@ -1749,6 +1856,7 @@
       var initial = document.createElement("div");
       initial.className = "x-toast"; initial.id = "xToast"; initial.hidden = true; document.body.appendChild(initial); toast = initial;
       window.glossExplore = { getSelected: function () { return byId[state.selected]; }, select: selectElement, data: elements };
+      window.glossPenguins = penguinRows;
       window.glossStatusIcon = statusIcon;
       renderScene(); selectElement("E-05");
     }());
@@ -1773,14 +1881,17 @@
       function renderContext(item) {
         if (!item) return;
         document.getElementById("pSelectedMeta").textContent = item.id;
-        document.getElementById("pContextTitle").textContent = item.id + " · " + item.tag;
+        document.getElementById("pContextTitle").textContent = item.id + " · " + item.tag + " · " + (item.species || "unknown species");
         document.getElementById("pContextElement").textContent = item.id;
+        document.getElementById("pContextSpecies").textContent = item.species || "unknown";
+        document.getElementById("pContextIsland").textContent = item.island || "unknown";
         document.getElementById("pContextLayer").textContent = item.layer;
         document.getElementById("pContextPanel").textContent = item.panel;
         document.getElementById("pContextRow").textContent = item.row === null ? "no stable row" : "row " + item.row;
         document.getElementById("pContextStatusText").textContent = item.status;
         document.getElementById("pContextStatus").innerHTML = pStatus(item.status) + item.status;
         document.getElementById("pElement").value = item.id;
+        document.getElementById("pTable").value = "penguins.points";
         pRow.innerHTML = (window.glossExplore ? window.glossExplore.data : []).filter(function (candidate) { return candidate.row !== null; }).map(function (candidate) {
           return '<option value="' + candidate.row + '"' + (candidate.row === item.row ? " selected" : "") + '>' + candidate.row + ' · ' + candidate.label + '</option>';
         }).join("");
@@ -1822,7 +1933,7 @@
         if (existing && existing.item && existing.item.id === item.id) {
           updateResult(existing.status, existing.reason);
         } else {
-          updateResult(item.row === null ? "unresolved" : "verified", item.row === null ? "This element has no stable row comparison yet." : "the proposed row is where " + item.id + " is drawn, within 0.5 pt.");
+          updateResult(item.row === null ? "unresolved" : "verified", item.row === null ? "这个元素没有稳定的 row 对照。" : "提交的 row 对应 " + item.id + "，误差在 0.5 pt 内。");
         }
         renderHistory();
       }
@@ -1859,20 +1970,21 @@
         var reason;
         if (pKind.value !== "binding") {
           status = "unresolved";
-          reason = pKind.value + " proposals live above the substrate binding layer; this pilot has no checker for that semantic record yet, so it stays unresolved instead of pretending a point-row check answers it.";
+          reason = pKind.value + " 位于 substrate binding 之上；当前 pilot 还没有这类 semantic record 的 checker，因此保持 unresolved，不把点位核验冒充成更高层结论。";
         } else if (!item || item.row === null) {
           status = "unresolved";
-          reason = "This element has no stable row comparison; the proposal is refused.";
+          reason = "这个元素没有稳定的 row 对照，提议被拒绝。";
         } else if (proposed === item.row) {
           status = "verified";
-          reason = "row " + proposed + " lands on " + item.id + " within the page tolerance.";
+          reason = "row " + proposed + " 对应 " + item.id + "，误差在页面容差内。";
         } else {
           status = "rejected";
-          reason = "row " + proposed + " is not where " + item.id + " is drawn; inspect the context and revise.";
+          reason = "row " + proposed + " 不是 " + item.id + " 所在行，请检查上下文后修改。";
         }
         history.push({kind:status, status:status, detail:reason});
         updateResult(status, reason);
         renderHistory();
+        if (window.glossAppendSemanticRecord) window.glossAppendSemanticRecord(pKind.value === "binding" ? "structure" : pKind.value === "claim" ? "claim" : "relation", pKind.value === "binding" ? "binding" : pKind.value, status, pKind.value + " · " + (item ? item.id : "no anchor"), reason, reason);
       });
       document.getElementById("pReset").addEventListener("click", populate);
       document.getElementById("pOpenExplore").addEventListener("click", function () { switchWorkspace("explore"); });
@@ -1898,14 +2010,20 @@
         M5: "价值评测待做：同模型、同预算、同问题的对照才会给出报告数字。"
       };
       var layerData = {
-        structure: {kicker:"layer 01 · structure", title:"角色与结构", lead:"代码能给出元素种类、叶子、图层、面板和数据行；角色语义仍需要记录层补上。", source:"substrate + rules", state:"substrate ready", check:"geometry + structure", note:"当前选中元素的行绑定是底座事实。它告诉我们这个标记从哪里来，还没有回答它在图中扮演什么角色。"},
-        meaning: {kicker:"layer 02 · meaning", title:"数据与领域含义", lead:"样本、基因、物种、条件等领域对象要保留来源，不能从一个坐标点的外观里臆测。", source:"agent / human", state:"proposal needed", check:"schema + anchor", note:"含义不是点位匹配的副产品；它要作为带来源的记录挂回元素或分组，并允许人和 agent 共同修订。"},
-        relation: {kicker:"layer 03 · relation", title:"关系与语义分组", lead:"图例、系列、标签、分支、注释和比较对象之间的关系，才是图能否被追问的关键。", source:"record layer", state:"design", check:"anchor + consistency", note:"关系可以跨越多个元素。下一步需要让提议明确写出关系类型、目标集合和锚点，而不是只提交一个 row。"},
-        claim: {kicker:"layer 04 · claim", title:"声明与证据", lead:"“两组存在差异”这类声明必须带可重跑的检查，核验失败就不能投影成事实。", source:"agent / human", state:"not implemented", check:"claim predicate", note:"真正高价值的核验对象是声明，不是点位本身。绑定只是让声明找到可检查的数据入口。"},
-        narrative: {kicker:"layer 05 · narrative", title:"叙事与无障碍", lead:"阅读顺序、关键结论、文字描述和可用知识，让人和机器都能读懂同一张图。", source:"record + projection", state:"design", check:"order + access", note:"叙事层会把分散的记录组织成可读的解释，并生成无障碍树、文字摘要和其他投影。"},
-        behavior: {kicker:"layer 06 · behavior", title:"交互与协作", lead:"联动高亮、批注、复核、修订、历史和来源，让图成为可以继续工作的知识载体。", source:"agent + human", state:"design", check:"target + provenance", note:"交互不改动原图几何；它只把已核验的记录和协作历史投影到同一个可追踪界面。"}
+        structure: {kicker:"第 1 层 · structure", title:"角色与结构", lead:"代码能给出元素种类、叶子、图层、面板和数据行；角色语义仍需要记录层补上。", source:"substrate + rules", state:"底座可查", check:"geometry + structure", note:"当前选中元素的行绑定是底座事实。它告诉我们这个标记从哪里来，还没有回答它在图中扮演什么角色。"},
+        meaning: {kicker:"第 2 层 · meaning", title:"数据与领域含义", lead:"样本、基因、物种、条件等领域对象要保留来源，不能从一个坐标点的外观里臆测。", source:"agent / human", state:"待提议", check:"schema + anchor", note:"含义不是点位匹配的副产品；它要作为带来源的记录挂回元素或分组，并允许人和 agent 共同修订。"},
+        relation: {kicker:"第 3 层 · relation", title:"关系与语义分组", lead:"图例、系列、标签、分支、注释和比较对象之间的关系，才是图能否被追问的关键。", source:"record layer", state:"待记录", check:"anchor + consistency", note:"关系可以跨越多个元素。提议需要明确写出关系类型、目标集合和锚点，而不是只提交一个 row。"},
+        claim: {kicker:"第 4 层 · claim", title:"声明与证据", lead:"“两组存在差异”这类声明必须带可重跑的检查，核验失败就不能投影成事实。", source:"agent / human", state:"待核验", check:"claim predicate", note:"真正高价值的核验对象是声明，不是点位本身。绑定只是让声明找到可检查的数据入口。"},
+        narrative: {kicker:"第 5 层 · narrative", title:"叙事与无障碍", lead:"阅读顺序、关键结论、文字描述和可用知识，让人和机器都能读懂同一张图。", source:"record + projection", state:"待投影", check:"order + access", note:"叙事层会把分散的记录组织成可读的解释，并生成无障碍树、文字摘要和其他投影。"},
+        behavior: {kicker:"第 6 层 · behavior", title:"交互与协作", lead:"联动高亮、批注、复核、修订、历史和来源，让图成为可以继续工作的知识载体。", source:"agent + human", state:"待实现", check:"target + provenance", note:"交互不改动原图几何；它只把已核验的记录和协作历史投影到同一个可追踪界面。"}
       };
       var activeLayer = "structure";
+      var semanticRecords = [
+        {id:"B-001", layer:"structure", kind:"binding", status:"verified", title:"E-05 ↔ row 5", detail:"substrate fact · penguins.points", anchor:"E-05", reason:"row 5 是当前选中的 Adelie 标记。"}
+      ];
+      var proposalSequence = 1;
+      var activeProposalType = "relation";
+      window.glossSemanticRecords = semanticRecords;
 
       function selected() {
         return window.glossExplore ? window.glossExplore.getSelected() : null;
@@ -1916,6 +2034,80 @@
       function latestFor(item) {
         var latest = window.glossVerification;
         return latest && latest.item && latest.item.id === item.id ? latest : null;
+      }
+      function penguins() {
+        return window.glossPenguins || [];
+      }
+      function meanFor(species, measure) {
+        var rows = penguins().filter(function (row) { return row.species === species; });
+        if (!rows.length) return null;
+        var values = rows.map(function (row) { return measure === "flipper" ? row.flipper : measure === "bill" ? row.bill : row.mass; });
+        return values.reduce(function (sum, value) { return sum + value; }, 0) / values.length;
+      }
+      function measureLabel(measure) {
+        return measure === "flipper" ? "flipper_length_mm" : measure === "bill" ? "bill_length_mm" : "body_mass_g";
+      }
+      function statusWord(status) {
+        return status === "verified" ? "verified" : status === "rejected" ? "rejected" : "unresolved";
+      }
+      function historyLabel(kind) {
+        return kind === "look up" ? "查询" : kind === "inspect" ? "检查" : kind;
+      }
+      function layerRecords(layer) {
+        return semanticRecords.filter(function (record) { return record.layer === layer; });
+      }
+      function recordMark(status) {
+        return status === "verified" ? "✓" : status === "rejected" ? "×" : "·";
+      }
+      function renderRecordList(target, records, emptyText) {
+        while (target.firstChild) target.removeChild(target.firstChild);
+        if (!records.length) {
+          var empty = document.createElement("span");
+          empty.className = "o-node-sub";
+          empty.textContent = emptyText;
+          target.appendChild(empty);
+          return;
+        }
+        records.slice(-6).reverse().forEach(function (record) {
+          var item = document.createElement("article");
+          item.className = "o-record-item " + (record.status === "verified" ? "verified" : record.status === "rejected" ? "rejected" : "unresolved");
+          var mark = document.createElement("span");
+          mark.className = "o-record-mark";
+          mark.textContent = recordMark(record.status);
+          var copy = document.createElement("div");
+          var title = document.createElement("strong");
+          title.textContent = record.id + " · " + record.title;
+          var detail = document.createElement("span");
+          detail.textContent = record.detail;
+          copy.appendChild(title);
+          copy.appendChild(detail);
+          item.appendChild(mark);
+          item.appendChild(copy);
+          target.appendChild(item);
+        });
+      }
+      function renderLayerRecords(item) {
+        var records = layerRecords(activeLayer);
+        var history = document.getElementById("oLayerRecords");
+        renderRecordList(history, records, "no records in this layer yet");
+        var state = document.getElementById("oLayerDetailState");
+        var layer = layerData[activeLayer];
+        var latest = records[records.length - 1];
+        state.textContent = latest ? statusWord(latest.status) + " · " + records.length + " record" + (records.length === 1 ? "" : "s") : layer.state;
+        document.querySelectorAll("[data-o-layer]").forEach(function (button) {
+          var data = layerRecords(button.dataset.oLayer);
+          var stateNode = button.querySelector(".o-layer-state");
+          var latestRecord = data[data.length - 1];
+          stateNode.classList.remove("ready", "proposed", "design");
+          if (latestRecord) {
+            stateNode.textContent = statusWord(latestRecord.status) + " · " + data.length;
+            stateNode.classList.add(latestRecord.status === "verified" ? "ready" : latestRecord.status === "rejected" ? "proposed" : "design");
+          } else {
+            stateNode.textContent = layerData[button.dataset.oLayer].state;
+            stateNode.classList.add(button.dataset.oLayer === "structure" ? "ready" : button.dataset.oLayer === "meaning" ? "proposed" : "design");
+          }
+        });
+        if (item) document.getElementById("oLayerAnchor").textContent = item.id + " · " + (item.row === null ? "no stable row" : "row " + item.row);
       }
       function renderLayerDetail(item) {
         var layer = layerData[activeLayer];
@@ -1932,7 +2124,105 @@
         document.getElementById("oLayerDetailState").textContent = layer.state;
         document.getElementById("oLayerAnchor").textContent = item ? item.id + " · " + row : "current selection";
         document.getElementById("oLayerDetailCheck").textContent = layer.check;
-        document.getElementById("oLayerDetailNote").textContent = item ? item.id + " ↔ " + row + " is the substrate anchor. " + layer.note : layer.note;
+        document.getElementById("oLayerDetailNote").textContent = item ? item.id + " ↔ " + row + " 是 substrate anchor。" + layer.note : layer.note;
+        renderLayerRecords(item);
+      }
+      function renderProposalContext(item) {
+        if (!item) return;
+        var row = item.row === null ? "no stable row" : "row " + item.row;
+        document.getElementById("oProposalContextTitle").textContent = item.id + " · " + (item.species || "unknown species");
+        document.getElementById("oProposalSpecies").textContent = item.species || "unknown";
+        document.getElementById("oProposalIsland").textContent = item.island || "unknown";
+        document.getElementById("oProposalRow").textContent = row;
+        document.getElementById("oProposalAnchor").textContent = item.id;
+        document.getElementById("oProposalContextLead").textContent = "这条记录会继续锚定 " + item.id + " 和 penguins 底座，直到核验完成。";
+        document.getElementById("oRelationSource").value = item.id;
+        document.getElementById("oProposalContextNode").setAttribute("class", "selected");
+        var target = document.getElementById("oRelationTarget");
+        var speciesValue = "species:" + (item.species || "Adelie");
+        if (["species:Adelie", "species:Chinstrap", "species:Gentoo"].indexOf(speciesValue) > -1) target.value = speciesValue;
+        document.getElementById("oRelationBasis").value = item.species ? item.id + " 归属于 penguins 表中的 " + item.species + " 分组。" : "把选中标记锚定到一个语义分组。";
+      }
+      function renderProposalRecords() {
+        renderRecordList(document.getElementById("oRecordList"), semanticRecords, "还没有记录，请先提交 Relation 或 Claim");
+      }
+      function setProposalGate(status, title, reason) {
+        var gate = document.getElementById("oProposalGate");
+        var safeStatus = status === "verified" ? "verified" : status === "rejected" ? "rejected" : "unresolved";
+        gate.classList.toggle("is-rejected", safeStatus === "rejected");
+        gate.classList.toggle("is-unresolved", safeStatus === "unresolved");
+        document.getElementById("oProposalVerdictIcon").innerHTML = statusIcon(safeStatus);
+        document.getElementById("oProposalVerdictTitle").textContent = title;
+        document.getElementById("oProposalVerdictReason").textContent = reason;
+        renderProposalRecords();
+      }
+      function appendSemanticRecord(layer, kind, status, title, detail, reason) {
+        var record = {id:(kind === "relation" ? "R-" : "C-") + String(proposalSequence++).padStart(3, "0"), layer:layer, kind:kind, status:status, title:title, detail:detail, anchor:selected() ? selected().id : "—", reason:reason};
+        semanticRecords.push(record);
+        activeLayer = layer;
+        window.glossSemanticRecords = semanticRecords;
+        setProposalGate(status, statusWord(status) + " · " + record.id, reason);
+        renderOverview();
+      }
+      function openProposal(type) {
+        activeProposalType = type === "claim" ? "claim" : "relation";
+        activeLayer = activeProposalType;
+        document.getElementById("oProposalShell").classList.add("is-open");
+        renderProposalContext(selected());
+        switchProposalType(activeProposalType);
+        document.getElementById("oProposalShell").scrollIntoView({behavior:"smooth", block:"start"});
+      }
+      function switchProposalType(type) {
+        activeProposalType = type === "claim" ? "claim" : "relation";
+        var isClaim = activeProposalType === "claim";
+        document.querySelectorAll("[data-o-proposal-type]").forEach(function (button) { button.setAttribute("aria-selected", String(button.dataset.oProposalType === activeProposalType)); });
+        document.getElementById("oRelationForm").classList.toggle("is-hidden", isClaim);
+        document.getElementById("oClaimForm").classList.toggle("is-hidden", !isClaim);
+        document.getElementById("oProposalLayerBadge").textContent = activeProposalType;
+        document.getElementById("oProposalTitle").textContent = "在当前界面追加一条 " + (isClaim ? "Claim" : "Relation");
+        document.getElementById("oProposalSubtitle").textContent = isClaim ? "把一个关于企鹅分组的声明和可重跑的证据一起交给核验，不离开 Overview。" : "把选中元素的上下文、关系类型和目标一起交给核验，不离开 Overview。";
+        setProposalGate("unresolved", "等待提交", "选择一种语义记录，提交后结果会写入 Overview 的历史。");
+      }
+      function submitRelation(event) {
+        event.preventDefault();
+        var item = selected();
+        var relationType = document.getElementById("oRelationType").value;
+        var target = document.getElementById("oRelationTarget").value.replace("species:", "");
+        var basis = document.getElementById("oRelationBasis").value.trim();
+        var status = "unresolved";
+        var reason = "没有选中锚点，无法核验这条 Relation。";
+        if (item && relationType === "belongs_to") {
+          status = item.species === target ? "verified" : "rejected";
+          reason = status === "verified" ? item.id + " 在 penguins.points 中归属于 " + target + " 组。" : item.id + " 属于 " + (item.species || "unresolved") + "，不是 " + target + " 组。";
+        } else if (item && relationType === "compares_with") {
+          status = item.species && item.species !== target ? "verified" : "rejected";
+          reason = status === "verified" ? "比较范围已解析为 " + item.species + " 与 " + target + " 两组。" : "比较关系需要两个不同的 species group。";
+        } else if (item && relationType === "annotates") {
+          status = basis ? "verified" : "unresolved";
+          reason = basis ? "注释锚点和文字结构完整；语义内容仍作为记录保存。" : "annotates Relation 需要填写 basis。";
+        }
+        appendSemanticRecord("relation", "relation", status, relationType + " · " + (item ? item.id : "no anchor") + " → " + target, basis || "relation proposal", reason);
+      }
+      function submitClaim(event) {
+        event.preventDefault();
+        var subject = document.getElementById("oClaimSubject").value;
+        var comparator = document.getElementById("oClaimComparator").value;
+        var measure = document.getElementById("oClaimMeasure").value;
+        var check = document.getElementById("oClaimCheck").value;
+        var text = document.getElementById("oClaimText").value.trim();
+        var subjectMean = meanFor(subject, measure);
+        var comparatorMean = meanFor(comparator, measure);
+        var status = "unresolved";
+        var reason = "Claim 需要两个都有可测量行的分组。";
+        if (subject === comparator) {
+          status = "rejected";
+          reason = "subject 和 comparator 必须是不同的分组。";
+        } else if (subjectMean !== null && comparatorMean !== null) {
+          var passes = check === "greater" ? subjectMean > comparatorMean : subjectMean < comparatorMean;
+          status = passes ? "verified" : "rejected";
+          reason = measureLabel(measure) + " 均值：" + subject + " " + subjectMean.toFixed(1) + "，" + comparator + " " + comparatorMean.toFixed(1) + "；检查" + (passes ? "通过" : "未通过") + "。";
+        }
+        appendSemanticRecord("claim", "claim", status, text || subject + " vs " + comparator, "evidence · " + measureLabel(measure), reason);
       }
       function renderOverview() {
         var item = selected();
@@ -1955,12 +2245,12 @@
         document.getElementById("oEvidenceElement").textContent = item.id + " · " + item.tag;
         document.getElementById("oEvidenceRow").textContent = row + " · " + item.panel;
         document.getElementById("oEvidenceStatus").innerHTML = statusIcon(status) + statusText;
-        document.getElementById("oEvidenceAttempts").textContent = history.length + " checks recorded";
-        document.getElementById("oHistoryDots").textContent = history.map(function (entry) { return entry.kind; }).join(" → ");
+        document.getElementById("oEvidenceAttempts").textContent = history.length + " binding checks · " + semanticRecords.length + " semantic records";
+        document.getElementById("oHistoryDots").textContent = history.map(function (entry) { return historyLabel(entry.kind); }).join(" → ") + " · " + semanticRecords.length + " semantic records";
         document.getElementById("oFlowSelected").textContent = item.id + " · " + row;
         document.getElementById("oFlowStatusText").textContent = statusText;
         document.getElementById("oFlowLatest").textContent = "latest · " + statusText;
-        document.getElementById("oFlowCaption").textContent = item.id + " is selected; " + row + " is the substrate fact, not the final semantic claim.";
+        document.getElementById("oFlowCaption").textContent = item.id + " 已选中；" + row + " 是 substrate fact，不是最终 semantic claim。";
 
         var focusStatus = document.getElementById("oFocusStatus");
         focusStatus.className = "o-focus-status " + status;
@@ -2022,9 +2312,19 @@
           toast(layerData[activeLayer].title + " focused; binding remains the substrate anchor.");
         });
       });
+      document.querySelectorAll("[data-o-open-proposal]").forEach(function (button) {
+        button.addEventListener("click", function () { openProposal(button.dataset.oOpenProposal); });
+      });
+      document.querySelectorAll("[data-o-proposal-type]").forEach(function (button) {
+        button.addEventListener("click", function () { switchProposalType(button.dataset.oProposalType); });
+      });
+      document.getElementById("oCloseProposal").addEventListener("click", function () { document.getElementById("oProposalShell").classList.remove("is-open"); });
+      document.getElementById("oRelationForm").addEventListener("submit", submitRelation);
+      document.getElementById("oClaimForm").addEventListener("submit", submitClaim);
       document.getElementById("oHelp").addEventListener("click", function () { toast("Overview maps the path; click a node to continue in Explore or Propose."); });
 
       window.glossOverviewRender = renderOverview;
+      window.glossAppendSemanticRecord = appendSemanticRecord;
       renderOverview();
     }());
   </script>

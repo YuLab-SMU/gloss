@@ -31,4 +31,6 @@ python3 -m http.server 4173 --directory docs
 - Overview 用黑白粒子、关系线和内联 SVG 把 `R 图与数据 → 语义底座 → 结构化语义提议 → 记录与多种呈现` 画成一条可点击的流程；节点会跳进 Explore 或 Propose。
 - 页面明确区分底座事实和高层语义：元素 ↔ 数据行只是 substrate，角色与结构、数据与领域含义、关系分组、声明证据、叙事无障碍、交互协作以六层语义堆栈追加，并显示各自的核验边界。
 - `M0—M5` 能力地图、当前选中元素卡和 evidence pulse 都来自同一份本地状态；切换元素、提交错误行或高层提议后，Overview 会同步最新核验颜色、原因和尝试次数。
+- Overview 内含同屏语义提议工作区：Relation 会核验选中企鹅元素的分组关系，Claim 会对 Palmer Penguins 的分组均值运行确定性检查；两类记录都会回写六层状态和 record history。
+- Explore 的示例数据使用 Palmer Penguins 风格的 `species / island / bill / flipper` 字段，避免把产品叙事收窄成通用点位配对。
 - 页面支持 `#overview`、`#explore`、`#propose` 深链接，适合直接部署到 GitHub Pages 的静态入口。
