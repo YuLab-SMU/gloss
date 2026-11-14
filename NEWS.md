@@ -8,6 +8,11 @@
 - Narrative/Accessibility and Behavior/Collaboration proposals now share the same Overview workbench and append-only history, covering reading order, accessible description, focus, annotations, review and revision provenance.
 - Data / Domain Meaning proposals now map the Palmer Penguins fields to verified domain terms, units and scopes in the same record history.
 
+## Interactive site workbench (2026-11-13)
+
+- The GitHub Pages Overview now keeps the six-layer semantic records, Narrative / Accessibility projection, and collaboration timeline in one screen. Records submitted from the inline proposal editor refresh the projection, accessibility tree, history chips, and timeline together.
+- Added a generated Palmer Penguins asset at `docs/assets/penguins-semantic.png` for the projection panel.
+
 ## Proposals checked from the figure alone (2026-11-12, agent-path plan Tasks 2 and 3)
 
 - `gl_propose()` is new: a pairing given as data (`list(kind = "binding", element, table, row)`) is checked against the figure and comes back `accepted` (with its status, `verified` or `ambiguous`), `rejected` (not valid data, naming what is not in the figure, or checked and not holding; the reason carries the distance) or `refused` (this figure does not let it be checked; the reason says why). Nothing is accepted unchecked, and the figure is not changed. It needs neither the object that was drawn nor the bindings made at capture, so it answers the same on a figure read back from a bundle.

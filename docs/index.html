@@ -961,10 +961,82 @@
     #oProposalContextLead { display: none; }
     #xInspectorBody .x-inspector-note { display: none; }
     .p-bottom-bar p { display: none; }
+    .o-output-deck { margin-top: .8rem; border: 1px solid #111; border-radius: 18px; background: rgba(255,255,255,.96); box-shadow: 0 16px 34px rgba(0,0,0,.08); overflow: hidden; }
+    .o-output-head { display: flex; align-items: end; justify-content: space-between; gap: .8rem; padding: .85rem 1rem; border-bottom: 1px solid #c9c9c9; }
+    .o-output-head h2 { margin: 0; font-size: 1.05rem; letter-spacing: -.025em; }
+    .o-output-head p { margin: .18rem 0 0; color: #6f6f6f; font-size: .68rem; }
+    .o-output-pills { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .35rem; }
+    .o-output-pill { display: inline-flex; align-items: center; gap: .3rem; padding: .32rem .48rem; border: 1px solid #777; border-radius: 999px; background: #fff; color: #555; font-size: .62rem; font-weight: 850; white-space: nowrap; }
+    .o-output-pill .o-live-dot { width: .4rem; height: .4rem; box-shadow: 0 0 0 3px var(--x-verified-bg); }
+    .o-output-grid { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(300px,.75fr); gap: .75rem; padding: .8rem; }
+    .o-projection-panel, .o-timeline-panel { min-width: 0; border: 1px solid #c9c9c9; border-radius: 13px; background: #fbfbfa; overflow: hidden; }
+    .o-output-panel-head { display: flex; align-items: center; justify-content: space-between; gap: .65rem; padding: .65rem .7rem; border-bottom: 1px solid #c9c9c9; background: #fff; }
+    .o-output-panel-title { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+    .o-output-panel-title h3 { margin: 0; font-size: .82rem; }
+    .o-output-panel-title p { margin: .12rem 0 0; color: #6f6f6f; font-size: .62rem; }
+    .o-output-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 1.85rem; height: 1.85rem; border: 1px solid var(--x-blue); border-radius: 8px; background: var(--x-blue-bg); color: var(--x-blue); }
+    .o-output-icon svg { width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .o-output-state { display: inline-flex; align-items: center; gap: .25rem; padding: .3rem .42rem; border: 1px solid #777; border-radius: 999px; color: #666; font-size: .59rem; font-weight: 900; white-space: nowrap; }
+    .o-output-state.verified { border-color: var(--x-verified); background: var(--x-verified-bg); color: var(--x-verified); }
+    .o-output-state.rejected { border-color: var(--x-rejected); background: var(--x-rejected-bg); color: var(--x-rejected); }
+    .o-output-state.unresolved { border-color: var(--x-unresolved); background: var(--x-unresolved-bg); color: var(--x-unresolved); border-style: dashed; }
+    .o-projection-body { display: grid; grid-template-columns: 150px minmax(0,1fr); gap: .7rem; padding: .7rem; }
+    .o-asset-panel { min-width: 0; }
+    .o-asset-frame { display: flex; align-items: end; justify-content: center; min-height: 154px; padding: .25rem; border: 1px solid #111; border-radius: 11px; background: linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px),#fff; background-size: 18px 18px; overflow: hidden; }
+    .o-penguin-asset { display: block; width: 100%; height: auto; max-height: 150px; object-fit: contain; mix-blend-mode: multiply; }
+    .o-species-legend { display: grid; gap: .28rem; margin-top: .45rem; }
+    .o-species-chip { display: flex; align-items: center; gap: .35rem; padding: .28rem .36rem; border: 1px solid #c9c9c9; border-radius: 7px; background: #fff; font-size: .61rem; }
+    .o-species-chip i { width: .55rem; height: .55rem; border: 1px solid currentColor; border-radius: 50%; background: currentColor; }
+    .o-species-chip.adelie { color: var(--x-blue); }
+    .o-species-chip.chinstrap { color: var(--x-verified); }
+    .o-species-chip.gentoo { color: var(--x-ambiguous); }
+    .o-projection-columns { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: .55rem; min-width: 0; }
+    .o-projection-card { min-width: 0; padding: .55rem; border: 1px dashed #999; border-radius: 10px; background: #fff; }
+    .o-projection-card-head { display: flex; align-items: center; justify-content: space-between; gap: .4rem; margin-bottom: .45rem; }
+    .o-projection-card-head strong { font-size: .67rem; }
+    .o-projection-card-head span { color: #6f6f6f; font-size: .58rem; }
+    .o-reading-flow { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; min-height: 2.2rem; }
+    .o-reading-node { display: inline-flex; align-items: center; gap: .25rem; padding: .28rem .35rem; border: 1px solid #111; border-radius: 6px; background: #fbfbfa; font-size: .6rem; font-weight: 850; }
+    .o-reading-node.is-active { border-color: var(--x-blue); background: var(--x-blue-bg); color: var(--x-blue); }
+    .o-reading-arrow { color: #888; font-size: .7rem; font-weight: 900; }
+    .o-projection-caption { min-height: 2.45rem; margin: .45rem 0 0; padding: .38rem .42rem; border-left: 3px solid var(--x-blue); background: var(--x-blue-bg); color: #32477a; font-size: .61rem; line-height: 1.4; }
+    .o-accessibility-tree { display: grid; gap: .3rem; }
+    .o-access-row { display: grid; grid-template-columns: 1.1rem minmax(0,1fr) auto; gap: .35rem; align-items: center; min-height: 1.75rem; padding: .3rem .36rem; border-bottom: 1px dashed #d1d1d1; font-size: .6rem; }
+    .o-access-row:last-child { border-bottom: 0; }
+    .o-access-level { display: inline-flex; align-items: center; justify-content: center; width: 1.05rem; height: 1.05rem; border: 1px solid #777; border-radius: 4px; color: #555; font-size: .55rem; font-weight: 900; }
+    .o-access-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .o-access-value { color: #6f6f6f; font-size: .56rem; white-space: nowrap; }
+    .o-projection-records { display: flex; flex-wrap: wrap; gap: .3rem; padding: .55rem .7rem .65rem; border-top: 1px dashed #c9c9c9; }
+    .o-projection-record-chip { display: inline-flex; align-items: center; gap: .25rem; padding: .25rem .36rem; border: 1px solid #c9c9c9; border-radius: 6px; background: #fff; font-size: .57rem; }
+    .o-projection-record-chip strong { font-size: .58rem; }
+    .o-projection-record-chip.verified { border-color: var(--x-verified); color: var(--x-verified); }
+    .o-projection-record-chip.rejected { border-color: var(--x-rejected); color: var(--x-rejected); }
+    .o-projection-record-chip.unresolved { border-color: var(--x-unresolved); border-style: dashed; color: var(--x-unresolved); }
+    .o-timeline-panel { display: flex; flex-direction: column; }
+    .o-timeline { position: relative; display: grid; gap: .45rem; max-height: 340px; padding: .7rem .7rem .45rem 1.1rem; overflow: auto; }
+    .o-timeline::before { content: ""; position: absolute; top: .9rem; bottom: .9rem; left: 1.35rem; width: 1px; background: linear-gradient(var(--x-blue),#d1d1d1); }
+    .o-timeline-item { position: relative; display: grid; grid-template-columns: 1.05rem minmax(0,1fr); gap: .45rem; min-width: 0; }
+    .o-timeline-dot { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 1.05rem; height: 1.05rem; margin-top: .18rem; border: 1px solid currentColor; border-radius: 50%; background: #fff; color: #777; font-size: .58rem; font-weight: 900; }
+    .o-timeline-item.verified .o-timeline-dot { color: var(--x-verified); background: var(--x-verified-bg); }
+    .o-timeline-item.rejected .o-timeline-dot { color: var(--x-rejected); background: var(--x-rejected-bg); border-radius: 4px; }
+    .o-timeline-item.unresolved .o-timeline-dot { color: var(--x-unresolved); background: var(--x-unresolved-bg); border-style: dashed; }
+    .o-timeline-card { min-width: 0; padding: .42rem .48rem; border: 1px solid #c9c9c9; border-radius: 8px; background: #fff; }
+    .o-timeline-top { display: flex; align-items: center; justify-content: space-between; gap: .35rem; }
+    .o-timeline-top strong { font-size: .62rem; }
+    .o-timeline-status { padding: .16rem .27rem; border: 1px solid currentColor; border-radius: 999px; font-size: .52rem; font-weight: 900; }
+    .o-timeline-item.verified .o-timeline-status { color: var(--x-verified); background: var(--x-verified-bg); }
+    .o-timeline-item.rejected .o-timeline-status { color: var(--x-rejected); background: var(--x-rejected-bg); }
+    .o-timeline-item.unresolved .o-timeline-status { color: var(--x-unresolved); background: var(--x-unresolved-bg); border-style: dashed; }
+    .o-timeline-title { display: block; margin-top: .22rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .63rem; font-weight: 850; }
+    .o-timeline-detail { display: block; margin-top: .12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #6f6f6f; font-size: .58rem; }
+    .o-timeline-meta { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .28rem; color: #777; font-size: .53rem; }
+    .o-timeline-footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: auto; padding: .5rem .7rem .65rem; border-top: 1px dashed #c9c9c9; color: #6f6f6f; font-size: .58rem; }
+    .o-timeline-footer strong { color: #111; }
     @media (max-width: 1120px) { .o-lower-grid { grid-template-columns: 1fr; } .o-evidence-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-    @media (max-width: 1120px) { .o-semantic-grid, .o-proposal-grid { grid-template-columns: 1fr; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
+    @media (max-width: 1120px) { .o-semantic-grid, .o-proposal-grid, .o-output-grid { grid-template-columns: 1fr; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
     @media (max-width: 860px) { .o-workspace-head, .o-hero-head, .o-evidence-head, .o-semantic-head { align-items: flex-start; flex-wrap: wrap; } .o-meta, .o-legend { justify-content: flex-start; } .o-milestone-track { grid-template-columns: repeat(3,minmax(0,1fr)); } }
-    @media (max-width: 600px) { .o-milestone-track, .o-evidence-grid, .o-layer-boundary { grid-template-columns: 1fr 1fr; } .o-layer-row { grid-template-columns: 1.75rem 1.75rem minmax(0,1fr); } .o-layer-state { grid-column: 3; justify-self: start; } .o-focus-figure { grid-template-columns: 1fr; } .o-focus-mini { width: 100%; height: 120px; } .o-evidence-footer, .o-flow-caption { align-items: flex-start; flex-direction: column; } }
+    @media (max-width: 720px) { .o-projection-body { grid-template-columns: 1fr; } .o-asset-panel { display: grid; grid-template-columns: 135px minmax(0,1fr); gap: .55rem; align-items: start; } .o-species-legend { margin-top: 0; } }
+    @media (max-width: 600px) { .o-milestone-track, .o-evidence-grid, .o-layer-boundary { grid-template-columns: 1fr 1fr; } .o-layer-row { grid-template-columns: 1.75rem 1.75rem minmax(0,1fr); } .o-layer-state { grid-column: 3; justify-self: start; } .o-focus-figure { grid-template-columns: 1fr; } .o-focus-mini { width: 100%; height: 120px; } .o-evidence-footer, .o-flow-caption { align-items: flex-start; flex-direction: column; } .o-output-head { align-items: flex-start; flex-direction: column; } .o-output-pills { justify-content: flex-start; } .o-projection-columns { grid-template-columns: 1fr; } .o-asset-panel { grid-template-columns: 1fr; } .o-asset-frame { min-height: 126px; } }
    </style>
 </head>
 <body>
@@ -1313,13 +1385,55 @@
                 </form>
                 <form class="o-proposal-form is-hidden" id="oBehaviorForm">
                   <p class="o-proposal-kicker">Behavior / Collaboration 记录</p><h3>source · target · action · history</h3>
-                  <div class="o-proposal-fields"><div class="o-proposal-field"><label for="oBehaviorOperation">操作</label><select id="oBehaviorOperation"><option value="focus_species">focus_species · 聚焦分组</option><option value="link_annotation">link_annotation · 关联批注</option><option value="request_review">request_review · 请求复核</option><option value="revise_record">revise_record · 修订记录</option></select></div><div class="o-proposal-field"><label for="oBehaviorActor">来源</label><select id="oBehaviorActor"><option value="human">human · 人</option><option value="agent">agent · agent</option></select></div><div class="o-proposal-field"><label for="oBehaviorTarget">目标</label><select id="oBehaviorTarget"><option value="species:Adelie">species · Adelie</option><option value="species:Chinstrap">species · Chinstrap</option><option value="species:Gentoo">species · Gentoo</option><option value="record:latest">record · latest</option></select></div><div class="o-proposal-field full"><label for="oBehaviorNote">协作说明</label><textarea id="oBehaviorNote">关注 Gentoo 分组，并保留这次复核的来源和历史。</textarea></div></div>
+                  <div class="o-proposal-fields"><div class="o-proposal-field"><label for="oBehaviorOperation">操作</label><select id="oBehaviorOperation"><option value="focus_species">focus_species · 聚焦分组</option><option value="link_annotation">link_annotation · 关联批注</option><option value="request_review">request_review · 请求复核</option><option value="revise_record">revise_record · 修订记录</option></select></div><div class="o-proposal-field"><label for="oBehaviorActor">来源</label><select id="oBehaviorActor"><option value="human">human · 人</option><option value="agent">agent · agent</option></select></div><div class="o-proposal-field"><label for="oBehaviorTarget">目标</label><select id="oBehaviorTarget"><option value="species:Gentoo">species · Gentoo</option><option value="species:Adelie">species · Adelie</option><option value="species:Chinstrap">species · Chinstrap</option><option value="record:latest">record · latest</option></select></div><div class="o-proposal-field full"><label for="oBehaviorNote">协作说明</label><textarea id="oBehaviorNote">关注 Gentoo 分组，并保留这次复核的来源和历史。</textarea></div></div>
                   <p class="o-proposal-form-note">Behavior 记录的是“谁在什么上下文对什么目标做了什么”，状态和来源会留在同一条历史中。</p><button class="o-proposal-submit" type="submit">提交 Behavior 并记录 →</button>
                 </form>
               </div>
               <aside class="o-proposal-gate" id="oProposalGate">
                 <p class="o-proposal-kicker">记录核验门</p><div class="o-proposal-verdict"><div class="o-proposal-verdict-icon" id="oProposalVerdictIcon">·</div><div><h3 id="oProposalVerdictTitle">等待提交</h3><p id="oProposalVerdictReason">记录待提交 · 历史已联动</p></div></div>
                 <div class="o-record-history"><p>记录历史</p><div class="o-record-list" id="oRecordList"></div></div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="o-output-deck" id="oSemanticOutputs" aria-labelledby="oOutputsTitle">
+            <header class="o-output-head">
+              <div><p class="o-kicker">projection / timeline</p><h2 id="oOutputsTitle">六层记录 · 可查看输出</h2><p>narrative · accessibility · collaboration</p></div>
+              <div class="o-output-pills"><span class="o-output-pill"><i class="o-live-dot"></i>local record store</span><span class="o-output-pill" id="oOutputRecordCount">1 record</span></div>
+            </header>
+            <div class="o-output-grid">
+              <article class="o-projection-panel" aria-labelledby="oProjectionTitle">
+                <header class="o-output-panel-head">
+                  <div class="o-output-panel-title"><span class="o-output-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M7 9h10M7 12h6M7 15h8"/><circle cx="17" cy="15" r="2"/></svg></span><div><h3 id="oProjectionTitle">Narrative / Accessibility</h3><p id="oProjectionStatus">projection ready · Palmer Penguins</p></div></div>
+                  <span class="o-output-state verified" id="oProjectionStatusChip"><span class="o-record-mark">✓</span>ready</span>
+                </header>
+                <div class="o-projection-body">
+                  <div class="o-asset-panel">
+                    <div class="o-asset-frame"><img class="o-penguin-asset" id="oPenguinAsset" src="assets/penguins-semantic.png" alt="三种企鹅：Adelie、Chinstrap、Gentoo"></div>
+                    <div class="o-species-legend" id="oSpeciesLegend"><span class="o-species-chip adelie"><i></i>Adelie</span><span class="o-species-chip chinstrap"><i></i>Chinstrap</span><span class="o-species-chip gentoo"><i></i>Gentoo</span></div>
+                  </div>
+                  <div class="o-projection-columns">
+                    <section class="o-projection-card" aria-labelledby="oNarrativeProjectionTitle">
+                      <div class="o-projection-card-head"><strong id="oNarrativeProjectionTitle">Narrative</strong><span id="oNarrativeRecordCount">0 records</span></div>
+                      <div class="o-reading-flow" id="oNarrativeFlow"></div>
+                      <p class="o-projection-caption" id="oNarrativeCaption">species → flipper → claim</p>
+                    </section>
+                    <section class="o-projection-card" aria-labelledby="oAccessibilityProjectionTitle">
+                      <div class="o-projection-card-head"><strong id="oAccessibilityProjectionTitle">Accessibility</strong><span>reading tree</span></div>
+                      <div class="o-accessibility-tree" id="oAccessibilityTree"></div>
+                    </section>
+                  </div>
+                </div>
+                <footer class="o-projection-records" id="oProjectionRecords"></footer>
+              </article>
+
+              <aside class="o-timeline-panel" aria-labelledby="oTimelineTitle">
+                <header class="o-output-panel-head">
+                  <div class="o-output-panel-title"><span class="o-output-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M6 7h11l-3 3 3 3H6"/><circle cx="6" cy="4" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="6" cy="20" r="2"/></svg></span><div><h3 id="oTimelineTitle">Collaboration timeline</h3><p>focus · annotate · review</p></div></div>
+                  <span class="o-output-state" id="oTimelineState">live</span>
+                </header>
+                <div class="o-timeline" id="oCollaborationTimeline" role="list" aria-label="协作时间线"></div>
+                <footer class="o-timeline-footer"><span><strong id="oTimelineCount">1</strong> records</span><span id="oTimelineAnchor">anchor · E-05</span></footer>
               </aside>
             </div>
           </section>
@@ -2191,6 +2305,142 @@
         setProposalGate(status, statusWord(status) + " · " + record.id, reason);
         renderOverview();
       }
+      function outputStateClass(status) {
+        return status === "verified" ? "verified" : status === "rejected" ? "rejected" : "unresolved";
+      }
+      function clearOutputNode(node) {
+        while (node.firstChild) node.removeChild(node.firstChild);
+      }
+      function renderProjection() {
+        var narrativeRecords = semanticRecords.filter(function (record) { return record.layer === "narrative"; });
+        var latestNarrative = narrativeRecords[narrativeRecords.length - 1];
+        var projectionStatus = latestNarrative ? latestNarrative.status : "unresolved";
+        var stateChip = document.getElementById("oProjectionStatusChip");
+        stateChip.className = "o-output-state " + outputStateClass(projectionStatus);
+        clearOutputNode(stateChip);
+        var stateMark = document.createElement("span");
+        stateMark.className = "o-record-mark";
+        stateMark.textContent = recordMark(projectionStatus);
+        stateChip.appendChild(stateMark);
+        stateChip.appendChild(document.createTextNode(latestNarrative ? statusWord(projectionStatus) : "ready"));
+        document.getElementById("oProjectionStatus").textContent = latestNarrative ? "projection · " + statusWord(projectionStatus) : "projection ready · Palmer Penguins";
+        document.getElementById("oNarrativeRecordCount").textContent = narrativeRecords.length + " record" + (narrativeRecords.length === 1 ? "" : "s");
+        document.getElementById("oOutputRecordCount").textContent = semanticRecords.length + " record" + (semanticRecords.length === 1 ? "" : "s");
+
+        var orderKey = document.getElementById("oNarrativeOrder") ? document.getElementById("oNarrativeOrder").value : "species_flipper";
+        var orderMap = {species_flipper:["species", "flipper", "claim"], island_bill:["island", "bill", "species"], selected_claim:["selected mark", "evidence", "claim"]};
+        var order = orderMap[orderKey] || orderMap.species_flipper;
+        var flow = document.getElementById("oNarrativeFlow");
+        clearOutputNode(flow);
+        order.forEach(function (label, index) {
+          var node = document.createElement("span");
+          node.className = "o-reading-node" + (index === 0 ? " is-active" : "");
+          node.textContent = label;
+          flow.appendChild(node);
+          if (index < order.length - 1) {
+            var arrow = document.createElement("span");
+            arrow.className = "o-reading-arrow";
+            arrow.textContent = "→";
+            flow.appendChild(arrow);
+          }
+        });
+        var caption = latestNarrative ? latestNarrative.title + " · " + statusWord(latestNarrative.status) : "species → flipper → claim";
+        document.getElementById("oNarrativeCaption").textContent = caption;
+
+        var tree = document.getElementById("oAccessibilityTree");
+        clearOutputNode(tree);
+        var accessRows = [
+          {level:"1", label:"figure", value:"Palmer Penguins"},
+          {level:"2", label:"species", value:"Adelie · Chinstrap · Gentoo"},
+          {level:"2", label:"measure", value:"flipper_length_mm"},
+          {level:"3", label:"alt", value:latestNarrative ? statusWord(latestNarrative.status) : "pending"},
+          {level:"3", label:"records", value:String(semanticRecords.length)}
+        ];
+        accessRows.forEach(function (row) {
+          var item = document.createElement("div");
+          item.className = "o-access-row";
+          var level = document.createElement("span");
+          level.className = "o-access-level";
+          level.textContent = row.level;
+          var label = document.createElement("span");
+          label.className = "o-access-label";
+          label.textContent = row.label;
+          var value = document.createElement("span");
+          value.className = "o-access-value";
+          value.textContent = row.value;
+          item.appendChild(level);
+          item.appendChild(label);
+          item.appendChild(value);
+          tree.appendChild(item);
+        });
+
+        var recordStrip = document.getElementById("oProjectionRecords");
+        clearOutputNode(recordStrip);
+        semanticRecords.slice(-6).reverse().forEach(function (record) {
+          var chip = document.createElement("span");
+          chip.className = "o-projection-record-chip " + outputStateClass(record.status);
+          var mark = document.createElement("b");
+          mark.textContent = recordMark(record.status);
+          var id = document.createElement("strong");
+          id.textContent = record.id;
+          var title = document.createElement("span");
+          title.textContent = record.title;
+          chip.appendChild(mark);
+          chip.appendChild(id);
+          chip.appendChild(title);
+          recordStrip.appendChild(chip);
+        });
+      }
+      function renderTimeline() {
+        var timeline = document.getElementById("oCollaborationTimeline");
+        clearOutputNode(timeline);
+        semanticRecords.slice().reverse().forEach(function (record) {
+          var item = document.createElement("article");
+          item.className = "o-timeline-item " + outputStateClass(record.status);
+          item.setAttribute("role", "listitem");
+          var dot = document.createElement("span");
+          dot.className = "o-timeline-dot";
+          dot.textContent = recordMark(record.status);
+          var card = document.createElement("div");
+          card.className = "o-timeline-card";
+          var top = document.createElement("div");
+          top.className = "o-timeline-top";
+          var id = document.createElement("strong");
+          id.textContent = record.id;
+          var status = document.createElement("span");
+          status.className = "o-timeline-status";
+          status.textContent = statusWord(record.status);
+          top.appendChild(id);
+          top.appendChild(status);
+          var title = document.createElement("span");
+          title.className = "o-timeline-title";
+          title.textContent = record.title;
+          var detail = document.createElement("span");
+          detail.className = "o-timeline-detail";
+          detail.textContent = record.detail;
+          var meta = document.createElement("div");
+          meta.className = "o-timeline-meta";
+          var layer = document.createElement("span");
+          layer.textContent = record.layer;
+          var anchor = document.createElement("span");
+          anchor.textContent = "anchor · " + record.anchor;
+          meta.appendChild(layer);
+          meta.appendChild(anchor);
+          card.appendChild(top);
+          card.appendChild(title);
+          card.appendChild(detail);
+          card.appendChild(meta);
+          item.appendChild(dot);
+          item.appendChild(card);
+          timeline.appendChild(item);
+        });
+        document.getElementById("oTimelineCount").textContent = semanticRecords.length;
+        document.getElementById("oTimelineAnchor").textContent = "anchor · " + (selected() ? selected().id : "—");
+        var latest = semanticRecords[semanticRecords.length - 1];
+        var state = document.getElementById("oTimelineState");
+        state.className = "o-output-state " + (latest ? outputStateClass(latest.status) : "unresolved");
+        state.textContent = latest ? statusWord(latest.status) : "live";
+      }
       function openProposal(type) {
         activeProposalType = ["claim", "meaning", "narrative", "behavior"].indexOf(type) > -1 ? type : "relation";
         activeLayer = activeProposalType;
@@ -2338,6 +2588,8 @@
         document.getElementById("oLineGate").classList.toggle("is-active", Boolean(latest));
         document.getElementById("oLineProjection").classList.toggle("is-active", status === "verified");
         renderLayerDetail(item);
+        renderProjection();
+        renderTimeline();
       }
 
       function toast(message) {
