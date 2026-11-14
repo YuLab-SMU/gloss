@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="gloss：以图形底座为入口，追加角色、含义、关系、声明、叙事和交互语义，并在 Overview、Explore 与 Propose 工作区中核验。">
-  <title>gloss · Explore</title>
+  <meta name="description" content="gloss：以 Palmer Penguins 图形底座为入口，沿六层语义记录、核验并投影到同一张可交互工作台。">
+  <title>gloss · Six-layer control room</title>
   <style>
     :root {
       --ink: #14284b;
@@ -484,6 +484,9 @@
     .x-top-title { min-width: 0; flex: 1; }
     .x-top-title strong { display: block; font-size: .96rem; letter-spacing: -.02em; }
     .x-top-title span { display: block; color: #6f6f6f; font-size: .74rem; }
+    .o-top-state { display: inline-flex; align-items: center; gap: .42rem; padding: .38rem .55rem; border: 1px solid #c9c9c9; border-radius: 999px; background: #fff; color: #6f6f6f; font-size: .6rem; font-weight: 850; letter-spacing: .08em; white-space: nowrap; }
+    .o-top-state strong { color: #111; letter-spacing: 0; }
+    .o-top-state .o-live-dot { width: .42rem; height: .42rem; box-shadow: 0 0 0 3px var(--x-verified-bg); }
     .x-mode-tabs { display: flex; gap: .2rem; padding: .22rem; border: 1px solid #777; border-radius: 10px; background: #fff; }
     .x-mode-tab { min-width: 82px; padding: .45rem .65rem; border: 0; border-radius: 7px; background: transparent; cursor: pointer; font-size: .78rem; font-weight: 850; }
     .x-mode-tab:hover, .x-mode-tab:focus-visible, .x-mode-tab[aria-selected="true"] { background: #111; color: #fff; outline: none; }
@@ -495,6 +498,13 @@
     .x-rail-btn span:first-child { font-size: 1.1rem; line-height: 1; }
     .x-rail-btn:hover, .x-rail-btn:focus-visible, .x-rail-btn[aria-selected="true"] { border-color: #111; background: #111; color: #fff; outline: none; }
     .x-rail-divider { height: 1px; margin: .4rem 0; background: #c9c9c9; }
+    .o-six-rail { min-height: 920px; }
+    .o-six-rail-title { margin: .2rem .15rem .1rem; color: #6f6f6f; font-size: .54rem; font-weight: 950; letter-spacing: .14em; text-align: center; text-transform: uppercase; }
+    .o-layer-nav { grid-template-columns: 1fr; gap: .18rem; min-height: 50px; }
+    .o-layer-nav b { display: inline-flex; align-items: center; justify-content: center; width: 1.4rem; height: 1.4rem; border: 1px solid currentColor; border-radius: 50%; font-size: .55rem; }
+    .o-layer-nav span { font-size: .58rem; }
+    #overviewView .x-mode-tabs { display: none; }
+    #exploreView, #proposeView { display: none !important; }
     .x-workspace { min-width: 0; }
     .x-workspace-head { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: .4rem 0 .8rem; }
     .x-eyebrow { margin: 0 0 .3rem; color: #6f6f6f; font-size: .68rem; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
@@ -962,6 +972,72 @@
     #xInspectorBody .x-inspector-note { display: none; }
     .p-bottom-bar p { display: none; }
     .o-output-deck { margin-top: .8rem; border: 1px solid #111; border-radius: 18px; background: rgba(255,255,255,.96); box-shadow: 0 16px 34px rgba(0,0,0,.08); overflow: hidden; }
+    .o-workspace { display: flex; flex-direction: column; gap: .8rem; }
+    .o-workspace > .o-workspace-head { order: 0; }
+    .o-workspace > #oSemanticLayers { order: 1; margin-top: 0; }
+    .o-workspace > #oDataLens { order: 2; }
+    .o-workspace > #o-flow-card { order: 3; margin-top: 0; }
+    .o-workspace > #oProposalShell { order: 4; margin-top: 0; }
+    .o-workspace > #oSemanticOutputs { order: 5; margin-top: 0; }
+    .o-workspace > .o-lower-grid { order: 6; margin-top: 0; }
+    .o-workspace > #oEvidence { order: 7; margin-top: 0; }
+    .o-data-lens { border: 1px solid #111; border-radius: 18px; background: rgba(255,255,255,.96); box-shadow: 0 14px 30px rgba(0,0,0,.08); overflow: hidden; }
+    .o-lens-head { display: flex; align-items: end; justify-content: space-between; gap: .8rem; padding: .8rem .95rem; border-bottom: 1px solid #c9c9c9; }
+    .o-lens-head h2 { margin: 0; font-size: 1rem; letter-spacing: -.025em; }
+    .o-lens-head p { margin: .16rem 0 0; color: #6f6f6f; font-size: .66rem; }
+    .o-lens-head-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
+    .o-lens-state { display: inline-flex; align-items: center; padding: .34rem .45rem; border: 1px solid var(--x-verified); border-radius: 999px; background: var(--x-verified-bg); color: var(--x-verified); font-size: .6rem; font-weight: 900; }
+    .o-lens-state.rejected { border-color: var(--x-rejected); background: var(--x-rejected-bg); color: var(--x-rejected); }
+    .o-lens-state.unresolved { border-color: var(--x-unresolved); background: var(--x-unresolved-bg); color: var(--x-unresolved); border-style: dashed; }
+    .o-lens-grid { display: grid; grid-template-columns: minmax(280px,.9fr) minmax(360px,1.3fr) minmax(220px,.65fr); gap: .65rem; padding: .7rem; }
+    .o-lens-figure-card, .o-lens-table-card, .o-lens-inspector { min-width: 0; border: 1px solid #c9c9c9; border-radius: 12px; background: #fbfbfa; overflow: hidden; }
+    .o-lens-card-head { display: flex; align-items: center; justify-content: space-between; gap: .45rem; padding: .58rem .65rem; border-bottom: 1px solid #c9c9c9; background: #fff; }
+    .o-lens-card-head strong { display: block; font-size: .72rem; }
+    .o-lens-card-head span { display: block; margin-top: .1rem; color: #6f6f6f; font-size: .58rem; }
+    .o-lens-card-head > span:last-child { margin: 0; white-space: nowrap; }
+    .o-lens-figure-wrap { position: relative; padding: .45rem; background: linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px),#fff; background-size: 18px 18px; }
+    #oLensPlot { display: block; width: 100%; height: auto; min-height: 176px; }
+    .o-lens-axis { stroke: #8a8a8a; stroke-width: 1.1; }
+    .o-lens-axis-label { fill: #6f6f6f; font-size: 8px; }
+    .o-lens-relation { stroke: #b4b4b4; stroke-width: 1; opacity: .7; }
+    .o-lens-relation.is-active { stroke: #111; stroke-width: 1.8; opacity: 1; }
+    .o-lens-point { cursor: pointer; }
+    .o-lens-point circle:first-child { fill: #fff; stroke: #111; stroke-width: 1.2; transition: r .15s ease,fill .15s ease,stroke-width .15s ease; }
+    .o-lens-point.is-verified circle:first-child { fill: var(--x-verified-bg); stroke: var(--x-verified); }
+    .o-lens-point.is-ambiguous circle:first-child { fill: var(--x-ambiguous-bg); stroke: var(--x-ambiguous); }
+    .o-lens-point.is-rejected circle:first-child { fill: var(--x-rejected-bg); stroke: var(--x-rejected); }
+    .o-lens-point.is-unresolved circle:first-child { fill: var(--x-unresolved-bg); stroke: var(--x-unresolved); stroke-dasharray: 2 2; }
+    .o-lens-point:hover circle:first-child, .o-lens-point:focus circle:first-child, .o-lens-point.is-selected circle:first-child { fill: #111; stroke: #111; stroke-width: 1.8; }
+    .o-lens-point .o-lens-ring { display: none; fill: none; stroke: #111; stroke-width: 1; stroke-dasharray: 3 3; }
+    .o-lens-point.is-selected .o-lens-ring { display: block; }
+    .o-lens-figure-focus { position: absolute; top: .55rem; left: .6rem; padding: .17rem .28rem; border: 1px solid #111; border-radius: 5px; background: rgba(255,255,255,.9); color: #111; font-size: .56rem; font-weight: 900; }
+    .o-lens-figure-footer { display: flex; align-items: center; justify-content: space-between; gap: .4rem; padding: .48rem .65rem .58rem; color: #6f6f6f; font-size: .58rem; }
+    .o-lens-figure-footer > span:first-child { display: inline-flex; align-items: center; gap: .25rem; flex-wrap: wrap; }
+    .o-lens-dot { display: inline-block; width: .45rem; height: .45rem; margin-left: .12rem; border: 1px solid currentColor; border-radius: 50%; background: currentColor; }
+    .o-lens-dot.adelie { color: var(--x-blue); }
+    .o-lens-dot.chinstrap { color: var(--x-verified); }
+    .o-lens-dot.gentoo { color: var(--x-ambiguous); }
+    .o-lens-table-scroll { max-height: 250px; overflow: auto; }
+    .o-lens-table { width: 100%; border-collapse: collapse; font-size: .6rem; }
+    .o-lens-table th, .o-lens-table td { padding: .38rem .42rem; border-bottom: 1px solid #e1e1df; text-align: left; white-space: nowrap; }
+    .o-lens-table th { position: sticky; top: 0; z-index: 1; color: #6f6f6f; background: #fbfbfa; font-size: .55rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
+    .o-lens-table tbody tr { cursor: pointer; transition: background .15s ease; }
+    .o-lens-table tbody tr:hover, .o-lens-table tbody tr:focus-visible, .o-lens-table tbody tr.is-selected { background: var(--x-blue-bg); outline: none; }
+    .o-lens-table-status { font-weight: 900; }
+    .o-lens-table-status.verified { color: var(--x-verified); }
+    .o-lens-table-status.ambiguous { color: var(--x-ambiguous); }
+    .o-lens-table-status.rejected { color: var(--x-rejected); }
+    .o-lens-table-status.unresolved { color: var(--x-unresolved); }
+    .o-lens-inspector { display: flex; flex-direction: column; }
+    .o-lens-inspector-mark { display: inline-flex !important; align-items: center; justify-content: center; width: 1.35rem; height: 1.35rem; border: 1px solid var(--x-verified); border-radius: 50%; background: var(--x-verified-bg); color: var(--x-verified) !important; font-size: .7rem !important; font-weight: 900; }
+    .o-lens-inspector-mark.rejected { border-color: var(--x-rejected); border-radius: 4px; background: var(--x-rejected-bg); color: var(--x-rejected) !important; }
+    .o-lens-inspector-mark.unresolved { border-color: var(--x-unresolved); border-style: dashed; background: var(--x-unresolved-bg); color: var(--x-unresolved) !important; }
+    .o-lens-facts { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem .45rem; padding: .65rem; }
+    .o-lens-facts > div { padding: .38rem .4rem; border-bottom: 1px dashed #c9c9c9; }
+    .o-lens-facts small { display: block; color: #6f6f6f; font-size: .56rem; }
+    .o-lens-facts strong { display: block; margin-top: .1rem; font-size: .66rem; word-break: break-word; }
+    .o-lens-inspector-actions { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: auto; padding: .65rem; }
+    .o-lens-inspector-actions .o-action-primary, .o-lens-inspector-actions .o-action-secondary { flex: 1 1 100%; justify-content: center; }
     .o-output-head { display: flex; align-items: end; justify-content: space-between; gap: .8rem; padding: .85rem 1rem; border-bottom: 1px solid #c9c9c9; }
     .o-output-head h2 { margin: 0; font-size: 1.05rem; letter-spacing: -.025em; }
     .o-output-head p { margin: .18rem 0 0; color: #6f6f6f; font-size: .68rem; }
@@ -1050,14 +1126,14 @@
     .o-timeline-footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: auto; padding: .5rem .7rem .65rem; border-top: 1px dashed #c9c9c9; color: #6f6f6f; font-size: .58rem; }
     .o-timeline-footer strong { color: #111; }
     @media (max-width: 1120px) { .o-lower-grid { grid-template-columns: 1fr; } .o-evidence-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-    @media (max-width: 1120px) { .o-semantic-grid, .o-proposal-grid, .o-output-grid { grid-template-columns: 1fr; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
+    @media (max-width: 1120px) { .o-semantic-grid, .o-proposal-grid, .o-output-grid { grid-template-columns: 1fr; } .o-lens-grid { grid-template-columns: 1fr 1fr; } .o-lens-inspector { grid-column: 1 / -1; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
     @media (max-width: 860px) { .o-workspace-head, .o-hero-head, .o-evidence-head, .o-semantic-head { align-items: flex-start; flex-wrap: wrap; } .o-meta, .o-legend { justify-content: flex-start; } .o-milestone-track { grid-template-columns: repeat(3,minmax(0,1fr)); } }
     @media (max-width: 720px) { .o-projection-body { grid-template-columns: 1fr; } .o-asset-panel { display: grid; grid-template-columns: 135px minmax(0,1fr); gap: .55rem; align-items: start; } .o-species-legend { margin-top: 0; } }
-    @media (max-width: 600px) { .o-milestone-track, .o-evidence-grid, .o-layer-boundary { grid-template-columns: 1fr 1fr; } .o-layer-row { grid-template-columns: 1.75rem 1.75rem minmax(0,1fr); } .o-layer-state { grid-column: 3; justify-self: start; } .o-focus-figure { grid-template-columns: 1fr; } .o-focus-mini { width: 100%; height: 120px; } .o-evidence-footer, .o-flow-caption { align-items: flex-start; flex-direction: column; } .o-output-head { align-items: flex-start; flex-direction: column; } .o-output-pills { justify-content: flex-start; } .o-projection-columns { grid-template-columns: 1fr; } .o-asset-panel { grid-template-columns: 1fr; } .o-asset-frame { min-height: 126px; } }
+    @media (max-width: 600px) { .o-milestone-track, .o-evidence-grid, .o-layer-boundary { grid-template-columns: 1fr 1fr; } .o-layer-row { grid-template-columns: 1.75rem 1.75rem minmax(0,1fr); } .o-layer-state { grid-column: 3; justify-self: start; } .o-focus-figure { grid-template-columns: 1fr; } .o-focus-mini { width: 100%; height: 120px; } .o-evidence-footer, .o-flow-caption { align-items: flex-start; flex-direction: column; } .o-output-head, .o-lens-head { align-items: flex-start; flex-direction: column; } .o-output-pills, .o-lens-head-actions { justify-content: flex-start; } .o-projection-columns, .o-lens-grid { grid-template-columns: 1fr; } .o-asset-panel { grid-template-columns: 1fr; } .o-asset-frame, .o-asset-map { min-height: 126px; } .o-lens-inspector { grid-column: auto; } }
    </style>
 </head>
 <body>
-  <a class="skip-link" href="#x-workspace">跳到 Explore 工作区</a>
+  <a class="skip-link" href="#o-workspace">跳到六层语义工作台</a>
   <div class="page">
     <div class="explore-view" id="exploreView">
       <header class="x-topbar">
@@ -1226,35 +1302,92 @@
     <div class="o-view" id="overviewView">
       <header class="x-topbar">
         <a class="x-brand" href="#o-workspace" aria-label="gloss Overview 首页"><span>gloss</span><i class="x-brand-mark" aria-hidden="true"></i></a>
-        <div class="x-top-title"><strong>语义观测台</strong><span>从输入图形到可核验语义：一张可以继续工作的系统地图。</span></div>
-        <nav class="x-mode-tabs" aria-label="工作区模式" role="tablist">
-          <button class="x-mode-tab" role="tab" aria-selected="true" data-x-mode="overview">overview</button>
-          <button class="x-mode-tab" role="tab" aria-selected="false" data-x-mode="explore">explore</button>
-          <button class="x-mode-tab" role="tab" aria-selected="false" data-x-mode="propose">propose</button>
-        </nav>
+        <div class="x-top-title"><strong>六层语义工作台</strong><span>同一张图，从 substrate 到 records，再到可查看的 projections。</span></div>
+        <div class="o-top-state"><span>PALMER PENGUINS</span><strong id="oTopLayerState">structure</strong><i class="o-live-dot"></i></div>
         <button class="x-header-action" id="oHelp" type="button" aria-label="帮助">?</button>
       </header>
 
       <div class="x-app-grid">
-        <aside class="x-rail" aria-label="Overview 工具栏">
+        <aside class="x-rail o-six-rail" aria-label="六层语义导航">
           <div class="x-rail-stack">
-            <button class="x-rail-btn" type="button" data-x-mode="overview" aria-selected="true"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10.5v8h11v-8"/><path d="M10 18.5v-4h4v4"/></svg></span><span>overview</span></button>
-            <button class="x-rail-btn" type="button" data-x-mode="explore" aria-selected="false"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="6" r="2.2"/><circle cx="19" cy="14" r="2.2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span><span>explore</span></button>
-            <button class="x-rail-btn" type="button" data-x-mode="propose" aria-selected="false"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5"/><path d="m13 6 5 5"/><path d="m4 20 3.5-1 9-9-3.5-3.5-9 9L4 20Z"/><path d="m15 15 4 4M18 3v4M16 5h4"/></svg></span><span>propose</span></button>
-            <div class="x-rail-divider"></div>
-            <button class="x-rail-btn" type="button" data-o-jump="o-flow-card"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="12" r="2"/><path d="m6.8 10.8 3.4-3.4M13.8 7.3l3.4 3.4"/></svg></span><span>path</span></button>
-            <button class="x-rail-btn" type="button" data-o-jump="oMilestones"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span><span>roadmap</span></button>
+            <p class="o-six-rail-title">six layers</p>
+            <button class="x-rail-btn o-layer-nav is-selected" type="button" data-o-layer="structure" aria-selected="true"><b>01</b><span>structure</span></button>
+            <button class="x-rail-btn o-layer-nav" type="button" data-o-layer="meaning" aria-selected="false"><b>02</b><span>meaning</span></button>
+            <button class="x-rail-btn o-layer-nav" type="button" data-o-layer="relation" aria-selected="false"><b>03</b><span>relation</span></button>
+            <button class="x-rail-btn o-layer-nav" type="button" data-o-layer="claim" aria-selected="false"><b>04</b><span>claim</span></button>
+            <button class="x-rail-btn o-layer-nav" type="button" data-o-layer="narrative" aria-selected="false"><b>05</b><span>narrative</span></button>
+            <button class="x-rail-btn o-layer-nav" type="button" data-o-layer="behavior" aria-selected="false"><b>06</b><span>behavior</span></button>
           </div>
           <div class="x-rail-stack">
-            <button class="x-rail-btn" type="button" data-o-jump="oEvidence"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v4H5zM5 12h14v4H5zM5 18h14v2H5z"/></svg></span><span>evidence</span></button>
+            <button class="x-rail-btn" type="button" data-o-jump="oSemanticOutputs"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M6 7h11l-3 3 3 3H6"/><circle cx="6" cy="4" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="6" cy="20" r="2"/></svg></span><span>history</span></button>
+            <button class="x-rail-btn" type="button" data-o-jump="oDataLens"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span><span>substrate</span></button>
           </div>
         </aside>
 
         <main class="x-workspace o-workspace" id="o-workspace">
           <header class="o-workspace-head">
-            <div><p class="x-eyebrow">Overview / 语义控制台</p><h1>从可见图元，到可解释的知识载体</h1><p>Palmer Penguins · species · flipper · semantic records</p></div>
+            <div><p class="x-eyebrow">Semantic control room / six-layer record path</p><h1>从可见图元，到可解释的知识载体</h1><p>Palmer Penguins · substrate · six semantic layers · projections</p></div>
             <div class="o-meta"><span class="x-pill">figure · penguins-relationships</span><span class="x-pill">selected · <strong id="oSelectionPill">E-05</strong></span></div>
           </header>
+
+          <section class="o-semantic-card" id="oSemanticLayers" aria-labelledby="oSemanticTitle">
+            <header class="o-semantic-head">
+              <div><p class="o-kicker">semantic layers</p><h2 id="oSemanticTitle">六层语义</h2><p>substrate · records · projections</p></div>
+              <span class="o-semantic-badge"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h12M4 9h16M6 13h12M4 17h16"/></svg></span>substrate ≠ semantics</span>
+            </header>
+            <div class="o-semantic-grid">
+              <div class="o-layer-stack" role="list" aria-label="六层语义">
+                <button class="o-layer-row structure is-selected" type="button" data-o-layer="structure" aria-selected="true" role="listitem"><span class="o-layer-number">1</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="7" height="6" rx="1"/><rect x="13" y="5" width="7" height="6" rx="1"/><path d="M12 11v4M8 15h8M8 15v4M16 15v4"/></svg></span><span class="o-layer-copy"><strong>角色与结构</strong><span>shape · layer · panel · group</span></span><span class="o-layer-state ready">底座可查</span></button>
+                <button class="o-layer-row meaning" type="button" data-o-layer="meaning" aria-selected="false" role="listitem"><span class="o-layer-number">2</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5C5 5.6 8.1 4 12 4s7 1.6 7 3.5S15.9 11 12 11 5 9.4 5 7.5Z"/><path d="M5 7.5V12c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5V7.5M5 12v4.5c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5V12"/></svg></span><span class="o-layer-copy"><strong>数据与领域含义</strong><span>species · island · context</span></span><span class="o-layer-state proposed">待提议</span></button>
+                <button class="o-layer-row relation" type="button" data-o-layer="relation" aria-selected="false" role="listitem"><span class="o-layer-number">3</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="7" r="2.5"/><circle cx="19" cy="17" r="2.5"/><path d="m7.4 11.1 9-3.2M7.4 12.9l9 3.2"/></svg></span><span class="o-layer-copy"><strong>关系与语义分组</strong><span>legend · branch · compare</span></span><span class="o-layer-state design">待记录</span></button>
+                <button class="o-layer-row claim" type="button" data-o-layer="claim" aria-selected="false" role="listitem"><span class="o-layer-number">4</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h9l3 3v13H6zM15 4v4h3"/><path d="M9 12h6M9 15h4"/><path d="m14 18 2 2 4-5"/></svg></span><span class="o-layer-copy"><strong>声明与证据</strong><span>claim · measure · check</span></span><span class="o-layer-state design">待核验</span></button>
+                <button class="o-layer-row narrative" type="button" data-o-layer="narrative" aria-selected="false" role="listitem"><span class="o-layer-number">5</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h6v14H5zM13 5h6v14h-6z"/><path d="M7.5 9h1.8M15.5 9h1.8M7.5 12h1.8M15.5 12h1.8"/></svg></span><span class="o-layer-copy"><strong>叙事与无障碍</strong><span>order · alt text · summary</span></span><span class="o-layer-state design">待投影</span></button>
+                <button class="o-layer-row behavior" type="button" data-o-layer="behavior" aria-selected="false" role="listitem"><span class="o-layer-number">6</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 4 15 3-6 6-3L5 4Z"/><circle cx="18" cy="17" r="3"/><path d="M18 15.5v3M16.5 17h3"/></svg></span><span class="o-layer-copy"><strong>交互与协作</strong><span>focus · annotate · review</span></span><span class="o-layer-state design">待实现</span></button>
+              </div>
+              <aside class="o-layer-detail" aria-live="polite">
+                <p class="o-layer-detail-kicker" id="oLayerDetailKicker">第 1 层 · structure</p>
+                <h3 id="oLayerDetailTitle">角色与结构</h3>
+                <p class="o-layer-detail-lead" id="oLayerDetailLead">shape · layer · panel · row</p>
+                <div class="o-layer-detail-facts"><div class="o-layer-detail-fact"><small>来源</small><strong id="oLayerDetailSource">substrate + rules</strong></div><div class="o-layer-detail-fact"><small>当前状态</small><strong id="oLayerDetailState">substrate ready</strong></div><div class="o-layer-detail-fact"><small>锚点</small><strong id="oLayerAnchor">E-05 · row 5</strong></div><div class="o-layer-detail-fact"><small>核验</small><strong id="oLayerDetailCheck">geometry + structure</strong></div></div>
+                <p class="o-layer-detail-note" id="oLayerDetailNote">E-05 ↔ row 5 · substrate anchor</p>
+                <div class="o-layer-records"><p>记录历史</p><div class="o-layer-records-list" id="oLayerRecords"></div></div>
+                <div class="o-action-row"><button class="o-action-primary" type="button" data-x-mode="explore"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="14" r="2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span>查看底座</button><button class="o-action-secondary" type="button" id="oLayerProposalButton" data-o-open-proposal="relation"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5M13 6l5 5M4 20l3.5-1 9-9-3.5-3.5-9 9L4 20Z"/></svg></span><span id="oLayerProposalLabel">追加 Relation</span></button></div>
+              </aside>
+            </div>
+            <div class="o-layer-boundary"><div class="o-boundary-box"><span class="o-boundary-mark fact">✓</span><div><strong>substrate</strong><span>geometry · row · panel</span></div></div><div class="o-boundary-box"><span class="o-boundary-mark semantic">+</span><div><strong>records</strong><span>relation · claim · narrative · behavior</span></div></div></div>
+          </section>
+
+          <section class="o-data-lens" id="oDataLens" aria-labelledby="oDataLensTitle">
+            <header class="o-lens-head">
+              <div><p class="o-kicker">substrate / data lens</p><h2 id="oDataLensTitle">企鹅数据 · 当前焦点</h2><p id="oLensMeta">penguins.points · row 5 · panel1</p></div>
+              <div class="o-lens-head-actions"><span class="o-lens-state" id="oLensRecordState">verified · structure</span><button class="o-action-secondary" type="button" data-o-open-proposal="meaning"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5C5 5.6 8.1 4 12 4s7 1.6 7 3.5S15.9 11 12 11 5 9.4 5 7.5Z"/><path d="M5 7.5V12c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5V7.5M5 12v4.5c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5V12"/></svg></span>追加 Meaning</button></div>
+            </header>
+            <div class="o-lens-grid">
+              <article class="o-lens-figure-card">
+                <header class="o-lens-card-head"><div><strong>figure marks</strong><span>species · flipper</span></div><span id="oLensFigureCount">12 marks</span></header>
+                <div class="o-lens-figure-wrap">
+                  <svg id="oLensPlot" viewBox="0 0 300 190" role="img" aria-label="Palmer Penguins 散点图数据底座">
+                    <defs><pattern id="oLensGridPattern" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M18 0H0V18" fill="none" stroke="#e8e8e6" stroke-width="1"/></pattern></defs>
+                    <rect x="0" y="0" width="300" height="190" fill="url(#oLensGridPattern)"/>
+                    <line class="o-lens-axis" x1="35" y1="158" x2="276" y2="158"/><line class="o-lens-axis" x1="35" y1="158" x2="35" y2="20"/>
+                    <text class="o-lens-axis-label" x="278" y="172">flipper</text><text class="o-lens-axis-label" x="22" y="22">bill</text>
+                    <g id="oLensRelations"></g><g id="oLensPoints"></g>
+                  </svg>
+                  <span class="o-lens-figure-focus" id="oLensFigureFocus">E-05 · Adelie · row 5</span>
+                </div>
+                <footer class="o-lens-figure-footer"><span><i class="o-lens-dot adelie"></i>Adelie <i class="o-lens-dot chinstrap"></i>Chinstrap <i class="o-lens-dot gentoo"></i>Gentoo</span><span id="oLensFigureStatus">verified</span></footer>
+              </article>
+              <section class="o-lens-table-card" aria-labelledby="oLensTableTitle">
+                <header class="o-lens-card-head"><div><strong id="oLensTableTitle">penguins.points</strong><span>data rows</span></div><span id="oLensTableCount">12 rows</span></header>
+                <div class="o-lens-table-scroll"><table class="o-lens-table"><thead><tr><th>row</th><th>sample</th><th>species</th><th>island</th><th>flipper</th><th>status</th></tr></thead><tbody id="oLensRows"></tbody></table></div>
+              </section>
+              <aside class="o-lens-inspector" aria-live="polite">
+                <header class="o-lens-card-head"><div><strong id="oLensInspectorTitle">E-05</strong><span id="oLensInspectorTag">circle · penguins.points</span></div><span class="o-lens-inspector-mark" id="oLensInspectorMark">✓</span></header>
+                <div class="o-lens-facts"><div><small>species</small><strong id="oLensSpecies">Adelie</strong></div><div><small>island</small><strong id="oLensIsland">Dream</strong></div><div><small>row</small><strong id="oLensRow">row 5</strong></div><div><small>flipper</small><strong id="oLensFlipper">190 mm</strong></div><div><small>layer</small><strong id="oLensLayer">penguins.points</strong></div><div><small>anchor</small><strong id="oLensAnchor">E-05</strong></div></div>
+                <div class="o-lens-inspector-actions"><button class="o-action-primary" type="button" data-o-open-proposal="relation">追加 Relation</button><button class="o-action-secondary" type="button" data-o-jump="oSemanticOutputs">查看记录</button></div>
+              </aside>
+            </div>
+          </section>
 
           <section class="o-hero" id="o-flow-card" aria-labelledby="o-flow-title">
             <header class="o-hero-head">
@@ -1339,33 +1472,6 @@
               </svg>
             </div>
             <div class="o-flow-caption"><span><strong>当前焦点：</strong><span id="oFlowCaption">E-05 · row 5 · substrate</span></span><span class="o-live"><i class="o-live-dot"></i>本地实时状态</span></div>
-          </section>
-
-          <section class="o-semantic-card" id="oSemanticLayers" aria-labelledby="oSemanticTitle">
-            <header class="o-semantic-head">
-              <div><p class="o-kicker">semantic layers</p><h2 id="oSemanticTitle">六层语义</h2><p>substrate · records · projections</p></div>
-              <span class="o-semantic-badge"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h12M4 9h16M6 13h12M4 17h16"/></svg></span>substrate ≠ semantics</span>
-            </header>
-            <div class="o-semantic-grid">
-              <div class="o-layer-stack" role="list" aria-label="六层语义">
-                <button class="o-layer-row structure is-selected" type="button" data-o-layer="structure" aria-selected="true" role="listitem"><span class="o-layer-number">1</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="7" height="6" rx="1"/><rect x="13" y="5" width="7" height="6" rx="1"/><path d="M12 11v4M8 15h8M8 15v4M16 15v4"/></svg></span><span class="o-layer-copy"><strong>角色与结构</strong><span>shape · layer · panel · group</span></span><span class="o-layer-state ready">底座可查</span></button>
-                <button class="o-layer-row meaning" type="button" data-o-layer="meaning" aria-selected="false" role="listitem"><span class="o-layer-number">2</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5C5 5.6 8.1 4 12 4s7 1.6 7 3.5S15.9 11 12 11 5 9.4 5 7.5Z"/><path d="M5 7.5V12c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5V7.5M5 12v4.5c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5V12"/></svg></span><span class="o-layer-copy"><strong>数据与领域含义</strong><span>species · island · context</span></span><span class="o-layer-state proposed">待提议</span></button>
-                <button class="o-layer-row relation" type="button" data-o-layer="relation" aria-selected="false" role="listitem"><span class="o-layer-number">3</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="7" r="2.5"/><circle cx="19" cy="17" r="2.5"/><path d="m7.4 11.1 9-3.2M7.4 12.9l9 3.2"/></svg></span><span class="o-layer-copy"><strong>关系与语义分组</strong><span>legend · branch · compare</span></span><span class="o-layer-state design">待记录</span></button>
-                <button class="o-layer-row claim" type="button" data-o-layer="claim" aria-selected="false" role="listitem"><span class="o-layer-number">4</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h9l3 3v13H6zM15 4v4h3"/><path d="M9 12h6M9 15h4"/><path d="m14 18 2 2 4-5"/></svg></span><span class="o-layer-copy"><strong>声明与证据</strong><span>claim · measure · check</span></span><span class="o-layer-state design">待核验</span></button>
-                <button class="o-layer-row narrative" type="button" data-o-layer="narrative" aria-selected="false" role="listitem"><span class="o-layer-number">5</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h6v14H5zM13 5h6v14h-6z"/><path d="M7.5 9h1.8M15.5 9h1.8M7.5 12h1.8M15.5 12h1.8"/></svg></span><span class="o-layer-copy"><strong>叙事与无障碍</strong><span>order · alt text · summary</span></span><span class="o-layer-state design">待投影</span></button>
-                <button class="o-layer-row behavior" type="button" data-o-layer="behavior" aria-selected="false" role="listitem"><span class="o-layer-number">6</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 4 15 3-6 6-3L5 4Z"/><circle cx="18" cy="17" r="3"/><path d="M18 15.5v3M16.5 17h3"/></svg></span><span class="o-layer-copy"><strong>交互与协作</strong><span>focus · annotate · review</span></span><span class="o-layer-state design">待实现</span></button>
-              </div>
-              <aside class="o-layer-detail" aria-live="polite">
-                <p class="o-layer-detail-kicker" id="oLayerDetailKicker">第 1 层 · structure</p>
-                <h3 id="oLayerDetailTitle">角色与结构</h3>
-                <p class="o-layer-detail-lead" id="oLayerDetailLead">shape · layer · panel · row</p>
-                <div class="o-layer-detail-facts"><div class="o-layer-detail-fact"><small>来源</small><strong id="oLayerDetailSource">substrate + rules</strong></div><div class="o-layer-detail-fact"><small>当前状态</small><strong id="oLayerDetailState">substrate ready</strong></div><div class="o-layer-detail-fact"><small>锚点</small><strong id="oLayerAnchor">E-05 · row 5</strong></div><div class="o-layer-detail-fact"><small>核验</small><strong id="oLayerDetailCheck">geometry + structure</strong></div></div>
-                <p class="o-layer-detail-note" id="oLayerDetailNote">E-05 ↔ row 5 · substrate anchor</p>
-                <div class="o-layer-records"><p>记录历史</p><div class="o-layer-records-list" id="oLayerRecords"></div></div>
-                <div class="o-action-row"><button class="o-action-primary" type="button" data-x-mode="explore"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="14" r="2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span>查看底座</button><button class="o-action-secondary" type="button" id="oLayerProposalButton" data-o-open-proposal="relation"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5M13 6l5 5M4 20l3.5-1 9-9-3.5-3.5-9 9L4 20Z"/></svg></span><span id="oLayerProposalLabel">追加 Relation</span></button></div>
-              </aside>
-            </div>
-            <div class="o-layer-boundary"><div class="o-boundary-box"><span class="o-boundary-mark fact">✓</span><div><strong>substrate</strong><span>geometry · row · panel</span></div></div><div class="o-boundary-box"><span class="o-boundary-mark semantic">+</span><div><strong>records</strong><span>relation · claim · narrative · behavior</span></div></div></div>
           </section>
 
           <section class="o-proposal-shell" id="oProposalShell" aria-labelledby="oProposalTitle">
@@ -2096,27 +2202,14 @@
         renderHistory();
       }
       function switchWorkspace(mode) {
-        if (mode === "overview") {
-          exploreView.classList.add("is-hidden");
-          proposeView.classList.remove("is-active");
-          overviewView.classList.add("is-active");
-          if (window.glossOverviewRender) window.glossOverviewRender();
-          document.title = "gloss · Overview";
-        } else if (mode === "propose") {
-          exploreView.classList.add("is-hidden");
-          overviewView.classList.remove("is-active");
-          proposeView.classList.add("is-active");
-          populate();
-          document.title = "gloss · Propose";
-        } else {
-          overviewView.classList.remove("is-active");
-          proposeView.classList.remove("is-active");
-          exploreView.classList.remove("is-hidden");
-          if (mode === "explore" && window.glossExplore && selected()) window.glossExplore.select(selected().id);
-          document.title = "gloss · Explore";
-        }
-        document.querySelectorAll("[data-x-mode]").forEach(function (button) { button.setAttribute("aria-selected", String(button.dataset.xMode === mode)); });
-        var modeHash = mode === "overview" ? "#overview" : mode === "propose" ? "#propose" : "#explore";
+        exploreView.classList.add("is-hidden");
+        proposeView.classList.remove("is-active");
+        overviewView.classList.add("is-active");
+        if (window.glossOverviewRender) window.glossOverviewRender();
+        if (mode !== "overview" && window.glossOverviewFocus) window.glossOverviewFocus(mode);
+        document.title = "gloss · Overview";
+        document.querySelectorAll("[data-x-mode]").forEach(function (button) { button.setAttribute("aria-selected", String(button.dataset.xMode === "overview")); });
+        var modeHash = "#overview";
         if (window.location.hash !== modeHash && window.history && window.history.replaceState) window.history.replaceState(null, "", modeHash);
       }
       window.glossSwitchWorkspace = switchWorkspace;
@@ -2152,9 +2245,7 @@
         drawer.textContent = "Choose binding to check a substrate fact. Relation, meaning and claim are higher layers; this pilot keeps them pending until their own checker exists.";
       });
       populate();
-      if (window.location.hash === "#overview" || window.location.hash === "#o-workspace") switchWorkspace("overview");
-      else if (window.location.hash === "#propose" || window.location.hash === "#p-workspace") switchWorkspace("propose");
-      else if (window.location.hash === "#explore" || window.location.hash === "#x-workspace") switchWorkspace("explore");
+      switchWorkspace("overview");
     }());
   </script>
   <script>
@@ -2179,12 +2270,51 @@
       var semanticRecords = [
         {id:"B-001", layer:"structure", kind:"binding", status:"verified", title:"E-05 ↔ row 5", detail:"substrate fact · penguins.points", anchor:"E-05", reason:"row 5 是当前选中的 Adelie 标记。"}
       ];
+      function ensureSubstrateData() {
+        if (window.glossPenguins && window.glossExplore) {
+          window.glossOverviewRows = window.glossPenguins;
+          window.glossOverviewElements = window.glossExplore.data || [];
+          window.glossOverviewSelectedId = "E-05";
+          return;
+        }
+        var rows = [
+          {row:1,sample:"P-01",species:"Adelie",island:"Torgersen",bill:39.1,flipper:181,mass:3750},
+          {row:2,sample:"P-02",species:"Adelie",island:"Torgersen",bill:39.5,flipper:186,mass:3800},
+          {row:3,sample:"P-03",species:"Adelie",island:"Dream",bill:40.3,flipper:195,mass:3250},
+          {row:4,sample:"P-04",species:"Adelie",island:"Biscoe",bill:36.7,flipper:193,mass:3450},
+          {row:5,sample:"P-05",species:"Adelie",island:"Dream",bill:39.3,flipper:190,mass:3650},
+          {row:6,sample:"P-06",species:"Chinstrap",island:"Dream",bill:46.5,flipper:192,mass:3500},
+          {row:7,sample:"P-07",species:"Chinstrap",island:"Dream",bill:50.0,flipper:196,mass:3900},
+          {row:8,sample:"P-08",species:"Chinstrap",island:"Dream",bill:51.3,flipper:195,mass:3550},
+          {row:9,sample:"P-09",species:"Chinstrap",island:"Dream",bill:45.2,flipper:198,mass:3950},
+          {row:10,sample:"P-10",species:"Gentoo",island:"Biscoe",bill:46.1,flipper:211,mass:4500},
+          {row:11,sample:"P-11",species:"Gentoo",island:"Biscoe",bill:50.0,flipper:230,mass:5700},
+          {row:12,sample:"P-12",species:"Gentoo",island:"Biscoe",bill:48.7,flipper:210,mass:5350}
+        ];
+        var points = [[188,292],[252,255],[314,324],[365,218],[424,270],[472,197],[516,236],[565,164],[607,188],[585,292],[342,154],[245,365]];
+        var elements = rows.map(function (row, index) {
+          var status = row.row === 9 ? "ambiguous" : row.row === 11 ? "unresolved" : row.row === 12 ? "rejected" : "verified";
+          return {id:"E-" + String(row.row).padStart(2,"0"), tag:"circle", x:points[index][0], y:points[index][1], row:row.row <= 10 ? row.row : null, leaf:row.row <= 10 ? "L-07" : "L-08", layer:row.row <= 10 ? "penguins.points" : "penguins.shadow", panel:"panel1", status:status, basis:status === "verified" ? "page position" : status === "ambiguous" ? "two rows within 0.5 pt" : status === "rejected" ? "no stable row comparison" : "layer emits a moved copy", label:row.species + " · " + row.sample, species:row.species, sample:row.sample, island:row.island, bill:row.bill, flipper:row.flipper};
+        });
+        var selectedId = "E-05";
+        window.glossOverviewRows = rows;
+        window.glossOverviewElements = elements;
+        window.glossOverviewSelectedId = selectedId;
+        window.glossPenguins = rows;
+        window.glossExplore = {getSelected:function () { return elements.filter(function (candidate) { return candidate.id === window.glossOverviewSelectedId; })[0] || elements[4]; }, select:function (id) { if (elements.some(function (candidate) { return candidate.id === id; })) { selectedId = id; window.glossOverviewSelectedId = id; if (window.glossOverviewRender) window.glossOverviewRender(); } }, data:elements};
+      }
+      ensureSubstrateData();
       var proposalSequence = 1;
       var activeProposalType = "relation";
       window.glossSemanticRecords = semanticRecords;
 
       function selected() {
-        return window.glossExplore ? window.glossExplore.getSelected() : null;
+        var data = window.glossOverviewElements || [];
+        var id = window.glossOverviewSelectedId || "E-05";
+        var overviewItem = data.filter(function (candidate) { return candidate.id === id; })[0];
+        if (overviewItem) return overviewItem;
+        if (window.glossExplore && window.glossExplore.getSelected) return window.glossExplore.getSelected();
+        return data[0] || null;
       }
       function statusIcon(status) {
         return window.glossStatusIcon ? window.glossStatusIcon(status) : "";
@@ -2194,7 +2324,7 @@
         return latest && latest.item && latest.item.id === item.id ? latest : null;
       }
       function penguins() {
-        return window.glossPenguins || [];
+        return window.glossOverviewRows || window.glossPenguins || [];
       }
       function meanFor(species, measure) {
         var rows = penguins().filter(function (row) { return row.species === species; });
@@ -2255,6 +2385,7 @@
         document.querySelectorAll("[data-o-layer]").forEach(function (button) {
           var data = layerRecords(button.dataset.oLayer);
           var stateNode = button.querySelector(".o-layer-state");
+            if (!stateNode) return;
           var latestRecord = data[data.length - 1];
           stateNode.classList.remove("ready", "proposed", "design");
           if (latestRecord) {
@@ -2270,6 +2401,7 @@
       function renderLayerDetail(item) {
         var layer = layerData[activeLayer];
         var row = item && item.row !== null ? "row " + item.row : "no stable row";
+        document.getElementById("oTopLayerState").textContent = activeLayer;
         document.querySelectorAll("[data-o-layer]").forEach(function (button) {
           var active = button.dataset.oLayer === activeLayer;
           button.classList.toggle("is-selected", active);
@@ -2337,8 +2469,8 @@
       }
       function selectSpecies(species) {
         var representative = {Adelie:"E-05", Chinstrap:"E-06", Gentoo:"E-10"}[species];
-        if (representative && window.glossExplore) {
-          window.glossExplore.select(representative);
+        if (representative) {
+          selectLensElement(representative);
           toast("已聚焦 · " + species);
         }
       }
@@ -2481,6 +2613,80 @@
         var state = document.getElementById("oTimelineState");
         state.className = "o-output-state " + (latest ? outputStateClass(latest.status) : "unresolved");
         state.textContent = latest ? statusWord(latest.status) : "live";
+      }
+      function renderDataLens() {
+        var item = selected();
+        var data = window.glossOverviewElements || (window.glossExplore ? window.glossExplore.data : []);
+        if (!item || !data.length) return;
+        var rowText = item.row === null ? "no stable row" : "row " + item.row;
+        document.getElementById("oLensMeta").textContent = item.layer + " · " + rowText + " · " + item.panel;
+        document.getElementById("oLensFigureFocus").textContent = item.id + " · " + (item.species || "unknown") + " · " + rowText;
+        document.getElementById("oLensFigureStatus").textContent = statusWord(item.status);
+        document.getElementById("oLensTableCount").textContent = data.filter(function (candidate) { return candidate.row !== null; }).length + " rows";
+        document.getElementById("oLensInspectorTitle").textContent = item.id;
+        document.getElementById("oLensInspectorTag").textContent = item.tag + " · " + item.layer;
+        document.getElementById("oLensSpecies").textContent = item.species || "—";
+        document.getElementById("oLensIsland").textContent = item.island || "—";
+        document.getElementById("oLensRow").textContent = rowText;
+        document.getElementById("oLensFlipper").textContent = item.flipper ? item.flipper + " mm" : "—";
+        document.getElementById("oLensLayer").textContent = item.layer;
+        document.getElementById("oLensAnchor").textContent = item.id;
+        var mark = document.getElementById("oLensInspectorMark");
+        mark.className = "o-lens-inspector-mark " + outputStateClass(item.status);
+        mark.textContent = recordMark(item.status);
+        var lensState = document.getElementById("oLensRecordState");
+        lensState.className = "o-lens-state " + outputStateClass(item.status);
+        lensState.textContent = statusWord(item.status) + " · " + activeLayer;
+
+        var x = function (value) { return 35 + ((value - 170) / 470) * 240; };
+        var y = function (value) { return 158 - ((value - 150) / 220) * 130; };
+        var svgNs = "http://www.w3.org/2000/svg";
+        var relationLayer = document.getElementById("oLensRelations");
+        var pointLayer = document.getElementById("oLensPoints");
+        clearOutputNode(relationLayer);
+        clearOutputNode(pointLayer);
+        var byElement = {};
+        data.forEach(function (candidate) { byElement[candidate.id] = candidate; });
+        [["E-01","E-02"],["E-02","E-03"],["E-02","E-04"],["E-04","E-05"],["E-05","E-06"],["E-05","E-07"],["E-07","E-08"],["E-08","E-09"],["E-05","E-10"]].forEach(function (pair) {
+          var from = byElement[pair[0]], to = byElement[pair[1]];
+          if (!from || !to) return;
+          var line = document.createElementNS(svgNs, "line");
+          line.setAttribute("x1", x(from.x)); line.setAttribute("y1", y(from.y)); line.setAttribute("x2", x(to.x)); line.setAttribute("y2", y(to.y));
+          line.setAttribute("class", "o-lens-relation" + (pair.indexOf(item.id) > -1 ? " is-active" : ""));
+          relationLayer.appendChild(line);
+        });
+        data.forEach(function (candidate) {
+          var group = document.createElementNS(svgNs, "g");
+          group.setAttribute("class", "o-lens-point " + outputStateClass(candidate.status) + (candidate.id === item.id ? " is-selected" : ""));
+          group.setAttribute("data-o-lens-element", candidate.id);
+          group.setAttribute("tabindex", "0");
+          group.setAttribute("role", "button");
+          group.setAttribute("aria-label", candidate.id + " " + (candidate.species || "unknown"));
+          var point = document.createElementNS(svgNs, "circle");
+          point.setAttribute("cx", x(candidate.x)); point.setAttribute("cy", y(candidate.y)); point.setAttribute("r", candidate.id === item.id ? "5.5" : "4");
+          var ring = document.createElementNS(svgNs, "circle");
+          ring.setAttribute("class", "o-lens-ring"); ring.setAttribute("cx", x(candidate.x)); ring.setAttribute("cy", y(candidate.y)); ring.setAttribute("r", "10");
+          group.appendChild(point); group.appendChild(ring); pointLayer.appendChild(group);
+        });
+        var rows = document.getElementById("oLensRows");
+        clearOutputNode(rows);
+        data.filter(function (candidate) { return candidate.row !== null; }).forEach(function (candidate) {
+          var tr = document.createElement("tr");
+          tr.setAttribute("data-o-lens-element", candidate.id); tr.setAttribute("tabindex", "0");
+          if (candidate.id === item.id) tr.className = "is-selected";
+          [candidate.row, candidate.sample, candidate.species, candidate.island, candidate.flipper ? candidate.flipper + " mm" : "—"].forEach(function (value) {
+            var td = document.createElement("td"); td.textContent = value; tr.appendChild(td);
+          });
+          var statusCell = document.createElement("td");
+          var statusLabel = document.createElement("span"); statusLabel.className = "o-lens-table-status " + outputStateClass(candidate.status); statusLabel.textContent = recordMark(candidate.status) + " " + statusWord(candidate.status); statusCell.appendChild(statusLabel); tr.appendChild(statusCell);
+          rows.appendChild(tr);
+        });
+      }
+      function selectLensElement(id) {
+        if (!id) return;
+        window.glossOverviewSelectedId = id;
+        if (window.glossExplore && window.glossExplore.select) window.glossExplore.select(id);
+        else if ((window.glossOverviewElements || []).some(function (candidate) { return candidate.id === id; })) { window.glossOverviewSelectedId = id; renderOverview(); }
       }
       function openProposal(type) {
         activeProposalType = ["claim", "meaning", "narrative", "behavior"].indexOf(type) > -1 ? type : "relation";
@@ -2629,6 +2835,7 @@
         document.getElementById("oLineGate").classList.toggle("is-active", Boolean(latest));
         document.getElementById("oLineProjection").classList.toggle("is-active", status === "verified");
         renderLayerDetail(item);
+        renderDataLens();
         renderProjection();
         renderTimeline();
       }
@@ -2690,11 +2897,32 @@
       document.querySelectorAll("[data-o-species]").forEach(function (button) {
         button.addEventListener("click", function () { selectSpecies(button.dataset.oSpecies); });
       });
+      document.getElementById("oLensRows").addEventListener("click", function (event) {
+        var row = event.target.closest("[data-o-lens-element]");
+        if (row) selectLensElement(row.dataset.oLensElement);
+      });
+      document.getElementById("oLensRows").addEventListener("keydown", function (event) {
+        var row = event.target.closest("[data-o-lens-element]");
+        if (row && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); selectLensElement(row.dataset.oLensElement); }
+      });
+      document.getElementById("oLensPoints").addEventListener("click", function (event) {
+        var point = event.target.closest("[data-o-lens-element]");
+        if (point) selectLensElement(point.dataset.oLensElement);
+      });
+      document.getElementById("oLensPoints").addEventListener("keydown", function (event) {
+        var point = event.target.closest("[data-o-lens-element]");
+        if (point && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); selectLensElement(point.dataset.oLensElement); }
+      });
       syncMeaningFields();
-      document.getElementById("oHelp").addEventListener("click", function () { toast("Overview maps the path; click a node to continue in Explore or Propose."); });
+      document.getElementById("oHelp").addEventListener("click", function () { toast("先选语义层，再在同一屏查看底座、提议和记录。"); });
 
       window.glossOverviewRender = renderOverview;
       window.glossAppendSemanticRecord = appendSemanticRecord;
+      window.glossOverviewFocus = function (mode) {
+        var target = document.getElementById(mode === "explore" ? "oDataLens" : "oProposalShell");
+        if (mode === "propose") openProposal(activeLayer === "structure" ? "relation" : activeLayer);
+        if (target) target.scrollIntoView({behavior:"smooth", block:"start"});
+      };
       renderOverview();
     }());
   </script>

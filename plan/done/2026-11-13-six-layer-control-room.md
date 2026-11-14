@@ -19,10 +19,10 @@
 
 ## Overall progress
 
-- [~] Task 1: Make the six-layer rail and single-screen Overview the primary shell.
-- [ ] Task 2: Embed substrate data lens, table, and inspector into the same shell.
-- [ ] Task 3: Re-route legacy workspace actions to in-page layer/proposal focus.
-- [ ] Task 4: Verify the full layer flow, update documentation, and close the plan.
+- [x] Task 1: Make the six-layer rail and single-screen Overview the primary shell.
+- [x] Task 2: Embed substrate data lens, table, and inspector into the same shell.
+- [x] Task 3: Re-route legacy workspace actions to in-page layer/proposal focus.
+- [x] Task 4: Verify the full layer flow, update documentation, and close the plan.
 
 ## Task 1: Single-screen semantic shell
 
@@ -40,7 +40,7 @@
 
 ## Task 2: Substrate data lens
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Intent:** Make the actual penguin data, scatter marks, selected anchor, and inspector visible without leaving the semantic flow.
 
@@ -52,7 +52,7 @@
 
 ## Task 3: In-page routing
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Intent:** Preserve existing buttons while removing page jumps.
 
@@ -64,7 +64,7 @@
 
 ## Task 4: Verification and close
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Checklist**
 
@@ -75,3 +75,10 @@
 ## Scope changes
 
 _(append-only)_
+
+## Closing notes
+
+- End state: one visible Overview control room with six-layer navigation, a substrate data lens, inline proposals, projections, and collaboration history.
+- Verification: `NOT_CRAN=true Rscript -e "devtools::test()"` → 1422 passed, 0 failed, 0 skipped; inline `node --check` passed; browser flow and asset HTTP checks passed.
+- The redesign changed only the static docs site, NEWS, plan, and dev logs.
+- Next work should measure actual M2/M3 record rebasing and projection behavior in the package, rather than adding another page shell.
