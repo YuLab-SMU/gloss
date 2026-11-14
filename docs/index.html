@@ -1290,7 +1290,7 @@
                 <div class="o-proposal-facts"><div class="o-proposal-fact"><small>species</small><strong id="oProposalSpecies">Adelie</strong></div><div class="o-proposal-fact"><small>island</small><strong id="oProposalIsland">Dream</strong></div><div class="o-proposal-fact"><small>row</small><strong id="oProposalRow">row 5</strong></div><div class="o-proposal-fact"><small>anchor</small><strong id="oProposalAnchor">E-05</strong></div></div>
               </aside>
               <div class="o-proposal-editor">
-                <div class="o-proposal-tabs" role="tablist" aria-label="语义提议类型"><button class="o-proposal-tab" type="button" role="tab" aria-selected="true" data-o-proposal-type="relation">Relation</button><button class="o-proposal-tab" type="button" role="tab" aria-selected="false" data-o-proposal-type="claim">Claim</button><button class="o-proposal-tab" type="button" role="tab" aria-selected="false" data-o-proposal-type="narrative">Narrative</button><button class="o-proposal-tab" type="button" role="tab" aria-selected="false" data-o-proposal-type="behavior">Behavior</button></div>
+                <div class="o-proposal-tabs" role="tablist" aria-label="语义提议类型"><button class="o-proposal-tab" type="button" role="tab" aria-selected="true" data-o-proposal-type="relation">Relation</button><button class="o-proposal-tab" type="button" role="tab" aria-selected="false" data-o-proposal-type="claim">Claim</button><button class="o-proposal-tab" type="button" role="tab" aria-selected="false" data-o-proposal-type="meaning">Meaning</button><button class="o-proposal-tab" type="button" role="tab" aria-selected="false" data-o-proposal-type="narrative">Narrative</button><button class="o-proposal-tab" type="button" role="tab" aria-selected="false" data-o-proposal-type="behavior">Behavior</button></div>
                 <form class="o-proposal-form" id="oRelationForm">
                   <p class="o-proposal-kicker">Relation 记录</p><h3>anchor · relation · target</h3>
                   <div class="o-proposal-fields"><div class="o-proposal-field"><label for="oRelationType">关系类型</label><select id="oRelationType"><option value="belongs_to">belongs_to · 分组归属</option><option value="compares_with">compares_with · 比较对象</option><option value="annotates">annotates · 注释指向</option></select></div><div class="o-proposal-field"><label for="oRelationSource">来源锚点</label><input id="oRelationSource" readonly value="E-05"></div><div class="o-proposal-field"><label for="oRelationTarget">目标</label><select id="oRelationTarget"><option value="species:Adelie">species · Adelie</option><option value="species:Chinstrap">species · Chinstrap</option><option value="species:Gentoo">species · Gentoo</option></select></div><div class="o-proposal-field full"><label for="oRelationBasis">依据</label><textarea id="oRelationBasis">E-05 归属于 penguins 表中的 Adelie 分组。</textarea></div></div>
@@ -1300,6 +1300,11 @@
                   <p class="o-proposal-kicker">Claim 记录</p><h3>subject · evidence · check</h3>
                   <div class="o-proposal-fields"><div class="o-proposal-field"><label for="oClaimSubject">主体分组</label><select id="oClaimSubject"><option>Gentoo</option><option>Chinstrap</option><option>Adelie</option></select></div><div class="o-proposal-field"><label for="oClaimComparator">比较分组</label><select id="oClaimComparator"><option>Adelie</option><option>Chinstrap</option><option>Gentoo</option></select></div><div class="o-proposal-field"><label for="oClaimMeasure">证据指标</label><select id="oClaimMeasure"><option value="flipper">mean flipper_length_mm</option><option value="bill">mean bill_length_mm</option><option value="mass">mean body_mass_g</option></select></div><div class="o-proposal-field"><label for="oClaimCheck">检查</label><select id="oClaimCheck"><option value="greater">主体均值 &gt; 比较均值</option><option value="less">主体均值 &lt; 比较均值</option></select></div><div class="o-proposal-field full"><label for="oClaimText">声明</label><textarea id="oClaimText">Gentoo 企鹅的 flipper 长度均值高于 Adelie 企鹅。</textarea></div></div>
                   <p class="o-proposal-form-note">Claim 会在本地 penguins fixture 上运行确定性的分组汇总。检查失败会记录为 rejected，不会静默升级为事实。</p><button class="o-proposal-submit" type="submit">提交 Claim 并核验 →</button>
+                </form>
+                <form class="o-proposal-form is-hidden" id="oMeaningForm">
+                  <p class="o-proposal-kicker">Meaning 记录</p><h3>field · term · unit</h3>
+                  <div class="o-proposal-fields"><div class="o-proposal-field"><label for="oMeaningField">字段</label><select id="oMeaningField"><option value="species">species</option><option value="island">island</option><option value="bill">bill_length_mm</option><option value="flipper">flipper_length_mm</option><option value="mass">body_mass_g</option></select></div><div class="o-proposal-field"><label for="oMeaningTerm">领域术语</label><select id="oMeaningTerm"><option value="物种">物种</option><option value="采样岛">采样岛</option><option value="喙长">喙长</option><option value="鳍长">鳍长</option><option value="体重">体重</option></select></div><div class="o-proposal-field"><label for="oMeaningUnit">单位</label><select id="oMeaningUnit"><option value="category">category</option><option value="mm">mm</option><option value="g">g</option></select></div><div class="o-proposal-field"><label for="oMeaningScope">作用范围</label><select id="oMeaningScope"><option value="row">row</option><option value="species">species group</option><option value="figure">figure</option></select></div><div class="o-proposal-field full"><label for="oMeaningSource">来源</label><input id="oMeaningSource" readonly value="penguins.points · Palmer Penguins"></div></div>
+                  <p class="o-proposal-form-note">Meaning 只检查字段、术语和单位是否与本地数据字典一致。</p><button class="o-proposal-submit" type="submit">提交 Meaning 并核验 →</button>
                 </form>
                 <form class="o-proposal-form is-hidden" id="oNarrativeForm">
                   <p class="o-proposal-kicker">Narrative 记录</p><h3>order · key point · alt text</h3>
@@ -2142,8 +2147,8 @@
         document.getElementById("oLayerDetailNote").textContent = item ? item.id + " ↔ " + row + " 是 substrate anchor。" + layer.note : layer.note;
         var proposalButton = document.getElementById("oLayerProposalButton");
         var proposalLabel = document.getElementById("oLayerProposalLabel");
-        var proposalType = activeLayer === "claim" ? "claim" : activeLayer === "narrative" ? "narrative" : activeLayer === "behavior" ? "behavior" : "relation";
-        var proposalNames = {relation:"追加 Relation", claim:"追加 Claim", narrative:"追加 Narrative", behavior:"追加 Behavior"};
+        var proposalType = activeLayer === "claim" ? "claim" : activeLayer === "meaning" ? "meaning" : activeLayer === "narrative" ? "narrative" : activeLayer === "behavior" ? "behavior" : "relation";
+        var proposalNames = {relation:"追加 Relation", claim:"追加 Claim", meaning:"追加 Meaning", narrative:"追加 Narrative", behavior:"追加 Behavior"};
         proposalButton.dataset.oOpenProposal = proposalType;
         proposalLabel.textContent = proposalNames[proposalType];
         renderLayerRecords(item);
@@ -2165,7 +2170,7 @@
         document.getElementById("oRelationBasis").value = item.species ? item.id + " 归属于 penguins 表中的 " + item.species + " 分组。" : "把选中标记锚定到一个语义分组。";
       }
       function renderProposalRecords() {
-        renderRecordList(document.getElementById("oRecordList"), semanticRecords, "还没有记录，请先提交 Relation 或 Claim");
+        renderRecordList(document.getElementById("oRecordList"), semanticRecords, "—");
       }
       function setProposalGate(status, title, reason) {
         var gate = document.getElementById("oProposalGate");
@@ -2178,7 +2183,7 @@
         renderProposalRecords();
       }
       function appendSemanticRecord(layer, kind, status, title, detail, reason) {
-        var prefix = kind === "relation" ? "R-" : kind === "claim" ? "C-" : kind === "narrative" ? "N-" : "W-";
+        var prefix = kind === "relation" ? "R-" : kind === "claim" ? "C-" : kind === "meaning" ? "M-" : kind === "narrative" ? "N-" : "W-";
         var record = {id:prefix + String(proposalSequence++).padStart(3, "0"), layer:layer, kind:kind, status:status, title:title, detail:detail, anchor:selected() ? selected().id : "—", reason:reason};
         semanticRecords.push(record);
         activeLayer = layer;
@@ -2187,7 +2192,7 @@
         renderOverview();
       }
       function openProposal(type) {
-        activeProposalType = ["claim", "narrative", "behavior"].indexOf(type) > -1 ? type : "relation";
+        activeProposalType = ["claim", "meaning", "narrative", "behavior"].indexOf(type) > -1 ? type : "relation";
         activeLayer = activeProposalType;
         document.getElementById("oProposalShell").classList.add("is-open");
         renderProposalContext(selected());
@@ -2195,13 +2200,13 @@
         document.getElementById("oProposalShell").scrollIntoView({behavior:"smooth", block:"start"});
       }
       function switchProposalType(type) {
-        activeProposalType = ["claim", "narrative", "behavior"].indexOf(type) > -1 ? type : "relation";
-        var forms = {relation:"oRelationForm", claim:"oClaimForm", narrative:"oNarrativeForm", behavior:"oBehaviorForm"};
+        activeProposalType = ["claim", "meaning", "narrative", "behavior"].indexOf(type) > -1 ? type : "relation";
+        var forms = {relation:"oRelationForm", claim:"oClaimForm", meaning:"oMeaningForm", narrative:"oNarrativeForm", behavior:"oBehaviorForm"};
         document.querySelectorAll("[data-o-proposal-type]").forEach(function (button) { button.setAttribute("aria-selected", String(button.dataset.oProposalType === activeProposalType)); });
         Object.keys(forms).forEach(function (name) { document.getElementById(forms[name]).classList.toggle("is-hidden", name !== activeProposalType); });
         document.getElementById("oProposalLayerBadge").textContent = activeProposalType;
-        var names = {relation:"Relation", claim:"Claim", narrative:"Narrative", behavior:"Behavior / Collaboration"};
-        var subtitles = {relation:"anchor · relation · target", claim:"subject · comparator · evidence", narrative:"order · key point · alt text", behavior:"source · target · action · history"};
+        var names = {relation:"Relation", claim:"Claim", meaning:"Meaning", narrative:"Narrative", behavior:"Behavior / Collaboration"};
+        var subtitles = {relation:"anchor · relation · target", claim:"subject · comparator · evidence", meaning:"field · term · unit", narrative:"order · key point · alt text", behavior:"source · target · action · history"};
         document.getElementById("oProposalTitle").textContent = "在当前界面追加一条 " + names[activeProposalType];
         document.getElementById("oProposalSubtitle").textContent = subtitles[activeProposalType];
         setProposalGate("unresolved", "等待提交", "记录待提交 · 历史已联动");
@@ -2246,6 +2251,28 @@
           reason = measureLabel(measure) + " 均值：" + subject + " " + subjectMean.toFixed(1) + "，" + comparator + " " + comparatorMean.toFixed(1) + "；检查" + (passes ? "通过" : "未通过") + "。";
         }
         appendSemanticRecord("claim", "claim", status, text || subject + " vs " + comparator, "evidence · " + measureLabel(measure), reason);
+      }
+      var meaningDictionary = {
+        species: {term:"物种", unit:"category"},
+        island: {term:"采样岛", unit:"category"},
+        bill: {term:"喙长", unit:"mm"},
+        flipper: {term:"鳍长", unit:"mm"},
+        mass: {term:"体重", unit:"g"}
+      };
+      function syncMeaningFields() {
+        var data = meaningDictionary[document.getElementById("oMeaningField").value];
+        document.getElementById("oMeaningTerm").value = data.term;
+        document.getElementById("oMeaningUnit").value = data.unit;
+      }
+      function submitMeaning(event) {
+        event.preventDefault();
+        var field = document.getElementById("oMeaningField").value;
+        var term = document.getElementById("oMeaningTerm").value;
+        var unit = document.getElementById("oMeaningUnit").value;
+        var expected = meaningDictionary[field];
+        var status = expected && expected.term === term && expected.unit === unit ? "verified" : "rejected";
+        var reason = status === "verified" ? field + " → " + term + " · " + unit + " 已匹配 penguins data dictionary。" : field + " 的领域术语或单位不匹配 data dictionary。";
+        appendSemanticRecord("meaning", "meaning", status, field + " · " + term, "unit · " + unit + " · scope · " + document.getElementById("oMeaningScope").value, reason);
       }
       function submitNarrative(event) {
         event.preventDefault();
@@ -2363,8 +2390,11 @@
       document.getElementById("oCloseProposal").addEventListener("click", function () { document.getElementById("oProposalShell").classList.remove("is-open"); });
       document.getElementById("oRelationForm").addEventListener("submit", submitRelation);
       document.getElementById("oClaimForm").addEventListener("submit", submitClaim);
+      document.getElementById("oMeaningForm").addEventListener("submit", submitMeaning);
+      document.getElementById("oMeaningField").addEventListener("change", syncMeaningFields);
       document.getElementById("oNarrativeForm").addEventListener("submit", submitNarrative);
       document.getElementById("oBehaviorForm").addEventListener("submit", submitBehavior);
+      syncMeaningFields();
       document.getElementById("oHelp").addEventListener("click", function () { toast("Overview maps the path; click a node to continue in Explore or Propose."); });
 
       window.glossOverviewRender = renderOverview;

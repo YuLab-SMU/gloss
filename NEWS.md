@@ -6,6 +6,7 @@
 - The site now frames element-to-row binding as a substrate fact rather than the research problem: Overview exposes six higher semantic layers (structure, meaning, relation, claim, narrative and behavior), while Explore and Propose label binding as the first checked proposal.
 - Overview now keeps Relation and Claim proposal forms in the same screen. The local Palmer Penguins fixture can verify species relations and group mean claims, with accepted/rejected records linked back to semantic-layer state and history.
 - Narrative/Accessibility and Behavior/Collaboration proposals now share the same Overview workbench and append-only history, covering reading order, accessible description, focus, annotations, review and revision provenance.
+- Data / Domain Meaning proposals now map the Palmer Penguins fields to verified domain terms, units and scopes in the same record history.
 
 ## Proposals checked from the figure alone (2026-11-12, agent-path plan Tasks 2 and 3)
 

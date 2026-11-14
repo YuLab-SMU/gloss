@@ -34,4 +34,5 @@ python3 -m http.server 4173 --directory docs
 - Overview 内含同屏语义提议工作区：Relation 会核验选中企鹅元素的分组关系，Claim 会对 Palmer Penguins 的分组均值运行确定性检查；两类记录都会回写六层状态和 record history。
 - Explore 的示例数据使用 Palmer Penguins 风格的 `species / island / bill / flipper` 字段，避免把产品叙事收窄成通用点位配对。
 - Narrative / Accessibility 会记录阅读顺序、关键结论和无障碍描述；Behavior / Collaboration 会记录聚焦、批注、复核、修订、来源和目标。四类记录共用同一个 append-only history。
+- Data / Domain Meaning 会把 `species / island / bill / flipper / mass` 映射到物种、采样岛、喙长、鳍长和体重等领域术语，并按单位与范围核验后写入 `M-` 记录。
 - 页面支持 `#overview`、`#explore`、`#propose` 深链接，适合直接部署到 GitHub Pages 的静态入口。
