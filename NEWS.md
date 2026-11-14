@@ -13,6 +13,7 @@
 - The GitHub Pages Overview now keeps the six-layer semantic records, Narrative / Accessibility projection, and collaboration timeline in one screen. Records submitted from the inline proposal editor refresh the projection, accessibility tree, history chips, and timeline together.
 - Added a generated Palmer Penguins asset at `docs/assets/penguins-semantic.png`; it now anchors the Overview path and acts as a species selection surface for the live substrate focus.
 - Reworked the site around a single six-layer control room: the semantic rail is the primary route, the substrate data lens carries the table and inspector, and former Explore / Propose actions focus or open inline panels without changing workspaces.
+- Added a raw-versus-gloss effects board: every layer now has a visible output on the penguin figure, and a submitted record changes the corresponding overlay, callout, relation line, reading order, or collaboration mark.
 
 ## Proposals checked from the figure alone (2026-11-12, agent-path plan Tasks 2 and 3)
 

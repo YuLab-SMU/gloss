@@ -975,12 +975,67 @@
     .o-workspace { display: flex; flex-direction: column; gap: .8rem; }
     .o-workspace > .o-workspace-head { order: 0; }
     .o-workspace > #oSemanticLayers { order: 1; margin-top: 0; }
-    .o-workspace > #oDataLens { order: 2; }
-    .o-workspace > #o-flow-card { order: 3; margin-top: 0; }
-    .o-workspace > #oProposalShell { order: 4; margin-top: 0; }
-    .o-workspace > #oSemanticOutputs { order: 5; margin-top: 0; }
-    .o-workspace > .o-lower-grid { order: 6; margin-top: 0; }
-    .o-workspace > #oEvidence { order: 7; margin-top: 0; }
+    .o-workspace > #oEffectsBoard { order: 2; }
+    .o-workspace > #oDataLens { order: 3; }
+    .o-workspace > #o-flow-card { order: 4; margin-top: 0; }
+    .o-workspace > #oProposalShell { order: 5; margin-top: 0; }
+    .o-workspace > #oSemanticOutputs { order: 6; margin-top: 0; }
+    .o-workspace > .o-lower-grid { order: 7; margin-top: 0; }
+    .o-workspace > #oEvidence { order: 8; margin-top: 0; }
+    .o-effects-board { border: 1px solid #111; border-radius: 18px; background: rgba(255,255,255,.96); box-shadow: 0 16px 34px rgba(0,0,0,.08); overflow: hidden; }
+    .o-effects-head { display: flex; align-items: end; justify-content: space-between; gap: .8rem; padding: .8rem .95rem; border-bottom: 1px solid #c9c9c9; }
+    .o-effects-head h2 { margin: 0; font-size: 1.05rem; letter-spacing: -.025em; }
+    .o-effects-head p { margin: .15rem 0 0; color: #6f6f6f; font-size: .67rem; }
+    .o-effects-meta { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; justify-content: flex-end; color: #6f6f6f; font-size: .6rem; }
+    .o-effects-meta > span:first-child { padding: .33rem .45rem; border: 1px solid var(--x-blue); border-radius: 999px; background: var(--x-blue-bg); color: var(--x-blue); font-weight: 900; }
+    .o-effects-live { display: inline-flex; align-items: center; gap: .27rem; }
+    .o-effects-live .o-live-dot { width: .4rem; height: .4rem; box-shadow: 0 0 0 3px var(--x-verified-bg); }
+    .o-effects-grid { display: grid; grid-template-columns: minmax(250px,1fr) minmax(300px,1.2fr) minmax(250px,.8fr); gap: .65rem; padding: .7rem; }
+    .o-board-card { min-width: 0; border: 1px solid #c9c9c9; border-radius: 12px; background: #fbfbfa; overflow: hidden; }
+    .o-board-card-head { display: flex; align-items: center; justify-content: space-between; gap: .4rem; padding: .58rem .65rem; border-bottom: 1px solid #c9c9c9; background: #fff; }
+    .o-board-card-head strong { display: block; font-size: .72rem; }
+    .o-board-card-head span:not(.o-board-tag) { display: block; margin-top: .1rem; color: #6f6f6f; font-size: .58rem; }
+    .o-board-tag { padding: .19rem .3rem; border: 1px solid #777; border-radius: 999px; color: #6f6f6f; font-size: .55rem; font-weight: 900; }
+    .o-board-tag.active { border-color: var(--x-blue); background: var(--x-blue-bg); color: var(--x-blue); }
+    .o-board-plot-wrap { position: relative; padding: .35rem; background: linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px),#fff; background-size: 18px 18px; }
+    .o-board-plot-wrap svg { display: block; width: 100%; height: auto; min-height: 210px; }
+    .o-board-axis { stroke: #8a8a8a; stroke-width: 1.1; }
+    .o-board-axis-label { fill: #6f6f6f; font-size: 8px; }
+    .o-board-raw-point, .o-board-gloss-point { cursor: pointer; }
+    .o-board-raw-point circle, .o-board-gloss-point circle:first-child { fill: #fff; stroke: #111; stroke-width: 1.2; }
+    .o-board-raw-point circle { opacity: .58; }
+    .o-board-gloss-point.is-verified circle:first-child { fill: var(--x-verified-bg); stroke: var(--x-verified); }
+    .o-board-gloss-point.is-ambiguous circle:first-child { fill: var(--x-ambiguous-bg); stroke: var(--x-ambiguous); }
+    .o-board-gloss-point.is-rejected circle:first-child { fill: var(--x-rejected-bg); stroke: var(--x-rejected); }
+    .o-board-gloss-point.is-unresolved circle:first-child { fill: var(--x-unresolved-bg); stroke: var(--x-unresolved); stroke-dasharray: 2 2; }
+    .o-board-gloss-point.is-selected circle:first-child, .o-board-gloss-point:hover circle:first-child { fill: #111; stroke: #111; stroke-width: 1.9; }
+    .o-board-gloss-point .o-board-ring { display: none; fill: none; stroke: var(--x-blue); stroke-width: 1.1; stroke-dasharray: 4 3; }
+    .o-board-gloss-point.is-selected .o-board-ring { display: block; }
+    .o-board-relation { stroke: var(--x-blue); stroke-width: 1.5; stroke-dasharray: 4 3; marker-end: url(#oBoardArrow); }
+    .o-board-overlay-card { fill: #fff; stroke: var(--x-blue); stroke-width: 1.1; }
+    .o-board-overlay-card.verified { fill: var(--x-verified-bg); stroke: var(--x-verified); }
+    .o-board-overlay-card.pending { fill: #fff; stroke: #999; stroke-dasharray: 4 3; }
+    .o-board-overlay-text { fill: #111; font-size: 9px; font-weight: 850; }
+    .o-board-overlay-sub { fill: #6f6f6f; font-size: 7px; }
+    .o-board-penguins { position: absolute; right: .35rem; top: .25rem; width: 76px; opacity: .78; mix-blend-mode: multiply; pointer-events: none; }
+    .o-board-note { position: absolute; left: .5rem; bottom: .48rem; padding: .18rem .28rem; border: 1px solid #999; border-radius: 5px; background: rgba(255,255,255,.9); color: #6f6f6f; font-size: .56rem; }
+    .o-board-card-foot { display: flex; align-items: center; justify-content: space-between; gap: .4rem; padding: .45rem .65rem .55rem; color: #6f6f6f; font-size: .58rem; }
+    .o-effect-stack { min-width: 0; border: 1px solid #c9c9c9; border-radius: 12px; background: #fbfbfa; overflow: hidden; }
+    .o-effect-stack-head { display: flex; align-items: end; justify-content: space-between; gap: .4rem; padding: .58rem .65rem; border-bottom: 1px solid #c9c9c9; background: #fff; }
+    .o-effect-stack-head h3 { margin: 0; font-size: .82rem; }
+    .o-effect-stack-head span { padding: .22rem .3rem; border: 1px solid #777; border-radius: 999px; color: #6f6f6f; font-size: .55rem; font-weight: 900; }
+    .o-effect-list { display: grid; gap: .28rem; padding: .45rem; }
+    .o-effect-item { display: grid; grid-template-columns: 1.45rem minmax(0,1fr) auto; gap: .4rem; align-items: center; padding: .42rem .38rem; border: 1px solid transparent; border-radius: 8px; background: transparent; cursor: pointer; text-align: left; transition: border-color .15s ease,background .15s ease,transform .15s ease; }
+    .o-effect-item:hover, .o-effect-item:focus-visible { border-color: var(--x-blue); background: var(--x-blue-bg); outline: none; transform: translateX(2px); }
+    .o-effect-item.is-active { border-color: var(--x-blue); background: var(--x-blue-bg); box-shadow: inset 3px 0 0 var(--x-blue); }
+    .o-effect-index { display: inline-flex; align-items: center; justify-content: center; width: 1.35rem; height: 1.35rem; border: 1px solid #777; border-radius: 50%; color: #555; font-size: .58rem; font-weight: 950; }
+    .o-effect-item.is-active .o-effect-index { border-color: var(--x-blue); background: var(--x-blue); color: #fff; }
+    .o-effect-copy { min-width: 0; }
+    .o-effect-copy strong { display: block; font-size: .63rem; }
+    .o-effect-copy small { display: block; margin-top: .08rem; overflow: hidden; color: #6f6f6f; font-size: .55rem; text-overflow: ellipsis; white-space: nowrap; }
+    .o-effect-state { padding: .18rem .26rem; border: 1px solid #999; border-radius: 999px; color: #777; font-size: .52rem; white-space: nowrap; }
+    .o-effect-state.is-recorded { border-color: var(--x-verified); background: var(--x-verified-bg); color: var(--x-verified); }
+    .o-effect-state.is-pending { border-style: dashed; }
     .o-data-lens { border: 1px solid #111; border-radius: 18px; background: rgba(255,255,255,.96); box-shadow: 0 14px 30px rgba(0,0,0,.08); overflow: hidden; }
     .o-lens-head { display: flex; align-items: end; justify-content: space-between; gap: .8rem; padding: .8rem .95rem; border-bottom: 1px solid #c9c9c9; }
     .o-lens-head h2 { margin: 0; font-size: 1rem; letter-spacing: -.025em; }
@@ -1126,10 +1181,10 @@
     .o-timeline-footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: auto; padding: .5rem .7rem .65rem; border-top: 1px dashed #c9c9c9; color: #6f6f6f; font-size: .58rem; }
     .o-timeline-footer strong { color: #111; }
     @media (max-width: 1120px) { .o-lower-grid { grid-template-columns: 1fr; } .o-evidence-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-    @media (max-width: 1120px) { .o-semantic-grid, .o-proposal-grid, .o-output-grid { grid-template-columns: 1fr; } .o-lens-grid { grid-template-columns: 1fr 1fr; } .o-lens-inspector { grid-column: 1 / -1; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
+    @media (max-width: 1120px) { .o-semantic-grid, .o-proposal-grid, .o-output-grid { grid-template-columns: 1fr; } .o-effects-grid { grid-template-columns: 1fr 1fr; } .o-effect-stack { grid-column: 1 / -1; } .o-lens-grid { grid-template-columns: 1fr 1fr; } .o-lens-inspector { grid-column: 1 / -1; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
     @media (max-width: 860px) { .o-workspace-head, .o-hero-head, .o-evidence-head, .o-semantic-head { align-items: flex-start; flex-wrap: wrap; } .o-meta, .o-legend { justify-content: flex-start; } .o-milestone-track { grid-template-columns: repeat(3,minmax(0,1fr)); } }
     @media (max-width: 720px) { .o-projection-body { grid-template-columns: 1fr; } .o-asset-panel { display: grid; grid-template-columns: 135px minmax(0,1fr); gap: .55rem; align-items: start; } .o-species-legend { margin-top: 0; } }
-    @media (max-width: 600px) { .o-milestone-track, .o-evidence-grid, .o-layer-boundary { grid-template-columns: 1fr 1fr; } .o-layer-row { grid-template-columns: 1.75rem 1.75rem minmax(0,1fr); } .o-layer-state { grid-column: 3; justify-self: start; } .o-focus-figure { grid-template-columns: 1fr; } .o-focus-mini { width: 100%; height: 120px; } .o-evidence-footer, .o-flow-caption { align-items: flex-start; flex-direction: column; } .o-output-head, .o-lens-head { align-items: flex-start; flex-direction: column; } .o-output-pills, .o-lens-head-actions { justify-content: flex-start; } .o-projection-columns, .o-lens-grid { grid-template-columns: 1fr; } .o-asset-panel { grid-template-columns: 1fr; } .o-asset-frame, .o-asset-map { min-height: 126px; } .o-lens-inspector { grid-column: auto; } }
+    @media (max-width: 600px) { .o-milestone-track, .o-evidence-grid, .o-layer-boundary { grid-template-columns: 1fr 1fr; } .o-layer-row { grid-template-columns: 1.75rem 1.75rem minmax(0,1fr); } .o-layer-state { grid-column: 3; justify-self: start; } .o-focus-figure { grid-template-columns: 1fr; } .o-focus-mini { width: 100%; height: 120px; } .o-evidence-footer, .o-flow-caption { align-items: flex-start; flex-direction: column; } .o-output-head, .o-lens-head, .o-effects-head { align-items: flex-start; flex-direction: column; } .o-output-pills, .o-lens-head-actions, .o-effects-meta { justify-content: flex-start; } .o-effects-grid, .o-projection-columns, .o-lens-grid { grid-template-columns: 1fr; } .o-effect-stack { grid-column: auto; } .o-asset-panel { grid-template-columns: 1fr; } .o-asset-frame, .o-asset-map { min-height: 126px; } .o-lens-inspector { grid-column: auto; } }
    </style>
 </head>
 <body>
@@ -1329,6 +1384,34 @@
             <div><p class="x-eyebrow">Semantic control room / six-layer record path</p><h1>从可见图元，到可解释的知识载体</h1><p>Palmer Penguins · substrate · six semantic layers · projections</p></div>
             <div class="o-meta"><span class="x-pill">figure · penguins-relationships</span><span class="x-pill">selected · <strong id="oSelectionPill">E-05</strong></span></div>
           </header>
+
+          <section class="o-effects-board" id="oEffectsBoard" aria-labelledby="oEffectsTitle">
+            <header class="o-effects-head">
+              <div><p class="o-kicker">same figure / different understanding</p><h2 id="oEffectsTitle">一张图，两个读法</h2><p>raw substrate → gloss semantic projection</p></div>
+              <div class="o-effects-meta"><span id="oBoardSelection">E-05 · Adelie</span><span class="o-effects-live"><i class="o-live-dot"></i>live overlay</span></div>
+            </header>
+            <div class="o-effects-grid">
+              <article class="o-board-card o-board-raw">
+                <header class="o-board-card-head"><div><strong>原图 / substrate</strong><span>marks · axes · rows</span></div><span class="o-board-tag">raw</span></header>
+                <div class="o-board-plot-wrap"><svg id="oBoardRawPlot" viewBox="0 0 420 260" role="img" aria-label="没有语义叠加的 Palmer Penguins 图"><defs><pattern id="oBoardRawGrid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#e8e8e6" stroke-width="1"/></pattern></defs><rect x="0" y="0" width="420" height="260" fill="url(#oBoardRawGrid)"/><line class="o-board-axis" x1="42" y1="220" x2="390" y2="220"/><line class="o-board-axis" x1="42" y1="220" x2="42" y2="28"/><text class="o-board-axis-label" x="386" y="239">flipper</text><text class="o-board-axis-label" x="22" y="30">bill</text><g id="oBoardRawPoints"></g></svg><span class="o-board-note">visible marks · no semantic callout</span></div>
+                <footer class="o-board-card-foot"><span>12 marks</span><span>3 species</span></footer>
+              </article>
+              <article class="o-board-card o-board-gloss">
+                <header class="o-board-card-head"><div><strong>gloss / semantic projection</strong><span>focus · meaning · evidence</span></div><span class="o-board-tag active">active</span></header>
+                <div class="o-board-plot-wrap"><svg id="oBoardGlossPlot" viewBox="0 0 420 260" role="img" aria-label="叠加六层语义的 Palmer Penguins 图"><defs><pattern id="oBoardGlossGrid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#e8e8e6" stroke-width="1"/></pattern><marker id="oBoardArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#315bb6"/></marker></defs><rect x="0" y="0" width="420" height="260" fill="url(#oBoardGlossGrid)"/><line class="o-board-axis" x1="42" y1="220" x2="390" y2="220"/><line class="o-board-axis" x1="42" y1="220" x2="42" y2="28"/><text class="o-board-axis-label" x="386" y="239">flipper</text><text class="o-board-axis-label" x="22" y="30">bill</text><g id="oBoardGlossRelations"></g><g id="oBoardGlossPoints"></g><g id="oBoardGlossOverlay"></g></svg><img class="o-board-penguins" src="assets/penguins-semantic.png" alt="Adelie、Chinstrap、Gentoo 企鹅图例"><span class="o-board-note" id="oBoardEffectNote">select a layer to see its effect</span></div><footer class="o-board-card-foot"><span id="oBoardSelectionLabel">E-05 · row 5</span><span id="oBoardRecordLabel">1 record</span></footer></article>
+              <aside class="o-effect-stack" aria-label="语义效果层">
+                <header class="o-effect-stack-head"><div><p class="o-kicker">six semantic effects</p><h3>加上语义之后</h3></div><span id="oBoardEffectCount">1 / 6</span></header>
+                <div class="o-effect-list">
+                  <button class="o-effect-item is-active" type="button" data-o-layer="structure"><span class="o-effect-index">1</span><span class="o-effect-copy"><strong>角色与结构</strong><small id="oEffectOutputStructure">E-05 · row 5</small></span><span class="o-effect-state" id="oEffectStateStructure">visible</span></button>
+                  <button class="o-effect-item" type="button" data-o-layer="meaning"><span class="o-effect-index">2</span><span class="o-effect-copy"><strong>数据与领域含义</strong><small id="oEffectOutputMeaning">species · island · flipper</small></span><span class="o-effect-state" id="oEffectStateMeaning">ready</span></button>
+                  <button class="o-effect-item" type="button" data-o-layer="relation"><span class="o-effect-index">3</span><span class="o-effect-copy"><strong>关系与语义分组</strong><small id="oEffectOutputRelation">E-05 → species</small></span><span class="o-effect-state" id="oEffectStateRelation">ready</span></button>
+                  <button class="o-effect-item" type="button" data-o-layer="claim"><span class="o-effect-index">4</span><span class="o-effect-copy"><strong>声明与证据</strong><small id="oEffectOutputClaim">Gentoo vs Adelie</small></span><span class="o-effect-state" id="oEffectStateClaim">ready</span></button>
+                  <button class="o-effect-item" type="button" data-o-layer="narrative"><span class="o-effect-index">5</span><span class="o-effect-copy"><strong>叙事与无障碍</strong><small id="oEffectOutputNarrative">species → flipper → claim</small></span><span class="o-effect-state" id="oEffectStateNarrative">ready</span></button>
+                  <button class="o-effect-item" type="button" data-o-layer="behavior"><span class="o-effect-index">6</span><span class="o-effect-copy"><strong>交互与协作</strong><small id="oEffectOutputBehavior">focus · review · history</small></span><span class="o-effect-state" id="oEffectStateBehavior">ready</span></button>
+                </div>
+              </aside>
+            </div>
+          </section>
 
           <section class="o-semantic-card" id="oSemanticLayers" aria-labelledby="oSemanticTitle">
             <header class="o-semantic-head">
@@ -2682,6 +2765,85 @@
           rows.appendChild(tr);
         });
       }
+      function boardMapX(value) { return 42 + ((value - 170) / 450) * 340; }
+      function boardMapY(value) { return 220 - ((value - 150) / 230) * 192; }
+      function boardText(parent, tag, x, y, value, className) {
+        var node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+        node.setAttribute("x", x); node.setAttribute("y", y); node.setAttribute("class", className || "o-board-overlay-text"); node.textContent = value; parent.appendChild(node); return node;
+      }
+      function boardCard(parent, x, y, width, title, detail, recorded) {
+        var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", x); rect.setAttribute("y", y); rect.setAttribute("width", width); rect.setAttribute("height", detail ? 34 : 24); rect.setAttribute("rx", 6); rect.setAttribute("class", "o-board-overlay-card " + (recorded ? "verified" : "pending")); parent.appendChild(rect);
+        boardText(parent, "text", x + 7, y + 13, title, "o-board-overlay-text");
+        if (detail) boardText(parent, "text", x + 7, y + 26, detail, "o-board-overlay-sub");
+      }
+      function renderSemanticBoard() {
+        var item = selected();
+        var data = window.glossOverviewElements || (window.glossExplore ? window.glossExplore.data : []);
+        if (!item || !data.length) return;
+        var raw = document.getElementById("oBoardRawPoints");
+        var gloss = document.getElementById("oBoardGlossPoints");
+        var relations = document.getElementById("oBoardGlossRelations");
+        var overlay = document.getElementById("oBoardGlossOverlay");
+        clearOutputNode(raw); clearOutputNode(gloss); clearOutputNode(relations); clearOutputNode(overlay);
+        var ns = "http://www.w3.org/2000/svg";
+        var byId = {};
+        data.forEach(function (candidate) { byId[candidate.id] = candidate; });
+        data.forEach(function (candidate) {
+          var cx = boardMapX(candidate.x), cy = boardMapY(candidate.y);
+          var rawGroup = document.createElementNS(ns, "g"); rawGroup.setAttribute("class", "o-board-raw-point");
+          var rawCircle = document.createElementNS(ns, "circle"); rawCircle.setAttribute("cx", cx); rawCircle.setAttribute("cy", cy); rawCircle.setAttribute("r", 3.2); rawGroup.appendChild(rawCircle); raw.appendChild(rawGroup);
+          var group = document.createElementNS(ns, "g"); group.setAttribute("class", "o-board-gloss-point " + outputStateClass(candidate.status) + (candidate.id === item.id ? " is-selected" : "")); group.setAttribute("data-o-board-element", candidate.id); group.setAttribute("tabindex", "0"); group.setAttribute("role", "button"); group.setAttribute("aria-label", candidate.id + " " + (candidate.species || "unknown"));
+          var point = document.createElementNS(ns, "circle"); point.setAttribute("cx", cx); point.setAttribute("cy", cy); point.setAttribute("r", candidate.id === item.id ? 5.6 : 4.1);
+          var ring = document.createElementNS(ns, "circle"); ring.setAttribute("class", "o-board-ring"); ring.setAttribute("cx", cx); ring.setAttribute("cy", cy); ring.setAttribute("r", 11);
+          group.appendChild(point); group.appendChild(ring); gloss.appendChild(group);
+        });
+        var latestByLayer = {};
+        semanticRecords.forEach(function (record) { latestByLayer[record.layer] = record; });
+        var activeRecord = latestByLayer[activeLayer];
+        var activeIndex = ["structure","meaning","relation","claim","narrative","behavior"].indexOf(activeLayer) + 1;
+        document.getElementById("oBoardSelection").textContent = item.id + " · " + (item.species || "unknown");
+        document.getElementById("oBoardSelectionLabel").textContent = item.id + " · " + (item.row === null ? "no stable row" : "row " + item.row);
+        document.getElementById("oBoardRecordLabel").textContent = semanticRecords.length + " record" + (semanticRecords.length === 1 ? "" : "s");
+        document.getElementById("oBoardEffectCount").textContent = activeIndex + " / 6";
+        var outputs = {
+          structure: item.id + " · " + (item.row === null ? "no stable row" : "row " + item.row),
+          meaning: latestByLayer.meaning ? latestByLayer.meaning.title : (item.species || "species") + " · " + (item.island || "island") + " · flipper " + (item.flipper || "—"),
+          relation: latestByLayer.relation ? latestByLayer.relation.title : item.id + " → species",
+          claim: latestByLayer.claim ? latestByLayer.claim.title : "Gentoo > Adelie",
+          narrative: latestByLayer.narrative ? latestByLayer.narrative.detail : "species → flipper → claim",
+          behavior: latestByLayer.behavior ? latestByLayer.behavior.detail : "focus · review · history"
+        };
+        ["structure","meaning","relation","claim","narrative","behavior"].forEach(function (layer) {
+          var state = latestByLayer[layer] ? statusWord(latestByLayer[layer].status) : layer === "structure" ? "visible" : "ready";
+          var stateNode = document.getElementById("oEffectState" + layer.charAt(0).toUpperCase() + layer.slice(1));
+          var outputNode = document.getElementById("oEffectOutput" + layer.charAt(0).toUpperCase() + layer.slice(1));
+          stateNode.textContent = state; stateNode.classList.toggle("is-recorded", Boolean(latestByLayer[layer])); stateNode.classList.toggle("is-pending", !latestByLayer[layer]);
+          outputNode.textContent = outputs[layer];
+        });
+        document.querySelectorAll(".o-effect-item").forEach(function (button) { button.classList.toggle("is-active", button.dataset.oLayer === activeLayer); });
+        var selectedX = boardMapX(item.x), selectedY = boardMapY(item.y);
+        if (activeLayer === "structure") {
+          boardCard(overlay, 52, 38, 108, item.id + " · row", item.layer, Boolean(activeRecord));
+          document.getElementById("oBoardEffectNote").textContent = "元素、图层、面板与 row 对齐";
+        } else if (activeLayer === "meaning") {
+          boardCard(overlay, 176, 34, 150, item.species + " · " + item.island, "flipper " + item.flipper + " mm", Boolean(activeRecord));
+          document.getElementById("oBoardEffectNote").textContent = activeRecord ? "字段与领域术语已进入记录" : "选择 Meaning 后看见字段含义";
+        } else if (activeLayer === "relation") {
+          var line = document.createElementNS(ns, "line"); line.setAttribute("class", "o-board-relation"); line.setAttribute("x1", selectedX); line.setAttribute("y1", selectedY); line.setAttribute("x2", 258); line.setAttribute("y2", 65); relations.appendChild(line);
+          boardCard(overlay, 258, 42, 126, activeRecord ? activeRecord.title : "selected → species", activeRecord ? "verified relation" : "record pending", Boolean(activeRecord));
+          document.getElementById("oBoardEffectNote").textContent = activeRecord ? "关系线连接图中对象与语义分组" : "选择 Relation 后出现关系线";
+        } else if (activeLayer === "claim") {
+          boardCard(overlay, 224, 82, 156, activeRecord ? activeRecord.title : "Gentoo > Adelie", activeRecord ? "evidence · flipper" : "measure · check", Boolean(activeRecord));
+          document.getElementById("oBoardEffectNote").textContent = activeRecord ? "声明与可计算证据一起出现" : "选择 Claim 后出现证据卡";
+        } else if (activeLayer === "narrative") {
+          boardCard(overlay, 74, 182, 190, activeRecord ? "Narrative ready" : "reading order", "species → flipper → claim", Boolean(activeRecord));
+          document.getElementById("oBoardEffectNote").textContent = activeRecord ? "讲解顺序与无障碍描述已可读" : "选择 Narrative 后出现讲解顺序";
+        } else {
+          boardCard(overlay, 232, 142, 142, activeRecord ? "collaboration" : "focus / review", activeRecord ? activeRecord.detail : "history stays attached", Boolean(activeRecord));
+          document.getElementById("oBoardEffectNote").textContent = activeRecord ? "动作与审阅历史留在当前对象上" : "选择 Behavior 后出现协作痕迹";
+        }
+      }
       function selectLensElement(id) {
         if (!id) return;
         window.glossOverviewSelectedId = id;
@@ -2836,6 +2998,7 @@
         document.getElementById("oLineProjection").classList.toggle("is-active", status === "verified");
         renderLayerDetail(item);
         renderDataLens();
+        renderSemanticBoard();
         renderProjection();
         renderTimeline();
       }
@@ -2878,6 +3041,7 @@
         button.addEventListener("click", function () {
           activeLayer = button.dataset.oLayer;
           renderLayerDetail(selected());
+          renderSemanticBoard();
           toast("已选择 · " + layerData[activeLayer].title);
         });
       });
@@ -2912,6 +3076,14 @@
       document.getElementById("oLensPoints").addEventListener("keydown", function (event) {
         var point = event.target.closest("[data-o-lens-element]");
         if (point && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); selectLensElement(point.dataset.oLensElement); }
+      });
+      document.getElementById("oBoardGlossPoints").addEventListener("click", function (event) {
+        var point = event.target.closest("[data-o-board-element]");
+        if (point) selectLensElement(point.dataset.oBoardElement);
+      });
+      document.getElementById("oBoardGlossPoints").addEventListener("keydown", function (event) {
+        var point = event.target.closest("[data-o-board-element]");
+        if (point && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); selectLensElement(point.dataset.oBoardElement); }
       });
       syncMeaningFields();
       document.getElementById("oHelp").addEventListener("click", function () { toast("先选语义层，再在同一屏查看底座、提议和记录。"); });
