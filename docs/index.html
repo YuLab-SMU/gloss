@@ -1180,6 +1180,100 @@
     .o-timeline-meta { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .28rem; color: #777; font-size: .53rem; }
     .o-timeline-footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: auto; padding: .5rem .7rem .65rem; border-top: 1px dashed #c9c9c9; color: #6f6f6f; font-size: .58rem; }
     .o-timeline-footer strong { color: #111; }
+    /* Guided semantic storyboard: one figure, one ladder, one action. */
+    .o-workspace > #oStoryBoard { order: 1; }
+    .o-workspace > #oDataLens { order: 2; }
+    .o-workspace > #oSemanticOutputs { order: 3; }
+    .o-effects-board, #oSemanticLayers, #o-flow-card, #oProposalShell, .o-lower-grid, #oEvidence { display: none !important; }
+    .o-view .o-layer-nav { display: none; }
+    .o-lens-head-actions .o-action-secondary, .o-lens-inspector-actions .o-action-primary { display: none; }
+    .o-storyboard { border: 1px solid #111; border-radius: 22px; background: linear-gradient(135deg,#fff 0%,#f7f8fb 100%); box-shadow: 0 20px 42px rgba(17,24,39,.12); overflow: hidden; }
+    .o-story-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; padding: 1rem 1.05rem .9rem; border-bottom: 1px solid #d7d8dc; }
+    .o-story-title { display: flex; align-items: flex-start; gap: .7rem; min-width: 0; }
+    .o-story-title h2 { margin: 0; font-size: clamp(1.15rem,2.3vw,1.75rem); letter-spacing: -.045em; line-height: 1.02; }
+    .o-story-title p { margin: .28rem 0 0; color: #6f6f6f; font-size: .7rem; }
+    .o-story-index { display: inline-flex; align-items: center; justify-content: center; min-width: 3.5rem; height: 1.65rem; border: 1px solid #111; border-radius: 999px; background: #111; color: #fff; font-size: .58rem; font-weight: 950; letter-spacing: .12em; }
+    .o-story-question { display: grid; gap: .2rem; min-width: 235px; padding: .55rem .65rem; border: 1px solid var(--x-ambiguous); border-radius: 12px; background: var(--x-ambiguous-bg); }
+    .o-story-question span:first-child { color: var(--x-ambiguous); font-size: .55rem; font-weight: 950; letter-spacing: .12em; text-transform: uppercase; }
+    .o-story-question strong { font-size: .76rem; }
+    .o-story-question span:last-child { color: #6f6f6f; font-size: .58rem; font-weight: 850; }
+    .o-story-grid { display: grid; grid-template-columns: minmax(0,1.22fr) minmax(300px,.78fr); gap: .85rem; padding: .85rem; }
+    .o-story-figure, .o-story-panel { min-width: 0; border: 1px solid #cfd1d6; border-radius: 16px; background: rgba(255,255,255,.9); overflow: hidden; }
+    .o-story-card-head { display: flex; align-items: center; justify-content: space-between; gap: .55rem; padding: .65rem .75rem; border-bottom: 1px solid #d7d8dc; }
+    .o-story-card-head strong { font-size: .78rem; }
+    .o-story-card-head span { color: #6f6f6f; font-size: .58rem; }
+    .o-story-plot-wrap { position: relative; padding: .4rem; background: linear-gradient(rgba(49,91,182,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(49,91,182,.045) 1px,transparent 1px),#fbfcff; background-size: 24px 24px; }
+    #oStoryPlot { display: block; width: 100%; height: auto; min-height: 300px; }
+    .o-story-axis { stroke: #73767d; stroke-width: 1.2; }
+    .o-story-axis-label { fill: #6f6f6f; font-size: 9px; font-weight: 700; }
+    .o-story-axis-title { fill: #111; font-size: 10px; font-weight: 900; }
+    .o-story-point { cursor: pointer; }
+    .o-story-point circle:first-child { fill: #fff; stroke: #111; stroke-width: 1.25; transition: fill .22s ease,stroke .22s ease,stroke-width .22s ease,r .22s ease; }
+    .o-story-point.is-selected circle:first-child { fill: #111; stroke: #111; stroke-width: 2; }
+    .o-story-point.is-meaning circle:first-child { stroke-width: 2; }
+    .o-story-point.adelie.is-meaning circle:first-child { fill: #dce5ff; stroke: var(--x-blue); }
+    .o-story-point.chinstrap.is-meaning circle:first-child { fill: #dff3eb; stroke: var(--x-verified); }
+    .o-story-point.gentoo.is-meaning circle:first-child { fill: #fff0d7; stroke: var(--x-ambiguous); }
+    .o-story-ring { display: none; fill: none; stroke: var(--x-blue); stroke-width: 1.4; stroke-dasharray: 5 4; }
+    .o-story-point.is-selected .o-story-ring { display: block; }
+    .o-story-relation { stroke: #111; stroke-width: 1.6; stroke-dasharray: 5 4; opacity: .8; }
+    .o-story-group-line { stroke-width: 2.4; opacity: .7; }
+    .o-story-overlay-card { fill: rgba(255,255,255,.96); stroke: #111; stroke-width: 1.1; }
+    .o-story-overlay-card.verified { fill: var(--x-verified-bg); stroke: var(--x-verified); }
+    .o-story-overlay-card.blue { fill: var(--x-blue-bg); stroke: var(--x-blue); }
+    .o-story-overlay-text { fill: #111; font-size: 10px; font-weight: 900; }
+    .o-story-overlay-sub { fill: #5f6269; font-size: 8px; }
+    .o-story-label-pill { fill: #fff; stroke: #111; stroke-width: 1; }
+    .o-story-label-text { fill: #111; font-size: 9px; font-weight: 900; }
+    .o-story-asset { position: absolute; right: .65rem; top: .55rem; width: 112px; opacity: .7; mix-blend-mode: multiply; pointer-events: none; }
+    .o-story-figure-badge { position: absolute; left: .7rem; top: .65rem; display: inline-flex; align-items: center; gap: .28rem; padding: .25rem .4rem; border: 1px solid #111; border-radius: 999px; background: rgba(255,255,255,.92); color: #111; font-size: .57rem; font-weight: 900; }
+    .o-story-figure-foot { display: flex; align-items: center; justify-content: space-between; gap: .55rem; padding: .55rem .75rem .65rem; border-top: 1px dashed #d2d3d7; color: #6f6f6f; font-size: .59rem; }
+    .o-story-legend { display: flex; flex-wrap: wrap; gap: .45rem; }
+    .o-story-legend span { display: inline-flex; align-items: center; gap: .22rem; }
+    .o-story-swatch { width: .52rem; height: .52rem; border: 1px solid currentColor; border-radius: 50%; }
+    .o-story-swatch.adelie { color: var(--x-blue); background: var(--x-blue-bg); }
+    .o-story-swatch.chinstrap { color: var(--x-verified); background: var(--x-verified-bg); }
+    .o-story-swatch.gentoo { color: var(--x-ambiguous); background: var(--x-ambiguous-bg); }
+    .o-story-panel { padding: .7rem; }
+    .o-story-ladder-head { display: flex; align-items: center; justify-content: space-between; gap: .45rem; padding: .05rem .05rem .55rem; }
+    .o-story-ladder-head strong { font-size: .72rem; letter-spacing: .11em; text-transform: uppercase; }
+    .o-story-ladder-head span { padding: .22rem .32rem; border: 1px solid #999; border-radius: 999px; color: #666; font-size: .54rem; font-weight: 900; }
+    .o-story-ladder { display: grid; gap: .28rem; margin: 0; padding: 0; list-style: none; }
+    .o-story-step { position: relative; display: grid; grid-template-columns: 1.55rem minmax(0,1fr) auto; gap: .42rem; align-items: center; width: 100%; padding: .47rem .42rem; border: 1px solid transparent; border-radius: 10px; background: transparent; cursor: pointer; text-align: left; transition: border-color .18s ease,background .18s ease,transform .18s ease; }
+    .o-story-step::before { content: ""; position: absolute; top: 100%; left: 1.16rem; width: 1px; height: .3rem; background: #d1d2d6; }
+    .o-story-step:last-child::before { display: none; }
+    .o-story-step:hover, .o-story-step:focus-visible { border-color: var(--x-blue); background: var(--x-blue-bg); outline: none; transform: translateX(2px); }
+    .o-story-step.is-active { border-color: var(--x-blue); background: var(--x-blue-bg); box-shadow: inset 3px 0 0 var(--x-blue); }
+    .o-story-step.is-recorded .o-story-step-num { border-color: var(--x-verified); background: var(--x-verified); color: #fff; }
+    .o-story-step-num { display: inline-flex; align-items: center; justify-content: center; width: 1.42rem; height: 1.42rem; border: 1px solid #777; border-radius: 50%; color: #555; font-size: .56rem; font-weight: 950; }
+    .o-story-step-copy { min-width: 0; }
+    .o-story-step-copy strong { display: block; font-size: .64rem; }
+    .o-story-step-copy small { display: block; margin-top: .08rem; overflow: hidden; color: #6f6f6f; font-size: .54rem; text-overflow: ellipsis; white-space: nowrap; }
+    .o-story-step-state { padding: .18rem .26rem; border: 1px solid #999; border-radius: 999px; color: #777; font-size: .5rem; white-space: nowrap; }
+    .o-story-step.is-recorded .o-story-step-state { border-color: var(--x-verified); background: var(--x-verified-bg); color: var(--x-verified); }
+    .o-story-step.is-active .o-story-step-state { border-color: var(--x-blue); color: var(--x-blue); }
+    .o-story-delta { margin-top: .65rem; padding: .58rem; border: 1px solid #d2d3d7; border-radius: 11px; background: #fbfbfa; }
+    .o-story-delta-label { color: #6f6f6f; font-size: .55rem; font-weight: 950; letter-spacing: .12em; text-transform: uppercase; }
+    .o-story-delta-grid { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: .4rem; align-items: center; margin-top: .42rem; }
+    .o-story-delta-cell { min-height: 3rem; padding: .42rem; border: 1px dashed #bbb; border-radius: 8px; background: #fff; }
+    .o-story-delta-cell.gain { border-style: solid; border-color: var(--x-verified); background: var(--x-verified-bg); }
+    .o-story-delta-cell small { display: block; color: #6f6f6f; font-size: .52rem; }
+    .o-story-delta-cell strong { display: block; margin-top: .18rem; font-size: .64rem; line-height: 1.35; }
+    .o-story-delta-arrow { color: var(--x-blue); font-size: 1.2rem; font-weight: 950; }
+    .o-story-actions { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .4rem; margin-top: .65rem; }
+    .o-story-actions button { min-height: 2.2rem; padding: .48rem .6rem; border: 1px solid #111; border-radius: 9px; cursor: pointer; font-size: .65rem; font-weight: 900; }
+    .o-story-actions .primary { border-color: var(--x-blue); background: var(--x-blue); color: #fff; }
+    .o-story-actions .secondary { background: #fff; }
+    .o-story-actions button:focus-visible { outline: 2px solid var(--x-blue); outline-offset: 2px; }
+    .o-story-status { margin: .5rem .05rem 0; color: #6f6f6f; font-size: .58rem; line-height: 1.4; }
+    .o-story-trail { display: flex; align-items: center; justify-content: space-between; gap: .55rem; padding: .65rem .85rem .72rem; border-top: 1px solid #d7d8dc; background: rgba(255,255,255,.72); }
+    .o-story-trail-list { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: .28rem; flex: 1; }
+    .o-story-trail-item { display: flex; align-items: center; gap: .25rem; min-width: 0; padding: .28rem .35rem; border: 1px dashed #c3c4c8; border-radius: 7px; color: #73757b; font-size: .5rem; font-weight: 850; }
+    .o-story-trail-item.is-recorded { border-style: solid; border-color: var(--x-verified); background: var(--x-verified-bg); color: var(--x-verified); }
+    .o-story-trail-item b { font-size: .57rem; }
+    .o-story-trail-caption { flex: 0 0 auto; color: #6f6f6f; font-size: .56rem; white-space: nowrap; }
+    @media (max-width: 1120px) { .o-story-grid { grid-template-columns: 1fr; } .o-story-panel { display: grid; grid-template-columns: minmax(0,1fr) minmax(290px,.8fr); gap: .7rem; align-items: start; } .o-story-ladder-head, .o-story-ladder, .o-story-delta, .o-story-actions, .o-story-status { grid-column: 1 / -1; } }
+    @media (max-width: 720px) { .o-story-head { align-items: flex-start; flex-direction: column; } .o-story-question { min-width: 0; width: 100%; } .o-story-panel { display: block; } .o-story-trail { align-items: flex-start; flex-direction: column; } .o-story-trail-list { width: 100%; } .o-story-trail-caption { white-space: normal; } }
     @media (max-width: 1120px) { .o-lower-grid { grid-template-columns: 1fr; } .o-evidence-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
     @media (max-width: 1120px) { .o-semantic-grid, .o-proposal-grid, .o-output-grid { grid-template-columns: 1fr; } .o-effects-grid { grid-template-columns: 1fr 1fr; } .o-effect-stack { grid-column: 1 / -1; } .o-lens-grid { grid-template-columns: 1fr 1fr; } .o-lens-inspector { grid-column: 1 / -1; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
     @media (max-width: 860px) { .o-workspace-head, .o-hero-head, .o-evidence-head, .o-semantic-head { align-items: flex-start; flex-wrap: wrap; } .o-meta, .o-legend { justify-content: flex-start; } .o-milestone-track { grid-template-columns: repeat(3,minmax(0,1fr)); } }
@@ -1384,6 +1478,48 @@
             <div><p class="x-eyebrow">Semantic control room / six-layer record path</p><h1>从可见图元，到可解释的知识载体</h1><p>Palmer Penguins · substrate · six semantic layers · projections</p></div>
             <div class="o-meta"><span class="x-pill">figure · penguins-relationships</span><span class="x-pill">selected · <strong id="oSelectionPill">E-05</strong></span></div>
           </header>
+
+          <section class="o-storyboard" id="oStoryBoard" aria-labelledby="oStoryTitle">
+            <header class="o-story-head">
+              <div class="o-story-title">
+                <span class="o-story-index">CASE 01</span>
+                <div><p class="o-kicker">Palmer Penguins · semantic story</p><h2 id="oStoryTitle">同一张图，逐层变得可解释</h2><p>从“看见点”到“说明、验证、复用”</p></div>
+              </div>
+              <div class="o-story-question"><span>QUESTION</span><strong>哪一组企鹅的鳍更长？</strong><span id="oStoryProgress">01 / 06</span></div>
+            </header>
+            <div class="o-story-grid">
+              <article class="o-story-figure">
+                <header class="o-story-card-head"><div><strong>Palmer Penguins · one figure</strong><span>bill length × flipper length</span></div><span id="oStoryFigureMode">substrate</span></header>
+                <div class="o-story-plot-wrap">
+                  <svg id="oStoryPlot" viewBox="0 0 620 380" role="img" aria-label="Palmer Penguins 语义故事图">
+                    <defs><pattern id="oStoryGridPattern" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#e8e8e6" stroke-width="1"/></pattern><marker id="oStoryArrow" width="8" height="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#315bb6"/></marker></defs>
+                    <rect x="0" y="0" width="620" height="380" fill="url(#oStoryGridPattern)"/>
+                    <line class="o-story-axis" x1="58" y1="322" x2="576" y2="322"/><line class="o-story-axis" x1="58" y1="322" x2="58" y2="35"/>
+                    <text class="o-story-axis-title" x="540" y="349">flipper length · mm</text><text class="o-story-axis-title" x="18" y="40" transform="rotate(-90 18 40)">bill length · mm</text>
+                    <g id="oStoryRelations"></g><g id="oStorySpeciesLabels"></g><g id="oStoryPoints"></g><g id="oStoryOverlay"></g><g id="oStoryAnnotations"></g>
+                  </svg>
+                  <img class="o-story-asset" src="assets/penguins-semantic.png" alt="Adelie、Chinstrap、Gentoo 企鹅">
+                  <span class="o-story-figure-badge" id="oStoryFigureBadge">原始图 · 12 marks</span>
+                </div>
+                <footer class="o-story-figure-foot"><div class="o-story-legend"><span><i class="o-story-swatch adelie"></i>Adelie</span><span><i class="o-story-swatch chinstrap"></i>Chinstrap</span><span><i class="o-story-swatch gentoo"></i>Gentoo</span></div><span id="oStorySelection">selected · E-05</span></footer>
+              </article>
+              <aside class="o-story-panel">
+                <header class="o-story-ladder-head"><strong>semantic ladder</strong><span id="oStoryRecordCount">1 record</span></header>
+                <ol class="o-story-ladder" id="oStoryLadder">
+                  <li><button class="o-story-step is-active is-recorded" type="button" data-o-story-layer="structure"><span class="o-story-step-num">1</span><span class="o-story-step-copy"><strong>角色与结构</strong><small>点 → row → panel</small></span><span class="o-story-step-state" id="oStoryStateStructure">✓</span></button></li>
+                  <li><button class="o-story-step" type="button" data-o-story-layer="meaning"><span class="o-story-step-num">2</span><span class="o-story-step-copy"><strong>数据与领域含义</strong><small>字段 → 物种与鳍长</small></span><span class="o-story-step-state" id="oStoryStateMeaning">—</span></button></li>
+                  <li><button class="o-story-step" type="button" data-o-story-layer="relation"><span class="o-story-step-num">3</span><span class="o-story-step-copy"><strong>关系与语义分组</strong><small>点 → species group</small></span><span class="o-story-step-state" id="oStoryStateRelation">—</span></button></li>
+                  <li><button class="o-story-step" type="button" data-o-story-layer="claim"><span class="o-story-step-num">4</span><span class="o-story-step-copy"><strong>声明与证据</strong><small>分组 → 均值比较</small></span><span class="o-story-step-state" id="oStoryStateClaim">—</span></button></li>
+                  <li><button class="o-story-step" type="button" data-o-story-layer="narrative"><span class="o-story-step-num">5</span><span class="o-story-step-copy"><strong>叙事与无障碍</strong><small>结果 → 可读顺序</small></span><span class="o-story-step-state" id="oStoryStateNarrative">—</span></button></li>
+                  <li><button class="o-story-step" type="button" data-o-story-layer="behavior"><span class="o-story-step-num">6</span><span class="o-story-step-copy"><strong>交互与协作</strong><small>结论 → focus / review</small></span><span class="o-story-step-state" id="oStoryStateBehavior">—</span></button></li>
+                </ol>
+                <section class="o-story-delta" aria-live="polite"><div class="o-story-delta-label">semantic gain</div><div class="o-story-delta-grid"><div class="o-story-delta-cell"><small>before</small><strong id="oStoryBefore">只能看到一个点</strong></div><span class="o-story-delta-arrow">→</span><div class="o-story-delta-cell gain"><small>gained</small><strong id="oStoryGain">知道它对应 row 5</strong></div></div></section>
+                <div class="o-story-actions"><button class="primary" type="button" id="oStoryAddButton">添加下一层</button><button class="secondary" type="button" id="oStoryReplayButton">从头查看</button></div>
+                <p class="o-story-status" id="oStoryStatus">结构记录已经把当前标记固定到 E-05 · row 5。</p>
+              </aside>
+            </div>
+            <footer class="o-story-trail"><div class="o-story-trail-list"><span class="o-story-trail-item is-recorded" data-o-story-trail="structure"><b>01</b> structure</span><span class="o-story-trail-item" data-o-story-trail="meaning"><b>02</b> meaning</span><span class="o-story-trail-item" data-o-story-trail="relation"><b>03</b> relation</span><span class="o-story-trail-item" data-o-story-trail="claim"><b>04</b> claim</span><span class="o-story-trail-item" data-o-story-trail="narrative"><b>05</b> narrative</span><span class="o-story-trail-item" data-o-story-trail="behavior"><b>06</b> behavior</span></div><span class="o-story-trail-caption">records stay attached to the same figure</span></footer>
+          </section>
 
           <section class="o-effects-board" id="oEffectsBoard" aria-labelledby="oEffectsTitle">
             <header class="o-effects-head">
@@ -2350,6 +2486,15 @@
         behavior: {kicker:"第 6 层 · behavior", title:"交互与协作", lead:"focus · annotate · review", source:"agent + human", state:"待实现", check:"target + provenance", note:""}
       };
       var activeLayer = "structure";
+      var storyLayerOrder = ["structure","meaning","relation","claim","narrative","behavior"];
+      var storyLayerMeta = {
+        structure: {title:"角色与结构", before:"只能看到一个点", gain:"知道它对应 row 5", status:"结构记录已经把当前标记固定到 E-05 · row 5。"},
+        meaning: {title:"数据与领域含义", before:"知道它是 row 5", gain:"知道 Adelie、Dream、鳍长 190 mm", status:"字段和领域术语把一个坐标变成可读的企鹅数据。"},
+        relation: {title:"关系与语义分组", before:"知道一个点的字段", gain:"知道它属于 Adelie 分组", status:"关系线把选中标记接回 species group。"},
+        claim: {title:"声明与证据", before:"知道分组关系", gain:"看到 Gentoo > Adelie 的均值证据", status:"声明卡把比较对象、指标和核验结果放在一起。"},
+        narrative: {title:"叙事与无障碍", before:"知道一条已核验结论", gain:"可以按顺序读懂这张图", status:"阅读顺序和 alt 描述把结果交给读者与辅助技术。"},
+        behavior: {title:"交互与协作", before:"知道一条可读结论", gain:"可以 focus、批注、复核并留痕", status:"协作动作沿着同一锚点留下可追踪记录。"}
+      };
       var semanticRecords = [
         {id:"B-001", layer:"structure", kind:"binding", status:"verified", title:"E-05 ↔ row 5", detail:"substrate fact · penguins.points", anchor:"E-05", reason:"row 5 是当前选中的 Adelie 标记。"}
       ];
@@ -2536,7 +2681,7 @@
         renderProposalRecords();
       }
       function appendSemanticRecord(layer, kind, status, title, detail, reason) {
-        var prefix = kind === "relation" ? "R-" : kind === "claim" ? "C-" : kind === "meaning" ? "M-" : kind === "narrative" ? "N-" : "W-";
+        var prefix = kind === "binding" ? "B-" : kind === "relation" ? "R-" : kind === "claim" ? "C-" : kind === "meaning" ? "M-" : kind === "narrative" ? "N-" : "W-";
         var record = {id:prefix + String(proposalSequence++).padStart(3, "0"), layer:layer, kind:kind, status:status, title:title, detail:detail, anchor:selected() ? selected().id : "—", reason:reason};
         semanticRecords.push(record);
         activeLayer = layer;
@@ -2844,6 +2989,141 @@
           document.getElementById("oBoardEffectNote").textContent = activeRecord ? "动作与审阅历史留在当前对象上" : "选择 Behavior 后出现协作痕迹";
         }
       }
+      function storyRecordFor(layer) {
+        var records = semanticRecords.filter(function (record) { return record.layer === layer; });
+        return records[records.length - 1] || null;
+      }
+      function storyMapX(item) {
+        var value = item.flipper || 190;
+        return 68 + Math.max(0, Math.min(1, (value - 175) / 65)) * 485;
+      }
+      function storyMapY(item) {
+        var value = item.bill || 42;
+        return 322 - Math.max(0, Math.min(1, (value - 30) / 27)) * 270;
+      }
+      function storyText(parent, tag, x, y, value, className) {
+        var node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+        node.setAttribute("x", x); node.setAttribute("y", y); node.setAttribute("class", className || "o-story-overlay-text"); node.textContent = value; parent.appendChild(node); return node;
+      }
+      function storyCard(parent, x, y, width, title, detail, className) {
+        var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", x); rect.setAttribute("y", y); rect.setAttribute("width", width); rect.setAttribute("height", detail ? 48 : 28); rect.setAttribute("rx", 8); rect.setAttribute("class", "o-story-overlay-card " + (className || "")); parent.appendChild(rect);
+        storyText(parent, "text", x + 10, y + 18, title, "o-story-overlay-text");
+        if (detail) storyText(parent, "text", x + 10, y + 35, detail, "o-story-overlay-sub");
+      }
+      function renderStoryBoard() {
+        var item = selected();
+        var data = window.glossOverviewElements || (window.glossExplore ? window.glossExplore.data : []);
+        if (!item || !data.length) return;
+        var points = document.getElementById("oStoryPoints");
+        var relations = document.getElementById("oStoryRelations");
+        var labels = document.getElementById("oStorySpeciesLabels");
+        var overlay = document.getElementById("oStoryOverlay");
+        var annotations = document.getElementById("oStoryAnnotations");
+        [points, relations, labels, overlay, annotations].forEach(clearOutputNode);
+        var ns = "http://www.w3.org/2000/svg";
+        var meaningRecord = storyRecordFor("meaning");
+        var relationRecord = storyRecordFor("relation");
+        var claimRecord = storyRecordFor("claim");
+        var narrativeRecord = storyRecordFor("narrative");
+        var behaviorRecord = storyRecordFor("behavior");
+        var structureRecord = storyRecordFor("structure");
+        var selectedX = storyMapX(item), selectedY = storyMapY(item);
+        data.forEach(function (candidate) {
+          var group = document.createElementNS(ns, "g");
+          var speciesClass = String(candidate.species || "unknown").toLowerCase();
+          group.setAttribute("class", "o-story-point " + speciesClass + (meaningRecord ? " is-meaning" : "") + (candidate.id === item.id ? " is-selected" : ""));
+          group.setAttribute("data-o-story-element", candidate.id);
+          group.setAttribute("tabindex", "0");
+          group.setAttribute("role", "button");
+          group.setAttribute("aria-label", candidate.id + " " + (candidate.species || "unknown"));
+          var circle = document.createElementNS(ns, "circle");
+          circle.setAttribute("cx", storyMapX(candidate)); circle.setAttribute("cy", storyMapY(candidate)); circle.setAttribute("r", candidate.id === item.id ? "6.5" : "4.5");
+          var ring = document.createElementNS(ns, "circle");
+          ring.setAttribute("class", "o-story-ring"); ring.setAttribute("cx", storyMapX(candidate)); ring.setAttribute("cy", storyMapY(candidate)); ring.setAttribute("r", "13");
+          group.appendChild(circle); group.appendChild(ring); points.appendChild(group);
+        });
+        if (meaningRecord) {
+          [["Adelie", "#315bb6", 98], ["Chinstrap", "#2d8c68", 270], ["Gentoo", "#b27116", 455]].forEach(function (entry) {
+            var rect = document.createElementNS(ns, "rect");
+            rect.setAttribute("x", entry[2]); rect.setAttribute("y", 50); rect.setAttribute("width", 115); rect.setAttribute("height", 24); rect.setAttribute("rx", 12); rect.setAttribute("class", "o-story-label-pill"); rect.setAttribute("stroke", entry[1]); labels.appendChild(rect);
+            var text = storyText(labels, "text", entry[2] + 12, 66, entry[0], "o-story-label-text"); text.setAttribute("fill", entry[1]);
+          });
+        }
+        if (relationRecord) {
+          var rel = document.createElementNS(ns, "line");
+          rel.setAttribute("class", "o-story-relation"); rel.setAttribute("x1", selectedX); rel.setAttribute("y1", selectedY); rel.setAttribute("x2", 155); rel.setAttribute("y2", 74); relations.appendChild(rel);
+          var groupLine = document.createElementNS(ns, "line");
+          groupLine.setAttribute("class", "o-story-group-line"); groupLine.setAttribute("stroke", "#315bb6"); groupLine.setAttribute("x1", 155); groupLine.setAttribute("y1", 74); groupLine.setAttribute("x2", storyMapX(item)); groupLine.setAttribute("y2", storyMapY(item)); relations.appendChild(groupLine);
+        }
+        if (claimRecord) {
+          var gentooMean = meanFor("Gentoo", "flipper");
+          var adelieMean = meanFor("Adelie", "flipper");
+          storyCard(overlay, 318, 92, 245, "Gentoo " + gentooMean.toFixed(1) + " > Adelie " + adelieMean.toFixed(1) + " mm", "mean flipper_length_mm · verified", "verified");
+        }
+        if (narrativeRecord) {
+          storyCard(overlay, 78, 260, 244, "1 species  →  2 flipper  →  3 claim", "reading order · accessible summary", "blue");
+        }
+        if (behaviorRecord) {
+          storyCard(annotations, 350, 274, 205, "focus · review", "E-05 · history attached", "blue");
+          var cross = document.createElementNS(ns, "path");
+          cross.setAttribute("d", "M" + (selectedX - 12) + " " + selectedY + "h24M" + selectedX + " " + (selectedY - 12) + "v24");
+          cross.setAttribute("stroke", "#315bb6"); cross.setAttribute("stroke-width", "1.6"); cross.setAttribute("stroke-dasharray", "3 3"); annotations.appendChild(cross);
+        }
+        if (!meaningRecord && activeLayer === "meaning") storyCard(overlay, 300, 100, 210, "species · island · flipper", "field meaning pending", "");
+        if (!relationRecord && activeLayer === "relation") storyCard(overlay, 318, 92, 205, "selected → species", "relation pending", "");
+        if (!claimRecord && activeLayer === "claim") storyCard(overlay, 318, 92, 220, "Gentoo > Adelie", "evidence pending", "");
+        if (!narrativeRecord && activeLayer === "narrative") storyCard(overlay, 78, 260, 220, "species → flipper → claim", "reading order pending", "");
+        if (!behaviorRecord && activeLayer === "behavior") storyCard(annotations, 350, 274, 205, "focus · review", "history pending", "");
+
+        var activeIndex = storyLayerOrder.indexOf(activeLayer);
+        var activeMeta = storyLayerMeta[activeLayer];
+        var recordedCount = storyLayerOrder.filter(function (layer) { return Boolean(storyRecordFor(layer)); }).length;
+        document.getElementById("oStoryProgress").textContent = String(activeIndex + 1).padStart(2, "0") + " / 06";
+        document.getElementById("oStoryFigureMode").textContent = recordedCount ? recordedCount + " semantic layer" + (recordedCount === 1 ? "" : "s") : "substrate";
+        document.getElementById("oStoryFigureBadge").textContent = meaningRecord ? "语义投影 · " + recordedCount + " layers" : "原始图 · 12 marks";
+        document.getElementById("oStorySelection").textContent = "selected · " + item.id + " · " + (item.species || "unknown");
+        document.getElementById("oStoryRecordCount").textContent = semanticRecords.length + " record" + (semanticRecords.length === 1 ? "" : "s");
+        document.getElementById("oStoryBefore").textContent = activeMeta.before;
+        document.getElementById("oStoryGain").textContent = activeMeta.gain;
+        document.getElementById("oStoryStatus").textContent = storyRecordFor(activeLayer) ? storyRecordFor(activeLayer).reason : activeMeta.status;
+        var activeRecord = storyRecordFor(activeLayer);
+        var action = document.getElementById("oStoryAddButton");
+        if (activeRecord) {
+          action.textContent = activeIndex < storyLayerOrder.length - 1 ? "添加下一层" : "六层已完成";
+          action.disabled = activeIndex === storyLayerOrder.length - 1;
+        } else {
+          action.textContent = "添加这一层";
+          action.disabled = false;
+        }
+        document.querySelectorAll("[data-o-story-layer]").forEach(function (button) {
+          var layer = button.dataset.oStoryLayer;
+          var record = storyRecordFor(layer);
+          button.classList.toggle("is-active", layer === activeLayer);
+          button.classList.toggle("is-recorded", Boolean(record));
+          var state = document.getElementById("oStoryState" + layer.charAt(0).toUpperCase() + layer.slice(1));
+          state.textContent = record ? "✓" : "—";
+        });
+        document.querySelectorAll("[data-o-story-trail]").forEach(function (node) { node.classList.toggle("is-recorded", Boolean(storyRecordFor(node.dataset.oStoryTrail))); });
+      }
+      function appendStoryLayer(layer) {
+        var item = selected();
+        if (!item) return;
+        if (layer === "structure") {
+          appendSemanticRecord("structure", "binding", "verified", item.id + " ↔ row " + item.row, "substrate fact · penguins.points", item.id + " 已固定到图形底座的 row " + item.row + "。");
+        } else if (layer === "meaning") {
+          appendSemanticRecord("meaning", "meaning", "verified", item.species + " · 物种", "field · species · term · 物种 · scope · row", "species 字段已映射为物种，并保留当前企鹅的 island 与 flipper 值。");
+        } else if (layer === "relation") {
+          appendSemanticRecord("relation", "relation", "verified", "belongs_to · " + item.id + " → " + item.species, "species group · " + item.species, item.id + " 的关系线已接回 " + item.species + " 分组。");
+        } else if (layer === "claim") {
+          var gentooMean = meanFor("Gentoo", "flipper"); var adelieMean = meanFor("Adelie", "flipper");
+          appendSemanticRecord("claim", "claim", "verified", "Gentoo > Adelie", "evidence · mean flipper_length_mm", "Gentoo 鳍长均值 " + gentooMean.toFixed(1) + " mm，高于 Adelie 的 " + adelieMean.toFixed(1) + " mm。");
+        } else if (layer === "narrative") {
+          appendSemanticRecord("narrative", "narrative", "verified", "species → flipper → claim", "reading order · alt text · summary", "读者先看物种分组，再看鳍长，最后读取已核验比较结论。");
+        } else if (layer === "behavior") {
+          appendSemanticRecord("behavior", "behavior", "verified", "focus · review · history", "human · E-05 · review", "当前焦点、复核动作和记录历史都继续锚定 E-05。");
+        }
+      }
       function selectLensElement(id) {
         if (!id) return;
         window.glossOverviewSelectedId = id;
@@ -2999,6 +3279,7 @@
         renderLayerDetail(item);
         renderDataLens();
         renderSemanticBoard();
+        renderStoryBoard();
         renderProjection();
         renderTimeline();
       }
@@ -3042,8 +3323,37 @@
           activeLayer = button.dataset.oLayer;
           renderLayerDetail(selected());
           renderSemanticBoard();
+          renderStoryBoard();
           toast("已选择 · " + layerData[activeLayer].title);
         });
+      });
+      document.querySelectorAll("[data-o-story-layer]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          activeLayer = button.dataset.oStoryLayer;
+          renderLayerDetail(selected());
+          renderStoryBoard();
+        });
+      });
+      document.getElementById("oStoryPlot").addEventListener("click", function (event) {
+        var node = event.target.closest("[data-o-story-element]");
+        if (node) selectLensElement(node.dataset.oStoryElement);
+      });
+      document.getElementById("oStoryAddButton").addEventListener("click", function () {
+        var index = storyLayerOrder.indexOf(activeLayer);
+        if (storyRecordFor(activeLayer)) {
+          if (index < storyLayerOrder.length - 1) {
+            activeLayer = storyLayerOrder[index + 1];
+            renderLayerDetail(selected());
+            renderStoryBoard();
+          }
+          return;
+        }
+        appendStoryLayer(activeLayer);
+      });
+      document.getElementById("oStoryReplayButton").addEventListener("click", function () {
+        activeLayer = "structure";
+        renderLayerDetail(selected());
+        renderStoryBoard();
       });
       document.querySelectorAll("[data-o-open-proposal]").forEach(function (button) {
         button.addEventListener("click", function () { openProposal(button.dataset.oOpenProposal); });

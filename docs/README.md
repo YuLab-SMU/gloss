@@ -19,6 +19,7 @@ python3 -m http.server 4173 --directory docs
 ## 工作台交互
 
 - 六层语义轨道是主导航：structure、meaning、relation、claim、narrative、behavior；
+- 首屏用一条 semantic ladder 演示同一张企鹅图如何从 substrate 逐层获得结构、含义、关系、证据、叙事和协作能力；每层只有一个统一的添加/推进动作；
 - “一张图，两个读法”并排显示 12 个 raw substrate 点和 12 个 gloss projection 点；
 - 选择表格行、画布粒子或六层效果卡，焦点、检查状态和右侧 inspector 会同步更新；
 - 语义提议在当前屏展开，提交后会更新对应的 callout、关系线、证据卡、阅读顺序或协作标记；
