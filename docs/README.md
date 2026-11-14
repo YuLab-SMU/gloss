@@ -33,4 +33,5 @@ python3 -m http.server 4173 --directory docs
 - `M0—M5` 能力地图、当前选中元素卡和 evidence pulse 都来自同一份本地状态；切换元素、提交错误行或高层提议后，Overview 会同步最新核验颜色、原因和尝试次数。
 - Overview 内含同屏语义提议工作区：Relation 会核验选中企鹅元素的分组关系，Claim 会对 Palmer Penguins 的分组均值运行确定性检查；两类记录都会回写六层状态和 record history。
 - Explore 的示例数据使用 Palmer Penguins 风格的 `species / island / bill / flipper` 字段，避免把产品叙事收窄成通用点位配对。
+- Narrative / Accessibility 会记录阅读顺序、关键结论和无障碍描述；Behavior / Collaboration 会记录聚焦、批注、复核、修订、来源和目标。四类记录共用同一个 append-only history。
 - 页面支持 `#overview`、`#explore`、`#propose` 深链接，适合直接部署到 GitHub Pages 的静态入口。

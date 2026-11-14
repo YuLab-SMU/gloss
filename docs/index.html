@@ -956,6 +956,11 @@
     .o-layer-record-chip { display: flex; align-items: center; justify-content: space-between; gap: .4rem; padding: .32rem .4rem; border: 1px solid #c9c9c9; border-radius: 7px; background: #fff; font-size: .61rem; }
     .o-layer-record-chip strong { font-size: .62rem; }
     .o-layer-record-chip span { color: #6f6f6f; }
+    .o-layer-detail-note { display: none; }
+    .o-proposal-form-note { display: none; }
+    #oProposalContextLead { display: none; }
+    #xInspectorBody .x-inspector-note { display: none; }
+    .p-bottom-bar p { display: none; }
     @media (max-width: 1120px) { .o-lower-grid { grid-template-columns: 1fr; } .o-evidence-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
     @media (max-width: 1120px) { .o-semantic-grid, .o-proposal-grid { grid-template-columns: 1fr; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
     @media (max-width: 860px) { .o-workspace-head, .o-hero-head, .o-evidence-head, .o-semantic-head { align-items: flex-start; flex-wrap: wrap; } .o-meta, .o-legend { justify-content: flex-start; } .o-milestone-track { grid-template-columns: repeat(3,minmax(0,1fr)); } }
@@ -996,7 +1001,7 @@
 
         <main class="x-workspace" id="x-workspace">
           <header class="x-workspace-head">
-            <div><p class="x-eyebrow">Explore / semantic figure inspector</p><h1>从底座看见语义入口</h1><p>选择一个元素，查看它的结构和数据入口；绑定是可核验的底座事实，角色、关系和声明在此之上继续追加。</p></div>
+            <div><p class="x-eyebrow">Explore / semantic figure inspector</p><h1>从底座看见语义入口</h1><p>penguins.points · substrate · semantic records</p></div>
             <div class="x-meta"><span class="x-pill">figure · penguins-relationships</span><label class="x-pill"><input id="xHideBinding" type="checkbox"> hide binding</label></div>
           </header>
 
@@ -1086,7 +1091,7 @@
         </aside>
         <main class="x-workspace" id="p-workspace">
           <header class="p-workspace-head">
-            <div><p class="x-eyebrow">Propose / verification workspace</p><h1>从语义提议到核验</h1><p>左侧保留底座上下文，中间提交结构化语义假设，右侧显示代码检查的结果；绑定只是第一种提议。</p></div>
+            <div><p class="x-eyebrow">Propose / verification workspace</p><h1>从语义提议到核验</h1><p>selected anchor · structured proposal · verification gate</p></div>
             <div class="p-meta"><span class="x-pill">selected · <strong id="pSelectedMeta">E-05</strong></span><span class="x-pill">figure · penguins-relationships</span></div>
           </header>
           <section class="p-stage">
@@ -1158,13 +1163,13 @@
 
         <main class="x-workspace o-workspace" id="o-workspace">
           <header class="o-workspace-head">
-            <div><p class="x-eyebrow">Overview / 语义控制台</p><h1>从可见图元，到可解释的知识载体</h1><p>元素 ↔ 数据行只是底座事实；gloss 继续把角色、领域含义、关系、声明、叙事和交互叠加到图上。</p></div>
+            <div><p class="x-eyebrow">Overview / 语义控制台</p><h1>从可见图元，到可解释的知识载体</h1><p>Palmer Penguins · species · flipper · semantic records</p></div>
             <div class="o-meta"><span class="x-pill">figure · penguins-relationships</span><span class="x-pill">selected · <strong id="oSelectionPill">E-05</strong></span></div>
           </header>
 
           <section class="o-hero" id="o-flow-card" aria-labelledby="o-flow-title">
             <header class="o-hero-head">
-              <div class="o-hero-title"><span class="x-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="12" r="2"/><path d="m6.8 10.8 3.4-3.4M13.8 7.3l3.4 3.4"/></svg></span><div><p class="o-kicker">语义路径</p><h2 id="o-flow-title">底座给事实，记录层给含义</h2><p>点击一个节点，进入对应的工作区继续检查或追加语义。</p></div></div>
+              <div class="o-hero-title"><span class="x-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="12" r="2"/><path d="m6.8 10.8 3.4-3.4M13.8 7.3l3.4 3.4"/></svg></span><div><p class="o-kicker">语义路径</p><h2 id="o-flow-title">底座给事实，记录层给含义</h2><p>substrate → records → projections</p></div></div>
               <div class="o-legend" aria-label="核验状态图例"><span class="o-legend-item"><i class="o-legend-mark verified">✓</i>verified</span><span class="o-legend-item"><i class="o-legend-mark rejected">×</i>rejected</span><span class="o-legend-item"><i class="o-legend-mark unresolved">·</i>unresolved</span></div>
             </header>
             <div class="o-flow-viewport">
@@ -1175,7 +1180,7 @@
                 </defs>
                 <rect x="0" y="0" width="1240" height="410" fill="url(#oSvgGrid)"/>
                 <text class="o-node-kicker" x="24" y="30">FIGURE → SEMANTICS → RECORDS</text>
-                <text class="o-node-sub" x="24" y="49">点位对应不是终点；可解释、可追问、可复用才是上层目标。</text>
+                <text class="o-node-sub" x="24" y="49">species · relation · claim · narrative · behavior</text>
 
                 <path class="o-flow-line" id="oLineSource" d="M244 190H289"/>
                 <path class="o-flow-line" id="oLineSubstrate" d="M525 190H576"/>
@@ -1243,39 +1248,39 @@
                 </g>
               </svg>
             </div>
-            <div class="o-flow-caption"><span><strong>当前焦点：</strong><span id="oFlowCaption">E-05 已选中；row 5 是 substrate fact，不是最终 semantic claim。</span></span><span class="o-live"><i class="o-live-dot"></i>本地实时状态</span></div>
+            <div class="o-flow-caption"><span><strong>当前焦点：</strong><span id="oFlowCaption">E-05 · row 5 · substrate</span></span><span class="o-live"><i class="o-live-dot"></i>本地实时状态</span></div>
           </section>
 
           <section class="o-semantic-card" id="oSemanticLayers" aria-labelledby="oSemanticTitle">
             <header class="o-semantic-head">
-              <div><p class="o-kicker">semantic layers</p><h2 id="oSemanticTitle">绑定只是起点，真正要追加的是多层语义</h2><p>元素和数据行的对应是底座事实；gloss 的核心工作，是让图继续承载角色、领域含义、关系、声明、叙事和可用知识。</p></div>
+              <div><p class="o-kicker">semantic layers</p><h2 id="oSemanticTitle">六层语义</h2><p>substrate · records · projections</p></div>
               <span class="o-semantic-badge"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h12M4 9h16M6 13h12M4 17h16"/></svg></span>substrate ≠ semantics</span>
             </header>
             <div class="o-semantic-grid">
               <div class="o-layer-stack" role="list" aria-label="六层语义">
-                <button class="o-layer-row structure is-selected" type="button" data-o-layer="structure" aria-selected="true" role="listitem"><span class="o-layer-number">1</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="7" height="6" rx="1"/><rect x="13" y="5" width="7" height="6" rx="1"/><path d="M12 11v4M8 15h8M8 15v4M16 15v4"/></svg></span><span class="o-layer-copy"><strong>角色与结构</strong><span>元素是什么、属于哪个图层、怎样组成面板与分组</span></span><span class="o-layer-state ready">底座可查</span></button>
-                <button class="o-layer-row meaning" type="button" data-o-layer="meaning" aria-selected="false" role="listitem"><span class="o-layer-number">2</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5C5 5.6 8.1 4 12 4s7 1.6 7 3.5S15.9 11 12 11 5 9.4 5 7.5Z"/><path d="M5 7.5V12c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5V7.5M5 12v4.5c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5V12"/></svg></span><span class="o-layer-copy"><strong>数据与领域含义</strong><span>样本、基因、物种、条件，以及它们来自什么研究语境</span></span><span class="o-layer-state proposed">待提议</span></button>
-                <button class="o-layer-row relation" type="button" data-o-layer="relation" aria-selected="false" role="listitem"><span class="o-layer-number">3</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="7" r="2.5"/><circle cx="19" cy="17" r="2.5"/><path d="m7.4 11.1 9-3.2M7.4 12.9l9 3.2"/></svg></span><span class="o-layer-copy"><strong>关系与语义分组</strong><span>图例 ↔ 系列、标签 ↔ 分支、注释 ↔ 变化与比较</span></span><span class="o-layer-state design">待记录</span></button>
-                <button class="o-layer-row claim" type="button" data-o-layer="claim" aria-selected="false" role="listitem"><span class="o-layer-number">4</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h9l3 3v13H6zM15 4v4h3"/><path d="M9 12h6M9 15h4"/><path d="m14 18 2 2 4-5"/></svg></span><span class="o-layer-copy"><strong>声明与证据</strong><span>“两组存在差异”这类主张，必须带可重跑的检查</span></span><span class="o-layer-state design">待核验</span></button>
-                <button class="o-layer-row narrative" type="button" data-o-layer="narrative" aria-selected="false" role="listitem"><span class="o-layer-number">5</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h6v14H5zM13 5h6v14h-6z"/><path d="M7.5 9h1.8M15.5 9h1.8M7.5 12h1.8M15.5 12h1.8"/></svg></span><span class="o-layer-copy"><strong>叙事与无障碍</strong><span>阅读顺序、关键结论、文字描述，让人和机器都能理解</span></span><span class="o-layer-state design">待投影</span></button>
-                <button class="o-layer-row behavior" type="button" data-o-layer="behavior" aria-selected="false" role="listitem"><span class="o-layer-number">6</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 4 15 3-6 6-3L5 4Z"/><circle cx="18" cy="17" r="3"/><path d="M18 15.5v3M16.5 17h3"/></svg></span><span class="o-layer-copy"><strong>交互与协作</strong><span>联动高亮、批注、复核、修订，以及保留来源和历史</span></span><span class="o-layer-state design">待实现</span></button>
+                <button class="o-layer-row structure is-selected" type="button" data-o-layer="structure" aria-selected="true" role="listitem"><span class="o-layer-number">1</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="7" height="6" rx="1"/><rect x="13" y="5" width="7" height="6" rx="1"/><path d="M12 11v4M8 15h8M8 15v4M16 15v4"/></svg></span><span class="o-layer-copy"><strong>角色与结构</strong><span>shape · layer · panel · group</span></span><span class="o-layer-state ready">底座可查</span></button>
+                <button class="o-layer-row meaning" type="button" data-o-layer="meaning" aria-selected="false" role="listitem"><span class="o-layer-number">2</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5C5 5.6 8.1 4 12 4s7 1.6 7 3.5S15.9 11 12 11 5 9.4 5 7.5Z"/><path d="M5 7.5V12c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5V7.5M5 12v4.5c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5V12"/></svg></span><span class="o-layer-copy"><strong>数据与领域含义</strong><span>species · island · context</span></span><span class="o-layer-state proposed">待提议</span></button>
+                <button class="o-layer-row relation" type="button" data-o-layer="relation" aria-selected="false" role="listitem"><span class="o-layer-number">3</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="7" r="2.5"/><circle cx="19" cy="17" r="2.5"/><path d="m7.4 11.1 9-3.2M7.4 12.9l9 3.2"/></svg></span><span class="o-layer-copy"><strong>关系与语义分组</strong><span>legend · branch · compare</span></span><span class="o-layer-state design">待记录</span></button>
+                <button class="o-layer-row claim" type="button" data-o-layer="claim" aria-selected="false" role="listitem"><span class="o-layer-number">4</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h9l3 3v13H6zM15 4v4h3"/><path d="M9 12h6M9 15h4"/><path d="m14 18 2 2 4-5"/></svg></span><span class="o-layer-copy"><strong>声明与证据</strong><span>claim · measure · check</span></span><span class="o-layer-state design">待核验</span></button>
+                <button class="o-layer-row narrative" type="button" data-o-layer="narrative" aria-selected="false" role="listitem"><span class="o-layer-number">5</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h6v14H5zM13 5h6v14h-6z"/><path d="M7.5 9h1.8M15.5 9h1.8M7.5 12h1.8M15.5 12h1.8"/></svg></span><span class="o-layer-copy"><strong>叙事与无障碍</strong><span>order · alt text · summary</span></span><span class="o-layer-state design">待投影</span></button>
+                <button class="o-layer-row behavior" type="button" data-o-layer="behavior" aria-selected="false" role="listitem"><span class="o-layer-number">6</span><span class="o-layer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 4 15 3-6 6-3L5 4Z"/><circle cx="18" cy="17" r="3"/><path d="M18 15.5v3M16.5 17h3"/></svg></span><span class="o-layer-copy"><strong>交互与协作</strong><span>focus · annotate · review</span></span><span class="o-layer-state design">待实现</span></button>
               </div>
               <aside class="o-layer-detail" aria-live="polite">
                 <p class="o-layer-detail-kicker" id="oLayerDetailKicker">第 1 层 · structure</p>
                 <h3 id="oLayerDetailTitle">角色与结构</h3>
-                <p class="o-layer-detail-lead" id="oLayerDetailLead">代码能给出元素种类、叶子、图层、面板和数据行；角色语义仍需要记录层补上。</p>
+                <p class="o-layer-detail-lead" id="oLayerDetailLead">shape · layer · panel · row</p>
                 <div class="o-layer-detail-facts"><div class="o-layer-detail-fact"><small>来源</small><strong id="oLayerDetailSource">substrate + rules</strong></div><div class="o-layer-detail-fact"><small>当前状态</small><strong id="oLayerDetailState">substrate ready</strong></div><div class="o-layer-detail-fact"><small>锚点</small><strong id="oLayerAnchor">E-05 · row 5</strong></div><div class="o-layer-detail-fact"><small>核验</small><strong id="oLayerDetailCheck">geometry + structure</strong></div></div>
-                <p class="o-layer-detail-note" id="oLayerDetailNote">E-05 ↔ row 5 证实了一个 substrate fact，但还没有说明这个标记在图中扮演什么角色。</p>
+                <p class="o-layer-detail-note" id="oLayerDetailNote">E-05 ↔ row 5 · substrate anchor</p>
                 <div class="o-layer-records"><p>记录历史</p><div class="o-layer-records-list" id="oLayerRecords"></div></div>
-                <div class="o-action-row"><button class="o-action-primary" type="button" data-x-mode="explore"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="14" r="2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span>查看底座</button><button class="o-action-secondary" type="button" data-o-open-proposal="relation"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5M13 6l5 5M4 20l3.5-1 9-9-3.5-3.5-9 9L4 20Z"/></svg></span>追加 Relation</button></div>
+                <div class="o-action-row"><button class="o-action-primary" type="button" data-x-mode="explore"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="14" r="2"/><path d="m6.7 10.8 3.6-3.5M13.9 7.3l3.4 5"/></svg></span>查看底座</button><button class="o-action-secondary" type="button" id="oLayerProposalButton" data-o-open-proposal="relation"><span class="x-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5M13 6l5 5M4 20l3.5-1 9-9-3.5-3.5-9 9L4 20Z"/></svg></span><span id="oLayerProposalLabel">追加 Relation</span></button></div>
               </aside>
             </div>
-            <div class="o-layer-boundary"><div class="o-boundary-box"><span class="o-boundary-mark fact">✓</span><div><strong>底座事实</strong><span>元素、坐标、图层、面板和数据行由原图形设备与代码核验。</span></div></div><div class="o-boundary-box"><span class="o-boundary-mark semantic">+</span><div><strong>语义记录</strong><span>角色、含义、关系、声明、叙事和交互由记录层追加，并各自携带来源与检查。</span></div></div></div>
+            <div class="o-layer-boundary"><div class="o-boundary-box"><span class="o-boundary-mark fact">✓</span><div><strong>substrate</strong><span>geometry · row · panel</span></div></div><div class="o-boundary-box"><span class="o-boundary-mark semantic">+</span><div><strong>records</strong><span>relation · claim · narrative · behavior</span></div></div></div>
           </section>
 
           <section class="o-proposal-shell" id="oProposalShell" aria-labelledby="oProposalTitle">
             <header class="o-proposal-head">
-              <div><p class="o-kicker">语义提议 · 本地记录</p><h2 id="oProposalTitle">在当前界面追加一条 Relation</h2><p id="oProposalSubtitle">把选中元素的上下文、关系类型和目标一起交给核验，不离开 Overview。</p></div>
+              <div><p class="o-kicker">语义提议 · 本地记录</p><h2 id="oProposalTitle">在当前界面追加一条 Relation</h2><p id="oProposalSubtitle">anchor · relation · target</p></div>
               <div class="o-proposal-head-actions"><span class="o-proposal-layer-badge" id="oProposalLayerBadge">relation</span><button class="o-proposal-close" type="button" id="oCloseProposal" aria-label="关闭语义提议">×</button></div>
             </header>
             <div class="o-proposal-grid">
@@ -1285,20 +1290,30 @@
                 <div class="o-proposal-facts"><div class="o-proposal-fact"><small>species</small><strong id="oProposalSpecies">Adelie</strong></div><div class="o-proposal-fact"><small>island</small><strong id="oProposalIsland">Dream</strong></div><div class="o-proposal-fact"><small>row</small><strong id="oProposalRow">row 5</strong></div><div class="o-proposal-fact"><small>anchor</small><strong id="oProposalAnchor">E-05</strong></div></div>
               </aside>
               <div class="o-proposal-editor">
-                <div class="o-proposal-tabs" role="tablist" aria-label="语义提议类型"><button class="o-proposal-tab" type="button" role="tab" aria-selected="true" data-o-proposal-type="relation">Relation</button><button class="o-proposal-tab" type="button" role="tab" aria-selected="false" data-o-proposal-type="claim">Claim</button></div>
+                <div class="o-proposal-tabs" role="tablist" aria-label="语义提议类型"><button class="o-proposal-tab" type="button" role="tab" aria-selected="true" data-o-proposal-type="relation">Relation</button><button class="o-proposal-tab" type="button" role="tab" aria-selected="false" data-o-proposal-type="claim">Claim</button><button class="o-proposal-tab" type="button" role="tab" aria-selected="false" data-o-proposal-type="narrative">Narrative</button><button class="o-proposal-tab" type="button" role="tab" aria-selected="false" data-o-proposal-type="behavior">Behavior</button></div>
                 <form class="o-proposal-form" id="oRelationForm">
-                  <p class="o-proposal-kicker">Relation 记录</p><h3>把元素放回关系网络</h3>
+                  <p class="o-proposal-kicker">Relation 记录</p><h3>anchor · relation · target</h3>
                   <div class="o-proposal-fields"><div class="o-proposal-field"><label for="oRelationType">关系类型</label><select id="oRelationType"><option value="belongs_to">belongs_to · 分组归属</option><option value="compares_with">compares_with · 比较对象</option><option value="annotates">annotates · 注释指向</option></select></div><div class="o-proposal-field"><label for="oRelationSource">来源锚点</label><input id="oRelationSource" readonly value="E-05"></div><div class="o-proposal-field"><label for="oRelationTarget">目标</label><select id="oRelationTarget"><option value="species:Adelie">species · Adelie</option><option value="species:Chinstrap">species · Chinstrap</option><option value="species:Gentoo">species · Gentoo</option></select></div><div class="o-proposal-field full"><label for="oRelationBasis">依据</label><textarea id="oRelationBasis">E-05 归属于 penguins 表中的 Adelie 分组。</textarea></div></div>
                   <p class="o-proposal-form-note">Relation 会检查锚点和目标词表，但不会把点位绑定自动升级成科学声明。</p><button class="o-proposal-submit" type="submit">提交 Relation 并核验 →</button>
                 </form>
                 <form class="o-proposal-form is-hidden" id="oClaimForm">
-                  <p class="o-proposal-kicker">Claim 记录</p><h3>让声明带着证据进入记录层</h3>
+                  <p class="o-proposal-kicker">Claim 记录</p><h3>subject · evidence · check</h3>
                   <div class="o-proposal-fields"><div class="o-proposal-field"><label for="oClaimSubject">主体分组</label><select id="oClaimSubject"><option>Gentoo</option><option>Chinstrap</option><option>Adelie</option></select></div><div class="o-proposal-field"><label for="oClaimComparator">比较分组</label><select id="oClaimComparator"><option>Adelie</option><option>Chinstrap</option><option>Gentoo</option></select></div><div class="o-proposal-field"><label for="oClaimMeasure">证据指标</label><select id="oClaimMeasure"><option value="flipper">mean flipper_length_mm</option><option value="bill">mean bill_length_mm</option><option value="mass">mean body_mass_g</option></select></div><div class="o-proposal-field"><label for="oClaimCheck">检查</label><select id="oClaimCheck"><option value="greater">主体均值 &gt; 比较均值</option><option value="less">主体均值 &lt; 比较均值</option></select></div><div class="o-proposal-field full"><label for="oClaimText">声明</label><textarea id="oClaimText">Gentoo 企鹅的 flipper 长度均值高于 Adelie 企鹅。</textarea></div></div>
                   <p class="o-proposal-form-note">Claim 会在本地 penguins fixture 上运行确定性的分组汇总。检查失败会记录为 rejected，不会静默升级为事实。</p><button class="o-proposal-submit" type="submit">提交 Claim 并核验 →</button>
                 </form>
+                <form class="o-proposal-form is-hidden" id="oNarrativeForm">
+                  <p class="o-proposal-kicker">Narrative 记录</p><h3>order · key point · alt text</h3>
+                  <div class="o-proposal-fields"><div class="o-proposal-field full"><label for="oNarrativeOrder">阅读顺序</label><select id="oNarrativeOrder"><option value="species_flipper">species → flipper → claim</option><option value="island_bill">island → bill → species</option><option value="selected_claim">selected mark → evidence → claim</option></select></div><div class="o-proposal-field full"><label for="oNarrativeLead">关键结论</label><textarea id="oNarrativeLead">先看三种企鹅的分组，再看 Gentoo 的 flipper 均值更长。</textarea></div><div class="o-proposal-field full"><label for="oNarrativeAlt">无障碍描述</label><textarea id="oNarrativeAlt">散点图按 species 分组，Gentoo 点位整体更高；下方记录一条按分组均值核验的比较声明。</textarea></div></div>
+                  <p class="o-proposal-form-note">Narrative 会检查阅读顺序、关键结论和文字描述是否齐全；它不会改动原图几何。</p><button class="o-proposal-submit" type="submit">提交 Narrative 并记录 →</button>
+                </form>
+                <form class="o-proposal-form is-hidden" id="oBehaviorForm">
+                  <p class="o-proposal-kicker">Behavior / Collaboration 记录</p><h3>source · target · action · history</h3>
+                  <div class="o-proposal-fields"><div class="o-proposal-field"><label for="oBehaviorOperation">操作</label><select id="oBehaviorOperation"><option value="focus_species">focus_species · 聚焦分组</option><option value="link_annotation">link_annotation · 关联批注</option><option value="request_review">request_review · 请求复核</option><option value="revise_record">revise_record · 修订记录</option></select></div><div class="o-proposal-field"><label for="oBehaviorActor">来源</label><select id="oBehaviorActor"><option value="human">human · 人</option><option value="agent">agent · agent</option></select></div><div class="o-proposal-field"><label for="oBehaviorTarget">目标</label><select id="oBehaviorTarget"><option value="species:Adelie">species · Adelie</option><option value="species:Chinstrap">species · Chinstrap</option><option value="species:Gentoo">species · Gentoo</option><option value="record:latest">record · latest</option></select></div><div class="o-proposal-field full"><label for="oBehaviorNote">协作说明</label><textarea id="oBehaviorNote">关注 Gentoo 分组，并保留这次复核的来源和历史。</textarea></div></div>
+                  <p class="o-proposal-form-note">Behavior 记录的是“谁在什么上下文对什么目标做了什么”，状态和来源会留在同一条历史中。</p><button class="o-proposal-submit" type="submit">提交 Behavior 并记录 →</button>
+                </form>
               </div>
               <aside class="o-proposal-gate" id="oProposalGate">
-                <p class="o-proposal-kicker">记录核验门</p><div class="o-proposal-verdict"><div class="o-proposal-verdict-icon" id="oProposalVerdictIcon">·</div><div><h3 id="oProposalVerdictTitle">等待提交</h3><p id="oProposalVerdictReason">选择一种语义记录，提交后结果会写入 Overview 的历史。</p></div></div>
+                <p class="o-proposal-kicker">记录核验门</p><div class="o-proposal-verdict"><div class="o-proposal-verdict-icon" id="oProposalVerdictIcon">·</div><div><h3 id="oProposalVerdictTitle">等待提交</h3><p id="oProposalVerdictReason">记录待提交 · 历史已联动</p></div></div>
                 <div class="o-record-history"><p>记录历史</p><div class="o-record-list" id="oRecordList"></div></div>
               </aside>
             </div>
@@ -1331,7 +1346,7 @@
           </section>
 
           <section class="o-evidence-card" id="oEvidence" aria-labelledby="oEvidenceTitle">
-            <header class="o-evidence-head"><div><p class="o-kicker">证据脉冲</p><h2 id="oEvidenceTitle">当前工作区的可核验摘要</h2><p>状态来自本地 Explore / Propose 交互；研究数字仍属于开发集 pilot。</p></div><span class="o-scope">开发集 · 本地原型</span></header>
+            <header class="o-evidence-head"><div><p class="o-kicker">证据脉冲</p><h2 id="oEvidenceTitle">当前状态</h2><p>penguins fixture · local record state</p></div><span class="o-scope">开发集 · 本地原型</span></header>
             <div class="o-evidence-grid">
               <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20c.8-3.8 3.1-5.7 7-5.7s6.2 1.9 7 5.7"/></svg></span><div><small>选中元素</small><strong id="oEvidenceElement">E-05 · circle</strong></div></div>
               <div class="o-evidence-metric"><span class="o-evidence-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span><div><small>绑定行</small><strong id="oEvidenceRow">row 5 · panel1</strong></div></div>
@@ -2010,12 +2025,12 @@
         M5: "价值评测待做：同模型、同预算、同问题的对照才会给出报告数字。"
       };
       var layerData = {
-        structure: {kicker:"第 1 层 · structure", title:"角色与结构", lead:"代码能给出元素种类、叶子、图层、面板和数据行；角色语义仍需要记录层补上。", source:"substrate + rules", state:"底座可查", check:"geometry + structure", note:"当前选中元素的行绑定是底座事实。它告诉我们这个标记从哪里来，还没有回答它在图中扮演什么角色。"},
-        meaning: {kicker:"第 2 层 · meaning", title:"数据与领域含义", lead:"样本、基因、物种、条件等领域对象要保留来源，不能从一个坐标点的外观里臆测。", source:"agent / human", state:"待提议", check:"schema + anchor", note:"含义不是点位匹配的副产品；它要作为带来源的记录挂回元素或分组，并允许人和 agent 共同修订。"},
-        relation: {kicker:"第 3 层 · relation", title:"关系与语义分组", lead:"图例、系列、标签、分支、注释和比较对象之间的关系，才是图能否被追问的关键。", source:"record layer", state:"待记录", check:"anchor + consistency", note:"关系可以跨越多个元素。提议需要明确写出关系类型、目标集合和锚点，而不是只提交一个 row。"},
-        claim: {kicker:"第 4 层 · claim", title:"声明与证据", lead:"“两组存在差异”这类声明必须带可重跑的检查，核验失败就不能投影成事实。", source:"agent / human", state:"待核验", check:"claim predicate", note:"真正高价值的核验对象是声明，不是点位本身。绑定只是让声明找到可检查的数据入口。"},
-        narrative: {kicker:"第 5 层 · narrative", title:"叙事与无障碍", lead:"阅读顺序、关键结论、文字描述和可用知识，让人和机器都能读懂同一张图。", source:"record + projection", state:"待投影", check:"order + access", note:"叙事层会把分散的记录组织成可读的解释，并生成无障碍树、文字摘要和其他投影。"},
-        behavior: {kicker:"第 6 层 · behavior", title:"交互与协作", lead:"联动高亮、批注、复核、修订、历史和来源，让图成为可以继续工作的知识载体。", source:"agent + human", state:"待实现", check:"target + provenance", note:"交互不改动原图几何；它只把已核验的记录和协作历史投影到同一个可追踪界面。"}
+        structure: {kicker:"第 1 层 · structure", title:"角色与结构", lead:"shape · layer · panel · group", source:"substrate + rules", state:"底座可查", check:"geometry + structure", note:""},
+        meaning: {kicker:"第 2 层 · meaning", title:"数据与领域含义", lead:"species · island · context", source:"agent / human", state:"待提议", check:"schema + anchor", note:""},
+        relation: {kicker:"第 3 层 · relation", title:"关系与语义分组", lead:"legend · branch · compare", source:"record layer", state:"待记录", check:"anchor + consistency", note:""},
+        claim: {kicker:"第 4 层 · claim", title:"声明与证据", lead:"claim · measure · check", source:"agent / human", state:"待核验", check:"claim predicate", note:""},
+        narrative: {kicker:"第 5 层 · narrative", title:"叙事与无障碍", lead:"order · alt text · summary", source:"record + projection", state:"待投影", check:"order + access", note:""},
+        behavior: {kicker:"第 6 层 · behavior", title:"交互与协作", lead:"focus · annotate · review", source:"agent + human", state:"待实现", check:"target + provenance", note:""}
       };
       var activeLayer = "structure";
       var semanticRecords = [
@@ -2125,6 +2140,12 @@
         document.getElementById("oLayerAnchor").textContent = item ? item.id + " · " + row : "current selection";
         document.getElementById("oLayerDetailCheck").textContent = layer.check;
         document.getElementById("oLayerDetailNote").textContent = item ? item.id + " ↔ " + row + " 是 substrate anchor。" + layer.note : layer.note;
+        var proposalButton = document.getElementById("oLayerProposalButton");
+        var proposalLabel = document.getElementById("oLayerProposalLabel");
+        var proposalType = activeLayer === "claim" ? "claim" : activeLayer === "narrative" ? "narrative" : activeLayer === "behavior" ? "behavior" : "relation";
+        var proposalNames = {relation:"追加 Relation", claim:"追加 Claim", narrative:"追加 Narrative", behavior:"追加 Behavior"};
+        proposalButton.dataset.oOpenProposal = proposalType;
+        proposalLabel.textContent = proposalNames[proposalType];
         renderLayerRecords(item);
       }
       function renderProposalContext(item) {
@@ -2157,7 +2178,8 @@
         renderProposalRecords();
       }
       function appendSemanticRecord(layer, kind, status, title, detail, reason) {
-        var record = {id:(kind === "relation" ? "R-" : "C-") + String(proposalSequence++).padStart(3, "0"), layer:layer, kind:kind, status:status, title:title, detail:detail, anchor:selected() ? selected().id : "—", reason:reason};
+        var prefix = kind === "relation" ? "R-" : kind === "claim" ? "C-" : kind === "narrative" ? "N-" : "W-";
+        var record = {id:prefix + String(proposalSequence++).padStart(3, "0"), layer:layer, kind:kind, status:status, title:title, detail:detail, anchor:selected() ? selected().id : "—", reason:reason};
         semanticRecords.push(record);
         activeLayer = layer;
         window.glossSemanticRecords = semanticRecords;
@@ -2165,7 +2187,7 @@
         renderOverview();
       }
       function openProposal(type) {
-        activeProposalType = type === "claim" ? "claim" : "relation";
+        activeProposalType = ["claim", "narrative", "behavior"].indexOf(type) > -1 ? type : "relation";
         activeLayer = activeProposalType;
         document.getElementById("oProposalShell").classList.add("is-open");
         renderProposalContext(selected());
@@ -2173,15 +2195,16 @@
         document.getElementById("oProposalShell").scrollIntoView({behavior:"smooth", block:"start"});
       }
       function switchProposalType(type) {
-        activeProposalType = type === "claim" ? "claim" : "relation";
-        var isClaim = activeProposalType === "claim";
+        activeProposalType = ["claim", "narrative", "behavior"].indexOf(type) > -1 ? type : "relation";
+        var forms = {relation:"oRelationForm", claim:"oClaimForm", narrative:"oNarrativeForm", behavior:"oBehaviorForm"};
         document.querySelectorAll("[data-o-proposal-type]").forEach(function (button) { button.setAttribute("aria-selected", String(button.dataset.oProposalType === activeProposalType)); });
-        document.getElementById("oRelationForm").classList.toggle("is-hidden", isClaim);
-        document.getElementById("oClaimForm").classList.toggle("is-hidden", !isClaim);
+        Object.keys(forms).forEach(function (name) { document.getElementById(forms[name]).classList.toggle("is-hidden", name !== activeProposalType); });
         document.getElementById("oProposalLayerBadge").textContent = activeProposalType;
-        document.getElementById("oProposalTitle").textContent = "在当前界面追加一条 " + (isClaim ? "Claim" : "Relation");
-        document.getElementById("oProposalSubtitle").textContent = isClaim ? "把一个关于企鹅分组的声明和可重跑的证据一起交给核验，不离开 Overview。" : "把选中元素的上下文、关系类型和目标一起交给核验，不离开 Overview。";
-        setProposalGate("unresolved", "等待提交", "选择一种语义记录，提交后结果会写入 Overview 的历史。");
+        var names = {relation:"Relation", claim:"Claim", narrative:"Narrative", behavior:"Behavior / Collaboration"};
+        var subtitles = {relation:"anchor · relation · target", claim:"subject · comparator · evidence", narrative:"order · key point · alt text", behavior:"source · target · action · history"};
+        document.getElementById("oProposalTitle").textContent = "在当前界面追加一条 " + names[activeProposalType];
+        document.getElementById("oProposalSubtitle").textContent = subtitles[activeProposalType];
+        setProposalGate("unresolved", "等待提交", "记录待提交 · 历史已联动");
       }
       function submitRelation(event) {
         event.preventDefault();
@@ -2224,6 +2247,25 @@
         }
         appendSemanticRecord("claim", "claim", status, text || subject + " vs " + comparator, "evidence · " + measureLabel(measure), reason);
       }
+      function submitNarrative(event) {
+        event.preventDefault();
+        var order = document.getElementById("oNarrativeOrder").value;
+        var lead = document.getElementById("oNarrativeLead").value.trim();
+        var alt = document.getElementById("oNarrativeAlt").value.trim();
+        var status = lead && alt ? "verified" : "unresolved";
+        var reason = status === "verified" ? "阅读顺序、关键结论和无障碍描述均已记录，可生成 narrative projection。" : "Narrative 需要同时填写关键结论和无障碍描述。";
+        appendSemanticRecord("narrative", "narrative", status, order + " · 企鹅图讲解", "reading order · " + order, reason);
+      }
+      function submitBehavior(event) {
+        event.preventDefault();
+        var operation = document.getElementById("oBehaviorOperation").value;
+        var actor = document.getElementById("oBehaviorActor").value;
+        var target = document.getElementById("oBehaviorTarget").value;
+        var note = document.getElementById("oBehaviorNote").value.trim();
+        var status = note ? "verified" : "unresolved";
+        var reason = status === "verified" ? actor + " 已记录对 " + target + " 执行 " + operation + " 的协作动作，来源和历史会保留。" : "Behavior 需要填写协作说明，才能留下可追踪记录。";
+        appendSemanticRecord("behavior", "behavior", status, operation + " · " + target, actor + " · " + (note || "no note"), reason);
+      }
       function renderOverview() {
         var item = selected();
         if (!item) return;
@@ -2250,7 +2292,7 @@
         document.getElementById("oFlowSelected").textContent = item.id + " · " + row;
         document.getElementById("oFlowStatusText").textContent = statusText;
         document.getElementById("oFlowLatest").textContent = "latest · " + statusText;
-        document.getElementById("oFlowCaption").textContent = item.id + " 已选中；" + row + " 是 substrate fact，不是最终 semantic claim。";
+        document.getElementById("oFlowCaption").textContent = item.id + " · " + row + " · substrate";
 
         var focusStatus = document.getElementById("oFocusStatus");
         focusStatus.className = "o-focus-status " + status;
@@ -2309,7 +2351,7 @@
         button.addEventListener("click", function () {
           activeLayer = button.dataset.oLayer;
           renderLayerDetail(selected());
-          toast(layerData[activeLayer].title + " focused; binding remains the substrate anchor.");
+          toast("已选择 · " + layerData[activeLayer].title);
         });
       });
       document.querySelectorAll("[data-o-open-proposal]").forEach(function (button) {
@@ -2321,6 +2363,8 @@
       document.getElementById("oCloseProposal").addEventListener("click", function () { document.getElementById("oProposalShell").classList.remove("is-open"); });
       document.getElementById("oRelationForm").addEventListener("submit", submitRelation);
       document.getElementById("oClaimForm").addEventListener("submit", submitClaim);
+      document.getElementById("oNarrativeForm").addEventListener("submit", submitNarrative);
+      document.getElementById("oBehaviorForm").addEventListener("submit", submitBehavior);
       document.getElementById("oHelp").addEventListener("click", function () { toast("Overview maps the path; click a node to continue in Explore or Propose."); });
 
       window.glossOverviewRender = renderOverview;
