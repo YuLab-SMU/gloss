@@ -11,7 +11,7 @@
 ## Interactive site workbench (2026-11-13)
 
 - The GitHub Pages Overview now keeps the six-layer semantic records, Narrative / Accessibility projection, and collaboration timeline in one screen. Records submitted from the inline proposal editor refresh the projection, accessibility tree, history chips, and timeline together.
-- Added a generated Palmer Penguins asset at `docs/assets/penguins-semantic.png` for the projection panel.
+- Added a generated Palmer Penguins asset at `docs/assets/penguins-semantic.png`; it now anchors the Overview path and acts as a species selection surface for the live substrate focus.
 
 ## Proposals checked from the figure alone (2026-11-12, agent-path plan Tasks 2 and 3)
 

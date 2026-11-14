@@ -980,13 +980,30 @@
     .o-output-state.verified { border-color: var(--x-verified); background: var(--x-verified-bg); color: var(--x-verified); }
     .o-output-state.rejected { border-color: var(--x-rejected); background: var(--x-rejected-bg); color: var(--x-rejected); }
     .o-output-state.unresolved { border-color: var(--x-unresolved); background: var(--x-unresolved-bg); color: var(--x-unresolved); border-style: dashed; }
+    .o-flow-penguins { opacity: .9; pointer-events: none; }
     .o-projection-body { display: grid; grid-template-columns: 150px minmax(0,1fr); gap: .7rem; padding: .7rem; }
     .o-asset-panel { min-width: 0; }
+    .o-asset-map { position: relative; min-height: 154px; border: 1px solid #111; border-radius: 11px; background: linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px),#fff; background-size: 18px 18px; overflow: hidden; }
+    .o-asset-map .o-penguin-asset { position: absolute; inset: 0; width: 100%; height: 100%; max-height: none; object-fit: contain; }
+    .o-asset-hit { position: absolute; top: .25rem; bottom: .25rem; width: 33.333%; padding: 0; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #111; cursor: pointer; font: inherit; transition: border-color .16s ease,background .16s ease,box-shadow .16s ease; }
+    .o-asset-hit.adelie { left: 0; }
+    .o-asset-hit.chinstrap { left: 33.333%; }
+    .o-asset-hit.gentoo { left: 66.666%; }
+    .o-asset-hit:hover, .o-asset-hit:focus-visible { border-color: var(--x-blue); background: rgba(220,234,253,.18); box-shadow: inset 0 0 0 2px rgba(49,91,182,.12); outline: none; }
+    .o-asset-hit[aria-pressed="true"] { border-color: var(--x-blue); background: rgba(220,234,253,.14); box-shadow: inset 0 0 0 2px rgba(49,91,182,.16); }
+    .o-asset-hit span { position: absolute; bottom: .25rem; left: 50%; transform: translateX(-50%); padding: .13rem .25rem; border: 1px solid currentColor; border-radius: 999px; background: rgba(255,255,255,.9); color: #111; font-size: .52rem; font-weight: 900; white-space: nowrap; }
+    .o-asset-hit.adelie span { color: var(--x-blue); }
+    .o-asset-hit.chinstrap span { color: var(--x-verified); }
+    .o-asset-hit.gentoo span { color: var(--x-ambiguous); }
+    .o-asset-focus { position: absolute; top: .35rem; left: .35rem; padding: .16rem .25rem; border: 1px solid #111; border-radius: 5px; background: rgba(255,255,255,.9); color: #111; font-size: .53rem; font-weight: 900; }
     .o-asset-frame { display: flex; align-items: end; justify-content: center; min-height: 154px; padding: .25rem; border: 1px solid #111; border-radius: 11px; background: linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px),#fff; background-size: 18px 18px; overflow: hidden; }
     .o-penguin-asset { display: block; width: 100%; height: auto; max-height: 150px; object-fit: contain; mix-blend-mode: multiply; }
     .o-species-legend { display: grid; gap: .28rem; margin-top: .45rem; }
-    .o-species-chip { display: flex; align-items: center; gap: .35rem; padding: .28rem .36rem; border: 1px solid #c9c9c9; border-radius: 7px; background: #fff; font-size: .61rem; }
+    .o-species-chip { display: flex; align-items: center; gap: .35rem; width: 100%; padding: .28rem .36rem; border: 1px solid #c9c9c9; border-radius: 7px; background: #fff; cursor: pointer; font: inherit; font-size: .61rem; text-align: left; transition: border-color .16s ease,background .16s ease,box-shadow .16s ease; }
+    .o-species-chip:hover, .o-species-chip:focus-visible { border-color: var(--x-blue); outline: none; }
+    .o-species-chip[aria-pressed="true"] { border-color: var(--x-blue); background: var(--x-blue-bg); box-shadow: inset 3px 0 0 var(--x-blue); }
     .o-species-chip i { width: .55rem; height: .55rem; border: 1px solid currentColor; border-radius: 50%; background: currentColor; }
+    .o-species-chip b { margin-left: auto; color: #6f6f6f; font-size: .56rem; }
     .o-species-chip.adelie { color: var(--x-blue); }
     .o-species-chip.chinstrap { color: var(--x-verified); }
     .o-species-chip.gentoo { color: var(--x-ambiguous); }
@@ -1313,6 +1330,7 @@
                   <text class="o-node-kicker" x="986" y="101">04 · RECORD / PROJECT</text>
                   <text class="o-node-label" x="986" y="127">记录与多种呈现</text>
                   <text class="o-node-sub" x="986" y="145">联动 · 讲解 · 无障碍 · 审阅</text>
+                  <image class="o-flow-penguins" href="assets/penguins-semantic.png" x="1125" y="91" width="68" height="48" preserveAspectRatio="xMidYMid meet" aria-hidden="true"/>
                   <rect x="990" y="170" width="196" height="110" rx="9" fill="#fbfbfa" stroke="#111" stroke-width="1.2"/><path d="M990 191h196" fill="none" stroke="#111" stroke-width="1.2"/><circle cx="1005" cy="181" r="3" fill="var(--x-verified)"/><circle cx="1016" cy="181" r="3" fill="var(--x-ambiguous)"/><circle cx="1027" cy="181" r="3" fill="var(--x-rejected)"/>
                   <path class="o-node-icon blue" d="M1010 257v-47M1010 257h151M1022 246l18-21 18 11 19-33 21 18"/><circle class="o-particle verified" cx="1022" cy="246" r="4"/><circle class="o-particle selected" cx="1040" cy="225" r="4"/><circle class="o-particle verified" cx="1058" cy="236" r="4"/><circle class="o-particle verified" cx="1077" cy="203" r="4"/><circle class="o-particle ambiguous" cx="1098" cy="221" r="4"/>
                   <rect x="1107" y="203" width="50" height="38" rx="5" fill="#fff" stroke="#111" stroke-width="1.2"/><path class="o-table-line" d="M1107 215h50M1107 228h50M1124 203v38M1140 203v38"/>
@@ -1409,8 +1427,14 @@
                 </header>
                 <div class="o-projection-body">
                   <div class="o-asset-panel">
-                    <div class="o-asset-frame"><img class="o-penguin-asset" id="oPenguinAsset" src="assets/penguins-semantic.png" alt="三种企鹅：Adelie、Chinstrap、Gentoo"></div>
-                    <div class="o-species-legend" id="oSpeciesLegend"><span class="o-species-chip adelie"><i></i>Adelie</span><span class="o-species-chip chinstrap"><i></i>Chinstrap</span><span class="o-species-chip gentoo"><i></i>Gentoo</span></div>
+                    <div class="o-asset-map" id="oAssetMap">
+                      <img class="o-penguin-asset" id="oPenguinAsset" src="assets/penguins-semantic.png" alt="三种企鹅：Adelie、Chinstrap、Gentoo">
+                      <button class="o-asset-hit adelie" type="button" data-o-species="Adelie" aria-pressed="false" aria-label="选择 Adelie"><span>Adelie</span></button>
+                      <button class="o-asset-hit chinstrap" type="button" data-o-species="Chinstrap" aria-pressed="false" aria-label="选择 Chinstrap"><span>Chinstrap</span></button>
+                      <button class="o-asset-hit gentoo" type="button" data-o-species="Gentoo" aria-pressed="false" aria-label="选择 Gentoo"><span>Gentoo</span></button>
+                      <span class="o-asset-focus" id="oAssetFocus">E-05 · Adelie</span>
+                    </div>
+                    <div class="o-species-legend" id="oSpeciesLegend"><button class="o-species-chip adelie" type="button" data-o-species="Adelie" aria-pressed="false"><i></i><span>Adelie</span><b class="o-species-count" data-o-count="Adelie">5</b></button><button class="o-species-chip chinstrap" type="button" data-o-species="Chinstrap" aria-pressed="false"><i></i><span>Chinstrap</span><b class="o-species-count" data-o-count="Chinstrap">4</b></button><button class="o-species-chip gentoo" type="button" data-o-species="Gentoo" aria-pressed="false"><i></i><span>Gentoo</span><b class="o-species-count" data-o-count="Gentoo">3</b></button></div>
                   </div>
                   <div class="o-projection-columns">
                     <section class="o-projection-card" aria-labelledby="oNarrativeProjectionTitle">
@@ -2311,10 +2335,27 @@
       function clearOutputNode(node) {
         while (node.firstChild) node.removeChild(node.firstChild);
       }
+      function selectSpecies(species) {
+        var representative = {Adelie:"E-05", Chinstrap:"E-06", Gentoo:"E-10"}[species];
+        if (representative && window.glossExplore) {
+          window.glossExplore.select(representative);
+          toast("已聚焦 · " + species);
+        }
+      }
       function renderProjection() {
         var narrativeRecords = semanticRecords.filter(function (record) { return record.layer === "narrative"; });
         var latestNarrative = narrativeRecords[narrativeRecords.length - 1];
         var projectionStatus = latestNarrative ? latestNarrative.status : "unresolved";
+        var currentItem = selected();
+        var activeSpecies = currentItem && currentItem.species ? currentItem.species : "";
+        document.querySelectorAll("[data-o-species]").forEach(function (node) {
+          var isActive = node.dataset.oSpecies === activeSpecies;
+          node.setAttribute("aria-pressed", String(isActive));
+        });
+        document.getElementById("oAssetFocus").textContent = currentItem && currentItem.species ? currentItem.id + " · " + currentItem.species : "species focus";
+        var counts = {};
+        penguins().forEach(function (row) { counts[row.species] = (counts[row.species] || 0) + 1; });
+        document.querySelectorAll("[data-o-count]").forEach(function (node) { node.textContent = counts[node.dataset.oCount] || "0"; });
         var stateChip = document.getElementById("oProjectionStatusChip");
         stateChip.className = "o-output-state " + outputStateClass(projectionStatus);
         clearOutputNode(stateChip);
@@ -2646,6 +2687,9 @@
       document.getElementById("oMeaningField").addEventListener("change", syncMeaningFields);
       document.getElementById("oNarrativeForm").addEventListener("submit", submitNarrative);
       document.getElementById("oBehaviorForm").addEventListener("submit", submitBehavior);
+      document.querySelectorAll("[data-o-species]").forEach(function (button) {
+        button.addEventListener("click", function () { selectSpecies(button.dataset.oSpecies); });
+      });
       syncMeaningFields();
       document.getElementById("oHelp").addEventListener("click", function () { toast("Overview maps the path; click a node to continue in Explore or Propose."); });
 

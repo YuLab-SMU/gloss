@@ -7,6 +7,7 @@ The GitHub Pages workbench keeps proposal, record history, and output views in t
 ## Changes
 
 - Added `docs/assets/penguins-semantic.png`, a transparent trio of Adelie, Chinstrap, and Gentoo penguins generated for the projection panel.
+- Used the asset as a visual anchor in the top record/project path and as an interactive species map in the projection card. The three hit regions and legend chips select representative penguin rows, update the focus card and anchor, and keep the selected state visible on the asset.
 - Added a compact projection deck to `docs/index.html` with the image asset, species legend, reading-order flow, accessibility tree, and record chips.
 - Added a collaboration timeline that renders semantic records newest first with status, layer, detail, and anchor metadata.
 - Wired both outputs to `semanticRecords`; submitting Narrative or Behavior records refreshes the layer state, projection, accessibility tree, history, and timeline without changing workspace pages.
@@ -16,7 +17,7 @@ The GitHub Pages workbench keeps proposal, record history, and output views in t
 
 - `git diff --check` passed.
 - Extracted all inline scripts and ran `node --check` on each; passed.
-- Browser check on `http://127.0.0.1:4173/#overview`: generated penguin asset renders; Narrative submission created `N-001` and changed the projection to `verified`; Behavior submission created `W-002` and added it to the timeline; reload restored the initial one-record state; default collaboration target is `Gentoo`.
+- Browser check on `http://127.0.0.1:4173/#overview`: generated penguin asset renders in the path and projection; the Gentoo hit region moved the selected anchor to `E-10` and updated the focus card, anchor, and active legend state; Narrative submission created `N-001` and changed the projection to `verified`; Behavior submission created `W-002` and added it to the timeline; reload restored the initial one-record state; default collaboration target is `Gentoo`.
 - Final package suite: `NOT_CRAN=true Rscript -e "devtools::test()"` → 0 failed, 0 skipped, 1422 passed. This slice only changes the static site and documentation; no package source was changed.
 
 ## Notes
