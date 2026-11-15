@@ -7,6 +7,8 @@
 - Added `gl_classify()`, `gl_role()`, `gl_unclassified()` and
   `gl_role_checks()` for reading element and leaf roles, residue reasons and
   consistency checks.
+- Added `gl_tree()` and `gl_map()` for read-only structure/data views and
+  checked element-to-row mappings.
 - Added `classify = FALSE` for callers that need capture and binding without
   deriving roles.
 

@@ -509,7 +509,9 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
       # A recovered recorded plot no longer carries the code chunk that drew
       # it. Keep the frozen script as an opt-in attribute for rules plugins;
       # the core uses it only when the normal context sniffer has no code.
-      attr(fig, "gloss_bench_code") <- paste(c(setup, unlist(chunks, use.names = FALSE)), collapse = "\n")
+      if (!identical(Sys.getenv("GLOSS_BENCH_NO_CODE"), "true")) {
+        attr(fig, "gloss_bench_code") <- paste(c(setup, unlist(chunks, use.names = FALSE)), collapse = "\n")
+      }
       g <- tryCatch(withCallingHandlers(gloss::gloss(fig, bind = FALSE), warning = function(w) {
         warns <<- c(warns, conditionMessage(w))
         invokeRestart("muffleWarning")
