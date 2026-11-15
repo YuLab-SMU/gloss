@@ -168,7 +168,11 @@ apply_role_checks <- function(fig, roles) {
   # role is supported when the leaf has at least one text primitive; only a
   # leaf with no text at all contradicts a text kind.
   leaf_has_text <- vapply(el$leaf, function(id) any(tags[el$leaf == id] == "text", na.rm = TRUE), logical(1))
-  bad_text <- text_kind & !leaf_has_text
+  # Some engine contracts render text as a label path, polygon or forced grob
+  # and expose no SVG text primitive. The label rule is the drawing-system cue
+  # for those leaves, so it is a valid text semantic rather than a failure.
+  label_semantics <- text_kind & grepl("label|textpath|textcurve|textdensity", el$rule, ignore.case = TRUE)
+  bad_text <- text_kind & !leaf_has_text & !label_semantics
   for (i in which(bad_text)) {
     el$flagged[i] <- TRUE
     el$flags[i] <- paste(unique(c(el$flags[i], "text role is drawn by a non-text element")), collapse = "; ")

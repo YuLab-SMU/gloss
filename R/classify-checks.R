@@ -18,7 +18,8 @@ role_checks <- function(fig, roles) {
   }
   text_roles <- el$kind %in% c("text", "tick label", "axis title", "legend label", "legend title", "strip label", "title")
   leaf_has_text <- vapply(el$leaf, function(id) any(tags[el$leaf == id] == "text", na.rm = TRUE), logical(1))
-  add("text roles are text elements", which(text_roles), leaf_has_text[text_roles],
+  label_semantics <- text_roles & grepl("label|textpath|textcurve|textdensity", el$rule, ignore.case = TRUE)
+  add("text roles are text elements", which(text_roles), (leaf_has_text | label_semantics)[text_roles],
       "role kind requires an SVG text element")
   failed <- logical(nrow(el))
   b <- fig$derived$bindings$tables$elements
