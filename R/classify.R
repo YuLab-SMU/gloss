@@ -25,6 +25,14 @@ rule_plugin <- function(engine) gl_plugin("rules", engine, must_exist = FALSE)
 
 rules_input <- function(fig, state) {
   code <- fig$context$code$value %||% list()
+  # A bench replay can preserve the frozen plotting script as an optional
+  # attribute on the recorded page. Use it only when normal context has no
+  # code; ordinary captures remain path and engine-state based.
+  recorded <- state$recorded %||% NULL
+  bench_code <- attr(recorded, "gloss_bench_code") %||% attr(state$plot %||% NULL, "gloss_bench_code")
+  if (!length(unlist(code, use.names = FALSE)) && is.character(bench_code) && length(bench_code)) {
+    code <- list(script = list(code = paste(bench_code, collapse = "\n")))
+  }
   list(fig = fig, state = state, code = code)
 }
 

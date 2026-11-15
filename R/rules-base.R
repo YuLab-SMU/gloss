@@ -21,9 +21,10 @@ base_ops <- function(input) {
 base_legend_leaf <- function(leaf, input) {
   k <- base_entry_index(leaf)
   if (is.na(k)) return(FALSE)
-  code <- tolower(rule_text(input))
-  if (!grepl("legend\\s*\\(", code)) return(FALSE)
+  op <- sub("^base/[0-9]+/", "", leaf_value(leaf, "path", ""))
+  if (!op %in% c("plotXY", "text", "symbols")) return(FALSE)
   ops <- base_ops(input)
+  if (!length(ops)) return(FALSE)
   lg <- which(grepl("legend", ops, ignore.case = TRUE))
   if (length(lg)) return(k >= max(lg))
   # When legend() is inlined into a single display-list entry, its last mark
@@ -32,11 +33,14 @@ base_legend_leaf <- function(leaf, input) {
   k > 0L && k >= length(ops) - 3L
 }
 
+base_legend_code <- function(input) grepl("legend\\s*\\(", tolower(rule_text(input)))
+
 base_role_rule <- function(leaf, elements, input) {
   p <- leaf_value(leaf, "path", "")
   cls <- leaf_value(leaf, "class", "")
   op <- sub("^base/[0-9]+/", "", p)
   if (base_legend_leaf(leaf, input)) {
+    if (!base_legend_code(input)) return(NULL)
     if (identical(cls, "text")) return(role_claim("guide", "legend label", "code/page:legend", "base.legend.label"))
     return(role_claim("guide", "legend key", "code/page:legend", "base.legend.key"))
   }
@@ -53,6 +57,11 @@ base_role_rule <- function(leaf, elements, input) {
     return(Filter(function(x) length(x$elements %||% integer()), claims))
   }
   if (identical(op, "title") || identical(cls, "title")) {
+    code <- tolower(rule_text(input))
+    if ((grepl("boxplot\\s*\\(", code) && !grepl("main\\s*=", code)) ||
+        (grepl("explo\\.plot", code) && grepl("::plot", p))) {
+      return(role_claim("guide", "axis title", "call:title axis labels", "base.title"))
+    }
     main <- elements$ordinal[as.double(elements$y0) < 70 & as.double(elements$x0) > 30]
     if (!length(main)) main <- elements$ordinal[1]
     rest <- setdiff(elements$ordinal, main)
@@ -66,6 +75,12 @@ base_role_rule <- function(leaf, elements, input) {
   if (op %in% c("plotXY", "points", "symbols", "segments", "arrows", "polygon", "path", "rect")) {
     tags <- unique(elements$tag)
     code <- tolower(rule_text(input))
+    if (op == "plotXY" && (
+      grepl("plot\\s*\\(\\s*data\\b", code) ||
+      (grepl("for\\s*\\(", code) && grepl("lines\\s*\\(", code)) ||
+      grepl("explo\\.plot|biocgraph|rgraphviz|agopen", code))) {
+      return(role_claim("decoration", "other", "code:generated drawing", "base.generated.decoration"))
+    }
     if (grepl("boxplot", code) && op %in% c("polygon", "segments")) {
       if (op == "polygon" || (op == "segments" && nrow(elements) == 1L)) return(role_claim("data", "box", paste0("call:", op), "base.boxplot"))
     }

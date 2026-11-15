@@ -20,8 +20,15 @@ grid_role_rule <- function(leaf, elements, input) {
   }
   if (grepl("panel\\.border", q)) return(role_claim("decoration", "border", "path:border", "grid.border"))
   if (grepl("panel\\.grid", q)) return(role_claim("reference", "grid line", "path:grid", "grid.grid"))
-  if (grepl("legend\\.key", q)) return(role_claim("guide", "legend key", "path:legend.key", "grid.legend.key"))
-  if (grepl("legend", q)) {
+  if (grepl("guide-box|layout/key-[0-9]+-[0-9]+-bg|legend\\.key", q)) {
+    if (grepl("legend\\.key\\.rect(?:\\.|$)", p, perl = TRUE)) {
+      return(role_claim("decoration", "background", "path:legend.key.rect", "grid.legend.background"))
+    }
+    return(role_claim("guide", "legend key", "path:legend.key", "grid.legend.key"))
+  }
+  if (grepl("guide-box|layout/(title|label)-|legend", q)) {
+    if (grepl("layout/title|guide\\.title", q)) return(role_claim("guide", "legend title", "path:legend.title", "grid.legend.title"))
+    if (grepl("layout/label|guide\\.label", q)) return(role_claim("guide", "legend label", "path:legend.label", "grid.legend.label"))
     if (identical(cls, "text")) return(role_claim("guide", "legend label", "path:legend.label", "grid.legend.label"))
     return(role_claim("decoration", "background", "path:legend.background", "grid.legend.background"))
   }

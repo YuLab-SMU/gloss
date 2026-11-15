@@ -69,8 +69,9 @@ for (k in seq_len(nrow(todo))) {
   cat(sprintf("[%d/%d] %s %s: %s\n", k, nrow(todo), id, todo$engine[k], status))
 }
 
+commit_value <- if (exists("git_head", mode = "function")) git_head() else NA_character_
 jsonlite::write_json(list(
   set = set, stratum = stratum %||% "v0", figures = nrow(todo), started = stamp,
-  commit = git_head(), commit_at_end = git_head(), gloss_source_digest = gloss_source$digest,
+  commit = commit_value, commit_at_end = commit_value, gloss_source_digest = gloss_source$digest,
   R = R.version.string, image = Sys.getenv("GLOSS_BENCH_IMAGE_DIGEST", NA)
 ), paste0(prefix, ".json"), auto_unbox = TRUE, pretty = TRUE)
