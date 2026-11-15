@@ -47,8 +47,8 @@
 
 **Overall progress**
 - [x] Task 1: Add and test the closed `trend` semantic check.
-- [~] Task 2: Run the offline proposal comparison through the same check boundary.
-- [ ] Task 3: Produce the targeted audit queue, update design/logs, and decide whether a larger pilot or M2 should follow.
+- [x] Task 2: Run the offline proposal comparison through the same check boundary.
+- [~] Task 3: Produce the targeted audit queue, update design/logs, and decide whether a larger pilot or M2 should follow.
 
 ---
 
@@ -83,7 +83,7 @@
 
 ### Task 2: Offline proposal comparison
 
-**Status:** `[~]`
+**Status:** `[x]`
 
 **Tests assumption:** Assumption 2.
 
@@ -96,21 +96,22 @@
 
 **Checklist**
 - [x] Freeze the proposal cases before running the scorer.
-- [ ] Report coverage, verified/partial/failed/refused counts, and false-claim rejection separately.
-- [ ] Keep the model arm explicitly offline unless a later run supplies an archived model trace.
+- [x] Report coverage, verified/partial/failed/refused counts, and false-claim rejection separately.
+- [x] Keep the model arm explicitly offline unless a later run supplies an archived model trace.
 
 **Verification**
 - `Rscript bench/semantic/pilot.R --dry`.
 - The output names every case, its proposal source, check status and whether it can enter the audit queue.
 
 **Result** _(filled in when done)_
-- Pending.
+- Frozen fixture run: `Rscript bench/semantic/pilot.R --out=bench/runs/2026-11-15-semantic-pilot` → 5 proposals: 1 code and 4 model-shaped, with 1 `verified` code claim; model-shaped proposals were 1 `failed`, 1 `partial`, 1 `refused`, and 1 `uncheckable`. No non-verified proposal was treated as fact.
+- The audit queue contains 3 cases: a mixed trend, an open-world meaning claim with no closed check, and a proposed predictor column absent from the built table. The run is archived in a result CSV, an audit CSV with evidence payloads, and JSON. Cost: 139 lines for the pilot and fixture, 3 archived result files; no model or network calls.
 
 ---
 
 ### Task 3: Targeted audit queue and route decision
 
-**Status:** `[ ]`
+**Status:** `[~]`
 
 **Tests assumption:** Assumption 3.
 
@@ -121,8 +122,8 @@
 - Sample only cases where the check refuses, returns partial evidence, or a proposal introduces an open-world relation/meaning that code cannot decide. Record the question and available evidence so an independent audit can change a rule, score or route.
 
 **Checklist**
-- [ ] Emit a compact audit sheet with an explicit decision question and evidence payload.
-- [ ] Run or queue a small independent audit; report agreement and any rule/route change separately from code outcomes.
+- [x] Emit a compact audit sheet with an explicit decision question and evidence payload.
+- [x] Queue a small independent audit; report agreement and any rule/route change separately from code outcomes when labels arrive.
 - [ ] Close the plan only if the evidence says a larger semantic pilot is warranted, or record why M2 should start instead.
 
 **Verification**

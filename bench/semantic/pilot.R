@@ -93,10 +93,15 @@ flat <- do.call(rbind, lapply(runs, function(x) {
     id = x$id, source = x$source, layer = x$layer, table = x$table,
     status = x$status, passed = x$passed, needs_audit = x$needs_audit,
     reason = x$reason, audit_question = x$audit_question,
+    evidence = if (is.data.frame(x$groups)) {
+      jsonlite::toJSON(x$groups, auto_unbox = TRUE, na = "null")
+    } else {
+      NA_character_
+    },
     stringsAsFactors = FALSE
   )
 }))
-audit <- flat[flat$needs_audit, c("id", "source", "layer", "status", "reason", "audit_question"),
+audit <- flat[flat$needs_audit, c("id", "source", "layer", "status", "reason", "audit_question", "evidence"),
               drop = FALSE]
 
 cat(sprintf("semantic pilot: %d proposals (%d code, %d model-shaped)\n",
@@ -115,6 +120,7 @@ if (nrow(audit)) print(audit, row.names = FALSE)
 if (!is.null(out_base) && !dry) {
   dir.create(dirname(out_base), recursive = TRUE, showWarnings = FALSE)
   utils::write.csv(flat, paste0(out_base, ".csv"), row.names = FALSE, na = "")
+  utils::write.csv(audit, paste0(out_base, "-audit.csv"), row.names = FALSE, na = "")
   json <- list(
     fixture = list(name = "mtcars-facet-points", tables = names(tables),
                    rows = vapply(tables, nrow, integer(1))),
@@ -123,5 +129,5 @@ if (!is.null(out_base) && !dry) {
   )
   jsonlite::write_json(json, paste0(out_base, ".json"), auto_unbox = TRUE,
                        pretty = TRUE, na = "null")
-  cat("archived:", paste0(out_base, c(".csv", ".json")), "\n")
+  cat("archived:", paste0(out_base, c(".csv", "-audit.csv", ".json")), "\n")
 }

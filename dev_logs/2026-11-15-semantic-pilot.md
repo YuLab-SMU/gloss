@@ -22,6 +22,16 @@
 
 - The built `geom_smooth()` table contains prediction rows rather than the source observations. The pilot therefore checks the point layer's built data for the claim, while the smoother remains the visible representation. This keeps the check on the data the figure actually draws and preserves the group-level exception.
 
+## Pilot result
+
+- The offline fixture has 5 proposals: 1 code and 4 model-shaped. The code proposal is `verified`; the model-shaped proposals are 1 `failed`, 1 `partial`, 1 `refused` and 1 `uncheckable`.
+- The false trend proposal is rejected by the check (`failed`); the universal trend proposal remains `partial` because the automatic 4-cylinder group has slope `+3.067891`. Neither is upgraded to a verified fact.
+- Three cases enter the targeted audit queue: the mixed trend wording, an open-world meaning claim with no closed check, and a predictor column that is absent from the built table. The audit CSV carries the question and group evidence where code has it. The run is archived at `bench/runs/2026-11-15-semantic-pilot.{csv,json}` and `-audit.csv`.
+
+## Surprise
+
+- A check can reject a false declaration without deciding the author's intended wording. The mixed trend is therefore an audit candidate even though the data already expose the exception; the open-world meaning claim is a different kind of gap because code has no truth procedure for it.
+
 ## What's next
 
-- Run the frozen offline proposal fixture through the same check boundary and emit a targeted audit queue. The result must distinguish a code-verifiable claim, a model proposal that is rejected by evidence, and a meaning claim for which code has no authority.
+- Get a small independent audit on the three queued cases. Use it only to decide whether the check vocabulary or route changes; do not turn this fixture into a model-accuracy or broad human-label result. If the audit does not change the route, start the next plan from M2 records and anchors.
