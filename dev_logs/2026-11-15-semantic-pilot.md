@@ -27,6 +27,7 @@
 - The offline fixture has 5 proposals: 1 code and 4 model-shaped. The code proposal is `verified`; the model-shaped proposals are 1 `failed`, 1 `partial`, 1 `refused` and 1 `uncheckable`.
 - The false trend proposal is rejected by the check (`failed`); the universal trend proposal remains `partial` because the automatic 4-cylinder group has slope `+3.067891`. Neither is upgraded to a verified fact.
 - Three cases enter the targeted audit queue: the mixed trend wording, an open-world meaning claim with no closed check, and a predictor column that is absent from the built table. The audit CSV carries the question and group evidence where code has it. The run is archived at `bench/runs/2026-11-15-semantic-pilot.{csv,json}` and `-audit.csv`.
+- Final host suite after the documentation sync: `NOT_CRAN=true Rscript -e "devtools::test()"` → 17 files, 1477 expectations, 0 failures, 0 skips.
 
 ## Surprise
 
