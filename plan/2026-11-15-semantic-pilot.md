@@ -131,7 +131,8 @@
 - Full suite and, if any code reads device output, the required bench-container suite.
 
 **Result** _(filled in when done)_
-- Pending.
+- `Rscript bench/semantic/pilot.R --dry` and the archived run produce a 3-row audit sheet with explicit questions; the mixed trend carries six group-level results, while the open-world meaning and missing-column cases carry their refusal reasons.
+- The independent labels and the route decision are still open. The plan remains active until the owner or an independent auditor labels these three cases; no agreement or rule change is claimed.
 
 ---
 
