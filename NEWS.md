@@ -1,5 +1,11 @@
 # gloss 0.0.0.9000
 
+## Semantic claim checks (2026-11-15)
+
+- Added `gl_check()` and the built-in `trend` check plugin. A check returns
+  group-level evidence with `verified`, `failed`, `partial` or `refused`
+  status, so a semantic proposal cannot turn incomplete evidence into a fact.
+
 ## Deterministic role classification (2026-11-15)
 
 - Added built-in role-rule plugins for ggplot, patchwork, heatmap, grid and

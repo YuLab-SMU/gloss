@@ -16,6 +16,7 @@ register_builtin_plugins <- function() {
   register_rules_heatmap()
   register_rules_base()
   register_rules_grid()
+  register_check_trend()
   register_context_code()
   register_context_data()
   register_context_engine()
