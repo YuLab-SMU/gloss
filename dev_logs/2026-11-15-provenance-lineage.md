@@ -16,3 +16,9 @@ The storyboard showed the visible result of adding a semantic layer, but it did 
 - Four extracted inline script blocks: node --check passed for all four.
 - The full R suite remains the baseline 1422 passed, 0 failed, 0 skipped; the change is static-site-only.
 - Remote branch content was verified against the local blobs before the previous push; this slice is ready for the same branch push.
+
+## Source-card follow-up
+
+The proof sentence was too thin to make a provenance click useful. The source chain now opens a single in-place card. It shows the concrete reference, the visible evidence, the path back to the current record, and a layer-specific explanation of what that source contributes. Selecting a different source changes only this card; the semantic ladder keeps its one add/advance action.
+
+The four cards use the Penguin fixture's actual values: row 5 / P-05 / Adelie / Dream / 190 mm, the plotting mapping for `flipper_length_mm`, `bill_length_mm`, and `species`, the computed Gentoo 217.0 mm versus Adelie 189.0 mm comparison, and the species / island / flipper vocabulary. This keeps the provenance interaction tied to the visible example rather than adding another workflow.

@@ -20,7 +20,7 @@ python3 -m http.server 4173 --directory docs
 
 - 六层语义轨道是主导航：structure、meaning、relation、claim、narrative、behavior；
 - 首屏用一条 semantic ladder 演示同一张企鹅图如何从 substrate 逐层获得结构、含义、关系、证据、叙事和协作能力；每层只有一个统一的添加/推进动作；
-- 故事板下方保留语义来源链：penguins.csv → 绘图代码 → 统计方法 → 真实世界术语；当前层会高亮对应来源并显示依据；
+- 故事板下方保留语义来源链：penguins.csv → 绘图代码 → 统计方法 → 真实世界术语；点击任一来源会在同屏打开来源卡，显示具体出处、可见证据、连接路径，以及它如何支撑当前语义层；
 - “一张图，两个读法”并排显示 12 个 raw substrate 点和 12 个 gloss projection 点；
 - 选择表格行、画布粒子或六层效果卡，焦点、检查状态和右侧 inspector 会同步更新；
 - 语义提议在当前屏展开，提交后会更新对应的 callout、关系线、证据卡、阅读顺序或协作标记；

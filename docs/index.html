@@ -1284,9 +1284,20 @@
     .o-story-source strong { overflow: hidden; font-size: .62rem; text-overflow: ellipsis; white-space: nowrap; }
     .o-story-source span { overflow: hidden; color: #6f6f6f; font-size: .52rem; text-overflow: ellipsis; white-space: nowrap; }
     .o-story-source-arrow { display: flex; align-items: center; justify-content: center; color: var(--x-blue); font-size: 1.1rem; font-weight: 950; }
-    .o-story-provenance-proof { margin-top: .55rem; padding: .45rem .55rem; border-left: 3px solid var(--x-blue); background: #f5f7ff; color: #4e5565; font-size: .58rem; line-height: 1.4; }
+    .o-story-source-card { margin-top: .6rem; padding: .65rem .7rem .7rem; border: 1px solid #c8cbd2; border-radius: 12px; background: #f8f9fc; }
+    .o-story-source-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+    .o-story-source-card-title { min-width: 0; }
+    .o-story-source-card-title small, .o-story-source-card-grid small, .o-story-source-support small { display: block; color: #6f6f6f; font-size: .49rem; font-weight: 950; letter-spacing: .1em; text-transform: uppercase; }
+    .o-story-source-card-title h3 { margin: .12rem 0 .12rem; overflow: hidden; font-size: .83rem; text-overflow: ellipsis; white-space: nowrap; }
+    .o-story-source-card-title p { margin: 0; color: #5d626d; font-size: .58rem; line-height: 1.38; }
+    .o-story-source-layer { flex: 0 0 auto; max-width: 42%; padding: .26rem .4rem; border: 1px solid var(--x-blue); border-radius: 999px; background: var(--x-blue-bg); color: var(--x-blue); font-size: .51rem; font-weight: 900; text-align: right; }
+    .o-story-source-card-grid { display: grid; grid-template-columns: 1.1fr 1.15fr 1fr; gap: .45rem; margin-top: .62rem; }
+    .o-story-source-card-grid > div { min-width: 0; padding: .42rem .46rem; border: 1px solid #d7d9df; border-radius: 8px; background: #fff; }
+    .o-story-source-card-grid strong { display: block; margin-top: .18rem; color: #252b36; font-size: .58rem; line-height: 1.38; overflow-wrap: anywhere; }
+    .o-story-source-support { margin-top: .55rem; padding: .44rem .52rem; border-left: 3px solid var(--x-verified); background: var(--x-verified-bg); }
+    .o-story-source-support p { margin: .16rem 0 0; color: #3d554c; font-size: .59rem; line-height: 1.42; }
     @media (max-width: 1120px) { .o-story-grid { grid-template-columns: 1fr; } .o-story-panel { display: grid; grid-template-columns: minmax(0,1fr) minmax(290px,.8fr); gap: .7rem; align-items: start; } .o-story-ladder-head, .o-story-ladder, .o-story-delta, .o-story-actions, .o-story-status { grid-column: 1 / -1; } }
-    @media (max-width: 720px) { .o-story-head { align-items: flex-start; flex-direction: column; } .o-story-question { min-width: 0; width: 100%; } .o-story-panel { display: block; } .o-story-trail { align-items: flex-start; flex-direction: column; } .o-story-trail-list { width: 100%; } .o-story-trail-caption { white-space: normal; } .o-story-source-chain { grid-template-columns: 1fr; } .o-story-source-arrow { transform: rotate(90deg); min-height: .9rem; } }
+    @media (max-width: 720px) { .o-story-head { align-items: flex-start; flex-direction: column; } .o-story-question { min-width: 0; width: 100%; } .o-story-panel { display: block; } .o-story-trail { align-items: flex-start; flex-direction: column; } .o-story-trail-list { width: 100%; } .o-story-trail-caption { white-space: normal; } .o-story-source-chain, .o-story-source-card-grid { grid-template-columns: 1fr; } .o-story-source-arrow { transform: rotate(90deg); min-height: .9rem; } .o-story-source-layer { max-width: 48%; } }
     @media (max-width: 1120px) { .o-lower-grid { grid-template-columns: 1fr; } .o-evidence-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
     @media (max-width: 1120px) { .o-semantic-grid, .o-proposal-grid, .o-output-grid { grid-template-columns: 1fr; } .o-effects-grid { grid-template-columns: 1fr 1fr; } .o-effect-stack { grid-column: 1 / -1; } .o-lens-grid { grid-template-columns: 1fr 1fr; } .o-lens-inspector { grid-column: 1 / -1; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
     @media (max-width: 860px) { .o-workspace-head, .o-hero-head, .o-evidence-head, .o-semantic-head { align-items: flex-start; flex-wrap: wrap; } .o-meta, .o-legend { justify-content: flex-start; } .o-milestone-track { grid-template-columns: repeat(3,minmax(0,1fr)); } }
@@ -1534,15 +1545,26 @@
             <section class="o-story-provenance" aria-labelledby="oStoryProvenanceTitle">
               <header class="o-story-provenance-head"><strong id="oStoryProvenanceTitle">semantic provenance</strong><span>每一层都回到一个可追踪的来源</span></header>
               <div class="o-story-source-chain">
-                <button class="o-story-source is-active" type="button" data-o-story-source="data"><small>DATA ARTIFACT</small><strong>penguins.csv</strong><span>rows · species · measurements</span></button>
+                <button class="o-story-source is-active" type="button" aria-pressed="true" data-o-story-source="data"><small>DATA ARTIFACT</small><strong>penguins.csv</strong><span>rows · species · measurements</span></button>
                 <span class="o-story-source-arrow">→</span>
-                <button class="o-story-source" type="button" data-o-story-source="code"><small>PLOTTING CODE</small><strong>ggplot / geom_point</strong><span>scales · groups · anchors</span></button>
+                <button class="o-story-source" type="button" aria-pressed="false" data-o-story-source="code"><small>PLOTTING CODE</small><strong>ggplot / geom_point</strong><span>scales · groups · anchors</span></button>
                 <span class="o-story-source-arrow">→</span>
-                <button class="o-story-source" type="button" data-o-story-source="method"><small>STATISTICAL METHOD</small><strong>group mean / check</strong><span>comparison · evidence</span></button>
+                <button class="o-story-source" type="button" aria-pressed="false" data-o-story-source="method"><small>STATISTICAL METHOD</small><strong>group mean / check</strong><span>comparison · evidence</span></button>
                 <span class="o-story-source-arrow">→</span>
-                <button class="o-story-source" type="button" data-o-story-source="world"><small>WORLD KNOWLEDGE</small><strong>species · flipper length</strong><span>domain terms · interpretation</span></button>
+                <button class="o-story-source" type="button" aria-pressed="false" data-o-story-source="world"><small>WORLD KNOWLEDGE</small><strong>species · flipper length</strong><span>domain terms · interpretation</span></button>
               </div>
-              <div class="o-story-provenance-proof" id="oStoryProvenanceProof">当前层从 penguins.csv 读取 row 5，并把它保留为一个可追踪的图元事实。</div>
+              <article class="o-story-source-card" id="oStorySourceCard" aria-live="polite">
+                <header class="o-story-source-card-head">
+                  <div class="o-story-source-card-title"><small id="oStorySourceKind">DATA ARTIFACT</small><h3 id="oStorySourceLabel">penguins.csv</h3><p id="oStorySourceRole">原始观测表把图上的坐标还原成可追踪的行。</p></div>
+                  <span class="o-story-source-layer" id="oStorySourceLayer">支撑 · 角色与结构</span>
+                </header>
+                <div class="o-story-source-card-grid">
+                  <div><small>具体出处</small><strong id="oStorySourceReference">penguins.csv · penguins.points</strong></div>
+                  <div><small>可见证据</small><strong id="oStorySourceEvidence">row 5 · P-05 · Adelie · Dream · flipper 190 mm</strong></div>
+                  <div><small>连接路径</small><strong id="oStorySourcePath">E-05 → row 5 → B-001</strong></div>
+                </div>
+                <div class="o-story-source-support"><small>支撑当前层</small><p id="oStorySourceSupport">把 E-05 固定到 row 5，保留图元与原始观测的对应。</p></div>
+              </article>
             </section>
             <footer class="o-story-trail"><div class="o-story-trail-list"><span class="o-story-trail-item is-recorded" data-o-story-trail="structure"><b>01</b> structure</span><span class="o-story-trail-item" data-o-story-trail="meaning"><b>02</b> meaning</span><span class="o-story-trail-item" data-o-story-trail="relation"><b>03</b> relation</span><span class="o-story-trail-item" data-o-story-trail="claim"><b>04</b> claim</span><span class="o-story-trail-item" data-o-story-trail="narrative"><b>05</b> narrative</span><span class="o-story-trail-item" data-o-story-trail="behavior"><b>06</b> behavior</span></div><span class="o-story-trail-caption">records stay attached to the same figure</span></footer>
           </section>
@@ -2522,10 +2544,66 @@
         behavior: {title:"交互与协作", before:"知道一条可读结论", gain:"可以 focus、批注、复核并留痕", status:"协作动作沿着同一锚点留下可追踪记录。", source:"code"}
       };
       var storySourceMeta = {
-        data: {label:"penguins.csv", proof:"当前层从 penguins.csv 读取 row 5，并把它保留为一个可追踪的图元事实。"},
-        code: {label:"ggplot / geom_point", proof:"绘图代码提供了坐标尺度、species 分组和图元锚点，关系线因此能回到原图。"},
-        method: {label:"group mean / check", proof:"统计方法把多个 row 汇总成可核验的比较：Gentoo 与 Adelie 的鳍长均值。"},
-        world: {label:"species · flipper length", proof:"领域知识把字段和数值翻译成物种、采样岛和鳍长等真实世界术语。"}
+        data: {
+          kind:"DATA ARTIFACT", label:"penguins.csv",
+          role:"原始观测表把图上的坐标还原成可追踪的行。",
+          reference:"penguins.csv · penguins.points",
+          evidence:"row 5 · P-05 · Adelie · Dream · flipper 190 mm",
+          path:"E-05 → row 5 → B-001",
+          support:{
+            structure:"把 E-05 固定到 row 5，保留图元与原始观测的对应。",
+            meaning:"从 row 5 取出 species、island 和 flipper，坐标因此有了可读字段。",
+            relation:"row 5 的 species=Adelie 让当前点接入 Adelie 分组。",
+            claim:"为分组均值提供可追踪的原始观测行，比较结果可以回溯。",
+            narrative:"给阅读顺序提供对象名、采样岛和测量值，alt 描述不再只有坐标。",
+            behavior:"让 focus、批注和复核继续指向同一行，而不是漂浮在图上。"
+          }
+        },
+        code: {
+          kind:"PLOTTING CODE", label:"ggplot / geom_point",
+          role:"绘图代码把数据列映射到坐标、分组和图元。",
+          reference:"R recipe · ggplot(penguins) + geom_point(aes(flipper_length_mm, bill_length_mm, colour = species))",
+          evidence:"x=flipper_length_mm · y=bill_length_mm · colour=species",
+          path:"aes(...) → panel1 → E-05",
+          support:{
+            structure:"说明 E-05 位于 panel1，并保留坐标和图层归属。",
+            meaning:"把 flipper_length_mm、bill_length_mm 这些列名带入图元上下文。",
+            relation:"colour=species 解释 E-05 为什么连到 Adelie 分组。",
+            claim:"固定比较使用的 x 变量和分组字段，避免把不同指标混在一起。",
+            narrative:"为图形阅读顺序提供轴、图例和分组的原始结构。",
+            behavior:"把交互锚点留在原图层，focus 后仍能回到同一个 mark。"
+          }
+        },
+        method: {
+          kind:"STATISTICAL METHOD", label:"group mean / check",
+          role:"统计方法把多行观测汇总成可核验的比较。",
+          reference:"mean(flipper_length_mm) by species + verification check",
+          evidence:"Gentoo 217.0 mm > Adelie 189.0 mm · verified",
+          path:"rows 1–12 → C-004 → check",
+          support:{
+            structure:"让一个图元知道自己属于哪一组观测，而不是孤立点。",
+            meaning:"明确 flipper 是被汇总和比较的测量字段。",
+            relation:"把 Adelie、Chinstrap、Gentoo 组织成可比较的分组。",
+            claim:"把 Gentoo 217.0 mm 与 Adelie 189.0 mm 的差异变成可核验声明。",
+            narrative:"把结论压缩成读者能沿着分组和指标复述的一句话。",
+            behavior:"为复核提供方法、输入行和通过状态，审阅动作有据可查。"
+          }
+        },
+        world: {
+          kind:"WORLD KNOWLEDGE", label:"species · flipper length",
+          role:"领域知识把字段、数值和图形语言翻译成真实世界概念。",
+          reference:"Palmer Penguins vocabulary · species taxonomy",
+          evidence:"Adelie=物种 · Dream=采样岛 · flipper_length_mm=鳍长",
+          path:"field glossary → meaning / narrative",
+          support:{
+            structure:"把 row 5 识别为一只可命名的企鹅，而不只是一个编号。",
+            meaning:"解释 Adelie、Dream 和 190 mm 分别代表什么现实对象和测量。",
+            relation:"让 Adelie 分组对应物种概念，而不只是颜色或图例文字。",
+            claim:"帮助读者理解均值比较说的是鳍长，而不是抽象的 x 轴数值。",
+            narrative:"把字段翻译成可朗读的物种、岛屿和测量描述。",
+            behavior:"让批注和协作围绕真实对象说话，复核记录更容易被接续。"
+          }
+        }
       };
       var activeStorySource = "data";
       var semanticRecords = [
@@ -3046,9 +3124,22 @@
       }
       function renderStoryProvenance(source) {
         var active = storySourceMeta[source] ? source : "data";
+        var meta = storySourceMeta[active];
+        var layerMeta = storyLayerMeta[activeLayer] || storyLayerMeta.structure;
         activeStorySource = active;
-        document.querySelectorAll("[data-o-story-source]").forEach(function (node) { node.classList.toggle("is-active", node.dataset.oStorySource === active); });
-        document.getElementById("oStoryProvenanceProof").textContent = storySourceMeta[active].proof;
+        document.querySelectorAll("[data-o-story-source]").forEach(function (node) {
+          var isActive = node.dataset.oStorySource === active;
+          node.classList.toggle("is-active", isActive);
+          node.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+        document.getElementById("oStorySourceKind").textContent = meta.kind;
+        document.getElementById("oStorySourceLabel").textContent = meta.label;
+        document.getElementById("oStorySourceRole").textContent = meta.role;
+        document.getElementById("oStorySourceLayer").textContent = "支撑 · " + layerMeta.title;
+        document.getElementById("oStorySourceReference").textContent = meta.reference;
+        document.getElementById("oStorySourceEvidence").textContent = meta.evidence;
+        document.getElementById("oStorySourcePath").textContent = meta.path;
+        document.getElementById("oStorySourceSupport").textContent = meta.support[activeLayer] || meta.support.structure;
       }
       function renderStoryBoard() {
         var item = selected();
