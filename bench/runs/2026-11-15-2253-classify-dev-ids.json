@@ -1,0 +1,11 @@
+{
+  "set": "dev",
+  "stratum": "v0",
+  "figures": 10,
+  "started": "2026-11-15-2253",
+  "commit": null,
+  "commit_at_end": null,
+  "gloss_source_digest": "8264b5155bb7c098c17b9bb58becc21b",
+  "R": "R version 4.5.2 (2025-10-31)",
+  "image": "bioconductor/bioconductor_docker@sha256:359702d482e70e343d2a436731b7c6deffd1ec184a1f1700de5d64b0c97cacba"
+}
