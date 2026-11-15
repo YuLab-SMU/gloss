@@ -57,7 +57,7 @@ element mapping.
 ## Verification
 
 - `NOT_CRAN=true Rscript -e "devtools::test()"` after the final code and tree
-  changes: 14 test files, 1447 expectations, 0 failures, 0 skips.
+  changes: 14 test files, 1450 expectations, 0 failures, 0 skips.
 - Targeted classification tests: 14 expectations, 0 failures.
 - Targeted hierarchy tests: 9 expectations, 0 failures.
 
