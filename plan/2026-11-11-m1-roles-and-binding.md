@@ -75,7 +75,7 @@
 - Not moved since 2026-11-11: Tasks 1, 3, 4, the legend item of Task 5, Tasks 6 to 8 (Scope change of 2026-11-12, "Review").
 
 **Overall progress**
-- [~] Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels _(decision 1(a): Claude labels, the owner labels the pilot)_
+- [x] Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels _(decision 1(a): Claude labels, the owner labels the pilot)_
 - [x] Task 2: Order binding for grid-page engines, verified by back-substitution (ggplot, heatmap)
 - [x] Task 2b: Patchwork: panels of each composed plot, then its bindings _(split from Task 2, see Scope changes)_
 - [ ] Task 3: Rules as plugins; coverage on the development set
@@ -92,7 +92,7 @@ Tasks 1 and 2 can run side by side: Task 1 is labelling time, Task 2 needs no la
 
 ### Task 1: Role vocabulary, labelling guideline, pilot agreement, development labels
 
-**Status:** `[~]` (guideline, sheets and scorer done; pilot under way, since 2026-11-11 with several annotators on the team workbench: Scope changes)
+**Status:** `[x]` (2026-11-15; guideline, sheets, scorer, pilot and the full development labels are committed)
 
 **Tests assumption:** 3 and 4.
 
@@ -107,14 +107,18 @@ Tasks 1 and 2 can run side by side: Task 1 is labelling time, Task 2 needs no la
 - [x] Role vocabulary: `data`, `guide`, `reference`, `decoration`, `annotation`, each with kinds (for example `guide`: axis line, tick, tick label, axis title, legend key, legend label, legend title, colour bar, strip). One page, with one worked example per kind from the hand-built figures, not the bench. — `bench/labels/guideline.md` v1: 5 roles, 28 kinds, a decision order, 11 decided cases; worked examples from three hand-built figures (`bench/labels/examples/make.R`, ggplot, base, ComplexHeatmap: 70 + 15 + 24 leaves, labelled in `examples/labels/`) cover 23 of the 28 kinds (not `data`/`box`, `reference`/`reference area` and the three `other` kinds).
 - [x] Label sheet per figure: the rendered page with every leaf outlined and numbered, and a CSV with one row per leaf (figure, leaf path, element index range, class, viewport, box, first text) and empty `role`, `kind`, `split` columns. The sheet shows no rule output. — `bench/R/label-sheet.R` (capture in the container, saving the substrate through the runner's new `keep` option; draw anywhere) and `bench/R/sheet.R`: `<id>.png`/`.svg` outlined and numbered, `<id>-page.png`, `<id>.csv`, `<id>-elements.csv`. One change from this item: no `split` column; a split is a leaf given in more than one row, each with an `elements` range, and `score-labels.R` derives it (a column that can disagree with the rows would need its own check).
 - [x] Labels keyed by leaf path and element index, not by `L001`-style ids, so they survive renumbering; `score-labels.R` fails when a label does not resolve on the current capture. — Key: the viewport path and grob path with grid's counters and base display-list indices dropped, plus the leaf's order among leaves with that key; a label must also match the leaf's class and element count. `Rscript bench/R/check-labels.R`: 12 of 12 checks OK (examples resolve; self-agreement κ 1; eight mutations of a label file each fail `check` with their reason; one leaf of 24 relabelled gives κ 0.920 and agreement 0.958, as computed by hand). Runner self-check on the host after the `keep` change: OK.
-- [~] Pilot: 5 development figures chosen by seed across engines, labelled independently by two annotators; κ on roles and on kinds, share of leaves split, minutes per figure. — Figures (`bench/labels/pilot/select.R`, seed 20261111, one per engine from run `1220`'s captured figures): gallery-070 (ggplot), patchwork-006, heatmap-026, gallery-052 (grid), gallery-021 (base). Predictions 28–31 committed before labelling. The criterion's unit, fixed before labelling (guideline §Agreement): κ with each leaf counted once. Annotator A's labels committed (`425d863`). 2026-11-11: the owner could not label from the CSV sheets by hand, so a label workbench was built (`bench/labels/workbench/`: a local page, one leaf at a time, number keys, files and time written by the server); annotator B labels with it. `python3 bench/labels/workbench/check.py`: 14 of 14 OK; a figure labelled through the page in a headless browser gave the same file as the one made by hand. The two annotators' ways of working differ (sheets and English guideline; workbench with Chinese hints), recorded in `bench/labels/pilot/README.md`.
-- [ ] Full development labels (54 figures) committed before any rule runs on the development set.
+- [x] Pilot: 5 development figures chosen by seed across engines, labelled independently by two annotators; κ on roles and on kinds, share of leaves split, minutes per figure. — Figures (`bench/labels/pilot/select.R`, seed 20261111, one per engine from run `1220`'s captured figures): gallery-070 (ggplot), patchwork-006, heatmap-026, gallery-052 (grid), gallery-021 (base). Predictions 28–31 committed before labelling. The criterion's unit, fixed before labelling (guideline §Agreement): κ with each leaf counted once. Annotator A's labels committed (`425d863`). 2026-11-11: the owner could not label from the CSV sheets by hand, so a label workbench was built (`bench/labels/workbench/`: a local page, one leaf at a time, number keys, files and time written by the server); annotator B labels with it. `python3 bench/labels/workbench/check.py`: 14 of 14 OK; a figure labelled through the page in a headless browser gave the same file as the one made by hand. The two annotators' ways of working differ (sheets and English guideline; workbench with Chinese hints), recorded in `bench/labels/pilot/README.md`. The pilot result is κ 0.822 on roles, 0.664 on role and kind, and 0 of 121 leaves split by either annotator (`Rscript bench/R/score-labels.R agree ...`).
+- [x] Full development labels (54 figures) committed before any rule runs on the development set. — `bench/labels/dev/`, made from the page, leaf and element sheets, frozen code and guideline v1. `Rscript bench/R/score-labels.R check bench/labels/dev`: 54 figures, 7108 leaves with elements, 33243 leaf elements, 0 unresolved labels, 3 role-split leaves (0.04%).
 
 **Verification**
 - `Rscript bench/R/score-labels.R bench/labels/pilot`: κ, splits, time. Then the same check that every development label resolves on run `0858`'s capture.
 - κ on roles below 0.8, or more than 5% of leaves split, is a scope change before the full labels (assumptions 4 and 3). Labelling time above about 15 minutes per figure is a scope change too: label a seeded sample of leaves instead, with its sampling error reported.
 
-**Result** _(filled in when done)_
+**Result** (2026-11-15)
+
+- The pilot met the role agreement criterion: κ 0.822 on 121 leaf units, with 0 split leaves for either annotator. The role-and-kind κ is 0.664; this is reported separately because the M1 criterion is on roles.
+- Annotator A labelled all 54 captured development figures before any rules plugin or development classification run. The labels resolve to the current sheets and cover all 7108 leaves with drawn elements and their 33243 elements. Three base leaves are split by element range; no other leaf is split by role.
+- Verification: `Rscript bench/R/score-labels.R check bench/labels/dev` passed with no unresolved labels or coverage errors. The label files and `time.csv` are in `bench/labels/dev/`.
 
 ---
 
