@@ -26,7 +26,7 @@ See [`_template.md`](_template.md).
 
 ## Active plans
 
-There is no active plan. M1 is closed in [done/2026-11-11-m1-roles-and-binding.md](done/2026-11-11-m1-roles-and-binding.md). The next plan should be opened from the evidence and decision in [ADR-0010](../dev_docs/decisions/0010-targeted-human-audits-and-evidence-bearing-correspondence.md), with a semantic pilot or the record core chosen explicitly.
+The active plan is [2026-11-15-semantic-pilot.md](2026-11-15-semantic-pilot.md). It starts from [ADR-0010](../dev_docs/decisions/0010-targeted-human-audits-and-evidence-bearing-correspondence.md), measures a closed claim check and an offline proposal fixture, and leaves M2 records and anchors for the route decision after a small independent audit. M1 remains closed in [done/2026-11-11-m1-roles-and-binding.md](done/2026-11-11-m1-roles-and-binding.md).
 
 ## Completed plans
 
