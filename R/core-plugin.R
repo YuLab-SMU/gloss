@@ -27,7 +27,7 @@ plugin_kinds <- function() {
     rules = list(
       required = list(engine = chr, rules = lst),
       optional = list(),
-      contract = contract_declaration
+      contract = contract_rules
     ),
     layer = list(
       required = list(body = lst),
@@ -343,6 +343,17 @@ contract_check <- function(label, expr) {
 }
 
 contract_declaration <- function(plugin) list()
+
+contract_rules <- function(plugin) {
+  checks <- list(contract_check("contains callable rules", {
+    if (!length(plugin$rules)) stop("the plugin has no rules")
+    if (!all(vapply(plugin$rules, is.function, logical(1)))) {
+      stop("every rule must be a function")
+    }
+    TRUE
+  }))
+  checks
+}
 
 contract_engine <- function(plugin) {
   if (is.null(plugin$example)) {

@@ -519,7 +519,8 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
         cap$status <- "captured"
         # The substrate itself, for label sheets (M1 plan Task 1): saved where
         # the caller asked, drawn later outside the worker.
-        if (!is.null(keep)) saveRDS(list(substrate = s, engine = g$meta$engine %||% NA), keep)
+        if (!is.null(keep)) saveRDS(list(substrate = s, engine = g$meta$engine %||% NA,
+                                         roles = g$derived$roles %||% NULL), keep)
         cap$engine <- g$meta$engine %||% NA
         cap$elements <- nrow(s$elements)
         cap$leaves <- nrow(s$leaves)

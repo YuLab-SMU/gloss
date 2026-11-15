@@ -1,5 +1,15 @@
 # gloss 0.0.0.9000
 
+## Deterministic role classification (2026-11-15)
+
+- Added built-in role-rule plugins for ggplot, patchwork, heatmap, grid and
+  base figures. `gloss()` now derives a checked role table by default.
+- Added `gl_classify()`, `gl_role()`, `gl_unclassified()` and
+  `gl_role_checks()` for reading element and leaf roles, residue reasons and
+  consistency checks.
+- Added `classify = FALSE` for callers that need capture and binding without
+  deriving roles.
+
 ## Interactive docs site (2026-11-13)
 
 - The static `docs/` site now has linked Overview, Explore and Propose workspaces. Overview renders the semantic path with inline SVG, semantic status colors, a live M0—M5 capability map and evidence summary synchronized with the selected element and latest local verification result.

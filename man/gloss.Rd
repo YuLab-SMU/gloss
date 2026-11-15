@@ -15,7 +15,8 @@ gloss(x, ...)
   dense = 10000,
   context = TRUE,
   engine = NULL,
-  bind = TRUE
+  bind = TRUE,
+  classify = TRUE
 )
 }
 \arguments{
@@ -40,6 +41,9 @@ class.}
 check every pairing against the page (see \code{\link[=gl_bindings]{gl_bindings()}}). The step
 needs what the engine built while drawing, which the figure does not
 keep, so it runs at capture or not at all. \code{FALSE} skips it.}
+
+\item{classify}{Run the registered engine role rules and keep their derived
+role table in the figure. Set to \code{FALSE} for a substrate-only capture.}
 }
 \value{
 A \code{gloss_figure}.

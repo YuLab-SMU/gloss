@@ -74,6 +74,8 @@
 #'   check every pairing against the page (see [gl_bindings()]). The step
 #'   needs what the engine built while drawing, which the figure does not
 #'   keep, so it runs at capture or not at all. `FALSE` skips it.
+#' @param classify Run the registered engine role rules and keep their derived
+#'   role table in the figure. Set to `FALSE` for a substrate-only capture.
 #' @return A `gloss_figure`.
 #' @examples
 #' if (requireNamespace("ggplot2", quietly = TRUE)) {
@@ -88,7 +90,7 @@ gloss <- function(x, ...) UseMethod("gloss")
 #' @rdname gloss
 #' @export
 gloss.default <- function(x, ..., width = NULL, height = NULL, dense = 10000,
-                          context = TRUE, engine = NULL, bind = TRUE) {
+                          context = TRUE, engine = NULL, bind = TRUE, classify = TRUE) {
   expr <- substitute(x)
   call <- sys.call()
   # Record the call as the user wrote it, not as dispatched.
@@ -98,7 +100,7 @@ gloss.default <- function(x, ..., width = NULL, height = NULL, dense = 10000,
   engines <- engine_candidates(x, engine)
   gl_capture(x, engines, width = size$width, height = size$height, dense = dense,
              context = context, expr = expr, call = call, env = env,
-             size_basis = size$basis, bind = bind)
+             size_basis = size$basis, bind = bind, classify = classify)
 }
 
 figure_size <- function(width, height) {
@@ -140,7 +142,7 @@ engine_page <- function(engine) engine$page %||% "grid"
 #'   candidate engine plugins; when the candidates capture different kinds of
 #'   page, the page `x` draws chooses among them.
 #' @param width,height Size in inches.
-#' @param dense,context,bind See [gloss()].
+#' @param dense,context,bind,classify See [gloss()].
 #' @param expr,call,env The expression, call and calling environment, used
 #'   by context sniffers.
 #' @param size_basis Where the size came from.
@@ -149,9 +151,11 @@ engine_page <- function(engine) engine$page %||% "grid"
 #' @export
 gl_capture <- function(x, engine, width = 7, height = 5, dense = 10000,
                        context = TRUE, expr = NULL, call = NULL,
-                       env = parent.frame(), size_basis = "argument", bind = TRUE) {
+                       env = parent.frame(), size_basis = "argument", bind = TRUE,
+                       classify = TRUE) {
   capture_figure(x, engine, width = width, height = height, dense = dense, context = context,
-                 expr = expr, call = call, env = env, size_basis = size_basis, bind = bind)$fig
+                 expr = expr, call = call, env = env, size_basis = size_basis, bind = bind,
+                 classify = classify)$fig
 }
 
 # gl_capture()'s work. Also returns the engine and its state after drawing,
@@ -160,7 +164,8 @@ gl_capture <- function(x, engine, width = 7, height = 5, dense = 10000,
 # state is at hand (ADR-0007).
 capture_figure <- function(x, engine, width = 7, height = 5, dense = 10000,
                            context = TRUE, expr = NULL, call = NULL,
-                           env = parent.frame(), size_basis = "argument", bind = TRUE) {
+                           env = parent.frame(), size_basis = "argument", bind = TRUE,
+                           classify = TRUE) {
   engines <- if (inherits(engine, "gloss_plugin")) list(engine) else engine
   cap <- capture_page(x, engines, width, height)
   eng <- cap$engine
@@ -261,6 +266,20 @@ capture_figure <- function(x, engine, width = 7, height = 5, dense = 10000,
   }
   if (!is.null(no_bindings)) {
     withheld <- rbind(withheld, data.frame(what = "bindings", reason = no_bindings, stringsAsFactors = FALSE))
+  }
+  no_roles <- if (!isTRUE(classify)) {
+    "not computed: the figure was captured with classify = FALSE"
+  } else {
+    r <- tryCatch(derive_roles(fig, eng, state), error = function(e) e)
+    if (inherits(r, "error")) {
+      paste("the role rules failed:", conditionMessage(r))
+    } else {
+      fig$derived$roles <- r
+      NULL
+    }
+  }
+  if (!is.null(no_roles)) {
+    withheld <- rbind(withheld, data.frame(what = "roles", reason = no_roles, stringsAsFactors = FALSE))
   }
   if (nrow(withheld)) {
     rownames(withheld) <- NULL
