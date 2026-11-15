@@ -85,6 +85,10 @@ ggplot_role_rule <- function(leaf, elements, input) {
   q <- paste(p, vp)
   ql <- tolower(q)
   tags <- unique(elements$tag)
+  if (identical(input$fig$meta$engine, "patchwork") &&
+      grepl("guide-box-inside", ql) && cls %in% c("lines", "pathgrob")) {
+    return(role_claim("guide", "legend key", "viewport:guide-box-inside", "ggplot.legend.key"))
+  }
   if (grepl("plot\\.background|layout::background|layout/background", ql)) return(role_claim("decoration", "background", "path:plot.background", "ggplot.background"))
   if (grepl("panel\\.background|strip\\.background|legend\\.background", ql)) {
     return(role_claim("decoration", "background", "path:background", "ggplot.background"))
