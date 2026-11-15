@@ -2,5 +2,5 @@ id,source,layer,text,table,check_kind,response,predictor,by,expect,audit_questio
 code_verified,code,claim,"Within each facet, the 8-cylinder group has lower mpg as wt increases",points_g3,trend,y,x,PANEL,negative,
 model_partial,model,claim,"Across every facet and cylinder group, heavier cars have lower mpg",points,trend,y,x,PANEL|group,negative,"Does the universal wording survive the positive slope in the automatic 4-cylinder group?"
 model_failed,model,claim,"Within the 8-cylinder group, heavier cars have higher mpg",points_g3,trend,y,x,PANEL,positive,
-model_open_world,model,meaning,"The 8-cylinder group may reflect a measurement artifact",points,,,,,"What domain evidence, if any, supports this explanation?"
+model_open_world,model,meaning,"The 8-cylinder group may reflect a measurement artifact",points,,,,,,"What domain evidence, if any, supports this explanation?"
 model_bad_column,model,claim,"Across every facet, heavier cars have lower fuel use",points,trend,y,weight,PANEL,negative,"Does the plotting mapping identify the proposed predictor column?"
