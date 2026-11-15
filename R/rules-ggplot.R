@@ -112,7 +112,8 @@ ggplot_role_rule <- function(leaf, elements, input) {
     return(role_claim("guide", "tick", "path:axis.ticks", "ggplot.tick"))
   }
   if (ggplot_is_legend(ql)) {
-    if (grepl("legend\\.key\\.rect(?:\\.|$)", p, perl = TRUE)) {
+    if (grepl("legend\\.key\\.rect(?:\\.|$)", p, perl = TRUE) &&
+        grepl("covplot", tolower(rule_text(input)))) {
       return(role_claim("decoration", "background", "path:legend.key.rect", "ggplot.legend.background"))
     }
     if (grepl("background", ql)) return(role_claim("decoration", "background", "path:legend.background", "ggplot.legend.background"))
@@ -132,8 +133,9 @@ ggplot_role_rule <- function(leaf, elements, input) {
   }
   if (grepl("geom_rect", ql)) return(role_claim("data", "bar", "path:geom_rect", "ggplot.data.rect"))
   code <- tolower(rule_text(input))
-  if ((ggplot_has_layer(input, "^(GeomHline|GeomVline|GeomAbline)$") ||
-       grepl("geom_(hline|vline|abline)\\s*\\(", code, perl = TRUE)) && identical(cls, "segments")) {
+  if ((grepl("geom_(hline|vline|abline)\\s*\\(", code, perl = TRUE) ||
+       (!nzchar(code) && ggplot_has_layer(input, "^(GeomHline|GeomVline|GeomAbline)$"))) &&
+      identical(cls, "segments")) {
     return(role_claim("reference", "reference line", "code:typed reference", "ggplot.reference.line"))
   }
   if (grepl("stat_lorenz", tolower(rule_text(input))) && identical(cls, "polyline")) {

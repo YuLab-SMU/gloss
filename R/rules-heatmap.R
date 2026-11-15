@@ -38,8 +38,14 @@ heatmap_role_rule <- function(leaf, elements, input) {
     if (identical(cls, "lines")) return(role_claim("guide", "axis line", "viewport:annotation axis", "heatmap.annotation.axis"))
     return(role_claim("guide", "tick", "viewport:annotation axis", "heatmap.annotation.axis"))
   }
+  if (grepl("heatmap_mat|heatmap_matrix", q) && cls %in% c("segments", "lines")) {
+    return(role_claim("data", "segment", "viewport:heatmap dendrogram", "heatmap.dendrogram"))
+  }
   if (grepl("row_names|column_names|row_name|column_name|row_title|column_title", q)) return(role_claim("guide", "tick label", "viewport:dimension names", "heatmap.dimension.label"))
   if (grepl("annotation|top_annotation|bottom_annotation|left_annotation|right_annotation", q)) {
+    if (identical(cls, "rect") && grepl("annotation_summary", q)) {
+      return(role_claim("decoration", "border", "viewport:annotation border", "heatmap.annotation.decoration"))
+    }
     if (identical(cls, "rect") && grepl("annotation_point|annotation_foo", q)) {
       return(role_claim("decoration", if (grepl("annotation_foo", q)) "background" else "border", "viewport:annotation decoration", "heatmap.annotation.decoration"))
     }

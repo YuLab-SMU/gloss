@@ -87,6 +87,16 @@ base_role_rule <- function(leaf, elements, input) {
     kind <- if ("text" %in% tags) "text" else if ("circle" %in% tags) "point" else if ("polyline" %in% tags || "path" %in% tags) "line" else if (op == "rect") "bar" else if (op == "polygon") "area" else "segment"
     return(role_claim("data", kind, paste0("call:", op), "base.data.mark"))
   }
-  if (identical(op, "text")) return(role_claim("data", "text", "call:text", "base.data.text"))
+  if (identical(op, "text")) {
+    code <- tolower(rule_text(input))
+    if (grepl("biocgraph", code) && any(as.double(elements$y0) < 50, na.rm = TRUE)) {
+      ann <- elements$ordinal[as.double(elements$y0) < 50]
+      rest <- setdiff(elements$ordinal, ann)
+      claims <- list(role_claim("annotation", "text", "code:package title", "base.annotation.text", elements = ann))
+      if (length(rest)) claims[[length(claims) + 1L]] <- role_claim("data", "text", "call:text", "base.data.text", elements = rest)
+      return(claims)
+    }
+    return(role_claim("data", "text", "call:text", "base.data.text"))
+  }
   NULL
 }
