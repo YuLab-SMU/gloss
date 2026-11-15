@@ -511,6 +511,8 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
       # the core uses it only when the normal context sniffer has no code.
       if (!identical(Sys.getenv("GLOSS_BENCH_NO_CODE"), "true")) {
         attr(fig, "gloss_bench_code") <- paste(c(setup, unlist(chunks, use.names = FALSE)), collapse = "\n")
+      } else {
+        attr(fig, "gloss_bench_no_code") <- TRUE
       }
       g <- tryCatch(withCallingHandlers(gloss::gloss(fig, bind = FALSE), warning = function(w) {
         warns <<- c(warns, conditionMessage(w))

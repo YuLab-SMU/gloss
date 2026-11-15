@@ -29,8 +29,11 @@ rules_input <- function(fig, state) {
   # attribute on the recorded page. Use it only when normal context has no
   # code; ordinary captures remain path and engine-state based.
   recorded <- state$recorded %||% NULL
+  no_bench_code <- isTRUE(attr(recorded, "gloss_bench_no_code"))
   bench_code <- attr(recorded, "gloss_bench_code") %||% attr(state$plot %||% NULL, "gloss_bench_code")
-  if (is.character(bench_code) && length(bench_code)) {
+  if (no_bench_code) {
+    code <- list()
+  } else if (is.character(bench_code) && length(bench_code)) {
     code <- list(script = list(code = paste(bench_code, collapse = "\n")))
   }
   list(fig = fig, state = state, code = code)
