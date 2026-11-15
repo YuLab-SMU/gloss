@@ -1073,3 +1073,41 @@ Written 2026-11-12, after `without_columns()` and its tests, before rerunning `b
 142. **Right.** All 54 captured figures are written under both embeddings. With everything embedded, 49 come back identical and 5 differ in their partial tables and the status that lists them (gallery-048, exts-017, exts-021, patchwork-010, patchwork-011); under the default embedding all 54 are identical in substrate and derived tables. Against run `-1938`, 53 of the 55 rows are the same in every stage and count; the two that changed are the two `sf` compositions, and neither has a pairing to try.
 
 With the tree stratum's run `-1926` (29 of 29 identical): every one of the 83 captured development figures can be written and read back; 78 identical in every part, 5 without what the codec cannot store, each naming it.
+
+## Role rules on the M1 development set (Task 3)
+
+Written 2026-11-15, after the 54 development label files were committed in
+`b5f0e77` and before any package rules plugin or development classification run.
+What I have seen: the three hand-built research figures classified 481 of 486
+elements by path and viewport rules; the development sheets contain 7108 leaves
+with elements and 33243 leaf elements. The labels were made from the page,
+sheet and frozen code, without classifier output.
+
+### Predictions
+
+143. **Element coverage is at least 90% for ggplot and patchwork, at least 85%
+for heatmap and base, and at least 70% for grid.** The first development run
+will classify a leaf when the engine's own path, viewport, plot structure or
+base call gives a stable cue; extension-specific grobs without such a cue stay
+residue with a reason.
+
+144. **The residue is concentrated in at most five reason classes per engine,
+and those classes cover at least 80% of the residual elements.** The expected
+classes are generic extension grobs, mixed or unsupported panel content,
+base legend entries, and leaves with no engine cue.
+
+145. **All path-named guide and decoration leaves on ggplot and patchwork pages
+are classified, apart from count-mismatch leaves.** This includes plot and
+panel backgrounds, grid lines, axes, strips, titles, legend backgrounds, keys,
+labels and titles.
+
+146. **The rules do not silently assign an unknown role.** Every unmatched leaf
+has a residue reason, and every split is returned with explicit element ranges;
+the classifier's output will resolve against the 54 label sheets without using
+the label files at runtime.
+
+**What would change the plan:** ggplot or patchwork residue above 10% of
+elements, or residue spread across more than five classes without one class
+covering most of it, triggers a scope change under M1 assumption 2. A rule that
+returns an unknown role without a reason is a defect and is fixed before the
+accuracy run.
