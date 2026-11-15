@@ -28,5 +28,6 @@ See [`_template.md`](_template.md).
 | [0005](0005-bundle-format-v0.md) | Bundle format v0 | Accepted | 2026-11-09 |
 | [0006](0006-capture-the-page-the-figure-draws.md) | Capture the page the figure draws, not a grob built from the object | Accepted | 2026-11-11 |
 | [0007](0007-derived-tables-of-the-substrate.md) | What code works out from the substrate is a derived table, made at capture; bindings are the first | Accepted | 2026-11-12 |
-| [0008](0008-held-out-role-labels-by-one-labeller-and-an-independent-sample.md) | Held-out role labels: annotator A labels every figure, people label a seeded sample independently (0007 is kept for the M1 plan's Task 6) | Accepted | 2026-11-11 |
+| [0008](0008-held-out-role-labels-by-one-labeller-and-an-independent-sample.md) | Held-out role labels: annotator A labels every figure, people label a seeded sample independently (0007 is kept for the M1 plan's Task 6) | Superseded by ADR-0010 for the current role layer | 2026-11-11 |
 | [0009](0009-package-behaviour-enters-as-a-checked-proposal.md) | Code binds what the drawing system's contract gives; a package's own behaviour enters as a checked proposal | Accepted | 2026-11-12 |
+| [0010](0010-targeted-human-audits-and-evidence-bearing-correspondence.md) | Targeted human audits for semantic layers; correspondence stays evidence-bearing | Accepted | 2026-11-15 |

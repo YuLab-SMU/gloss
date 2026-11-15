@@ -1,6 +1,6 @@
 # ADR-0008: Held-out role labels: annotator A labels every figure, people label a seeded sample independently
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-0010 for the current role layer
 - **Date:** 2026-11-11
 - **Deciders:** Yonghe Xia (2026-11-11, on Claude's proposal, after labelling the pilot)
 - **Related:** plan/2026-11-11-m1-roles-and-binding.md (Task 1, Scope changes of 2026-11-11); dev_logs/2026-11-11-m1-plan.md; bench/predictions.md (predictions 28–31, 43–52); design §评测设计. The number 0007 is kept for the decision the same plan names in its Task 6.

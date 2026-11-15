@@ -26,7 +26,7 @@ See [`_template.md`](_template.md).
 
 ## Active plans
 
-- [2026-11-11-m1-roles-and-binding.md](2026-11-11-m1-roles-and-binding.md): M1, first slice: roles and bindings on the development set. Opened 2026-11-11; the owner's three decisions settled. Scope change of 2026-11-12: few rules, with the open tasks read under ADR-0009 (accepted 2026-11-12).
+There is no active plan. M1 is closed in [done/2026-11-11-m1-roles-and-binding.md](done/2026-11-11-m1-roles-and-binding.md). The next plan should be opened from the evidence and decision in [ADR-0010](../dev_docs/decisions/0010-targeted-human-audits-and-evidence-bearing-correspondence.md), with a semantic pilot or the record core chosen explicitly.
 
 ## Completed plans
 

@@ -362,5 +362,7 @@ rules, checked role tables, binding tables, structure/data tree queries and a
 residue list. The development scorer reports 0 silent errors and 0 flagged
 correct elements over 33243 labelled elements; the 12 residues are explicit
 and named. Base legends are guide under the code cue and residue under the
-page-only cue, never data. The next plan begins with held-out annotation and
-the frozen rule set; it does not retune against held-out results.
+page-only cue, never data. The next plan begins with a semantic pilot and
+targeted audits under [ADR-0010](../../dev_docs/decisions/0010-targeted-human-audits-and-evidence-bearing-correspondence.md).
+It does not begin with broad held-out role annotation or retune against
+held-out results.
