@@ -48,7 +48,7 @@ for (id in idx$id) {
 }
 labels <- do.call(rbind, label_rows)
 els <- read_chr(el_file)
-for (nm in c("ordinal", "flagged")) if (nm %in% names(els)) els[[nm]] <- as.integer(els[[nm]])
+if ("ordinal" %in% names(els)) els$ordinal <- as.integer(els$ordinal)
 if ("flagged" %in% names(els)) els$flagged <- as.logical(els$flagged)
 els$ordinal <- as.integer(els$ordinal)
 sc <- merge(els, labels, by = c("id", "leaf", "ordinal"), all.x = TRUE, sort = FALSE)
@@ -78,7 +78,9 @@ line("silent errors %d; flagged-but-correct %d; flagged correct share %s", sum(s
 line("\n== by engine")
 by_engine <- do.call(rbind, lapply(split(sc[sc$labelled, , drop = FALSE], sc$engine[sc$labelled]), function(d) {
   data.frame(elements = nrow(d), classified = sum(d$classified), residue = sum(!d$classified),
-             role_correct = sum(d$role_correct), silent_errors = sum(d$silent_error), flagged_correct = sum(d$flagged_correct))
+             coverage = pct(sum(d$classified), nrow(d)), role_correct = sum(d$role_correct),
+             accuracy = pct(sum(d$role_correct), sum(d$classified)),
+             silent_errors = sum(d$silent_error), flagged_correct = sum(d$flagged_correct))
 }))
 print(by_engine)
 
@@ -91,6 +93,14 @@ print(by_role)
 line("\n== residue reasons")
 res <- sc[sc$labelled & !sc$classified, , drop = FALSE]
 if (nrow(res)) print(sort(table(res$reason), decreasing = TRUE)) else line("none")
+if (nrow(res)) {
+  line("\n== residue by figure")
+  rf <- do.call(rbind, lapply(split(sc[sc$labelled, , drop = FALSE], sc$id[sc$labelled]), function(d) {
+    data.frame(id = d$id[1], engine = d$engine[1], elements = nrow(d), classified = sum(d$classified),
+               residue = sum(!d$classified), coverage = pct(sum(d$classified), nrow(d)), stringsAsFactors = FALSE)
+  }))
+  print(rf[order(rf$engine, rf$id), ], row.names = FALSE)
+}
 
 line("\n== checks")
 if (file.exists(check_file)) {

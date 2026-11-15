@@ -164,7 +164,11 @@ apply_role_checks <- function(fig, roles) {
   if (!nrow(el)) return(roles)
   tags <- fig$substrate$elements$tag[match(el$element, fig$substrate$elements$id)]
   text_kind <- el$kind %in% c("text", "tick label", "axis title", "legend label", "legend title", "strip label", "title")
-  bad_text <- text_kind & !is.na(tags) & tags != "text"
+  # A label leaf can contain both its text and the box/path behind it. The
+  # role is supported when the leaf has at least one text primitive; only a
+  # leaf with no text at all contradicts a text kind.
+  leaf_has_text <- vapply(el$leaf, function(id) any(tags[el$leaf == id] == "text", na.rm = TRUE), logical(1))
+  bad_text <- text_kind & !leaf_has_text
   for (i in which(bad_text)) {
     el$flagged[i] <- TRUE
     el$flags[i] <- paste(unique(c(el$flags[i], "text role is drawn by a non-text element")), collapse = "; ")
