@@ -47,7 +47,7 @@
 
 **Overall progress**
 - [x] Task 1: Add and test the closed `trend` semantic check.
-- [ ] Task 2: Run the offline proposal comparison through the same check boundary.
+- [~] Task 2: Run the offline proposal comparison through the same check boundary.
 - [ ] Task 3: Produce the targeted audit queue, update design/logs, and decide whether a larger pilot or M2 should follow.
 
 ---
@@ -83,7 +83,7 @@
 
 ### Task 2: Offline proposal comparison
 
-**Status:** `[ ]`
+**Status:** `[~]`
 
 **Tests assumption:** Assumption 2.
 
@@ -95,7 +95,7 @@
 - Give code-generated and proposal-generated claims the same closed check. The fixture must include a true claim, a false claim, a partial claim and an unsupported/open-world claim, so a proposal cannot gain credit by abstaining.
 
 **Checklist**
-- [ ] Freeze the proposal cases before running the scorer.
+- [x] Freeze the proposal cases before running the scorer.
 - [ ] Report coverage, verified/partial/failed/refused counts, and false-claim rejection separately.
 - [ ] Keep the model arm explicitly offline unless a later run supplies an archived model trace.
 
