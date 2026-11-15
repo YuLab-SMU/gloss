@@ -529,8 +529,9 @@ capture_page <- function(x, engines, width, height) {
   # rules can distinguish package-generated marks from direct base calls. The
   # page kind probe records a fresh replay, so carry that opt-in attribute
   # across the probe before the base engine consumes it.
-  if (!is.null(page$rp) && !is.null(attr(x, "gloss_bench_code"))) {
+  if (!is.null(page$rp) && (!is.null(attr(x, "gloss_bench_code")) || isTRUE(attr(x, "gloss_bench_no_code")))) {
     attr(page$rp, "gloss_bench_code") <- attr(x, "gloss_bench_code")
+    attr(page$rp, "gloss_bench_no_code") <- isTRUE(attr(x, "gloss_bench_no_code"))
   }
   if (is.null(eng)) {
     # Class did not fix the page kind: the page drawn chooses the engine.
