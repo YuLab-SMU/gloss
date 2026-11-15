@@ -37,6 +37,7 @@ base_legend_code <- function(input) grepl("legend\\s*\\(", tolower(rule_text(inp
 
 base_role_rule <- function(leaf, elements, input) {
   p <- leaf_value(leaf, "path", "")
+  vp <- leaf_value(leaf, "vp", "")
   cls <- leaf_value(leaf, "class", "")
   op <- sub("^base/[0-9]+/", "", p)
   if (base_legend_leaf(leaf, input)) {
@@ -59,7 +60,7 @@ base_role_rule <- function(leaf, elements, input) {
   if (identical(op, "title") || identical(cls, "title")) {
     code <- tolower(rule_text(input))
     if ((grepl("boxplot\\s*\\(", code) && !grepl("main\\s*=", code)) ||
-        (grepl("explo\\.plot", code) && grepl("::plot", p))) {
+        (grepl("explo\\.plot", code) && grepl("::plot", paste(p, vp)))) {
       return(role_claim("guide", "axis title", "call:title axis labels", "base.title"))
     }
     main <- elements$ordinal[as.double(elements$y0) < 70 & as.double(elements$x0) > 30]
@@ -89,8 +90,8 @@ base_role_rule <- function(leaf, elements, input) {
   }
   if (identical(op, "text")) {
     code <- tolower(rule_text(input))
-    if (grepl("biocgraph", code) && any(as.double(elements$y0) < 50, na.rm = TRUE)) {
-      ann <- elements$ordinal[as.double(elements$y0) < 50]
+    if (grepl("biocgraph", code) && any(as.double(elements$y0) < 50 | as.double(elements$x0) < 60, na.rm = TRUE)) {
+      ann <- elements$ordinal[as.double(elements$y0) < 50 | as.double(elements$x0) < 60]
       rest <- setdiff(elements$ordinal, ann)
       claims <- list(role_claim("annotation", "text", "code:package title", "base.annotation.text", elements = ann))
       if (length(rest)) claims[[length(claims) + 1L]] <- role_claim("data", "text", "call:text", "base.data.text", elements = rest)

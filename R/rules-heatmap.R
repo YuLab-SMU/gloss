@@ -44,6 +44,7 @@ heatmap_role_rule <- function(leaf, elements, input) {
   if (grepl("row_names|column_names|row_name|column_name|row_title|column_title", q)) return(role_claim("guide", "tick label", "viewport:dimension names", "heatmap.dimension.label"))
   if (grepl("annotation|top_annotation|bottom_annotation|left_annotation|right_annotation", q)) {
     if (identical(cls, "rect") && grepl("annotation_summary", q)) {
+      if (nrow(elements) > 1L) return(role_claim("data", "bar", "viewport:annotation summary", "heatmap.annotation.bar"))
       return(role_claim("decoration", "border", "viewport:annotation border", "heatmap.annotation.decoration"))
     }
     if (identical(cls, "rect") && grepl("annotation_point|annotation_foo", q)) {
