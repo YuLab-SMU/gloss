@@ -1272,8 +1272,21 @@
     .o-story-trail-item.is-recorded { border-style: solid; border-color: var(--x-verified); background: var(--x-verified-bg); color: var(--x-verified); }
     .o-story-trail-item b { font-size: .57rem; }
     .o-story-trail-caption { flex: 0 0 auto; color: #6f6f6f; font-size: .56rem; white-space: nowrap; }
+    .o-story-provenance { margin: 0 .85rem .85rem; padding: .7rem .8rem; border: 1px solid #cfd1d6; border-radius: 15px; background: rgba(255,255,255,.88); }
+    .o-story-provenance-head { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-bottom: .55rem; }
+    .o-story-provenance-head strong { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; }
+    .o-story-provenance-head span { color: #6f6f6f; font-size: .56rem; }
+    .o-story-source-chain { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); gap: .35rem; align-items: stretch; }
+    .o-story-source { display: grid; gap: .16rem; min-width: 0; padding: .5rem .55rem; border: 1px solid #c9cbd0; border-radius: 10px; background: #fbfbfa; cursor: pointer; text-align: left; transition: border-color .18s ease,background .18s ease,transform .18s ease; }
+    .o-story-source:hover, .o-story-source:focus-visible { border-color: var(--x-blue); background: var(--x-blue-bg); outline: none; transform: translateY(-1px); }
+    .o-story-source.is-active { border-color: var(--x-blue); background: var(--x-blue-bg); box-shadow: inset 0 3px 0 var(--x-blue); }
+    .o-story-source small { color: #6f6f6f; font-size: .49rem; font-weight: 950; letter-spacing: .1em; text-transform: uppercase; }
+    .o-story-source strong { overflow: hidden; font-size: .62rem; text-overflow: ellipsis; white-space: nowrap; }
+    .o-story-source span { overflow: hidden; color: #6f6f6f; font-size: .52rem; text-overflow: ellipsis; white-space: nowrap; }
+    .o-story-source-arrow { display: flex; align-items: center; justify-content: center; color: var(--x-blue); font-size: 1.1rem; font-weight: 950; }
+    .o-story-provenance-proof { margin-top: .55rem; padding: .45rem .55rem; border-left: 3px solid var(--x-blue); background: #f5f7ff; color: #4e5565; font-size: .58rem; line-height: 1.4; }
     @media (max-width: 1120px) { .o-story-grid { grid-template-columns: 1fr; } .o-story-panel { display: grid; grid-template-columns: minmax(0,1fr) minmax(290px,.8fr); gap: .7rem; align-items: start; } .o-story-ladder-head, .o-story-ladder, .o-story-delta, .o-story-actions, .o-story-status { grid-column: 1 / -1; } }
-    @media (max-width: 720px) { .o-story-head { align-items: flex-start; flex-direction: column; } .o-story-question { min-width: 0; width: 100%; } .o-story-panel { display: block; } .o-story-trail { align-items: flex-start; flex-direction: column; } .o-story-trail-list { width: 100%; } .o-story-trail-caption { white-space: normal; } }
+    @media (max-width: 720px) { .o-story-head { align-items: flex-start; flex-direction: column; } .o-story-question { min-width: 0; width: 100%; } .o-story-panel { display: block; } .o-story-trail { align-items: flex-start; flex-direction: column; } .o-story-trail-list { width: 100%; } .o-story-trail-caption { white-space: normal; } .o-story-source-chain { grid-template-columns: 1fr; } .o-story-source-arrow { transform: rotate(90deg); min-height: .9rem; } }
     @media (max-width: 1120px) { .o-lower-grid { grid-template-columns: 1fr; } .o-evidence-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
     @media (max-width: 1120px) { .o-semantic-grid, .o-proposal-grid, .o-output-grid { grid-template-columns: 1fr; } .o-effects-grid { grid-template-columns: 1fr 1fr; } .o-effect-stack { grid-column: 1 / -1; } .o-lens-grid { grid-template-columns: 1fr 1fr; } .o-lens-inspector { grid-column: 1 / -1; } .o-layer-detail { min-height: 0; } .o-layer-detail .o-action-row { margin-top: .8rem; padding-top: 0; } }
     @media (max-width: 860px) { .o-workspace-head, .o-hero-head, .o-evidence-head, .o-semantic-head { align-items: flex-start; flex-wrap: wrap; } .o-meta, .o-legend { justify-content: flex-start; } .o-milestone-track { grid-template-columns: repeat(3,minmax(0,1fr)); } }
@@ -1518,6 +1531,19 @@
                 <p class="o-story-status" id="oStoryStatus">结构记录已经把当前标记固定到 E-05 · row 5。</p>
               </aside>
             </div>
+            <section class="o-story-provenance" aria-labelledby="oStoryProvenanceTitle">
+              <header class="o-story-provenance-head"><strong id="oStoryProvenanceTitle">semantic provenance</strong><span>每一层都回到一个可追踪的来源</span></header>
+              <div class="o-story-source-chain">
+                <button class="o-story-source is-active" type="button" data-o-story-source="data"><small>DATA ARTIFACT</small><strong>penguins.csv</strong><span>rows · species · measurements</span></button>
+                <span class="o-story-source-arrow">→</span>
+                <button class="o-story-source" type="button" data-o-story-source="code"><small>PLOTTING CODE</small><strong>ggplot / geom_point</strong><span>scales · groups · anchors</span></button>
+                <span class="o-story-source-arrow">→</span>
+                <button class="o-story-source" type="button" data-o-story-source="method"><small>STATISTICAL METHOD</small><strong>group mean / check</strong><span>comparison · evidence</span></button>
+                <span class="o-story-source-arrow">→</span>
+                <button class="o-story-source" type="button" data-o-story-source="world"><small>WORLD KNOWLEDGE</small><strong>species · flipper length</strong><span>domain terms · interpretation</span></button>
+              </div>
+              <div class="o-story-provenance-proof" id="oStoryProvenanceProof">当前层从 penguins.csv 读取 row 5，并把它保留为一个可追踪的图元事实。</div>
+            </section>
             <footer class="o-story-trail"><div class="o-story-trail-list"><span class="o-story-trail-item is-recorded" data-o-story-trail="structure"><b>01</b> structure</span><span class="o-story-trail-item" data-o-story-trail="meaning"><b>02</b> meaning</span><span class="o-story-trail-item" data-o-story-trail="relation"><b>03</b> relation</span><span class="o-story-trail-item" data-o-story-trail="claim"><b>04</b> claim</span><span class="o-story-trail-item" data-o-story-trail="narrative"><b>05</b> narrative</span><span class="o-story-trail-item" data-o-story-trail="behavior"><b>06</b> behavior</span></div><span class="o-story-trail-caption">records stay attached to the same figure</span></footer>
           </section>
 
@@ -2488,13 +2514,20 @@
       var activeLayer = "structure";
       var storyLayerOrder = ["structure","meaning","relation","claim","narrative","behavior"];
       var storyLayerMeta = {
-        structure: {title:"角色与结构", before:"只能看到一个点", gain:"知道它对应 row 5", status:"结构记录已经把当前标记固定到 E-05 · row 5。"},
-        meaning: {title:"数据与领域含义", before:"知道它是 row 5", gain:"知道 Adelie、Dream、鳍长 190 mm", status:"字段和领域术语把一个坐标变成可读的企鹅数据。"},
-        relation: {title:"关系与语义分组", before:"知道一个点的字段", gain:"知道它属于 Adelie 分组", status:"关系线把选中标记接回 species group。"},
-        claim: {title:"声明与证据", before:"知道分组关系", gain:"看到 Gentoo > Adelie 的均值证据", status:"声明卡把比较对象、指标和核验结果放在一起。"},
-        narrative: {title:"叙事与无障碍", before:"知道一条已核验结论", gain:"可以按顺序读懂这张图", status:"阅读顺序和 alt 描述把结果交给读者与辅助技术。"},
-        behavior: {title:"交互与协作", before:"知道一条可读结论", gain:"可以 focus、批注、复核并留痕", status:"协作动作沿着同一锚点留下可追踪记录。"}
+        structure: {title:"角色与结构", before:"只能看到一个点", gain:"知道它对应 row 5", status:"结构记录已经把当前标记固定到 E-05 · row 5。", source:"data"},
+        meaning: {title:"数据与领域含义", before:"知道它是 row 5", gain:"知道 Adelie、Dream、鳍长 190 mm", status:"字段和领域术语把一个坐标变成可读的企鹅数据。", source:"world"},
+        relation: {title:"关系与语义分组", before:"知道一个点的字段", gain:"知道它属于 Adelie 分组", status:"关系线把选中标记接回 species group。", source:"code"},
+        claim: {title:"声明与证据", before:"知道分组关系", gain:"看到 Gentoo > Adelie 的均值证据", status:"声明卡把比较对象、指标和核验结果放在一起。", source:"method"},
+        narrative: {title:"叙事与无障碍", before:"知道一条已核验结论", gain:"可以按顺序读懂这张图", status:"阅读顺序和 alt 描述把结果交给读者与辅助技术。", source:"world"},
+        behavior: {title:"交互与协作", before:"知道一条可读结论", gain:"可以 focus、批注、复核并留痕", status:"协作动作沿着同一锚点留下可追踪记录。", source:"code"}
       };
+      var storySourceMeta = {
+        data: {label:"penguins.csv", proof:"当前层从 penguins.csv 读取 row 5，并把它保留为一个可追踪的图元事实。"},
+        code: {label:"ggplot / geom_point", proof:"绘图代码提供了坐标尺度、species 分组和图元锚点，关系线因此能回到原图。"},
+        method: {label:"group mean / check", proof:"统计方法把多个 row 汇总成可核验的比较：Gentoo 与 Adelie 的鳍长均值。"},
+        world: {label:"species · flipper length", proof:"领域知识把字段和数值翻译成物种、采样岛和鳍长等真实世界术语。"}
+      };
+      var activeStorySource = "data";
       var semanticRecords = [
         {id:"B-001", layer:"structure", kind:"binding", status:"verified", title:"E-05 ↔ row 5", detail:"substrate fact · penguins.points", anchor:"E-05", reason:"row 5 是当前选中的 Adelie 标记。"}
       ];
@@ -3011,6 +3044,12 @@
         storyText(parent, "text", x + 10, y + 18, title, "o-story-overlay-text");
         if (detail) storyText(parent, "text", x + 10, y + 35, detail, "o-story-overlay-sub");
       }
+      function renderStoryProvenance(source) {
+        var active = storySourceMeta[source] ? source : "data";
+        activeStorySource = active;
+        document.querySelectorAll("[data-o-story-source]").forEach(function (node) { node.classList.toggle("is-active", node.dataset.oStorySource === active); });
+        document.getElementById("oStoryProvenanceProof").textContent = storySourceMeta[active].proof;
+      }
       function renderStoryBoard() {
         var item = selected();
         var data = window.glossOverviewElements || (window.glossExplore ? window.glossExplore.data : []);
@@ -3078,6 +3117,7 @@
 
         var activeIndex = storyLayerOrder.indexOf(activeLayer);
         var activeMeta = storyLayerMeta[activeLayer];
+        renderStoryProvenance(activeMeta.source);
         var recordedCount = storyLayerOrder.filter(function (layer) { return Boolean(storyRecordFor(layer)); }).length;
         document.getElementById("oStoryProgress").textContent = String(activeIndex + 1).padStart(2, "0") + " / 06";
         document.getElementById("oStoryFigureMode").textContent = recordedCount ? recordedCount + " semantic layer" + (recordedCount === 1 ? "" : "s") : "substrate";
@@ -3333,6 +3373,9 @@
           renderLayerDetail(selected());
           renderStoryBoard();
         });
+      });
+      document.querySelectorAll("[data-o-story-source]").forEach(function (button) {
+        button.addEventListener("click", function () { renderStoryProvenance(button.dataset.oStorySource); });
       });
       document.getElementById("oStoryPlot").addEventListener("click", function (event) {
         var node = event.target.closest("[data-o-story-element]");

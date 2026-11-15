@@ -31,6 +31,7 @@ See [`_template.md`](_template.md).
 ## Completed plans
 
 - [2026-11-14-semantic-storyboard.md](done/2026-11-14-semantic-storyboard.md): the guided six-layer Penguin storyboard. Closed 2026-11-14. The primary path now uses one shared add/advance action and makes each semantic layer visibly change the same figure; duplicate Overview proposal controls are removed from the main experience. The full package suite remains clean (1422 passed, 0 failed, 0 skipped).
+- [2026-11-15-provenance-lineage.md](done/2026-11-15-provenance-lineage.md): provenance for semantic gains. Closed 2026-11-15. The storyboard now connects data artifacts, plotting code, statistical methods, and real-world domain knowledge to the six-layer path. The full package suite remains clean (1422 passed, 0 failed, 0 skipped).
 
 - [2026-11-09-m0-substrate.md](done/2026-11-09-m0-substrate.md): M0, the substrate. Closed 2026-11-11; code landed 2026-11-09, Task 9 (benchmark) carried out under bench v0. Six input classes identical to plain svglite; lossless round trip; 10^5 points in 2.65 MiB.
 - [2026-11-09-bench-v0.md](done/2026-11-09-bench-v0.md): sample and freeze the benchmark; first capture feedback. Closed 2026-11-11. 109 of 160 eligible, 55 development / 54 held-out, frozen in `e985d82`; the fidelity gap it found led to ADR-0006.

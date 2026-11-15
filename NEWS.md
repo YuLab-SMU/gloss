@@ -15,6 +15,7 @@
 - Reworked the site around a single six-layer control room: the semantic rail is the primary route, the substrate data lens carries the table and inspector, and former Explore / Propose actions focus or open inline panels without changing workspaces.
 - Added a raw-versus-gloss effects board: every layer now has a visible output on the penguin figure, and a submitted record changes the corresponding overlay, callout, relation line, reading order, or collaboration mark.
 - Replaced the button-heavy semantic demo with a guided Penguin storyboard: one semantic ladder, one add/advance action, one shared chart, and a visible “before → gained” card for each layer.
+- Added a provenance chain to the storyboard: data artifact, plotting code, statistical method, and real-world domain knowledge now identify the source behind each semantic gain.
 
 ## Proposals checked from the figure alone (2026-11-12, agent-path plan Tasks 2 and 3)
 
