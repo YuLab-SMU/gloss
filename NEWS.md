@@ -1,5 +1,19 @@
 # gloss 0.0.0.9000
 
+## Semantic operations and projections (2026-11-16)
+
+- Added closed `count`, `value`, `compare`, `range` and `exists` checks beside
+  `trend`, with evidence-bearing statuses and safe JSON-like record schemas.
+- Added `gl_apply()` and the operation plugin registry for selection, styling,
+  visibility, focus, ordering, links, overlays and tooltips. Operations resolve
+  through anchors and materialise into a separate SVG overlay group.
+- HTML projections now embed a dependency-free browser runtime with the v0
+  selection, styling, visibility and tooltip handlers. Operation state survives
+  bundle round trips.
+- Added `gl_export()` for WAI-ARIA graphics trees, plain-text descriptions and
+  one-way W3C Web Annotation JSON. Rejected claims are excluded from factual
+  summaries and speculative records remain labeled.
+
 ## Append-only records and anchors (2026-11-15)
 
 - Added the eight registered semantic layers, append-only JSONL event logs,

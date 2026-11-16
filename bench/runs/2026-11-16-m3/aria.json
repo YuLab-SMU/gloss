@@ -1,0 +1,609 @@
+{
+  "role": "graphics-document",
+  "id": "a810095904fbe967774ec31751f4c22c3fdb4e2182d235a66d9b84e450664ccf",
+  "label": "R figure",
+  "children": [
+    {
+      "role": "graphics-object",
+      "id": "panel1",
+      "label": "panel ",
+      "children": [
+        {
+          "role": "graphics-symbol",
+          "id": "e3",
+          "label": "rect",
+          "bbox": {
+            "x": 33.13,
+            "y": 5.48,
+            "width": 465.39,
+            "height": 323.02
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e4",
+          "label": "polyline",
+          "bbox": {
+            "x": 33.13,
+            "y": 287.58,
+            "width": 465.39,
+            "height": 0.0
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e5",
+          "label": "polyline",
+          "bbox": {
+            "x": 33.13,
+            "y": 225.1,
+            "width": 465.39,
+            "height": 0.0
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e6",
+          "label": "polyline",
+          "bbox": {
+            "x": 33.13,
+            "y": 162.62,
+            "width": 465.39,
+            "height": 0.0
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e7",
+          "label": "polyline",
+          "bbox": {
+            "x": 33.13,
+            "y": 100.14,
+            "width": 465.39,
+            "height": 0.0
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e8",
+          "label": "polyline",
+          "bbox": {
+            "x": 33.13,
+            "y": 37.66,
+            "width": 465.39,
+            "height": 0.0
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e9",
+          "label": "polyline",
+          "bbox": {
+            "x": 52.88,
+            "y": 5.48,
+            "width": 0.0,
+            "height": 323.02
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e10",
+          "label": "polyline",
+          "bbox": {
+            "x": 161.05,
+            "y": 5.48,
+            "width": 0.0,
+            "height": 323.02
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e11",
+          "label": "polyline",
+          "bbox": {
+            "x": 269.23,
+            "y": 5.48,
+            "width": 0.0,
+            "height": 323.02
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e12",
+          "label": "polyline",
+          "bbox": {
+            "x": 377.41,
+            "y": 5.48,
+            "width": 0.0,
+            "height": 323.02
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e13",
+          "label": "polyline",
+          "bbox": {
+            "x": 485.59,
+            "y": 5.48,
+            "width": 0.0,
+            "height": 323.02
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e14",
+          "label": "polyline",
+          "bbox": {
+            "x": 33.13,
+            "y": 318.82,
+            "width": 465.39,
+            "height": 0.0
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e15",
+          "label": "polyline",
+          "bbox": {
+            "x": 33.13,
+            "y": 256.34,
+            "width": 465.39,
+            "height": 0.0
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e16",
+          "label": "polyline",
+          "bbox": {
+            "x": 33.13,
+            "y": 193.86,
+            "width": 465.39,
+            "height": 0.0
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e17",
+          "label": "polyline",
+          "bbox": {
+            "x": 33.13,
+            "y": 131.38,
+            "width": 465.39,
+            "height": 0.0
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e18",
+          "label": "polyline",
+          "bbox": {
+            "x": 33.13,
+            "y": 68.9,
+            "width": 465.39,
+            "height": 0.0
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e19",
+          "label": "polyline",
+          "bbox": {
+            "x": 33.13,
+            "y": 6.42,
+            "width": 465.39,
+            "height": 0.0
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e20",
+          "label": "polyline",
+          "bbox": {
+            "x": 106.96,
+            "y": 5.48,
+            "width": 0.0,
+            "height": 323.02
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e21",
+          "label": "polyline",
+          "bbox": {
+            "x": 215.14,
+            "y": 5.48,
+            "width": 0.0,
+            "height": 323.02
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e22",
+          "label": "polyline",
+          "bbox": {
+            "x": 323.32,
+            "y": 5.48,
+            "width": 0.0,
+            "height": 323.02
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e23",
+          "label": "polyline",
+          "bbox": {
+            "x": 431.5,
+            "y": 5.48,
+            "width": 0.0,
+            "height": 323.02
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e24",
+          "label": "circle",
+          "bbox": {
+            "x": 172.08,
+            "y": 179.41,
+            "width": 3.8999999999999773,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e25",
+          "label": "circle",
+          "bbox": {
+            "x": 199.67,
+            "y": 179.41,
+            "width": 3.9000000000000057,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e26",
+          "label": "circle",
+          "bbox": {
+            "x": 139.63,
+            "y": 156.92,
+            "width": 3.9000000000000057,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e27",
+          "label": "circle",
+          "bbox": {
+            "x": 236.45,
+            "y": 174.41,
+            "width": 3.9000000000000057,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e28",
+          "label": "circle",
+          "bbox": {
+            "x": 260.79,
+            "y": 208.15,
+            "width": 3.8999999999999773,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e29",
+          "label": "circle",
+          "bbox": {
+            "x": 262.95,
+            "y": 215.65,
+            "width": 3.9000000000000341,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e30",
+          "label": "circle",
+          "bbox": {
+            "x": 274.85,
+            "y": 263.14,
+            "width": 3.8999999999999773,
+            "height": 3.9000000000000341
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e31",
+          "label": "circle",
+          "bbox": {
+            "x": 233.75,
+            "y": 136.93,
+            "width": 3.9000000000000057,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e32",
+          "label": "circle",
+          "bbox": {
+            "x": 229.42,
+            "y": 156.92,
+            "width": 3.9000000000000057,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e33",
+          "label": "circle",
+          "bbox": {
+            "x": 260.79,
+            "y": 201.91,
+            "width": 3.8999999999999773,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e34",
+          "label": "circle",
+          "bbox": {
+            "x": 260.79,
+            "y": 219.4,
+            "width": 3.8999999999999773,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e35",
+          "label": "circle",
+          "bbox": {
+            "x": 328.94,
+            "y": 236.89,
+            "width": 3.8999999999999773,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e36",
+          "label": "circle",
+          "bbox": {
+            "x": 292.16,
+            "y": 225.65,
+            "width": 3.8999999999999773,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e37",
+          "label": "circle",
+          "bbox": {
+            "x": 297.57,
+            "y": 251.89,
+            "width": 3.9000000000000341,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e38",
+          "label": "circle",
+          "bbox": {
+            "x": 456.59,
+            "y": 311.87,
+            "width": 3.9000000000000341,
+            "height": 3.8999999999999773
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e39",
+          "label": "circle",
+          "bbox": {
+            "x": 475.42,
+            "y": 311.87,
+            "width": 3.8999999999999773,
+            "height": 3.8999999999999773
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e40",
+          "label": "circle",
+          "bbox": {
+            "x": 466.87,
+            "y": 258.14,
+            "width": 3.8999999999999773,
+            "height": 3.9000000000000341
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e41",
+          "label": "circle",
+          "bbox": {
+            "x": 126.65,
+            "y": 36.96,
+            "width": 3.9000000000000057,
+            "height": 3.8999999999999986
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e42",
+          "label": "circle",
+          "bbox": {
+            "x": 63.37,
+            "y": 61.95,
+            "width": 3.8999999999999986,
+            "height": 3.8999999999999915
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e43",
+          "label": "circle",
+          "bbox": {
+            "x": 87.16,
+            "y": 18.21,
+            "width": 3.9000000000000057,
+            "height": 3.8999999999999986
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e44",
+          "label": "circle",
+          "bbox": {
+            "x": 155.32,
+            "y": 173.16,
+            "width": 3.9000000000000057,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e45",
+          "label": "circle",
+          "bbox": {
+            "x": 269.45,
+            "y": 248.14,
+            "width": 3.9000000000000341,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e46",
+          "label": "circle",
+          "bbox": {
+            "x": 260.25,
+            "y": 251.89,
+            "width": 3.8999999999999773,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e47",
+          "label": "circle",
+          "bbox": {
+            "x": 304.06,
+            "y": 275.63,
+            "width": 3.8999999999999773,
+            "height": 3.8999999999999773
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e48",
+          "label": "circle",
+          "bbox": {
+            "x": 304.6,
+            "y": 201.91,
+            "width": 3.8999999999999773,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e49",
+          "label": "circle",
+          "bbox": {
+            "x": 97.98,
+            "y": 100.69,
+            "width": 3.8999999999999915,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e50",
+          "label": "circle",
+          "bbox": {
+            "x": 120.16,
+            "y": 116.93,
+            "width": 3.9000000000000057,
+            "height": 3.8999999999999915
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e51",
+          "label": "circle",
+          "bbox": {
+            "x": 52.33,
+            "y": 61.95,
+            "width": 3.8999999999999986,
+            "height": 3.8999999999999915
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e52",
+          "label": "circle",
+          "bbox": {
+            "x": 231.58,
+            "y": 244.39,
+            "width": 3.8999999999999773,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e53",
+          "label": "circle",
+          "bbox": {
+            "x": 188.31,
+            "y": 195.66,
+            "width": 3.9000000000000057,
+            "height": 3.9000000000000057
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e54",
+          "label": "circle",
+          "bbox": {
+            "x": 274.85,
+            "y": 254.39,
+            "width": 3.8999999999999773,
+            "height": 3.9000000000000341
+          }
+        },
+        {
+          "role": "graphics-symbol",
+          "id": "e55",
+          "label": "circle",
+          "bbox": {
+            "x": 189.39,
+            "y": 174.41,
+            "width": 3.9000000000000057,
+            "height": 3.9000000000000057
+          }
+        }
+      ]
+    }
+  ],
+  "records": [
+    {
+      "id": "r_60f425f0d2c02a52b026",
+      "layer": "claim",
+      "status": "verified",
+      "text": "weight and fuel economy trend down together",
+      "targets": "e1",
+      "by": "m3-fixture",
+      "created": "2026-11-16T14:41:34Z"
+    }
+  ]
+}
+

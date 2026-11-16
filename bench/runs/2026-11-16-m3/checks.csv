@@ -1,0 +1,11 @@
+"id","kind","expected","status","passed","correct","reason"
+"count_true","count","verified","verified",TRUE,TRUE,
+"count_false","count","failed","failed",FALSE,TRUE,
+"value_true","value","verified","verified",TRUE,TRUE,
+"value_false","value","failed","failed",FALSE,TRUE,
+"compare_true","compare","verified","verified",TRUE,TRUE,
+"compare_false","compare","failed","failed",FALSE,TRUE,
+"range_mixed","range","partial","partial",FALSE,TRUE,"some groups passed and some groups failed"
+"range_refused","range","refused","refused",,TRUE,"missing column: missing"
+"exists_true","exists","verified","verified",TRUE,TRUE,
+"exists_false","exists","failed","failed",FALSE,TRUE,"no matching value"
