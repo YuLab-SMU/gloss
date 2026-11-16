@@ -5,6 +5,10 @@
 - Added `gl_check()` and the built-in `trend` check plugin. A check returns
   group-level evidence with `verified`, `failed`, `partial` or `refused`
   status, so a semantic proposal cannot turn incomplete evidence into a fact.
+- Closed the first semantic pilot with three targeted audit decisions: a
+  mixed trend is rewritten with its exception, an open-world explanation stays
+  `speculative`, and a missing-column proposal is rejected. The next pilot
+  tests a prepared visual evidence view before M2 records and anchors.
 
 ## Deterministic role classification (2026-11-15)
 

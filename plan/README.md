@@ -26,9 +26,11 @@ See [`_template.md`](_template.md).
 
 ## Active plans
 
-The active plan is [2026-11-15-semantic-pilot.md](2026-11-15-semantic-pilot.md). It starts from [ADR-0010](../dev_docs/decisions/0010-targeted-human-audits-and-evidence-bearing-correspondence.md), measures a closed claim check and an offline proposal fixture, and leaves M2 records and anchors for the route decision after a small independent audit. M1 remains closed in [done/2026-11-11-m1-roles-and-binding.md](done/2026-11-11-m1-roles-and-binding.md).
+The active plan is [2026-11-15-visual-semantic-pilot.md](2026-11-15-visual-semantic-pilot.md). It tests whether a prepared visual evidence view improves agent semantic proposals before the M2 record and anchor slice. The preceding claim pilot is closed in [done/2026-11-15-semantic-pilot.md](done/2026-11-15-semantic-pilot.md); M1 remains closed in [done/2026-11-11-m1-roles-and-binding.md](done/2026-11-11-m1-roles-and-binding.md).
 
 ## Completed plans
+
+- [2026-11-15-semantic-pilot.md](done/2026-11-15-semantic-pilot.md): closed 2026-11-15. Added the deterministic `trend` check, compared one code proposal with four offline model-shaped proposals, and resolved three targeted audit cases. The host suite ended at 17 files, 1477 expectations, 0 failures and 0 skips.
 
 - [2026-11-14-semantic-storyboard.md](done/2026-11-14-semantic-storyboard.md): the guided six-layer Penguin storyboard. Closed 2026-11-14. The primary path now uses one shared add/advance action and makes each semantic layer visibly change the same figure; duplicate Overview proposal controls are removed from the main experience. The full package suite remains clean (1422 passed, 0 failed, 0 skipped).
 - [2026-11-15-provenance-lineage.md](done/2026-11-15-provenance-lineage.md): provenance for semantic gains. Closed 2026-11-15. The storyboard now connects data artifacts, plotting code, statistical methods, and real-world domain knowledge to the six-layer path. The full package suite remains clean (1422 passed, 0 failed, 0 skipped).

@@ -1,7 +1,8 @@
 # Semantic pilot: checked claims before records
 
-> Status: active
+> Status: completed
 > Date opened: 2026-11-15. Owner: Codex.
+> Date closed: 2026-11-15.
 
 **Goal:** Measure, on a controlled claim fixture, which parts of a semantic declaration are decided by code, which survive as checked model proposals, and which need a targeted human audit.
 
@@ -48,7 +49,7 @@
 **Overall progress**
 - [x] Task 1: Add and test the closed `trend` semantic check.
 - [x] Task 2: Run the offline proposal comparison through the same check boundary.
-- [~] Task 3: Produce the targeted audit queue, update design/logs, and decide whether a larger pilot or M2 should follow.
+- [x] Task 3: Produce the targeted audit queue, update design/logs, and decide whether a larger pilot or M2 should follow.
 
 ---
 
@@ -111,7 +112,7 @@
 
 ### Task 3: Targeted audit queue and route decision
 
-**Status:** `[~]`
+**Status:** `[x]`
 
 **Tests assumption:** Assumption 3.
 
@@ -124,7 +125,7 @@
 **Checklist**
 - [x] Emit a compact audit sheet with an explicit decision question and evidence payload.
 - [x] Queue a small independent audit; report agreement and any rule/route change separately from code outcomes when labels arrive.
-- [ ] Close the plan only if the evidence says a larger semantic pilot is warranted, or record why M2 should start instead.
+- [x] Close the plan only if the evidence says a larger semantic pilot is warranted, or record why M2 should start instead.
 
 **Verification**
 - `Rscript bench/semantic/pilot.R --dry` and review the audit queue.
@@ -132,14 +133,20 @@
 
 **Result** _(filled in when done)_
 - `Rscript bench/semantic/pilot.R --dry` and the archived run produce a 3-row audit sheet with explicit questions; the mixed trend carries six group-level results, while the open-world meaning and missing-column cases carry their refusal reasons.
-- The independent labels and the route decision are still open. The plan remains active until the owner or an independent auditor labels these three cases; no agreement or rule change is claimed.
+- The owner audit labels the three cases: rewrite the mixed trend as an exception, keep the open-world meaning as `speculative`, and reject the missing-column proposal. The decisions are archived in `bench/runs/2026-11-15-semantic-pilot-audit-decisions.{csv,json}`.
 
 ---
 
 ## Scope changes
 
-_(append-only; none yet.)_
+_(append-only.)_
+
+- 2026-11-15 — The owner audit resolved all three queued cases. **Evidence:** `bench/runs/2026-11-15-semantic-pilot-audit-decisions.{csv,json}`. **Effect:** the larger semantic pilot is deferred; the next slice starts M2 records and anchors.
 
 ## Closing notes
 
-Filled in when the plan moves to `done/`.
+- End state against starting state: the host suite moved from 17 files / 1450 expectations to 17 files / 1477 expectations, with 0 failures and 0 skips in both runs. The semantic fixture measured 1 verified code proposal, 4 model-shaped proposals with statuses failed/partial/refused/uncheckable, and 3 targeted audit cases.
+- Assumption 1 was supported on the controlled fixture: the `trend` check preserved group evidence and separated all four outcomes. Assumption 2 was supported as a proposal boundary: no failed, partial or refused proposal became a verified fact; the model arm was a frozen mechanism fixture, not a real-model accuracy result. Assumption 3 was supported for this pilot: targeted review changed one claim's wording, kept one as speculative, rejected one proposal, and sent the route to M2.
+- The design now records `gl_check()`/`trend`, the offline proposal run and the audit decision. No claim is made about benchmark-wide semantic accuracy, real-model performance or inter-rater agreement.
+- The next plan first measures a prepared visual evidence view for agent proposals, then starts M2 record schema, append-only logs and anchor resolution using the rewritten claim and speculative meaning as record fixtures.
+- Closing log: `dev_logs/2026-11-15-semantic-pilot.md`; NEWS entry: `NEWS.md` under “Semantic claim checks”.

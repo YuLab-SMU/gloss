@@ -1,0 +1,24 @@
+{
+  "run": "2026-11-15-semantic-pilot",
+  "auditor": "owner",
+  "decisions": [
+    {
+      "id": "model_partial",
+      "decision": "rewrite_exception",
+      "disposition": "claim_rewritten",
+      "rationale": "The positive slope in the automatic 4-cylinder group makes the universal wording too strong; retain the evidence and state the exception."
+    },
+    {
+      "id": "model_open_world",
+      "decision": "keep_speculative",
+      "disposition": "speculative_only",
+      "rationale": "The explanation has no closed data check and remains a domain hypothesis rather than a verified fact."
+    },
+    {
+      "id": "model_bad_column",
+      "decision": "reject_proposal",
+      "disposition": "rejected",
+      "rationale": "The proposed predictor column is absent from the built table, so the proposal has no established mapping."
+    }
+  ]
+}

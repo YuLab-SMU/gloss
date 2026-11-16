@@ -36,3 +36,9 @@
 ## What's next
 
 - Get a small independent audit on the three queued cases. Use it only to decide whether the check vocabulary or route changes; do not turn this fixture into a model-accuracy or broad human-label result. If the audit does not change the route, start the next plan from M2 records and anchors.
+
+## Audit and closure
+
+- The owner audit resolved all three queued cases: rewrite the mixed trend as a claim with an exception, keep the measurement-artifact explanation as `speculative`, and reject the missing-column proposal.
+- Decisions are archived in `bench/runs/2026-11-15-semantic-pilot-audit-decisions.csv` and `.json`. The review changed the claim wording and disposition but did not add a rule or broaden the check vocabulary.
+- The semantic pilot is closed. The next plan first measures a prepared visual evidence view for agent proposals, then starts M2 records, append-only logs and anchor resolution; the rewritten claim and speculative meaning are the first record fixtures.
