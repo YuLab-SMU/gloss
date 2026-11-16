@@ -401,6 +401,7 @@ record_fact_status <- function(check, proposed = "proposed", body = list()) {
 validate_record_body <- function(layer, body) {
   p <- gl_plugin("layer", layer)
   problems <- gl_schema_validate(body, p$body %||% list(type = "any"))
+  problems <- c(problems, payload_issues(body))
   if (length(problems)) cli::cli_abort(c(
     "Invalid body for layer {.val {layer}}.", bullets_x(problems)
   ))

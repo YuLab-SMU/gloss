@@ -13,6 +13,27 @@ is_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 
 is_flag <- function(x) is.logical(x) && length(x) == 1L && !is.na(x)
 
+payload_issues <- function(x, path = "<root>") {
+  out <- character()
+  if (is.character(x)) {
+    bad <- grepl("<[^>]+>|javascript:|data:text/html|on[a-z]+\\s*=|url\\s*\\(",
+                 x, ignore.case = TRUE, perl = TRUE)
+    if (any(bad)) out <- c(out, sprintf("%s contains executable markup", path))
+    return(out)
+  }
+  if (is.function(x) || is.environment(x) || is.language(x) || is.expression(x)) {
+    return(sprintf("%s is not JSON-like", path))
+  }
+  if (is.list(x)) {
+    nms <- names(x)
+    if (is.null(nms)) nms <- seq_along(x)
+    for (i in seq_along(x)) {
+      out <- c(out, payload_issues(x[[i]], paste0(path, "$", nms[[i]])))
+    }
+  }
+  out
+}
+
 # Geometry is kept in SVG user units (1/72 in) rounded to 1/100, the
 # precision svglite writes. Rounding through integers makes the value
 # identical whether it was parsed from text or decoded from the index.

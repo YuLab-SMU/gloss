@@ -198,6 +198,7 @@ normalize_operation <- function(fig, operation) {
   plugin <- gl_plugin("operation", name, must_exist = FALSE)
   if (is.null(plugin)) cli::cli_abort("No operation plugin named {.val {name}} is registered.")
   problems <- gl_schema_validate(operation, plugin$schema)
+  problems <- c(problems, payload_issues(operation))
   if (length(problems)) cli::cli_abort(c("Invalid operation {.val {name}}.", bullets_x(problems)))
   out <- operation
   out$op <- name
