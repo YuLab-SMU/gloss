@@ -167,7 +167,7 @@ register_check_exists <- function() {
   )
 }
 
-check_groups <- function(table, by) {
+semantic_check_groups <- function(table, by) {
   if (!length(by)) return(list(all = seq_len(nrow(table))))
   key <- as.data.frame(lapply(table[by], as.character), stringsAsFactors = FALSE)
   if (!nrow(key)) return(list())
@@ -211,7 +211,7 @@ check_count <- function(table, args) {
     return(semantic_check_result("count", "refused",
                                  reason = "supply equals, min or max"))
   }
-  groups <- check_groups(table, by)
+  groups <- semantic_check_groups(table, by)
   if (!length(groups)) return(semantic_check_result("count", "refused", reason = "the table has no rows"))
   evidence <- do.call(rbind, lapply(names(groups), function(label) {
     n <- length(groups[[label]])
@@ -255,7 +255,7 @@ check_compare <- function(table, args) {
   }
   stat <- args$stat %||% "mean"
   fun <- switch(stat, mean = mean, median = median, sum = sum, min = min, max = max)
-  groups <- check_groups(table, by)
+  groups <- semantic_check_groups(table, by)
   if (!length(groups)) return(semantic_check_result("compare", "refused", reason = "the table has no rows"))
   tol <- args$tolerance %||% 1e-12
   evidence <- do.call(rbind, lapply(names(groups), function(label) {
