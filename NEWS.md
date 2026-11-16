@@ -1,5 +1,17 @@
 # gloss 0.0.0.9000
 
+## Append-only records and anchors (2026-11-15)
+
+- Added the eight registered semantic layers, append-only JSONL event logs,
+  provenance, record queries, revisions, retractions, conflict reports and
+  rationale-bearing resolutions.
+- Added structured anchors for data keys, predicates, structure paths, roles,
+  regions and element ids. Selector fallback is conservative: a missing
+  stronger selector never silently accepts a weaker target.
+- Added `gl_rebase()`, `gl_status()`, `gl_diff()` and `gl_repair()`. Rebase
+  marks missing, ambiguous and dependency-invalid records explicitly and keeps
+  all history through directory and single-file bundle round trips.
+
 ## Semantic claim checks (2026-11-15)
 
 - Added `gl_check()` and the built-in `trend` check plugin. A check returns

@@ -4,12 +4,31 @@
 \alias{gl_propose}
 \title{Propose a pairing and have it checked}
 \usage{
-gl_propose(fig, proposal)
+gl_propose(
+  fig,
+  proposal = NULL,
+  layer = NULL,
+  anchor = NULL,
+  body = NULL,
+  by = "user",
+  depends_on = character()
+)
 }
 \arguments{
 \item{fig}{A \code{gloss_figure}.}
 
 \item{proposal}{A proposal, see \emph{Proposals}.}
+
+\item{layer}{Optional record layer name. When supplied, use the record
+writing form together with \code{anchor}, \code{body} and \code{by}.}
+
+\item{anchor}{Optional record anchor for the writing form.}
+
+\item{body}{Optional record body for the writing form.}
+
+\item{by}{Provenance identity for the writing form.}
+
+\item{depends_on}{Optional record ids on which the new record depends.}
 }
 \value{
 A \code{gloss_proposal}: a list with \code{outcome}, \code{stage}, \code{reasons} (a

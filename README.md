@@ -2,7 +2,7 @@
 
 gloss reads an R figure that has already been drawn and traces every shape back to the grob, panel and data row behind it. People and AI agents can then attach notes to those shapes, and any note that makes a claim is checked against the data. The figure itself is never redrawn.
 
-> **Status, 2026-11-12: capture and row binding are implemented and measured; everything else is design.** `gloss()` captures the page a figure draws and checks its capture against that page. Each drawn element of a layer is paired with a data row, the pairing is checked by putting the row back through the panel's scales, and `gl_bindings()` reads the result. A pairing proposed afterwards, by a person or an agent, is checked the same way by `gl_propose()`, and `gl_tools()` hands read-only queries and that one check to an agent loop; no result with a model is reported yet. Roles, records, claim checks, interactive projections and staged agents are not built. Numbers come from a benchmark of sampled figures with runnable code ([`bench/`](https://github.com/YuLab-SMU/gloss/tree/main/bench)); numbers marked as spikes come from scripts in [`dev_docs/research/`](https://github.com/YuLab-SMU/gloss/tree/main/dev_docs/research).
+> **Status, 2026-11-15: capture, derived roles/bindings, semantic checks, and the M2 record/anchor core are implemented.** `gloss()` captures the page a figure draws and checks its capture against that page. Each drawn element of a layer is paired with a data row, and `gl_bindings()` reads the checked result. People and agents can append records to registered layers through structured anchors; failed checks, conflicts and broken anchors remain visible, and `gl_rebase()` carries the log across controlled figure edits. Interactive projections and staged agents remain future milestones. Numbers come from a benchmark of sampled figures with runnable code ([`bench/`](https://github.com/YuLab-SMU/gloss/tree/main/bench)); numbers marked as spikes come from scripts in [`dev_docs/research/`](https://github.com/YuLab-SMU/gloss/tree/main/dev_docs/research).
 
 ![Schematic. Left: an unchanged scatter plot. Middle: the substrate, a read-only table linking each drawn element to its leaf grob, panel and data row. Right: three layers of records anchored to those elements by dotted lines. Bottom: four projections: an interactive HTML page, an ARIA tree, a text description and a Web Annotation export.](man/figures/README-overview.png)
 
@@ -41,11 +41,15 @@ gl_propose(fig, list(kind = "binding", element = b$element, table = b$table, row
                                      # accepted, rejected with the reason, or refused
 tools <- gl_tools(fig)               # the same queries and `propose`, as tools for an aisdk agent
 
+fig <- gl_record(fig, "meaning", gl_anchor(element = b$element),
+                 list(text = "a checked note"), by = "person")
+gl_records(fig)                       # append-only records across semantic layers
+
 gl_write(fig, "fig.html")            # the figure, with the whole bundle embedded
 fig <- gl_read("fig.html")           # restored; what a bundle cannot store of a table is left out and named
 ```
 
-A binding names a row of the layer's built data; the link from there to the rows of your own data frame is not built yet. Still planned: roles, `gl_annotate()` (staged agents propose records, each one verified), the interactive and accessible projection, and `gl_rebase()` for updated figures.
+A binding names a row of the layer's built data; the link from there to the rows of your own data frame is not built yet. The record core is available for hand-written and programmatic semantic notes. Still planned: `gl_annotate()` (staged agents propose records, each one verified), the interactive and accessible projection, and benchmark-wide update evaluation.
 
 ## Six capabilities
 
@@ -54,9 +58,9 @@ A binding names a row of the layer's built data; the link from there to the rows
 | Identify | Traces each drawn element to its leaf grob, viewport and panel | Implemented; 50 of 54 held-out figures equal to the page drawn, none captured as another figure |
 | Classify | Labels each element as a data mark, guide, reference line, decoration or annotation, using rules first and an agent for the rest | 481 of 486 elements by naming rules alone |
 | Organize | Builds the structure tree, the data tree and semantic groups, and maps each onto the others | Structure tree rebuilt for ggplot |
-| Attach semantics | Binds elements to data rows; records meaning, relations, checkable claims and narrative as anchored, layered records | Binding implemented (`gl_bindings()`): 92.6% of layer elements checked on 24 held-out ggplot tree figures, none failed. One claim check run by script; records are design |
+| Attach semantics | Binds elements to data rows; records meaning, relations, checkable claims and narrative as anchored, layered records | Binding implemented; M2 records use eight registered layers, JSONL logs, structured anchors and checked statuses. One claim check run by script; benchmark-wide semantic coverage remains for M5 |
 | Operate | Provides one set of operations (select, style, show/hide, tooltip, overlay, ...) shared by R, the browser and agents | Design |
-| Update | Re-captures after the code or data changes, re-anchors records, and sends only the broken ones for repair | Design |
+| Update | Re-captures after the code or data changes, re-anchors records, and sends only the broken ones for repair | `gl_rebase()` implemented; controlled fixture hit rates are archived in `bench/runs/2026-11-15-m2-rebase/` |
 
 ## The name
 

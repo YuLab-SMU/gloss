@@ -234,6 +234,10 @@ gl_key <- function(fig, table, key, by = "user") {
   tbl$key_basis <- sprintf("set by %s with gl_key()", by)
   tbl$key_fragile <- identical(key, key_hash)
   fig$tables[[table]] <- tbl
+  if (length(fig$layers %||% list())) {
+    fig <- rewrite_key_selectors(fig, table, tbl$key_history$from[nrow(tbl$key_history)],
+                                 key, by = by)
+  }
   fig
 }
 

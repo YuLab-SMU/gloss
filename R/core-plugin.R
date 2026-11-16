@@ -14,6 +14,7 @@ plugin_kinds <- function() {
   f <- function(pred, label) list(pred = pred, label = label)
   fn <- f(is_fn, "a function")
   chr <- f(is_chr, "a character vector")
+  chr0 <- f(function(x) is.character(x) && !anyNA(x), "a character vector")
   lst <- f(is_list, "a list")
   str <- f(is_string, "a single string")
   page <- f(is_page_kind, '"grid" or "base"')
@@ -31,7 +32,7 @@ plugin_kinds <- function() {
     ),
     layer = list(
       required = list(body = lst),
-      optional = list(depends = chr, verify = fn, scope = str),
+      optional = list(depends = chr0, verify = fn, scope = str),
       contract = contract_declaration
     ),
     check = list(

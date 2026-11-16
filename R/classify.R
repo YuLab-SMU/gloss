@@ -253,3 +253,31 @@ gl_unclassified <- function(fig) {
   out <- gl_classify(fig, "element")
   out[out$status == "residue" | is.na(out$role), , drop = FALSE]
 }
+
+#' Append a role correction without changing the derived role table
+#'
+#' @param fig A `gloss_figure`.
+#' @param anchor An element anchor.
+#' @param role Corrected role.
+#' @param kind Corrected kind.
+#' @param by Provenance identity.
+#' @return The updated figure.
+#' @export
+gl_reclassify <- function(fig, anchor, role, kind = "other", by = "user") {
+  body <- list(type = "role_correction", role = as.character(role)[1L],
+               kind = as.character(kind)[1L])
+  gl_record(fig, "structure", anchor, body, by = by)
+}
+
+#' Define a semantic group as an append-only structure record
+#'
+#' @param fig A `gloss_figure`.
+#' @param name Group name.
+#' @param anchor Group member anchor.
+#' @param by Provenance identity.
+#' @return The updated figure.
+#' @export
+gl_group <- function(fig, name, anchor, by = "user") {
+  gl_record(fig, "structure", anchor,
+            list(type = "group", name = as.character(name)[1L]), by = by)
+}

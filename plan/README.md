@@ -26,9 +26,13 @@ See [`_template.md`](_template.md).
 
 ## Active plans
 
-The active plan is [2026-11-15-visual-semantic-pilot.md](2026-11-15-visual-semantic-pilot.md). It tests whether a prepared visual evidence view improves agent semantic proposals before the M2 record and anchor slice. The preceding claim pilot is closed in [done/2026-11-15-semantic-pilot.md](done/2026-11-15-semantic-pilot.md); M1 remains closed in [done/2026-11-11-m1-roles-and-binding.md](done/2026-11-11-m1-roles-and-binding.md).
+There is no active plan after M2 closed. The M2 record and anchor slice is in [done/2026-11-15-m2-records-and-anchors.md](done/2026-11-15-m2-records-and-anchors.md). The prepared visual evidence pilot is closed with its model comparison deferred in [done/2026-11-15-visual-semantic-pilot.md](done/2026-11-15-visual-semantic-pilot.md). The preceding claim pilot is closed in [done/2026-11-15-semantic-pilot.md](done/2026-11-15-semantic-pilot.md); M1 remains closed in [done/2026-11-11-m1-roles-and-binding.md](done/2026-11-11-m1-roles-and-binding.md).
 
 ## Completed plans
+
+- [2026-11-15-m2-records-and-anchors.md](done/2026-11-15-m2-records-and-anchors.md): closed 2026-11-15/16. Added append-only record layers, JSONL bundle logs, safe multi-selector anchors, status propagation, conflict records and `gl_rebase()`. The controlled mtcars fixture hit 75% after a title edit, 100% after colour/add/delete-layer edits and 50% after a data-subset edit; invalid targets were explicit. The final host suite was 18 files, 1506 expectations, 0 failures and 0 skips.
+
+- [2026-11-15-visual-semantic-pilot.md](done/2026-11-15-visual-semantic-pilot.md): closed 2026-11-15 with the prepared visual artifact complete; the text-only versus visual model run was deferred so M2 records and anchors could proceed.
 
 - [2026-11-15-semantic-pilot.md](done/2026-11-15-semantic-pilot.md): closed 2026-11-15. Added the deterministic `trend` check, compared one code proposal with four offline model-shaped proposals, and resolved three targeted audit cases. The host suite ended at 17 files, 1477 expectations, 0 failures and 0 skips.
 

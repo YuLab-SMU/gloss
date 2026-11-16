@@ -190,6 +190,12 @@ check_proposal <- function(ctx, proposal) {
 #'
 #' @param fig A `gloss_figure`.
 #' @param proposal A proposal, see *Proposals*.
+#' @param layer Optional record layer name. When supplied, use the record
+#'   writing form together with `anchor`, `body` and `by`.
+#' @param anchor Optional record anchor for the writing form.
+#' @param body Optional record body for the writing form.
+#' @param by Provenance identity for the writing form.
+#' @param depends_on Optional record ids on which the new record depends.
 #' @return A `gloss_proposal`: a list with `outcome`, `stage`, `reasons` (a
 #'   character vector, empty when accepted) and `record` (a list when
 #'   accepted, else `NULL`). The figure is not changed.
@@ -202,7 +208,30 @@ check_proposal <- function(ctx, proposal) {
 #'   gl_propose(fig, list(kind = "binding", element = b$element, table = b$table, row = 20L))
 #' }
 #' @export
-gl_propose <- function(fig, proposal) {
+gl_propose <- function(fig, proposal = NULL, layer = NULL, anchor = NULL,
+                       body = NULL, by = "user", depends_on = character()) {
+  # M2 extends the original binding proposal API with a record-writing form.
+  # Keep the two forms distinguishable so existing agent tools continue to
+  # receive a checked, non-mutating binding result.
+  record_form <- !is.null(layer) || !is.null(anchor) || !is.null(body) ||
+    (is.list(proposal) && !is.null(proposal$layer))
+  if (record_form) {
+    if (is.list(proposal) && !is.null(proposal$layer)) {
+      spec <- proposal
+      layer <- spec$layer; anchor <- spec$anchor %||% spec$anchors
+      body <- spec$body %||% list(); by <- spec$by %||% by
+      depends_on <- spec$depends_on %||% depends_on
+    } else if (is_string(proposal) && is.list(anchor) &&
+               (is.character(body) || is.list(body)) &&
+               (!is_string(layer) || is.null(gl_plugin("layer", layer, must_exist = FALSE)))) {
+      # Positional design form: gl_propose(fig, layer, anchor, body, by).
+      actual_layer <- proposal; actual_anchor <- layer; actual_body <- anchor
+      actual_by <- body
+      layer <- actual_layer; anchor <- actual_anchor; body <- actual_body; by <- actual_by
+    }
+    return(gl_record(fig, layer = layer, anchor = anchor, body = body %||% list(),
+                     by = by, depends_on = depends_on))
+  }
   check_proposal(propose_context(fig), proposal)
 }
 

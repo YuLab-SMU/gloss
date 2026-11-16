@@ -47,8 +47,8 @@
 
 **Overall progress**
 - [x] Task 1: Define and verify the prepared visual evidence artifact.
-- [ ] Task 2: Run the text-only versus visual proposal fixture.
-- [ ] Task 3: Decide whether to add a real vision-model ablation before M2 records.
+- [-] Task 2: Run the text-only versus visual proposal fixture. _(Deferred; the prepared artifact remains reusable for the later agent evaluation.)_
+- [x] Task 3: Decide whether to add a real vision-model ablation before M2 records. _(Route: start M2 records and anchors first, per the owner's `/goal 完成M2` request.)_
 
 ---
 
@@ -77,7 +77,7 @@
 
 ### Task 2: Text-only versus visual proposal fixture
 
-**Status:** `[ ]`
+**Status:** `[-]` — Deferred in favour of the M2 record and anchor slice; no model comparison was run.
 
 **Tests assumption:** Assumption 2.
 
@@ -93,13 +93,13 @@
 - Keep the offline fixture separate from any real-model run.
 
 **Result** _(filled in when done)_
-- Pending.
+- Deferred by the route decision below; no model run was made and no comparison number is claimed.
 
 ---
 
 ### Task 3: Route decision
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** Assumption 3.
 
@@ -110,14 +110,16 @@
 - Update `plan/README.md`, `dev_docs/design.qmd`, and a closing `dev_logs/` entry with the measured route.
 
 **Result** _(filled in when done)_
-- Pending.
+- Route decision recorded 2026-11-15: defer a real vision-model ablation and proceed to M2 records and anchors. The prepared view is retained for a later controlled agent comparison.
 
 ---
 
 ## Scope changes
 
-_(append-only; none yet.)_
+_(append-only; the route decision below is the only scope change.)_
+
+- 2026-11-15 — The owner requested `/goal 完成M2`; the visual artifact contract was complete, but no text-only versus visual model run had been made. Task 2 is deferred and Task 3 routes the next slice to M2 records and anchors. The artifact remains in `bench/runs/2026-11-15-visual-view/` for a later evaluation.
 
 ## Closing notes
 
-Filled in when the plan moves to `done/`.
+The visual artifact is complete and archived; the comparative model run is deferred. The plan closes with M2 as the next slice.

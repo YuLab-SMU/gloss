@@ -285,14 +285,17 @@ capture_figure <- function(x, engine, width = 7, height = 5, dense = 10000,
     rownames(withheld) <- NULL
     fig$status$withheld <- withheld
   }
+  fig <- ensure_stable_ids(fig)
   list(fig = fig, engine = eng, state = state)
 }
 
 # `derived` holds what code worked out from the substrate and the engine's
 # state (core-derived.R): bindings, when the capture made them.
-new_figure <- function(meta, substrate, tables, context, plugins, derived = list()) {
+new_figure <- function(meta, substrate, tables, context, plugins, derived = list(),
+                       layers = NULL) {
+  if (is.null(layers)) layers <- empty_layers()
   structure(list(meta = meta, substrate = substrate, tables = tables, derived = derived,
-                 context = context, plugins = plugins, status = list()),
+                 layers = layers, context = context, plugins = plugins, status = list()),
             class = "gloss_figure")
 }
 

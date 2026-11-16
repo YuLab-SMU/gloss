@@ -142,6 +142,7 @@ bundle_files <- function(fig, embed = "default") {
     })
   }
   files[["context.json"]] <- as_bytes(json_write(ctx))
+  files <- c(files, encode_layers(fig$layers))
 
   manifest <- list(
     format = "gloss-bundle",
@@ -156,7 +157,7 @@ bundle_files <- function(fig, embed = "default") {
     status = fig$status,
     tables = as.list(names(fig$tables)),
     derived = derived_manifest(fig$derived),
-    layers = list(),
+    layers = layers_manifest(fig$layers),
     files = lapply(sort(names(files)), function(nm) {
       list(path = nm, bytes = length(files[[nm]]),
            sha256 = digest::digest(files[[nm]], algo = "sha256", serialize = FALSE))
@@ -468,8 +469,10 @@ figure_from_files <- function(files) {
     tables = tables,
     context = context,
     plugins = plugins,
-    derived = decode_derived(files, man$derived, substrate)
+    derived = decode_derived(files, man$derived, substrate),
+    layers = decode_layers(files, man$layers)
   )
+  fig <- ensure_stable_ids(fig)
   fig$status <- status
   fig
 }
@@ -636,8 +639,9 @@ figure_from_plain_svg <- function(txt) {
                 created = NA_character_),
     substrate = list(scene = as.character(doc), leaves = leaves, elements = elements,
                      panels = empty_panels(), rasters = list()),
-    tables = list(), context = list(), plugins = NULL
+    tables = list(), context = list(), plugins = NULL, layers = empty_layers()
   )
+  fig <- ensure_stable_ids(fig)
   fig$status <- list(restored = "geometry only: the SVG has no embedded gloss bundle")
   fig
 }
