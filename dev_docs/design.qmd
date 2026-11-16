@@ -37,7 +37,7 @@ gloss 要同时做到两点：有真值，也能处理没写过规则的输入�
 “gloss”一词指中世纪手抄本上的批注。批注挂在正文具体的词句上，一代代读者不断往上添，正文本身一笔不改（@fig-hero，@sec-analogy）。
 
 ::: {.callout-note}
-**文档所处阶段。** 这是一份设计文档，其中一部分已经实现。M0（底座）2026-11-09 实现，进度和验证记在 `plan/done/2026-11-09-m0-substrate.md`；捕获路线 2026-11-11 改为捕获图自己画出的页面（[ADR-0006](decisions/0006-capture-the-page-the-figure-draws.md)，`plan/done/2026-11-11-page-capture.md`）。M1 的第一段计划 2026-11-11 开始（`plan/2026-11-11-m1-roles-and-binding.md`），其中绑定已有代码：各引擎给出配对，核心逐条核验，结果在捕获时算出、存在图里，用 `gl_bindings()` 读（[ADR-0007](decisions/0007-derived-tables-of-the-substrate.md)）；角色规则还没有。agent 一侧 2026-11-12 有了第一段代码（`plan/done/2026-11-12-agent-path.md`）：`gl_propose()` 核验一条提议，内容是某个元素画的是某张表的某一行；`gl_tools()` 把只读查询和 `propose` 作为工具交给 aisdk。主比较在开发集上试跑过一次，10 张图、30 个绑定问题、三个自部署模型，结果和它的限度写在 @sec-pilot；报告用的评测还没有做，要证明什么、怎样证明，写在 @sec-research-card 和 @sec-eval。M2 的记录、锚点和更新闭环已在 2026-11-15/16 落地，并由 `tests/testthat/test-records.R` 和 `bench/runs/2026-11-15-m2-rebase/` 验证；投影和 agent 的各个阶段仍待后续里程碑。插件机制已随 M0 实现。标“实测”的数字来自 `dev_docs/research/` 下的探针脚本（2026-11-07 首次运行，2026-11-08 重跑，结果一致）和 `bench/runs/` 里存档的运行，每个数字对应哪个脚本或哪次运行，文中都已注明。
+**文档所处阶段。** 这是一份设计文档，其中一部分已经实现。M0（底座）2026-11-09 实现，进度和验证记在 `plan/done/2026-11-09-m0-substrate.md`；捕获路线 2026-11-11 改为捕获图自己画出的页面（[ADR-0006](decisions/0006-capture-the-page-the-figure-draws.md)，`plan/done/2026-11-11-page-capture.md`）。M1 的第一段计划 2026-11-11 开始（`plan/2026-11-11-m1-roles-and-binding.md`），其中绑定已有代码：各引擎给出配对，核心逐条核验，结果在捕获时算出、存在图里，用 `gl_bindings()` 读（[ADR-0007](decisions/0007-derived-tables-of-the-substrate.md)）；角色规则还没有。agent 一侧 2026-11-12 有了第一段代码（`plan/done/2026-11-12-agent-path.md`）：`gl_propose()` 核验一条提议，内容是某个元素画的是某张表的某一行；`gl_tools()` 把只读查询和 `propose` 作为工具交给 aisdk。主比较在开发集上试跑过一次，10 张图、30 个绑定问题、三个自部署模型，结果和它的限度写在 @sec-pilot；报告用的评测还没有做，要证明什么、怎样证明，写在 @sec-research-card 和 @sec-eval。M2 的记录、锚点和更新闭环已在 2026-11-15/16 落地，并由 `tests/testthat/test-records.R` 和 `bench/runs/2026-11-15-m2-rebase/` 验证。M3 的检查、操作、浏览器运行时和三类投影已在 2026-11-16 落地，并由 `bench/runs/2026-11-16-m3*`、21 个测试文件和 `R CMD check` 验证。插件机制已随 M0 实现。标“实测”的数字来自 `dev_docs/research/` 下的探针脚本（2026-11-07 首次运行，2026-11-08 重跑，结果一致）和 `bench/runs/` 里存档的运行，每个数字对应哪个脚本或哪次运行，文中都已注明。
 
 本文是当前的最佳解释和后续路线，不是规格书。gloss 实际做到了什么，由代码、测试和实测数字说明；本文和它们对不上时，以实测为准：改本文，注明日期，并在 @sec-changes 记一笔。
 :::
@@ -428,7 +428,7 @@ figure: Weight vs fuel use
 
 新的检查原语通过插件注册（@sec-plugins）。比如生存曲线的扩展包可以注册针对风险表的检查。
 
-**当前实现（2026-11-15）。** `gl_check()` 已经通过同一个插件注册表提供了第一条 `trend` 检查。它只接受一张构建后的数据表，按分组保留样本数、斜率、通过与不能运行的原因，结果分为 `verified`、`failed`、`partial` 和 `refused`；它不创建记录，也不改变图。mtcars 的声明试验在完整的六个分组上得到 5 个负斜率和 1 个正斜率，所以是 `partial`；只取 8 缸组时是 `verified`。其余五条原语和声明记录仍属于后续切片。
+**当前实现（2026-11-16）。** `gl_check()` 通过同一个插件注册表提供 `trend`、`count`、`value`、`compare`、`range` 和 `exists` 六条检查。它们只接受构建后的数据表，保留分组或行级证据，结果分为 `verified`、`failed`、`partial` 和 `refused`；它们不创建记录，也不改变图。记录层使用显式 JSON-like schema，失败检查不能成为事实，领域推测保持 `speculative`。M3 的 mtcars fixture 对十个真、假、混合和不可运行案例全部得到预期状态。
 
 ## 绑定假设也要能检查
 
@@ -748,7 +748,7 @@ gl_annotate(fig, stages = c("classify", "bind", "meaning", "relation", "claim", 
 # 人、R 程序、浏览器和 agent 共用一套操作 {#sec-operate}
 
 ::: {.callout-note appearance="minimal"}
-**要点**：操作词表只有一份，R 端和浏览器端各实现一遍。R 端 v0 实现全部操作；浏览器端先做四个，其余等有了实际场景再加。一张图启用哪些操作，由嗅探到的上下文决定，而不是固定配置（设计）。
+**要点**：操作词表只有一份，R 端和浏览器端各实现一遍。R 端 v0 实现全部操作；浏览器端先做四个，其余等有了实际场景再加。一张图启用哪些操作，由嗅探到的上下文决定，而不是固定配置。M3 已实现这条词表的插件注册、R 端物化和 HTML 运行时。
 :::
 
 ## 操作词表 v0
@@ -806,6 +806,8 @@ agent 的任务是决定做什么操作、作用在哪里：为这张图设计�
 ## 投影 {#sec-projection}
 
 投影是从底座加若干层生成的只读产物，包括：交互式 SVG 或 HTML（带运行时）；无障碍树（WAI-ARIA Graphics 角色、描述和导航结构）；文字描述（给人读，也给只处理文本的模型读）；以及给浏览器端 agent 用的操作接口。投影的元数据记下了用到哪些层、哪个版本的日志；层改了以后重新投影即可。单文件形式的 SVG/HTML 不只是投影，它还内嵌了整份图包，详见下一节。
+
+**当前实现（2026-11-16）。** `gl_apply()` 将 11 个 R 端操作保存为可序列化状态，并把叠加内容写进独立的 `gloss-overlay` 组。HTML 投影内嵌无依赖浏览器运行时，浏览器 v0 提供选择、样式、显隐和 tooltip。`gl_export()` 提供 ARIA、纯文本和 Web Annotation JSON 单向导出。M3 的浏览器语法和静态 HTML 契约已通过，运行环境没有 Chromium 或 Playwright，因此尚无真实浏览器截图数字。
 
 # 一个文件就能带走整份图包 {#sec-storage}
 
@@ -1351,6 +1353,8 @@ M0–M3 不依赖大模型（@fig-milestones）。到 M3 为止交付的已经�
 **2026-11-12（agent 路径计划第 5、6 步，计划关闭）主比较试跑了一次；按结果，绑定这一层撑不起“更准”。** 新增 @sec-pilot：10 张开发图、30 个绑定问题、三个自部署模型、540 次运行，条件 A 答对 91.1%，条件 B 99.6%，不用模型的枚举全对；稳定的差别是成本，B 用 A 三分之一的 token 和时间。据此改了五处。@sec-research-card 加了一条补记：绑定一层的论断收窄，“更准”留给代码枚举不了的层，卡片正文没有改。@sec-eval 的“同一模型、同一预算、多次运行”多了三条：评测程序自带循环，按用掉的预算报告，先读运行记录再信分数；前一条原是试跑时的补记，起因是 aisdk 1.5.0 的循环会改写工具调用的参数。@sec-premortem 改了七行、加了一行。@sec-risks 加了“主论断在绑定这一层没有多少余地”，“提议”一条改写成现状。@sec-plan 加了补记，建议先做声明这条最薄的路径。计划关闭时，它在各节留下的按日期追加的补记并回了正文：文首的“文档所处阶段”，@sec-verify 的“提议”，@sec-agent 的工具（新增 @tbl-tools-built），@sec-embed 的图包往返。并回时没有改任何数字；被替换掉的经过是：图包第一次量时（`bench/runs/2026-11-12-1918-bundle-dev*`）83 张里 5 张写不出来，写得出的 78 张里 5 张因为空的表列表少了一个名字属性而不逐项相同，两处都已修；包内工具的 60 次复核运行当时因为模型服务中断推迟过一次。
 
 **2026-11-15（semantic pilot）。** 按 ADR-0010 的决定，先做声明层的最薄试验，再决定 M2 或更大的模型评测。`gl_check()` 和 `trend` 插件对构建后的 mtcars 点数据给出 1 个 `verified` 代码结果；4 个冻结的 model-shaped 提议分别为 `failed`、`partial`、`refused` 和 `uncheckable`，3 个进入带问题和证据的审计队列。owner 审计把混合趋势改写为“存在例外”，把开放世界含义保留为 `speculative`，拒绝缺失列提议。运行在 `bench/runs/2026-11-15-semantic-pilot*`，没有真实模型调用或人工一致性数字；语义 pilot 关闭，下一计划先测 prepared visual view，再决定 M2 记录与锚点的顺序。
+
+**2026-11-16（M3 关闭）。** M3 计划完成了检查原语、语义层 schema、R 端操作、HTML 运行时、ARIA/文字/Web Annotation 投影。宿主套件从 18 个文件、1506 个通过增加到 21 个文件、1594 个通过，0 失败、0 跳过；M3 fixture 的十个检查案例全部匹配预期，运行时 gzip 大小为 1,193 bytes，`R CMD check` 为 `Status: OK`。这批结果是受控机制证据，不是开发集或留出集覆盖率。浏览器环境没有 Chromium 或 Playwright，真实浏览器冒烟留作后续环境补充。
 
 # 附录 A：六项能力的接口 {#sec-api .appendix}
 
