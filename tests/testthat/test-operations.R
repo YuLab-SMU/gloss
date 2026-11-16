@@ -67,7 +67,11 @@ test_that("verified claims can support an overlay and operation state round-trip
 test_that("the browser runtime is dependency-free and syntactically valid", {
   node <- Sys.which("node")
   skip_if(!nzchar(node), "node is unavailable")
-  root <- normalizePath(file.path(testthat::test_path(), "..", "..", "inst", "js"), mustWork = TRUE)
+  root <- system.file("js", package = "gloss")
+  if (!nzchar(root)) {
+    root <- normalizePath(file.path(testthat::test_path(), "..", "..", "inst", "js"),
+                         mustWork = TRUE)
+  }
   files <- c(file.path(root, "gloss-core.js"),
              list.files(file.path(root, "ops"), full.names = TRUE))
   for (file in files) {

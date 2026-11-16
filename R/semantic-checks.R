@@ -254,7 +254,7 @@ check_compare <- function(table, args) {
                                  reason = "left and right columns must be numeric"))
   }
   stat <- args$stat %||% "mean"
-  fun <- switch(stat, mean = mean, median = median, sum = sum, min = min, max = max)
+  fun <- switch(stat, mean = mean, median = stats::median, sum = sum, min = min, max = max)
   groups <- semantic_check_groups(table, by)
   if (!length(groups)) return(semantic_check_result("compare", "refused", reason = "the table has no rows"))
   tol <- args$tolerance %||% 1e-12

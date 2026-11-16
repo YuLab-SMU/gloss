@@ -12,6 +12,8 @@ gl_export(fig, format = c("aria", "text", "annotation"), path = NULL, ...)
 \item{format}{One of \code{"aria"}, \code{"text"} or \code{"annotation"}.}
 
 \item{path}{Optional output path. Without it, return the projection value.}
+
+\item{...}{Additional arguments passed to the exporter plugin.}
 }
 \value{
 The projection value, or \code{path} invisibly when writing a file.

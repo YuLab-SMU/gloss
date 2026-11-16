@@ -143,6 +143,7 @@ write_annotation <- function(fig, path, ...) write_projection_text(annotation_pr
 #' @param fig A `gloss_figure`.
 #' @param format One of `"aria"`, `"text"` or `"annotation"`.
 #' @param path Optional output path. Without it, return the projection value.
+#' @param ... Additional arguments passed to the exporter plugin.
 #' @return The projection value, or `path` invisibly when writing a file.
 #' @export
 gl_export <- function(fig, format = c("aria", "text", "annotation"), path = NULL, ...) {
