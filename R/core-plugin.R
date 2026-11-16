@@ -43,7 +43,7 @@ plugin_kinds <- function() {
     operation = list(
       required = list(r = fn),
       optional = list(js = str),
-      contract = contract_declaration
+      contract = contract_operation
     ),
     projection = list(
       required = list(formats = chr, write = fn),
@@ -345,6 +345,10 @@ contract_check <- function(label, expr) {
 
 contract_declaration <- function(plugin) list()
 
+contract_operation <- function(plugin) {
+  list(contract_check("R materializer is callable", is.function(plugin$r)))
+}
+
 contract_rules <- function(plugin) {
   checks <- list(contract_check("contains callable rules", {
     if (!length(plugin$rules)) stop("the plugin has no rules")
@@ -452,13 +456,22 @@ contract_projection <- function(plugin) {
   }))
   if (is.null(fig)) return(out)
   for (fmt in plugin$formats) {
-    out <- c(out, list(contract_check(sprintf("writes and reads back .%s", fmt), {
-      path <- tempfile(fileext = paste0(".", fmt))
-      on.exit(unlink(path), add = TRUE)
-      plugin$write(fig, path, embed = "all")
-      back <- gl_read(path)
-      identical(back$substrate$elements, fig$substrate$elements)
-    })))
+    if (fmt %in% c("html", "htm", "svg")) {
+      out <- c(out, list(contract_check(sprintf("writes and reads back .%s", fmt), {
+        path <- tempfile(fileext = paste0(".", fmt))
+        on.exit(unlink(path), add = TRUE)
+        plugin$write(fig, path, embed = "all")
+        back <- gl_read(path)
+        identical(back$substrate$elements, fig$substrate$elements)
+      })))
+    } else {
+      out <- c(out, list(contract_check(sprintf("writes .%s", fmt), {
+        path <- tempfile(fileext = paste0(".", fmt))
+        on.exit(unlink(path), add = TRUE)
+        plugin$write(fig, path, embed = "all")
+        file.exists(path) && file.size(path) > 0
+      })))
+    }
   }
   out
 }

@@ -23,6 +23,7 @@ register_builtin_plugins <- function() {
   register_check_compare()
   register_check_range()
   register_check_exists()
+  register_builtin_operations()
   register_context_code()
   register_context_data()
   register_context_engine()
@@ -31,4 +32,7 @@ register_builtin_plugins <- function() {
   register_context_git()
   register_projection_html()
   register_projection_svg()
+  register_projection_aria()
+  register_projection_text()
+  register_projection_annotation()
 }

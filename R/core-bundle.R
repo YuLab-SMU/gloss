@@ -143,6 +143,9 @@ bundle_files <- function(fig, embed = "default") {
   }
   files[["context.json"]] <- as_bytes(json_write(ctx))
   files <- c(files, encode_layers(fig$layers))
+  if (!is.null(fig$operations) && length(fig$operations$specs %||% list())) {
+    files[["projections/operations.json"]] <- as_bytes(json_write(fig$operations, pretty = FALSE))
+  }
 
   manifest <- list(
     format = "gloss-bundle",
@@ -472,6 +475,9 @@ figure_from_files <- function(files) {
     derived = decode_derived(files, man$derived, substrate),
     layers = decode_layers(files, man$layers)
   )
+  if (!is.null(files[["projections/operations.json"]])) {
+    fig$operations <- json_read(bytes_text(files[["projections/operations.json"]]))
+  }
   fig <- ensure_stable_ids(fig)
   fig$status <- status
   fig
@@ -588,7 +594,7 @@ extract_embedded <- function(txt) {
 
 # Scene with rasters as data URIs, without the XML declaration.
 scene_for_projection <- function(fig) {
-  s <- fig$substrate$scene
+  s <- scene_with_operations(fig)
   s <- sub("^<\\?xml[^>]*>\\s*", "", s)
   for (id in names(fig$substrate$rasters)) {
     uri <- paste0("data:image/png;base64,", base64_line(fig$substrate$rasters[[id]]))
