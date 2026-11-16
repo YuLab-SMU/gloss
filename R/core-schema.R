@@ -20,11 +20,13 @@ schema_normalize <- function(schema) {
   if (is.character(schema) && length(schema) > 1L) {
     return(list(type = "string", enum = schema))
   }
-  if (is.list(schema) && is_string(schema$type)) {
-    if (identical(schema$type, "object")) {
+  # Use exact indexing here. `$type` partially matches a field named
+  # `type?`, which is a valid optional object field in this schema language.
+  if (is.list(schema) && is_string(schema[["type"]])) {
+    if (identical(schema[["type"]], "object")) {
       schema$fields <- lapply(schema$fields %||% list(), schema_normalize)
     }
-    if (identical(schema$type, "array")) {
+    if (identical(schema[["type"]], "array")) {
       schema$items <- schema_normalize(schema$items %||% "any")
     }
     return(schema)

@@ -6,9 +6,52 @@
 # and an append-only event log for history and bundle round trips.
 
 record_states <- c("proposed", "verified", "rejected", "superseded",
-                   "retracted", "invalid")
+                   "retracted", "invalid", "speculative")
 record_events <- c("add", "revise", "retract", "verify", "rebase",
                    "rewrite")
+
+semantic_check_body_schema <- function() {
+  list(
+    kind = "string",
+    "table?" = "string",
+    "args?" = "any"
+  )
+}
+
+core_layer_body_schema <- function(name) {
+  common <- list(
+    "text?" = "string",
+    "type?" = "string",
+    "provenance?" = c("direct", "derived", "speculative"),
+    "origin?" = c("direct", "derived", "speculative"),
+    "description?" = "string",
+    "label?" = "string",
+    "value?" = "any",
+    "check?" = semantic_check_body_schema(),
+    "table?" = "string",
+    "evidence?" = "any",
+    "rationale?" = "string",
+    "keep?" = list(type = "array", items = "string"),
+    "name?" = "string",
+    "role?" = "string",
+    "kind?" = "string",
+    "cue?" = "string",
+    "rule?" = "string",
+    "row?" = "integer",
+    "trigger?" = c("hover", "click", "key", "state"),
+    "operation?" = "string",
+    "field?" = "string",
+    "order?" = "integer",
+    "alt_text?" = "string",
+    "from?" = "any",
+    "to?" = "any",
+    "basis?" = list(type = "array", items = "string")
+  )
+  if (name == "binding") {
+    common$table <- "string"
+  }
+  common
+}
 
 core_layer_specs <- function() {
   list(
@@ -24,10 +67,11 @@ core_layer_specs <- function() {
 }
 
 register_core_layer <- function(name, depends = character(), scope = "element") {
+  body <- core_layer_body_schema(name)
   gl_register(
     "layer", name = name, version = "0.1.0", package = "gloss",
     description = sprintf("Built-in %s semantic record layer", name),
-    schema = list(type = "any"), body = list(type = "any"),
+    schema = body, body = body,
     depends = depends, scope = scope
   )
 }
@@ -216,6 +260,23 @@ record_summary <- function(rec) {
   )
 }
 
+record_projection_status <- function(rec) {
+  body <- rec$body %||% list()
+  origin <- body$provenance %||% body$origin %||% NULL
+  if (identical(origin, "speculative") || identical(rec$status, "speculative")) {
+    return("speculative")
+  }
+  check <- rec$check
+  if (!is.null(check) && identical(check$status, "partial")) return("partial")
+  if (!is.null(check) && identical(check$status, "refused")) return("uncheckable")
+  rec$status %||% "proposed"
+}
+
+record_is_factual <- function(rec) {
+  identical(record_projection_status(rec), "verified") &&
+    (is.null(rec$check) || !identical(rec$check$status, "failed"))
+}
+
 record_rows <- function(fig, layer = NULL, status = NULL) {
   check_figure(fig)
   nms <- names(fig$layers %||% list())
@@ -321,7 +382,13 @@ run_record_check <- function(fig, rec) {
   gl_check(fig$tables[[table]]$data, spec$kind, spec$args %||% list())
 }
 
-record_fact_status <- function(check, proposed = "proposed") {
+record_fact_status <- function(check, proposed = "proposed", body = list()) {
+  origin <- body$provenance %||% body$origin %||% NULL
+  if (identical(origin, "speculative")) {
+    if (is.null(check)) return("speculative")
+    if (identical(check$status, "failed")) return("rejected")
+    return("speculative")
+  }
   if (is.null(check)) return(proposed)
   switch(check$status,
          verified = "verified",
@@ -350,7 +417,7 @@ validate_record <- function(fig, rec, strict_anchor = TRUE) {
                 reason = "one or more anchors are missing or ambiguous"))
   }
   rec$check <- run_record_check(fig, rec)
-  rec$status <- record_fact_status(rec$check, rec$status %||% "proposed")
+  rec$status <- record_fact_status(rec$check, rec$status %||% "proposed", rec$body)
   list(ok = TRUE, record = rec, resolutions = resolutions)
 }
 
