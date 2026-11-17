@@ -26,7 +26,9 @@ See [`_template.md`](_template.md).
 
 ## Active plans
 
-There is no active plan after the M5 feasibility slice closed. The next slice should start from the M5 scope changes and the unrun two-model, repeated, audit and engineering-baseline clauses.
+The M5 feasibility slice closed with its two-model, repeated, audit and engineering-baseline clauses still open. M6 starts from those scope changes as a measurement-validation and evaluation-closure slice: [2026-11-17-m6-evaluation-closure.md](2026-11-17-m6-evaluation-closure.md).
+
+- [2026-11-17-m6-evaluation-closure.md](2026-11-17-m6-evaluation-closure.md): repair the pinned evaluation environment, validate masked scoring against a blinded audit, measure SVG-only and prepared-visual conditions, and apply a cost gate before any repeated/two-model held-out extension.
 
 The M3 semantic, operations and projection slice is in [done/2026-11-16-m3-semantic-operations-projection.md](done/2026-11-16-m3-semantic-operations-projection.md). The M2 record and anchor slice is in [done/2026-11-15-m2-records-and-anchors.md](done/2026-11-15-m2-records-and-anchors.md). The prepared visual evidence pilot is closed with its model comparison deferred in [done/2026-11-15-visual-semantic-pilot.md](done/2026-11-15-visual-semantic-pilot.md). The preceding claim pilot is closed in [done/2026-11-15-semantic-pilot.md](done/2026-11-15-semantic-pilot.md); M1 remains closed in [done/2026-11-11-m1-roles-and-binding.md](done/2026-11-11-m1-roles-and-binding.md).
 
