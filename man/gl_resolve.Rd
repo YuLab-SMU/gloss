@@ -16,6 +16,8 @@ gl_resolve(fig, conflict, keep, rationale, by = "user", evidence = NULL)
 \item{rationale}{Explanation for the judgment.}
 
 \item{by}{Provenance identity.}
+
+\item{evidence}{Optional JSON-like evidence attached to the resolution.}
 }
 \value{
 The updated figure.

@@ -1,0 +1,23 @@
+{
+  "set": "dev",
+  "stratum": "v0",
+  "figures": 1,
+  "started": "2026-11-17-0428",
+  "captured": 1,
+  "scene_unchanged": 1,
+  "operation_roundtrip": 0,
+  "aria_parse": 1,
+  "annotation_parse": 1,
+  "runtime_embedded": 1,
+  "statuses": {
+    "captured": 1
+  },
+  "R": "R version 4.5.2 (2025-10-31)",
+  "gloss_source_digest": "d73c3ed572352837c920f0dcbc57a833",
+  "browser": {
+    "chromium": "",
+    "chromium_browser": "",
+    "google_chrome": "",
+    "node": "/usr/bin/node"
+  }
+}

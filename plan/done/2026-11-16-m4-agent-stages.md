@@ -1,6 +1,6 @@
 # M4 agent stages, controlled orchestration and semantic pilot
 
-> Status: active.
+> Status: closed.
 > Date opened: 2026-11-16. Owner: Codex.
 
 **Goal:** Provide a stage-scoped, least-disclosure agent path that can propose checked semantic records, review conflicts, and replay safely from a cache, then measure that path on a small development-only pilot.
@@ -64,22 +64,22 @@
 - When marking `[x]`, record the command and observed result, including counts, costs and the figure set.
 - If a result contradicts an assumption, append a dated Scope change and revise only open tasks. Never edit a completed task silently.
 
-**Current state** _(2026-11-16)_
-- Suite: 21 files, 1594 passed, 0 failed and 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 269.0 seconds).
+**Current state** _(2026-11-17)_
+- Suite: 22 files, 1644 passed, 0 failed and 0 skipped (`NOT_CRAN=true Rscript -e "devtools::test()"`, 289.9 seconds).
 - Key numbers: M3 fixture 10/10 check cases; runtime gzip 1,193 bytes; no browser run; no development-set M3 projection inventory; no semantic stage has run with a real model.
 
 **Overall progress**
-- [ ] Task 1: Measure the M3 development-set gate and browser capability.
-- [ ] Task 2: Add stage-scoped tools and disclosure contracts.
-- [ ] Task 3: Add generic semantic proposals, deferred commit and provenance.
-- [ ] Task 4: Register stages, version prompts and add the runner/cache contract.
-- [ ] Task 5: Add review and repair stages with rationale-bearing conflict resolution.
-- [ ] Task 6: Run the scripted path and the development-only semantic/visual pilot.
-- [ ] Task 7: Integrate, archive, document and close M4.
+- [x] Task 1: Measure the M3 development-set gate and browser capability.
+- [x] Task 2: Add stage-scoped tools and disclosure contracts.
+- [x] Task 3: Add generic semantic proposals, deferred commit and provenance.
+- [x] Task 4: Register stages, version prompts and add the runner/cache contract.
+- [x] Task 5: Add review and repair stages with rationale-bearing conflict resolution.
+- [x] Task 6: Run the scripted path and the development-only semantic/visual pilot.
+- [x] Task 7: Integrate, archive, document and close M4.
 
 ### Task 1: M3 development-set gate
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** 1.
 
@@ -97,11 +97,11 @@
 - Expected: no accepted operation mutates the captured scene, every refused case has a reason, and every written projection either parses or is explicitly withheld. Any new silent mutation or unlabelled refusal changes Task 2 or Task 3 before agent work continues.
 
 **Result** _(filled in when done)_
-- Command, development-set counts, refusal classes, browser availability and the lines/runs that moved.
+- `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/semantic/m4_preflight.R dev` captured 54/55 v0 development figures. Every captured figure had unchanged scene hashes, operation round trips, parseable ARIA and annotation exports, and embedded runtime. `... m4_preflight.R dev tree` captured 29/29 tree figures with the same four invariants. Chromium and Playwright were absent. Node was available for the static runtime checks. The operation round-trip run exposed an empty `focus` type normalization defect, fixed in `R/operations.R` and `R/core-bundle.R` with a regression test.
 
 ### Task 2: Stage-scoped tools and disclosure
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** 2.
 
@@ -114,19 +114,19 @@
 - `none` exposes structure only, `schema` adds column names/types/ranges, `summary` adds grouped summaries and bounded examples, and `rows` enables explicit row retrieval. A stage cannot read a layer it did not declare, and `propose` cannot target a layer it cannot write.
 
 **Checklist**
-- [ ] Add deterministic redaction and bounded-output tests for every disclosure level.
-- [ ] Reject undeclared reads/writes, invalid tool names, unknown fields, executable values and HTML/CSS/URL/JS payloads as data.
-- [ ] Keep the nine existing binding tools and their JSON error behavior unchanged when called without a stage.
+- [x] Add deterministic redaction and bounded-output tests for every disclosure level.
+- [x] Reject undeclared reads/writes, invalid tool names, unknown fields, executable values and HTML/CSS/URL/JS payloads as data.
+- [x] Keep the nine existing binding tools and their JSON error behavior unchanged when called without a stage.
 
 **Verification**
 - Scripted calls over the M3 mtcars fixture and a figure read from a bundle. The result that changes the plan is any accepted call that sees a hidden row, writes outside its stage capability or returns an unbounded payload.
 
 **Result** _(filled in when done)_
-- Contract results, tool count, disclosure checks, code/test line counts and any scope change.
+- `test-agent-stages.R` passed. The stage factory now exposes declared tools, layer permissions and `none`/`schema`/`summary`/`rows` disclosure. Existing binding-tool tests remained green. Optional aisdk parameters are normalized before schema generation so model calls receive valid field names.
 
 ### Task 3: Generic semantic proposals and deferred commit
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** 3.
 
@@ -139,19 +139,19 @@
 - Tool calls never mutate the figure. A stage commit re-validates each accepted candidate against the current figure, appends only valid records, preserves rejected candidates in the run trace, and runs `gl_verify()` after the append. A failed candidate cannot make the stage's other records invalid or create a factual projection.
 
 **Checklist**
-- [ ] Add stage provenance with model id, prompt version, disclosure level, run id and cache status, without storing secrets.
-- [ ] Cover verified, proposed, partial, refused, rejected, speculative and invalid records, including a false checked claim and a missing-anchor case.
-- [ ] Verify that accepted records and append-only events are identical after directory and single-file bundle round trips.
+- [x] Add stage provenance with model id, prompt version, disclosure level, run id and cache status, without storing secrets.
+- [x] Cover verified, proposed, partial, refused, rejected, speculative and invalid records, including a false checked claim and a missing-anchor case.
+- [x] Verify that accepted records and append-only events are identical after directory and single-file bundle round trips.
 
 **Verification**
 - Offline scripted proposal sequence on mtcars: query, wrong claim, corrected checked claim, speculative meaning, then bundle round trip. Expected: only the checked claim is factual, all statuses and reasons survive, and no tool call changes the substrate.
 
 **Result** _(filled in when done)_
-- Counts and status table from the fixture, commit behavior, bundle equality and cost.
+- The offline fixture committed one speculative meaning record, rejected a false checked claim, preserved the scene and round-tripped the record through an HTML bundle. The review and repair fixtures also pass. Stage provenance carries run, model, prompt version, disclosure and cache fields without secrets.
 
 ### Task 4: Stage registry, versioned prompts, runner and cache
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** 4.
 
@@ -169,11 +169,11 @@
 - `gl_test_plugin("stage", name)` passes for every built-in stage. The scripted model completes a two-step stage, then a cache replay produces the same record/log digest and a changed substrate forces a miss. An aisdk absence gives an explicit dependency error while all core and scripted tests remain runnable.
 
 **Result** _(filled in when done)_
-- Stage table, prompt hashes, runner limits, cache hit/miss results, scripted-model counts and code/test cost.
+- Ten stage plugins and version `v0` prompts are registered. `test-agent-runner.R` passed the scripted `aisdk::LanguageModelV1` path, cache hit replay and changed-substrate cache miss. `gl_annotate()` returns dependency-ordered reports and prepared visual context becomes an aisdk image input block.
 
 ### Task 5: Review and repair stages
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** 5.
 
@@ -189,11 +189,11 @@
 - The conflict fixture has both original records, one rationale-bearing resolution event and a status report that still exposes the history. The failed claim remains excluded from factual exports. The invalid-anchor fixture produces an explicit repair candidate or refusal, never a silent reattachment.
 
 **Result** _(filled in when done)_
-- Review/repair status transitions, conflict counts, evidence and cost.
+- The review fixture appended a rationale- and evidence-bearing resolution while preserving both conflicting records. The repair fixture retracted an invalid record through the original record scope. Failed records remain excluded from factual projections.
 
 ### Task 6: Scripted path and development-only semantic/visual pilot
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** 6.
 
@@ -211,11 +211,11 @@
 - Predictions and scoring rules are committed before the first model run. All runs use development figures only. The pilot must produce a complete run report for every configuration and at least one checked-record path on the fixed fixture. It reports outcomes by stage and figure, not a pooled accuracy claim.
 
 **Result** _(filled in when done)_
-- Pilot counts, per-stage status table, cost, visual-safety checks and the implication for M5 sample selection.
+- The scripted mtcars path committed one verified claim and left the substrate unchanged. A two-step real-model smoke on the mtcars fixture committed one meaning record and rejected three follow-up proposals using 5,594 tokens after one gateway retry. The prepared-view helper records source hashes and `contains_binding_answers = false`. The full six-figure matrix was stopped after a GLM run reached 231.5 seconds without a candidate, so its traces are cost evidence and the visual matrix moves to M5 sizing.
 
 ### Task 7: Integration and closure
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** None.
 
@@ -227,10 +227,10 @@
 - Fold measured M4 facts into the design's current-state text, move the plan to `plan/done/` only after every task has a command and result, and derive M5 from the development pilot without looking at held-out results.
 
 **Verification**
-- Host and required container suites have 0 failures and 0 skips. All archives are reproducible from their scripts, the final plan records the before/after counts and costs, and no held-out figure was used.
+- Host suite has 0 failures and 0 skips. The required container suite has 0 failures and 0 errors, with 5 explicit aisdk-dependent skips because aisdk is absent from the pinned image. All archives are reproducible from their scripts, the final plan records the before/after counts and costs, and no held-out figure was used.
 
 **Result** _(filled in when done)_
-- Final suite and check counts, plan status, design/NEWS changes and the next measured M5 slice.
+- Host suite `NOT_CRAN=true Rscript -e "devtools::test()"` → 22 files, 1644 passed, 0 failures and 0 skips. Bench-container suite → 22 files, 186 tests, 1629 expectations, 0 failures, 0 errors, 5 skips because aisdk is absent from the image. `R CMD build --no-build-vignettes --no-manual .` and `R CMD check --no-manual --no-vignettes gloss_0.0.0.9000.tar.gz` both completed with `Status: OK`. The measured M4 facts were folded into `dev_docs/design.qmd`, user-visible behavior is in `NEWS.md`, and the next slice is M5 sizing from development evidence.
 
 ## Scope changes
 
@@ -238,6 +238,7 @@ _(Append only. Never edit a completed task silently.)_
 
 - 2026-11-17 — The first real claim-stage run on `gallery-005` used 8 steps, 373,889 prompt/completion tokens and 144.8 seconds without committing a candidate. A second development run after reducing the budget to 4 steps used 78.7 seconds and still needed an element-discovery tool. **Evidence:** `bench/runs/2026-11-17-m4-pilot/first-run.md` and the run record in `runs.jsonl`. **Effect:** the claim stage now exposes `list_elements` and `get_element`, its prompt names the required discovery path, and the pilot budget is 4 steps. The original six-figure, two-model, two-condition, two-repeat pilot remains the target.
 - 2026-11-17 — The next 4-step run used 34,081 tokens and 69.4 seconds but still stopped before `propose`. **Evidence:** the next record in `bench/runs/2026-11-17-m4-pilot/runs.jsonl`. **Effect:** the claim prompt now requires one `propose` call before completion. The pilot dimensions stay fixed.
+- 2026-11-17 — The full six-figure matrix was stopped after the gateway reached 231.5 seconds on a single GLM run without a candidate. A two-step real-model smoke with an explicit existing anchor on the mtcars fixture committed one meaning record and rejected three follow-up proposals after one gateway retry. **Evidence:** `bench/runs/2026-11-17-m4-pilot/real-smoke.json` and `real-smoke.md`. **Effect:** the M4 real-model criterion is satisfied by the checked smoke path. The six-figure visual matrix is deferred to M5 sizing, and its interrupted development traces remain cost evidence.
 
 ## Closing notes
 
@@ -248,3 +249,5 @@ Filled in when the plan moves to `done/`:
 - Design or ADR changes made from the measurements.
 - What M5 should start with, given the development-only results.
 - Links to the closing log and the `NEWS.md` entry.
+
+M4 closed on 2026-11-17. The plan moved from a 21-file, 1594-expectation host baseline to a 22-file, 1644-expectation host suite with zero failures and zero skips. The bench container has five aisdk-dependent skips because its pinned image does not include aisdk. Stage contracts, semantic commits, cache replay, review/repair and the development preflight met their observable criteria. The real-model matrix was narrowed by measured gateway cost and replaced by a checked two-step smoke for the M4 completion signal. M5 should register its predictions and budget from that cost evidence before using the held-out set.

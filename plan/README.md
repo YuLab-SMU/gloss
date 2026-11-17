@@ -26,7 +26,7 @@ See [`_template.md`](_template.md).
 
 ## Active plans
 
-- [2026-11-16-m4-agent-stages.md](2026-11-16-m4-agent-stages.md): opened 2026-11-16. Measures the M3 development-set gate, adds stage-scoped tools and disclosure, connects semantic proposals to append-only commits, registers versioned agent stages, adds orchestration/cache/review contracts, and runs a development-only semantic/visual pilot before M5.
+There is no active plan after M4 closed. The next slice is M5, which must be opened from the M4 development evidence and registered predictions.
 
 The M3 semantic, operations and projection slice is in [done/2026-11-16-m3-semantic-operations-projection.md](done/2026-11-16-m3-semantic-operations-projection.md). The M2 record and anchor slice is in [done/2026-11-15-m2-records-and-anchors.md](done/2026-11-15-m2-records-and-anchors.md). The prepared visual evidence pilot is closed with its model comparison deferred in [done/2026-11-15-visual-semantic-pilot.md](done/2026-11-15-visual-semantic-pilot.md). The preceding claim pilot is closed in [done/2026-11-15-semantic-pilot.md](done/2026-11-15-semantic-pilot.md); M1 remains closed in [done/2026-11-11-m1-roles-and-binding.md](done/2026-11-11-m1-roles-and-binding.md).
 
@@ -34,6 +34,7 @@ The M3 semantic, operations and projection slice is in [done/2026-11-16-m3-seman
 
 - [2026-11-15-m2-records-and-anchors.md](done/2026-11-15-m2-records-and-anchors.md): closed 2026-11-15/16. Added append-only record layers, JSONL bundle logs, safe multi-selector anchors, status propagation, conflict records and `gl_rebase()`. The controlled mtcars fixture hit 75% after a title edit, 100% after colour/add/delete-layer edits and 50% after a data-subset edit; invalid targets were explicit. The final host suite was 18 files, 1506 expectations, 0 failures and 0 skips.
 - [2026-11-16-m3-semantic-operations-projection.md](done/2026-11-16-m3-semantic-operations-projection.md): closed 2026-11-16. Added five closed check plugins, explicit semantic schemas, 11 R-side operations, a four-operation HTML runtime, ARIA/text/Web Annotation exporters and deterministic M3 archives. The final host suite was 21 files, 1594 expectations, 0 failures and 0 skips. `R CMD check` was `Status: OK`.
+- [2026-11-16-m4-agent-stages.md](done/2026-11-16-m4-agent-stages.md): closed 2026-11-17. Added stage-scoped disclosure, ten registered stages with versioned prompts, checked semantic proposal commits, orchestration and cache replay, review/repair capabilities and development preflight/pilot archives. The final host suite was 22 files, 1644 expectations, 0 failures and 0 skips. The bench-container suite was 22 files, 186 tests, 1629 expectations, 0 failures, 0 errors and 5 aisdk-dependent skips. `R CMD check` was `Status: OK`.
 
 - [2026-11-15-visual-semantic-pilot.md](done/2026-11-15-visual-semantic-pilot.md): closed 2026-11-15 with the prepared visual artifact complete; the text-only versus visual model run was deferred so M2 records and anchors could proceed.
 

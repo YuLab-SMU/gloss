@@ -24,13 +24,13 @@ test_that("built-in agent stages have explicit capabilities and prompts", {
 test_that("stage disclosure hides rows and binding answers until rows are enabled", {
   skip_if_no("ggplot2")
   fig <- stage_fig()
-  summary_tools <- gloss:::tool_specs(fig, stage = "claim", disclose = "summary")
+  summary_tools <- gloss:::tool_specs(fig, stage = "meaning", disclose = "summary")
   hidden <- stage_run_spec(summary_tools, "get_rows", list(table = "built_layer1", rows = 1L))
   expect_true(is.character(hidden$error) && grepl("disclosure", hidden$error[1]))
   binding_hidden <- stage_run_spec(summary_tools, "get_binding", list(element = gl_elements(fig)$id[1]))
   expect_true(is.character(binding_hidden$error) && grepl("disclosure", binding_hidden$error[1]))
 
-  row_tools <- gloss:::tool_specs(fig, stage = "claim", disclose = "rows")
+  row_tools <- gloss:::tool_specs(fig, stage = "meaning", disclose = "rows")
   rows <- stage_run_spec(row_tools, "get_rows", list(table = "built_layer1", rows = 1L))
   expect_equal(rows$row, 1L)
   binding <- stage_run_spec(row_tools, "get_binding", list(element = gl_bindings(fig)$element[1]))

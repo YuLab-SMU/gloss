@@ -1,0 +1,14 @@
+{
+  "script": "Rscript - <<'RS' run_stage smoke",
+  "model": "auto/gemini-4-argon",
+  "fixture": "mtcars-point",
+  "stage": "meaning",
+  "condition": "text_only",
+  "max_steps": 2,
+  "committed": 1,
+  "rejected": 3,
+  "tool_calls": ["propose", "propose", "propose", "propose"],
+  "usage": {"prompt_tokens": 5319, "completion_tokens": 275, "total_tokens": 5594},
+  "network_retry": true,
+  "keys_archived": false
+}
