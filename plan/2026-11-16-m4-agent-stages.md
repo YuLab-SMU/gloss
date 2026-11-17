@@ -236,6 +236,8 @@
 
 _(Append only. Never edit a completed task silently.)_
 
+- 2026-11-17 — The first real claim-stage run on `gallery-005` used 8 steps, 373,889 prompt/completion tokens and 144.8 seconds without committing a candidate. A second development run after reducing the budget to 4 steps used 78.7 seconds and still needed an element-discovery tool. **Evidence:** `bench/runs/2026-11-17-m4-pilot/first-run.md` and the run record in `runs.jsonl`. **Effect:** the claim stage now exposes `list_elements` and `get_element`, its prompt names the required discovery path, and the pilot budget is 4 steps. The original six-figure, two-model, two-condition, two-repeat pilot remains the target.
+
 ## Closing notes
 
 Filled in when the plan moves to `done/`:

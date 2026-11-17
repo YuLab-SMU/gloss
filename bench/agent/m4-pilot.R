@@ -11,7 +11,7 @@ models <- c("westlakehpc/glm-5.3-flash", "auto/gemini-4-argon")
 figures <- c("gallery-005", "gallery-002", "gallery-029", "exts-027", "bioc-016", "tree-062")
 conditions <- c("text_only", "prepared_visual")
 repeats <- 2L
-max_steps <- 8L
+max_steps <- 4L
 gateway <- "http://127.0.0.1:3425/v1"
 cache_root <- path.expand(Sys.getenv("GLOSS_BENCH_CACHE", "~/.cache/gloss-bench"))
 material_root <- file.path(cache_root, "agent", "pilot")
