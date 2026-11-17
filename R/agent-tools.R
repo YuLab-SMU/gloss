@@ -389,7 +389,12 @@ gl_tools <- function(fig, hide = NULL, stage = NULL, disclose = NULL, state = NU
   }
   tools <- lapply(specs$names, function(nm) {
     spec <- specs$tools[[nm]]
-    params <- if (length(spec$params)) do.call(aisdk::z_object, lapply(spec$params, z)) else aisdk::z_empty_object()
+    params <- if (length(spec$params)) {
+      values <- lapply(spec$params, z)
+      names(values) <- sub("[?]$", "", names(values))
+      required <- names(values)[!grepl("[?]$", names(spec$params))]
+      do.call(aisdk::z_object, c(values, list(.required = required)))
+    } else aisdk::z_empty_object()
     aisdk::tool(name = nm, description = spec$description, parameters = params,
                 execute = function(...) specs$run(nm, list(...)))
   })

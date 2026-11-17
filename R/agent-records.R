@@ -189,5 +189,6 @@ stage_commit <- function(fig, state) {
   }
   list(fig = out, committed = committed, rejected = rejected,
        candidates = state$candidates %||% list(),
+       proposals = state$proposals %||% list(), calls = state$calls %||% list(),
        stage = state$stage, metadata = state$metadata)
 }
