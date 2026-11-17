@@ -126,15 +126,14 @@ stage_dependency_order <- function(stages) {
   registered <- vapply(plugins_of("stage"), `[[`, "", "name")
   missing <- setdiff(stages, registered)
   if (length(missing)) cli::cli_abort("Unknown agent stage(s) {.val {missing}}.")
-  out <- character()
-  visit <- function(name, path = character()) {
-    if (name %in% out) return(invisible())
+  visit <- function(name, path = character(), order = character()) {
+    if (name %in% order) return(order)
     if (name %in% path) cli::cli_abort("Cyclic agent stage dependency at {.val {name}}.")
     p <- stage_plugin_info(name)
-    for (dep in p$depends) visit(dep, c(path, name))
-    out <<- c(out, name)
-    invisible()
+    for (dep in p$depends) order <- visit(dep, c(path, name), order)
+    c(order, name)
   }
-  for (name in stages) visit(name)
+  out <- character()
+  for (name in stages) out <- visit(name, order = out)
   unique(out)
 }
