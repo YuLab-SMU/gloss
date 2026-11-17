@@ -10,12 +10,16 @@ The gloss benchmark: R figures with runnable code and data, sampled from publish
 - Figures that fail are counted, never dropped: every sampled unit has an outcome row.
 
 M5 semantic evaluation uses the registered task and condition files under
-`agent/` and archives traces in `runs/`. The first closed slice uses six
-development materials and six held-out materials. Four held-out figures yield
-directional tasks under the current task rule. The pinned image currently lacks
-`svglite`, so those selected materials were written on the host and carry
-source hashes in their manifests. This environment change is recorded in the
-M5 plan and does not alter the frozen benchmark split.
+`agent/` and archives traces in `runs/`. The first closed slice used six
+development materials and six held-out materials. Four held-out figures yielded
+directional tasks under the M5 task rule. M6 adds a pinned image with
+`svglite` 2.2.2 (`docker/image-manifest.json`) and writes its canonical material
+under the `m6-container` cache namespace. The six M5 held-out host materials
+were regenerated in that image: all six were written with zero prepared-view
+answer leaks, and all six changed scene hash against the old host material
+because the host used `ggplot2` 4.0.3.9000 while the pinned image uses 4.0.3.
+The old M5 archives remain unchanged; M6 task files record the new container
+scene hashes before any new held-out model run.
 
 ## Layout
 
@@ -36,6 +40,9 @@ M5 plan and does not alter the frozen benchmark split.
 | `predictions.md` | predictions, committed before the runs they predict, and their scores |
 | `agent/m5-material.R`, `agent/m5-pilot.R`, `agent/score-m5.R` | M5 material writer, fixed-loop semantic runner and archive-only scorer |
 | `semantic/m5_checks.R` | deterministic M5 claims, transformed data, masked binding, update and SVG preflight |
+| `semantic/m6_env.R`, `semantic/m6_updates.R`, `semantic/m6_audit.R` | M6 container parity, selector ablation and audit-contract archives |
+| `agent/m6-pilot.R` | M6 development sizing for raw, checked gloss, SVG-only and prepared-visual conditions |
+| `baselines/m6_inventory.R` | M6 comparison-package availability and integration inventory |
 | `docker/` | the pinned container (`run.sh`, `image`) in which all third-party code runs |
 
 Data vendored from URLs (`figures/<id>/data/`, 7 figures) is not in git: several sources state no license (owner's decision, 2026-11-10). Its checksums are in `MANIFEST.md5` and its URLs in `meta.json`.

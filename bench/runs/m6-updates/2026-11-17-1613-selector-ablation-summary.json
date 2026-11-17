@@ -1,0 +1,33 @@
+{
+  "updates": 25,
+  "selectors": 3,
+  "attempts": 75,
+  "unique": 72,
+  "ambiguous": 0,
+  "missing": 3,
+  "silent_misattachments": 7,
+  "silent_misattachments_by_selector": {
+    "data_key": 7
+  },
+  "multi_selector_silent_misattachments": 0,
+  "same_target": 65,
+  "rebase_errors": 0,
+  "by_update": [
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5
+  ],
+  "csv": "bench/runs/m6-updates/2026-11-17-1613-selector-ablation.csv"
+}

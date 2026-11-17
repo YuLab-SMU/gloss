@@ -1,0 +1,24 @@
+"item","type","figure","task","audit_kind","expected","rater_a","rater_b","adjudicated","reason","human_required","agreement"
+"claim-01-true","claim","gallery-005","dev-gallery-005","deterministic_proxy","supported","supported","supported",,"independent slope recomputation",FALSE,TRUE
+"claim-01-false","claim","gallery-005","dev-gallery-005","deterministic_proxy","unsupported","unsupported","unsupported",,"every runnable group failed the expected trend",FALSE,TRUE
+"binding-01-true","binding","gallery-005","dev-gallery-005","deterministic_proxy","verified","verified","verified",,"captured binding",FALSE,TRUE
+"binding-01-false","binding","gallery-005","dev-gallery-005","deterministic_proxy","rejected","rejected","rejected",,"independent wrong-row perturbation",FALSE,TRUE
+"claim-02-true","claim","gallery-029","dev-gallery-029","deterministic_proxy","supported","supported","supported",,"independent slope recomputation",FALSE,TRUE
+"claim-02-false","claim","gallery-029","dev-gallery-029","deterministic_proxy","unsupported","unsupported","unsupported",,"every runnable group failed the expected trend",FALSE,TRUE
+"binding-02-true","binding","gallery-029","dev-gallery-029","deterministic_proxy","verified","verified","verified",,"captured binding",FALSE,TRUE
+"binding-02-false","binding","gallery-029","dev-gallery-029","deterministic_proxy","rejected","rejected","rejected",,"independent wrong-row perturbation",FALSE,TRUE
+"claim-03-true","claim","exts-030","dev-exts-030","deterministic_proxy","supported","supported","supported",,"independent slope recomputation",FALSE,TRUE
+"claim-03-false","claim","exts-030","dev-exts-030","deterministic_proxy","unsupported","unsupported","unsupported",,"every runnable group failed the expected trend",FALSE,TRUE
+"binding-03-true","binding","exts-030","dev-exts-030","deterministic_proxy","verified","verified","verified",,"captured binding",FALSE,TRUE
+"binding-03-false","binding","exts-030","dev-exts-030","deterministic_proxy","rejected","rejected","rejected",,"independent wrong-row perturbation",FALSE,TRUE
+"claim-04-true","claim","bioc-016","dev-bioc-016","deterministic_proxy","supported","supported","supported",,"independent slope recomputation",FALSE,TRUE
+"claim-04-false","claim","bioc-016","dev-bioc-016","deterministic_proxy","unsupported","unsupported","unsupported",,"every runnable group failed the expected trend",FALSE,TRUE
+"binding-04-true","binding","bioc-016","dev-bioc-016","deterministic_proxy","verified","verified","verified",,"captured binding",FALSE,TRUE
+"binding-04-false","binding","bioc-016","dev-bioc-016","deterministic_proxy","rejected","rejected","rejected",,"independent wrong-row perturbation",FALSE,TRUE
+"claim-05-true","claim","tree-062","dev-tree-062","deterministic_proxy","supported","supported","supported",,"independent slope recomputation",FALSE,TRUE
+"claim-05-false","claim","tree-062","dev-tree-062","deterministic_proxy","unsupported","unsupported","unsupported",,"every runnable group failed the expected trend",FALSE,TRUE
+"binding-05-true","binding","tree-062","dev-tree-062","deterministic_proxy","verified","verified","verified",,"captured binding",FALSE,TRUE
+"binding-05-false","binding","tree-062","dev-tree-062","deterministic_proxy","rejected","rejected","rejected",,"independent wrong-row perturbation",FALSE,TRUE
+"open-world-model_partial","claim","mtcars-facet-points","Does the universal wording survive the positive slope in the automatic 4-cylinder group?","open_world_human_queue",,,,,"some groups passed and some groups failed the expected trend",TRUE,
+"open-world-model_open_world","meaning","mtcars-facet-points","What domain evidence, if any, supports this explanation?","open_world_human_queue",,,,,"no closed check was supplied",TRUE,
+"open-world-model_bad_column","claim","mtcars-facet-points","Does the plotting mapping identify the proposed predictor column?","open_world_human_queue",,,,,"missing column: weight",TRUE,

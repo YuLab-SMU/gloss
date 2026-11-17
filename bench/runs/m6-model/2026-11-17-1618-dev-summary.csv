@@ -1,0 +1,5 @@
+"condition","runs","correct","coverage","false_accept","false_reject","median_seconds","median_tokens","errors"
+"A_raw",5,1,1,0,0,18.67,4282,0
+"B_check",5,0.8,1,0,0,14.56,1201,0
+"D_svg",5,0.6,1,0,0.4,16.65,15748,0
+"V_prepared",5,0.8,1,0,0.2,14.21,3044,0

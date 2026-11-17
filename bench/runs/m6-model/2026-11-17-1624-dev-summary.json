@@ -1,0 +1,54 @@
+{
+  "archive": "bench/runs/m6-model/2026-11-17-1624-dev.jsonl",
+  "model": "auto/deepseek-v4.1-flash",
+  "summary": [
+    {
+      "condition": "A_raw",
+      "runs": 5,
+      "correct": 1,
+      "coverage": 1,
+      "false_accept": 0,
+      "false_reject": 0,
+      "median_seconds": 6.95,
+      "median_tokens": 4650,
+      "errors": 0,
+      "_row": "A_raw"
+    },
+    {
+      "condition": "B_check",
+      "runs": 5,
+      "correct": 1,
+      "coverage": 1,
+      "false_accept": 0,
+      "false_reject": 0,
+      "median_seconds": 10.51,
+      "median_tokens": 2570,
+      "errors": 0,
+      "_row": "B_check"
+    },
+    {
+      "condition": "D_svg",
+      "runs": 5,
+      "correct": 0.4,
+      "coverage": 1,
+      "false_accept": 0.2,
+      "false_reject": 0.4,
+      "median_seconds": 6.09,
+      "median_tokens": 16914,
+      "errors": 0,
+      "_row": "D_svg"
+    },
+    {
+      "condition": "V_prepared",
+      "runs": 5,
+      "correct": 0.6,
+      "coverage": 1,
+      "false_accept": 0,
+      "false_reject": 0.4,
+      "median_seconds": 4.53,
+      "median_tokens": 2349,
+      "errors": 0,
+      "_row": "V_prepared"
+    }
+  ]
+}

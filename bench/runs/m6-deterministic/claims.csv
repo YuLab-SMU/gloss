@@ -1,0 +1,5 @@
+"id","expected","check_status","record_status","check_matches","record_matches"
+"original_true","verified","verified","verified",TRUE,TRUE
+"original_false","failed","failed","rejected",TRUE,TRUE
+"perturbed_true","verified","verified","verified",TRUE,TRUE
+"counterfactual_false","failed","failed","rejected",TRUE,TRUE

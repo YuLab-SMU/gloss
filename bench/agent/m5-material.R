@@ -32,7 +32,10 @@ if (anyNA(todo$id)) stop("not in bench/split.csv: ", paste(ids[is.na(todo$id)], 
 if (any(todo$set != set_name)) stop("requested ids are not all in the ", set_name, " set")
 
 cache_root <- path.expand(Sys.getenv("GLOSS_BENCH_CACHE", "~/.cache/gloss-bench"))
-out_root <- file.path(cache_root, "agent", "m5", set_name)
+material_namespace <- Sys.getenv("GLOSS_MATERIAL_NAMESPACE", "m5")
+if (!grepl("^[A-Za-z][A-Za-z0-9_-]*$", material_namespace))
+  stop("invalid GLOSS_MATERIAL_NAMESPACE")
+out_root <- file.path(cache_root, "agent", material_namespace, set_name)
 dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
 
 prepared_view <- function(fig, dir) {
@@ -80,6 +83,7 @@ prepared_view <- function(fig, dir) {
 }
 
 export_m5 <- function(fig, svg, dir) {
+  material_namespace <- Sys.getenv("GLOSS_MATERIAL_NAMESPACE", "m5")
   dir.create(file.path(dir, "A", "tables"), recursive = TRUE, showWarnings = FALSE)
   gx <- suppressWarnings(gloss::gloss(fig))
   gloss::gl_write(gx, file.path(dir, "figure.html"))
@@ -111,7 +115,7 @@ export_m5 <- function(fig, svg, dir) {
                  prepared_view_sha256 = digest::digest(prepared, algo = "sha256", serialize = FALSE),
                  contains_binding_answers = FALSE, labels = 0L)
   meta <- list(
-    format = "gloss-m5-material",
+    format = paste0("gloss-", material_namespace, "-material"),
     version = "0.1.0",
     contains_binding_answers = FALSE,
     visual = visual,
@@ -127,7 +131,7 @@ export_m5 <- function(fig, svg, dir) {
 
 stamp <- format(Sys.time(), "%Y-%m-%d-%H%M", tz = "UTC")
 gloss_snapshot()
-out_file <- file.path(bench_root, "runs", paste0(stamp, "-m5-material-", set_name, ".csv"))
+out_file <- file.path(bench_root, "runs", paste0(stamp, "-", material_namespace, "-material-", set_name, ".csv"))
 rows <- vector("list", nrow(todo))
 
 for (k in seq_len(nrow(todo))) {

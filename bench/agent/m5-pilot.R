@@ -9,6 +9,9 @@ source("bench/agent/sandbox.R")
 options(aisdk.skip_internet_check = TRUE)
 
 `%||%` <- function(a, b) if (is.null(a) || !length(a)) b else a
+material_namespace <- Sys.getenv("GLOSS_MATERIAL_NAMESPACE", "m5")
+task_prefix <- Sys.getenv("GLOSS_TASK_PREFIX", "m5")
+run_prefix <- Sys.getenv("GLOSS_RUN_PREFIX", "m5")
 
 gateway <- "http://127.0.0.1:3425/v1"
 models_default <- c("auto/glm-5.3-flash", "auto/gemini-4-argon")
@@ -23,7 +26,7 @@ git_head <- function() system("git rev-parse --short HEAD", intern = TRUE)
 utc_stamp <- function() format(Sys.time(), "%Y-%m-%d-%H%M", tz = "UTC")
 
 material_root <- function(set_name) {
-  path.expand(file.path(Sys.getenv("GLOSS_BENCH_CACHE", "~/.cache/gloss-bench"), "agent", "m5", set_name))
+  path.expand(file.path(Sys.getenv("GLOSS_BENCH_CACHE", "~/.cache/gloss-bench"), "agent", material_namespace, set_name))
 }
 
 load_material <- function(set_name, id) {
@@ -342,7 +345,7 @@ run_one <- function(model_id, condition, m, task, repeat_n, max_steps, out_dir) 
 
 write_task_file <- function(set_name) {
   dir.create("bench/agent", showWarnings = FALSE)
-  path <- file.path("bench", "agent", paste0("m5-tasks-", set_name, ".csv"))
+  path <- file.path("bench", "agent", paste0(task_prefix, "-tasks-", set_name, ".csv"))
   if (!file.exists(path)) {
     tasks <- build_tasks(set_name, out_file = path)
   } else tasks <- utils::read.csv(path, stringsAsFactors = FALSE)
@@ -356,7 +359,7 @@ set_name <- if (length(args) > 1L) args[2L] else "dev"
 if (!set_name %in% c("dev", "heldout")) stop("set must be dev or heldout")
 
 if (mode == "tasks") {
-  tasks <- build_tasks(set_name, out_file = file.path("bench", "agent", paste0("m5-tasks-", set_name, ".csv")))
+  tasks <- build_tasks(set_name, out_file = file.path("bench", "agent", paste0(task_prefix, "-tasks-", set_name, ".csv")))
   print(tasks, row.names = FALSE)
   quit(status = if (nrow(tasks)) 0L else 1L)
 }
@@ -399,13 +402,13 @@ condition_filter <- condition_filter[nzchar(condition_filter)]
 if (length(condition_filter)) conditions <- intersect(conditions, condition_filter)
 if (!nrow(tasks) || !length(conditions)) stop("the requested M5 run has no tasks or conditions")
 stamp <- utc_stamp()
-out_file <- file.path("bench", "runs", paste0(stamp, "-m5-", set_name, ".jsonl"))
+out_file <- file.path("bench", "runs", paste0(stamp, "-", run_prefix, "-", set_name, ".jsonl"))
 dir.create("bench/runs", recursive = TRUE, showWarnings = FALSE)
 writeLines(json_line(list(meta = TRUE, script = "bench/agent/m5-pilot.R", set = set_name, models = models,
                           conditions = conditions, repeats = repeats, max_steps = max_steps,
                           request_timeout = request_timeout, sandbox_timeout = sandbox_timeout,
-                          task_file = file.path("bench", "agent", paste0("m5-tasks-", set_name, ".csv")),
-                          gloss_commit = git_head(), prompt_version = "m5-v1")), out_file)
+                          task_file = file.path("bench", "agent", paste0(task_prefix, "-tasks-", set_name, ".csv")),
+                          gloss_commit = git_head(), prompt_version = paste0(run_prefix, "-v1"))), out_file)
 
 for (model_id in models) for (i in seq_len(nrow(tasks))) for (condition in conditions) for (rep in seq_len(repeats)) {
   task <- as.list(tasks[i, ])

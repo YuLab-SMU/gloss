@@ -3,10 +3,13 @@
 # Deterministic M5 checks for true and false claims, transformed data, masked
 # binding and controlled record updates. This script makes no model calls.
 
+source("bench/R/runner.R")
+.libPaths(unique(c(bench_libpaths(), .libPaths())))
 suppressMessages(pkgload::load_all(".", quiet = TRUE, export_all = FALSE, helpers = FALSE))
 if (!requireNamespace("ggplot2", quietly = TRUE)) stop("ggplot2 is required")
 `%||%` <- function(a, b) if (is.null(a) || !length(a)) b else a
-out_dir <- file.path("bench", "runs", "2026-11-17-m5-deterministic")
+material_namespace <- Sys.getenv("GLOSS_MATERIAL_NAMESPACE", "m5")
+out_dir <- Sys.getenv("GLOSS_M5_CHECK_OUT", file.path("bench", "runs", paste0("2026-11-17-", material_namespace, "-deterministic")))
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 make_fixture <- function(kind) {
@@ -67,7 +70,7 @@ masked <- if (nrow(b)) do.call(rbind, lapply(seq_len(nrow(b)), function(i) {
 })) else data.frame()
 write.csv(masked, file.path(out_dir, "masked-binding.csv"), row.names = FALSE)
 
-material_root <- path.expand(file.path(Sys.getenv("GLOSS_BENCH_CACHE", "~/.cache/gloss-bench"), "agent", "m5"))
+material_root <- path.expand(file.path(Sys.getenv("GLOSS_BENCH_CACHE", "~/.cache/gloss-bench"), "agent", material_namespace))
 meta_files <- list.files(material_root, pattern = "m5-metadata[.]json$", recursive = TRUE, full.names = TRUE)
 svg_rows <- if (length(meta_files)) do.call(rbind, lapply(meta_files, function(file) {
   x <- jsonlite::read_json(file, simplifyVector = FALSE)

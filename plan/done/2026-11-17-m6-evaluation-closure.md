@@ -1,6 +1,6 @@
 # M6 evaluation closure and measurement validation
 
-> Status: active.  
+> Status: completed.
 > Date opened: 2026-11-17. Owner: Codex.
 
 **Goal:** Close the M5 measurement gaps that can change the design decision: make semantic materials reproducible in the pinned container, validate the masked metric against a blinded open-world audit, measure the SVG-only and prepared-visual conditions, and run a repeated or two-model extension only if its cost is demonstrably sustainable.
@@ -68,22 +68,23 @@
 
 **Current state** _(2026-11-17)_
 
-- Suite: 22 files, 1644 passed, 0 failures and 0 skips (`NOT_CRAN=true Rscript -e "devtools::test()"`, 296.7 seconds).
-- Key numbers: deterministic M5 fixture 4/4 claims, 20/20 masked bindings in each direction, 5/5 updates, 16/16 prepared SVGs with zero leaks; M5 held-out GLM slice 16 runs, A/A + check/B 4/4 correct, B - check 1/4; Gemini sizing stopped after one 135.7-second run.
+- Suite: 22 files, 1644 passed, 0 failures and 0 skips (`NOT_CRAN=true Rscript -e "devtools::test()"`; opening 296.7 seconds, closing 285.7 seconds).
+- M6 evidence: the new image writes 6/6 development and 6/6 held-out materials with zero prepared-view leaks; development source scenes match 6/6 M5 hashes, while the six old held-out host hashes are replaced by container-canonical hashes because the host used `ggplot2` 4.0.3.9000 and the image uses 4.0.3. Deterministic checks on the container materials are 4/4 claims, 20/20 masked bindings in each direction, 5/5 updates, 16/16 SVGs parsed and 0 leaks.
+- M6 model sizing: two models, four conditions and five tasks each (40 runs, one repeat). Every run had a response and no request error. GLM: A 5/5, B+check 4/5, D 3/5, visual 4/5; DeepSeek: A 5/5, B+check 5/5, D 2/5, visual 3/5.
 
 **Overall progress**
 
-- [ ] Task 1: Repair the pinned bench environment and prove host/container material parity.
-- [ ] Task 2: Validate masked scoring with a blinded audit and extend the update/anchor ablation.
-- [ ] Task 3: Run the SVG-only/prepared-visual development sizing and make the repeated/two-model cost decision.
-- [ ] Task 4: Measure thin engineering baselines on the frozen figures.
-- [ ] Task 5: Conditionally run and archive the expanded held-out comparison, or close with a measured feasibility scope change.
+- [x] Task 1: Repair the pinned bench environment and establish container-canonical material parity.
+- [x] Task 2: Validate the archive contract and extend the update/anchor ablation; the human open-world queue remains explicitly unlabelled.
+- [x] Task 3: Run the SVG-only/prepared-visual development sizing and complete the two-model cost gate.
+- [x] Task 4: Measure the thin engineering-baseline inventory on the frozen figures.
+- [x] Task 5: Close the expanded held-out comparison by scope change; retain it as the next slice after the human audit and repeat budget are available.
 
 ---
 
 ### Task 1: Pinned environment and material parity
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumption:** 1.
 
@@ -104,16 +105,18 @@
 - `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/semantic/m6_env.R dev` and the corresponding held-out material preflight.
 - Expected: all selected materials are written, source hashes match, prepared views contain no binding answers, and the deterministic M5 checks reproduce their archived statuses. The result that changes the plan is a container-only mismatch that cannot be explained by the recorded runtime or a missing package.
 
-**Result** _(to be filled when done)_
+**Result**
 
-- Command, counts, image digest and parity result.
-- Cost: files changed, container builds/runs and what coverage or reproducibility number moved.
+- Added `bench/docker/Dockerfile`, rebuilt the pinned base as image `sha256:ab2a2e6f27e84cd1cb113fc84aa3dccbf9c0047bdbaabe633dcc7edd07f015c5`, and installed `svglite` 2.2.2. `bench/docker/image-manifest.json` records the base digest, R 4.5.2, Bioconductor 3.21 and CRAN snapshot.
+- `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/semantic/m6_env.R dev` wrote 6/6 materials and matched the M5 source scene hash on 6/6, with 0 prepared-view leaks. The held-out command wrote 6/6 with 0 leaks; all six are `source_changed_from_m5`, caused by the host/container `ggplot2` version difference. M6 task files use the container hashes and the old M5 archives remain unchanged.
+- `GLOSS_BENCH_OFFLINE=true GLOSS_MATERIAL_NAMESPACE=m6-container bench/docker/run.sh Rscript bench/semantic/m5_checks.R` reproduced 4/4 claim statuses, 20/20 masked bindings in each direction, 5/5 updates, 16/16 parsed prepared SVGs and 0 leaks.
+- Cost: one image build, two six-figure container material runs and the namespace/preflight changes; the result moved the semantic materials from host-only to a pinned container reference.
 
 ---
 
 ### Task 2: Audit validity and anchor robustness
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumptions:** 2 and 3.
 
@@ -134,15 +137,17 @@
 - Archive the item manifest, rater labels, adjudications, agreement statistics and the archive-only join contract for the later condition comparison. Every item has two labels or an explicit unavailable reason.
 - Run the update scorer from archives only. Expected: no silent misattachment and a complete audit join ready for Task 3. The masked-versus-audit primary/auxiliary decision is made after the model-condition rows are scored; any disagreement changes Task 5's metric and predictions before held-out execution.
 
-**Result** _(to be filled when done)_
+**Result**
 
-- Command, item counts, agreement, ordering comparison, update counts and cost.
+- `GLOSS_MATERIAL_NAMESPACE=m6-container Rscript bench/semantic/m6_audit.R` archived 20 deterministic proxy items with 20/20 agreement between the closed check/binding path and an independent recomputation. It also archived the three existing open-world audit candidates with two blank human-rater columns; no two-person human labels were available in this session, so no masked-versus-human ordering claim is made.
+- `Rscript bench/semantic/m6_updates.R` ran 25 updates × 3 selectors = 75 attempts. The multi-selector path had 25/25 unique resolutions and 0 silent misattachments; element-id also had 0 silent misattachments; data-key-only had 7 silent misattachments and 3 missing targets. There were 0 rebase errors.
+- Cost: 20 proxy audit items, 3 queued human items and 75 selector/update attempts. The human audit remains an explicit open-world measurement gap.
 
 ---
 
 ### Task 3: SVG-only, prepared-visual and cost gate
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Tests assumptions:** 4 and 5.
 
@@ -162,32 +167,45 @@
 - Archive every request, tool call, finish reason, token count, retry, time and prepared-view leak check. The scorer makes no model calls.
 - Expected: D and visual conditions have complete or explicitly failed rows, no answer leaks, and a registered cost decision. If the cost gate fails, Task 5 is marked deferred with the measured p95/total budget and the untested clauses.
 
-**Result** _(to be filled when done)_
+**Result**
 
-- Command, per-condition outcomes and cost distributions; prediction verdicts and scope change.
+- `GLOSS_MATERIAL_NAMESPACE=m6-container Rscript bench/agent/m6-pilot.R materials` generated five prepared PNGs with the registered zero-answer metadata. Two development runs of `Rscript bench/agent/m6-pilot.R run` completed 40 runs: GLM and DeepSeek, four conditions (`A_raw`, `B_check`, `D_svg`, `V_prepared`), five tasks and one repeat per model.
+- Every run had full coverage and 0 request errors. GLM medians were 18.67/14.56/16.65/14.21 seconds and 4282/1201/15748/3044 tokens for A/B/D/visual. DeepSeek medians were 6.95/10.51/6.09/4.53 seconds and 4650/2570/16914/2349 tokens. No prepared visual row reported a binding-answer leak.
+- The cost gate supports the two-model one-repeat development extension. Five-repeat precision and the expanded held-out run remain outside this slice because the human audit is unlabelled and the task material migrated to a new pinned-container hash set.
 
 ---
 
 ### Task 4: Engineering baselines
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
-Measure identification and binding coverage for the frozen figures with the selected ggiraph, gridSVG, maidr and plotly baselines, or record an explicit unavailable/incompatible result for each. Keep all adapters under `bench/baselines/`; do not add dependencies to `DESCRIPTION`. Run first on development figures and freeze the runner before any held-out baseline report.
+**Result**
+
+- `Rscript bench/baselines/m6_inventory.R` archived 48 rows over 12 figures and four comparison packages. `ggiraph` and `plotly` were installed but had no baseline-specific calls in the frozen code (12 `not_applicable` rows each); `gridSVG` and `maidr` were unavailable (12 rows each). No comparison package entered `DESCRIPTION`, and no adapter was inferred from an unavailable or non-integrated package.
 
 ---
 
 ### Task 5: Conditional expanded held-out comparison
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
-After Tasks 1–3 freeze the metric, eligible task set, model ids, prompt/loop versions, repeats and predictions, run the expanded held-out comparison and archive the paired scorer output. If the cost gate or audit validity fails, close this task with a dated Scope change that states the exact untested research-card clauses and does not claim M5's main comparison.
+**Result**
+
+- The held-out semantic model extension was deferred after the environment migration and the missing two-rater open-world labels. The new container materials and `m6-tasks-heldout.csv` are archived, but no held-out model call was made and no prediction was tuned on the old host hashes.
 
 ---
 
 ## Scope changes
 
-_(append-only; none at plan opening)_
+- 2026-11-17 — The pinned image now contains `svglite` 2.2.2. The six development materials matched the old host source scenes, while all six selected held-out host scenes changed under the pinned `ggplot2` 4.0.3 versus host 4.0.3.9000. **Evidence:** `bench/runs/m6-environment/2026-11-17-1603-dev-summary.json` and `2026-11-17-1606-heldout-summary.json`; held-out scene diffs show changed panel margins/clipping geometry. **Effect:** M6 uses the six container-generated held-out materials and their new source hashes as the canonical future task set; the old M5 host material and score remain historical and unchanged.
+- 2026-11-17 — The planned two-rater open-world audit could not be completed in this session. The deterministic proxy has 20/20 agreement, and the three open-world candidates have no human labels. **Evidence:** `bench/runs/m6-audit/2026-11-17-1615-items-summary.json`. **Effect:** the masked metric is not promoted to a primary open-world metric; the human audit is the first task of the next slice.
+- 2026-11-17 — The update matrix found 7/25 silent misattachments for data-key-only anchors, 0/25 for multi-selector anchors and 0/25 for element-id anchors; 3 data-key resolutions were missing. **Evidence:** `bench/runs/m6-updates/2026-11-17-1613-selector-ablation-summary.json`. **Effect:** the multi-selector result is retained as the safe path, while data-key-only remains an auxiliary ablation and does not meet the 1% research-card criterion.
+- 2026-11-17 — Two models completed one development repeat over four conditions with full coverage and no request errors, but no five-repeat precision estimate or held-out semantic run was made. **Evidence:** `bench/runs/m6-model/2026-11-17-1618-dev-summary.csv` and `2026-11-17-1624-dev-summary.csv`. **Effect:** the cost gate is closed for a two-model one-repeat feasibility extension; the repeated precision and main A/B confidence-interval clauses remain open.
+- 2026-11-17 — The engineering baseline inventory found no runnable baseline-specific integration in the 12 frozen figures; ggiraph/plotly were installed but not applicable, and gridSVG/maidr were unavailable. **Evidence:** `bench/runs/m6-baselines/2026-11-17-1630-inventory.csv`. **Effect:** M6 records package availability and integration reasons; actual adapter coverage remains open without changing package dependencies.
 
 ## Closing notes
 
-To be filled when the plan closes: end state against the starting suite and key numbers, assumptions confirmed or refuted, the audit/masked decision, the cost-gate branch, design or ADR updates, the closing dev log and any NEWS entry.
+- End state against the opening state: the host suite remains green at 22 files, 1644 passed, 0 failures and 0 skips. The pinned image now has `svglite` 2.2.2; 12 container materials were written with zero prepared-view leaks; the held-out six use container-canonical scene hashes.
+- Confirmed: container material writing, deterministic semantic checks, the prepared-view contract, multi-selector safety on 25 controlled updates and a two-model one-repeat development sizing path. Refuted or left open: host/container scene identity for the old held-out materials, human masked-versus-audit agreement, data-key-only safety, five-repeat precision, held-out semantic extension and runnable engineering baselines.
+- Design consequence: M6 closes as a measured feasibility and reproducibility slice. It does not establish the main A-versus-B claim, a confidence interval, an open-world audit ordering or the 1% anchor criterion.
+- Related log: `dev_logs/2026-11-17-m6-complete.md`. No `NEWS.md` entry is needed because this slice adds bench evaluation artifacts and changes no package-facing behavior.
