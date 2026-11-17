@@ -26,7 +26,7 @@ See [`_template.md`](_template.md).
 
 ## Active plans
 
-There is no active plan after M4 closed. The next slice is M5, which must be opened from the M4 development evidence and registered predictions.
+The active slice is [2026-11-17-m5-evaluation.md](2026-11-17-m5-evaluation.md). It opens M5 from the M4 development evidence, starts with the semantic cost gate on development figures, and requires registered predictions and a budget before any new held-out semantic run.
 
 The M3 semantic, operations and projection slice is in [done/2026-11-16-m3-semantic-operations-projection.md](done/2026-11-16-m3-semantic-operations-projection.md). The M2 record and anchor slice is in [done/2026-11-15-m2-records-and-anchors.md](done/2026-11-15-m2-records-and-anchors.md). The prepared visual evidence pilot is closed with its model comparison deferred in [done/2026-11-15-visual-semantic-pilot.md](done/2026-11-15-visual-semantic-pilot.md). The preceding claim pilot is closed in [done/2026-11-15-semantic-pilot.md](done/2026-11-15-semantic-pilot.md); M1 remains closed in [done/2026-11-11-m1-roles-and-binding.md](done/2026-11-11-m1-roles-and-binding.md).
 

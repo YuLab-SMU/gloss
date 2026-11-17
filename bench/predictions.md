@@ -1135,3 +1135,67 @@ and every visual run should record `contains_binding_answers = false`.
 150. **The text-only and prepared-visual arms complete within the same eight
 stage-step budget.** A request failure is archived with its reason and is not
 silently counted as no answer.
+
+## M5 evaluation predictions
+
+Written 2026-11-17 before any M5 held-out semantic run. The development sizing
+slice may test mechanisms and cost, but it does not replace the registered
+held-out comparison. Predictions 151–160 stay fixed unless a dated scope
+change names the evidence and the affected task before the held-out run.
+
+### Operational budget registered at plan opening
+
+- Development sizing uses two models, six development figures, A and B, two
+  repeats, at most four model requests per run, 180 seconds per request, 300
+  seconds wall time, 120 seconds per sandbox call and one retry.
+- The held-out comparison uses at most five repeats for each registered
+  figure-condition-model configuration, at most eight model requests per run,
+  180 seconds per request, 300 seconds wall time, 120 seconds per sandbox
+  call and one retry. The eligible figure subset and exact model ids are
+  committed after development sizing and before held-out material is written.
+- C and D, perturbation generation, counterfactual generation and archive
+  scoring use no model budget.
+
+### Predictions
+
+151. **Every selected development figure has stable material hashes, and no
+prepared visual view contains a binding answer.** A source or metadata mismatch
+is an archive failure, not a model result.
+
+152. **No injected false claim becomes factual in C or in a checked proposal.**
+Every code-decidable true claim is either verified or returned with an explicit
+refusal or partial status.
+
+153. **D has lower semantic coverage than A or B on tasks that require table or
+build-data context.** Its SVG-only outputs remain parseable and do not gain
+factual status from the missing context.
+
+154. **B has a lower false-accept rate than B − check, with coverage no more
+than 10 percentage points lower.** The difference should be largest on injected
+false claims and counterfactuals.
+
+155. **A + check has a lower false-accept rate than A, with coverage no more
+than 10 percentage points lower.** A checked rejection is counted separately
+from a run that never submits.
+
+156. **On semantic tasks that require multi-panel, extension or open-world
+context, B has a higher paired correctness share than A on at least half of
+the registered figures, while its coverage is no more than 10 percentage
+points lower.** Ordinary code-enumerable tasks may be tied.
+
+157. **The perturbation lowers A's correctness or coverage more than B's.** The
+original-versus-perturbed difference is reported by figure and condition so a
+memory effect cannot be hidden in a pooled score.
+
+158. **The check-enabled cells have a lower false-accept rate than their
+no-check counterparts on the counterfactual subset, while coverage remains
+within 10 percentage points.**
+
+159. **The condition ordering from masked binding agrees with the ordering from
+the targeted open-world audit.** If it does not, masked binding is reported as
+an auxiliary measurement and the disagreement is a result.
+
+160. **The multi-selector anchor path keeps the silent misattachment rate below
+1% after the registered title, colour, data-subset, add-layer and delete-layer
+updates, and the single-selector ablations perform worse on at least one
+update class.**
