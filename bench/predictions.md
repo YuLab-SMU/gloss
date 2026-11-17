@@ -1111,3 +1111,27 @@ elements, or residue spread across more than five classes without one class
 covering most of it, triggers a scope change under M1 assumption 2. A rule that
 returns an unknown role without a reason is a defect and is fixed before the
 accuracy run.
+
+## M4 semantic stage pilot predictions
+
+Written 2026-11-17 before the M4 development-only pilot. The run uses six
+development figures, two gateway models, text-only and prepared-visual
+conditions, two repeats and the checked `claim` stage. These predictions size
+M5 and do not report held-out performance.
+
+147. **The scripted M4 path commits one checked claim and preserves the scene.**
+The claim should be `verified`, and the bundle round trip should preserve its
+status and append-only log.
+
+148. **At least one real-model configuration produces a committed checked or
+explicitly non-factual claim on a development figure.** The pilot should
+record accepted, rejected, partial and speculative outcomes without treating
+unchecked text as a fact.
+
+149. **Prepared visual context changes the number of usable claim proposals on
+at least two of the six figures.** The prepared view contains no binding answer,
+and every visual run should record `contains_binding_answers = false`.
+
+150. **The text-only and prepared-visual arms complete within the same eight
+stage-step budget.** A request failure is archived with its reason and is not
+silently counted as no answer.
