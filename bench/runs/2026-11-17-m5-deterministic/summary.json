@@ -1,0 +1,29 @@
+{
+  "claims": {
+    "total": 4,
+    "check_matches": 4,
+    "record_matches": 4
+  },
+  "markup_rejected": true,
+  "masked_binding": {
+    "tried": 20,
+    "right_accepted": 20,
+    "wrong_rejected": 20
+  },
+  "updates": {
+    "total": 5,
+    "successful": 5,
+    "invalid": 2
+  },
+  "svg_preflight": {
+    "files": 16,
+    "parsed": 16,
+    "answer_leaks": 0,
+    "hashes_differ": 16
+  },
+  "anchor_ablation": {
+    "updates": 5,
+    "element_id_unique": 5,
+    "data_key_unique": 4
+  }
+}

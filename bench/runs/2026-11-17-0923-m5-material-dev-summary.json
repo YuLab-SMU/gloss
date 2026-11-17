@@ -1,0 +1,13 @@
+{
+  "set": "dev",
+  "figures": 6,
+  "written": 2,
+  "contains_binding_answers": 0,
+  "statuses": {
+    "rerun: eval": 4,
+    "written": 2
+  },
+  "started": "2026-11-17-0923",
+  "gloss_source_digest": "99b9abdcfa1eb4275e3d54d9940f8be2",
+  "ids": ["gallery-005", "gallery-029", "exts-030", "bioc-016", "patchwork-006", "tree-062"]
+}

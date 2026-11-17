@@ -1,0 +1,7 @@
+"id","set","stratum","engine","status","message","elements","leaves","panels","tables","files","bytes","contains_binding_answers","source_scene_sha256","prepared_view_sha256"
+"gallery-005","dev","gallery","ggplot","rerun: eval","there is no package called ‘hrbrthemes’",NA,NA,NA,NA,0,0,NA,NA,NA
+"gallery-029","dev","gallery","ggplot","rerun: eval","there is no package called ‘hrbrthemes’",NA,NA,NA,NA,0,0,NA,NA,NA
+"exts-030","dev","exts","ggplot","rerun: eval","there is no package called ‘ggstatsplot’",NA,NA,NA,NA,0,0,NA,NA,NA
+"bioc-016","dev","bioc","ggplot","rerun: eval","there is no package called ‘GenomicFeatures’",NA,NA,NA,NA,0,0,NA,NA,NA
+"patchwork-006","dev","patchwork","patchwork","written","",139,38,1,3,9,117669,FALSE,"658466979dd666f590ff655582c55b8c75e8868d865af8cbbd520e5b044e8322","f23a937c3bc219eae60f3e8cee9f888f4d8557d65f809169775e72c27dadc382"
+"tree-062","dev","tree","ggplot","written","",91,11,1,10,16,78589,FALSE,"05e4161ca87154c847a3d5d5bac16464ca6c3e2e1fc5fa8e1b1f79153ab605be","eb6511292780f76068573b7d9085a7861961b4f7cd0c9153c234d0b270e9965c"

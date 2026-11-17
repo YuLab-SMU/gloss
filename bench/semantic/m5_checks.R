@@ -67,6 +67,19 @@ masked <- if (nrow(b)) do.call(rbind, lapply(seq_len(nrow(b)), function(i) {
 })) else data.frame()
 write.csv(masked, file.path(out_dir, "masked-binding.csv"), row.names = FALSE)
 
+material_root <- path.expand(file.path(Sys.getenv("GLOSS_BENCH_CACHE", "~/.cache/gloss-bench"), "agent", "m5"))
+meta_files <- list.files(material_root, pattern = "m5-metadata[.]json$", recursive = TRUE, full.names = TRUE)
+svg_rows <- if (length(meta_files)) do.call(rbind, lapply(meta_files, function(file) {
+  x <- jsonlite::read_json(file, simplifyVector = FALSE)
+  svg <- sub("m5-metadata[.]json$", "prepared.svg", file)
+  parsed <- tryCatch({ xml2::read_xml(svg); TRUE }, error = function(e) FALSE)
+  data.frame(file = file, parsed = parsed,
+             contains_binding_answers = isTRUE(x$contains_binding_answers) || isTRUE(x$visual$contains_binding_answers),
+             hashes_differ = !identical(x$visual$source_scene_sha256, x$visual$prepared_view_sha256),
+             stringsAsFactors = FALSE)
+})) else data.frame()
+write.csv(svg_rows, file.path(out_dir, "svg-preflight.csv"), row.names = FALSE)
+
 base_plot <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point() +
   ggplot2::geom_smooth(method = "lm", se = FALSE)
 base <- gloss::gloss(base_plot, context = FALSE)
@@ -87,11 +100,29 @@ updates <- do.call(rbind, lapply(names(edited), function(id) {
 }))
 write.csv(updates, file.path(out_dir, "updates.csv"), row.names = FALSE)
 
+binding_one <- gloss::gl_bindings(base)[1L, , drop = FALSE]
+key_text <- gloss::gl_tables(base)$key[match(binding_one$table, gloss::gl_tables(base)$name)]
+tab_key <- strsplit(key_text, " + ", fixed = TRUE)[[1L]]
+key_values <- as.list(gloss::gl_table(base, binding_one$table)[binding_one$row, tab_key, drop = FALSE])
+names(key_values) <- tab_key
+anchor_rows <- do.call(rbind, lapply(names(edited), function(id) {
+  edited_fig <- suppressWarnings(gloss::gloss(edited[[id]], context = FALSE))
+  id_res <- gloss::gl_resolve_anchor(edited_fig, list(type = "element_id", id = binding_one$element))
+  key_res <- gloss::gl_resolve_anchor(edited_fig, list(type = "data_key", table = binding_one$table, key = key_values))
+  data.frame(update = id, element_id = id_res$status, data_key = key_res$status, stringsAsFactors = FALSE)
+}))
+write.csv(anchor_rows, file.path(out_dir, "anchor-ablation.csv"), row.names = FALSE)
+
 summary <- list(
   claims = list(total = nrow(claim_rows), check_matches = sum(claim_rows$check_matches), record_matches = sum(claim_rows$record_matches)),
   markup_rejected = markup_rejected,
   masked_binding = list(tried = nrow(masked), right_accepted = sum(masked$right == "accepted"), wrong_rejected = sum(masked$wrong == "rejected")),
-  updates = list(total = nrow(updates), successful = sum(updates$rebase == "ok"), invalid = sum(updates$invalid, na.rm = TRUE))
+  updates = list(total = nrow(updates), successful = sum(updates$rebase == "ok"), invalid = sum(updates$invalid, na.rm = TRUE)),
+  svg_preflight = list(files = nrow(svg_rows), parsed = sum(svg_rows$parsed %in% TRUE),
+                       answer_leaks = sum(svg_rows$contains_binding_answers %in% TRUE),
+                       hashes_differ = sum(svg_rows$hashes_differ %in% TRUE)),
+  anchor_ablation = list(updates = nrow(anchor_rows), element_id_unique = sum(anchor_rows$element_id == "unique"),
+                         data_key_unique = sum(anchor_rows$data_key == "unique"))
 )
 jsonlite::write_json(summary, file.path(out_dir, "summary.json"), auto_unbox = TRUE, pretty = TRUE)
 writeLines(c(

@@ -1199,3 +1199,13 @@ an auxiliary measurement and the disagreement is a result.
 1% after the registered title, colour, data-subset, add-layer and delete-layer
 updates, and the single-selector ablations perform worse on at least one
 update class.**
+
+### Scope change before the held-out semantic run
+
+On 2026-11-17 the registered development gate completed 24 GLM runs and one
+Gemini A run. GLM runs took 11.5–14.4 seconds by condition, while the first
+Gemini A run took 135.7 seconds. The held-out semantic slice therefore uses
+`auto/glm-5.3-flash`, the six host-material figures in the M5 task file, one
+repeat per condition, the four conditions and the same loop limits. The Gemini
+trace remains a development cost record. The two-model and five-repeat parts
+of predictions 153, 156 and 159 remain open and are reported as untested.

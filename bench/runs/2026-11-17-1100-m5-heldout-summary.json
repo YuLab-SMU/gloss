@@ -1,0 +1,75 @@
+{
+  "archive": "/Users/xiayh/Projects/gloss/bench/runs/2026-11-17-1100-m5-heldout.jsonl",
+  "meta": {
+    "meta": true,
+    "script": "bench/agent/m5-pilot.R",
+    "set": "heldout",
+    "models": "auto/glm-5.3-flash",
+    "conditions": [
+      "A",
+      "A_check",
+      "B_no_check",
+      "B_check"
+    ],
+    "repeats": 1,
+    "max_steps": 3,
+    "request_timeout": 180,
+    "sandbox_timeout": 120,
+    "task_file": "bench/agent/m5-tasks-heldout.csv",
+    "gloss_commit": "e5a57c1",
+    "prompt_version": "m5-v1"
+  },
+  "runs": 16,
+  "conditions": [
+    {
+      "model": "auto/glm-5.3-flash",
+      "condition": "A",
+      "runs": 4,
+      "correct": 1,
+      "coverage": 1,
+      "false_accept": 0,
+      "false_reject": 0,
+      "median_tokens": 3495.5,
+      "median_seconds": 12.47,
+      "request_errors": 0
+    },
+    {
+      "model": "auto/glm-5.3-flash",
+      "condition": "A_check",
+      "runs": 4,
+      "correct": 1,
+      "coverage": 1,
+      "false_accept": 0,
+      "false_reject": 0,
+      "median_tokens": 3727,
+      "median_seconds": 12.045,
+      "request_errors": 0
+    },
+    {
+      "model": "auto/glm-5.3-flash",
+      "condition": "B_check",
+      "runs": 4,
+      "correct": 1,
+      "coverage": 1,
+      "false_accept": 0,
+      "false_reject": 0,
+      "median_tokens": 2108.5,
+      "median_seconds": 9.07,
+      "request_errors": 0
+    },
+    {
+      "model": "auto/glm-5.3-flash",
+      "condition": "B_no_check",
+      "runs": 4,
+      "correct": 0.25,
+      "coverage": 1,
+      "false_accept": 0.5,
+      "false_reject": 0,
+      "median_tokens": 2174.5,
+      "median_seconds": 11.405,
+      "request_errors": 0
+    }
+  ],
+  "request_errors": 0,
+  "materialized": true
+}

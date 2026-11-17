@@ -9,6 +9,14 @@ The gloss benchmark: R figures with runnable code and data, sampled from publish
 - Predictions go into `predictions.md`, committed before the run they predict.
 - Figures that fail are counted, never dropped: every sampled unit has an outcome row.
 
+M5 semantic evaluation uses the registered task and condition files under
+`agent/` and archives traces in `runs/`. The first closed slice uses six
+development materials and six held-out materials. Four held-out figures yield
+directional tasks under the current task rule. The pinned image currently lacks
+`svglite`, so those selected materials were written on the host and carry
+source hashes in their manifests. This environment change is recorded in the
+M5 plan and does not alter the frozen benchmark split.
+
 ## Layout
 
 | Path | What it holds |
@@ -26,6 +34,8 @@ The gloss benchmark: R figures with runnable code and data, sampled from publish
 | `figures/<id>/` | one frozen figure: `code.R`, `meta.json` (in git), `data/` (not in git) |
 | `runs/` | outcome rows of every attempt (`attempts.csv`), check results, logs, archived earlier runs |
 | `predictions.md` | predictions, committed before the runs they predict, and their scores |
+| `agent/m5-material.R`, `agent/m5-pilot.R`, `agent/score-m5.R` | M5 material writer, fixed-loop semantic runner and archive-only scorer |
+| `semantic/m5_checks.R` | deterministic M5 claims, transformed data, masked binding, update and SVG preflight |
 | `docker/` | the pinned container (`run.sh`, `image`) in which all third-party code runs |
 
 Data vendored from URLs (`figures/<id>/data/`, 7 figures) is not in git: several sources state no license (owner's decision, 2026-11-10). Its checksums are in `MANIFEST.md5` and its URLs in `meta.json`.

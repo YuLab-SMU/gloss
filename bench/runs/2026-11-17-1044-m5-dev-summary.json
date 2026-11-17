@@ -1,0 +1,90 @@
+{
+  "archive": "/Users/xiayh/Projects/gloss/bench/runs/2026-11-17-1044-m5-dev.jsonl",
+  "meta": {
+    "meta": true,
+    "script": "bench/agent/m5-pilot.R",
+    "set": "dev",
+    "models": [
+      "auto/glm-5.3-flash",
+      "auto/gemini-4-argon"
+    ],
+    "conditions": [
+      "A",
+      "A_check",
+      "B_no_check",
+      "B_check"
+    ],
+    "repeats": 1,
+    "max_steps": 3,
+    "request_timeout": 180,
+    "sandbox_timeout": 120,
+    "task_file": "bench/agent/m5-tasks-dev.csv",
+    "gloss_commit": "89bfbce",
+    "prompt_version": "m5-v1"
+  },
+  "runs": 25,
+  "conditions": [
+    {
+      "model": "auto/gemini-4-argon",
+      "condition": "A",
+      "runs": 1,
+      "correct": 1,
+      "coverage": 1,
+      "false_accept": 0,
+      "false_reject": 0,
+      "median_tokens": 3169,
+      "median_seconds": 135.67,
+      "request_errors": 0
+    },
+    {
+      "model": "auto/glm-5.3-flash",
+      "condition": "A",
+      "runs": 6,
+      "correct": 1,
+      "coverage": 1,
+      "false_accept": 0,
+      "false_reject": 0,
+      "median_tokens": 3679.5,
+      "median_seconds": 14.385,
+      "request_errors": 0
+    },
+    {
+      "model": "auto/glm-5.3-flash",
+      "condition": "A_check",
+      "runs": 6,
+      "correct": 1,
+      "coverage": 1,
+      "false_accept": 0,
+      "false_reject": 0,
+      "median_tokens": 3711.5,
+      "median_seconds": 14.27,
+      "request_errors": 0
+    },
+    {
+      "model": "auto/glm-5.3-flash",
+      "condition": "B_check",
+      "runs": 6,
+      "correct": 1,
+      "coverage": 1,
+      "false_accept": 0,
+      "false_reject": 0,
+      "median_tokens": 1708.5,
+      "median_seconds": 11.47,
+      "request_errors": 0
+    },
+    {
+      "model": "auto/glm-5.3-flash",
+      "condition": "B_no_check",
+      "runs": 6,
+      "correct": 0.5,
+      "coverage": 1,
+      "false_accept": 0.5,
+      "false_reject": 0,
+      "median_tokens": 1574,
+      "median_seconds": 12.92,
+      "request_errors": 0
+    }
+  ],
+  "request_errors": 0,
+  "materialized": true
+}

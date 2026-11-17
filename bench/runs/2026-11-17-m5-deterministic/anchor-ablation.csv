@@ -1,0 +1,6 @@
+"update","element_id","data_key"
+"title","unique","unique"
+"colour","unique","unique"
+"subset","unique","missing"
+"add_layer","unique","unique"
+"delete_layer","unique","unique"
