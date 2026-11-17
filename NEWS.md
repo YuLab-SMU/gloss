@@ -1,5 +1,15 @@
 # gloss 0.0.0.9000
 
+## Agent stages and checked semantic proposals (2026-11-17)
+
+- Added ten registered agent stages with versioned prompts, stage-scoped tools
+  and four disclosure levels. Existing binding tools remain available without
+  a stage.
+- Added deferred semantic proposals, append-only stage commits, rationale-based
+  review resolutions, invalid-record repair and provenance for model runs.
+- Added `gl_annotate()` orchestration with dependency ordering, explicit
+  `aisdk` limits and cache replay that re-validates candidates.
+
 ## Semantic operations and projections (2026-11-16)
 
 - Added closed `count`, `value`, `compare`, `range` and `exists` checks beside

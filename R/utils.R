@@ -16,9 +16,9 @@ is_flag <- function(x) is.logical(x) && length(x) == 1L && !is.na(x)
 payload_issues <- function(x, path = "<root>") {
   out <- character()
   if (is.character(x)) {
-    bad <- grepl("<[^>]+>|javascript:|data:text/html|on[a-z]+\\s*=|url\\s*\\(",
+    bad <- grepl("<[^>]+>|javascript:|data:text/html|on[a-z]+\\s*=|url\\s*\\(|https?://|ftp://",
                  x, ignore.case = TRUE, perl = TRUE)
-    if (any(bad)) out <- c(out, sprintf("%s contains executable markup", path))
+    if (any(bad)) out <- c(out, sprintf("%s contains markup or a URL", path))
     return(out)
   }
   if (is.function(x) || is.environment(x) || is.language(x) || is.expression(x)) {

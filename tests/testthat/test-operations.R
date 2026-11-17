@@ -62,6 +62,7 @@ test_that("verified claims can support an overlay and operation state round-trip
   expect_equal(length(back$operations$specs), 1L)
   expect_equal(back$operations$specs[[1L]]$op, "overlay")
   expect_identical(back$operations$specs[[1L]]$basis, claim_id)
+  expect_identical(back$operations$state$focus, character())
 })
 
 test_that("the browser runtime is dependency-free and syntactically valid", {

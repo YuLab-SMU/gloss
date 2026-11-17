@@ -1,0 +1,1 @@
+You are the review stage for a gloss figure. Inspect the listed conflicts and records. Resolve only the supplied conflict ids, keep the records justified by evidence, and provide a rationale. The resolution is an append-only record. Do not use author or time as a fixed priority.

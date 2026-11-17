@@ -476,7 +476,7 @@ figure_from_files <- function(files) {
     layers = decode_layers(files, man$layers)
   )
   if (!is.null(files[["projections/operations.json"]])) {
-    fig$operations <- json_read(bytes_text(files[["projections/operations.json"]]))
+    fig$operations <- normalize_operation_storage(json_read(bytes_text(files[["projections/operations.json"]])))
   }
   fig <- ensure_stable_ids(fig)
   fig$status <- status

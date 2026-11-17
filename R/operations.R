@@ -53,6 +53,17 @@ operation_state_empty <- function() {
        focus = character())
 }
 
+normalize_operation_storage <- function(operations) {
+  if (is.null(operations) || !is.list(operations)) return(operations)
+  state <- operations$state
+  if (is.list(state)) {
+    if (is.null(state$focus) || (is.list(state$focus) && !length(state$focus))) state$focus <- character()
+    if (!is.null(state$focus)) state$focus <- as.character(unlist(state$focus, use.names = FALSE))
+    operations$state <- state
+  }
+  operations
+}
+
 operation_add_class <- function(state, id, class) {
   state$classes[[id]] <- unique(c(state$classes[[id]] %||% character(), class))
   state

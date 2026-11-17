@@ -18,6 +18,9 @@ plugin_kinds <- function() {
   lst <- f(is_list, "a list")
   str <- f(is_string, "a single string")
   page <- f(is_page_kind, '"grid" or "base"')
+  disclose <- f(function(x) is.character(x) && length(x) >= 1L &&
+                  all(x %in% c("none", "schema", "summary", "rows")),
+                'one of "none", "schema", "summary" or "rows"')
   list(
     engine = list(
       required = list(classes = chr, prepare = fn),
@@ -57,8 +60,8 @@ plugin_kinds <- function() {
     ),
     stage = list(
       required = list(reads = chr, writes = chr, prompt = str),
-      optional = list(tools = chr),
-      contract = contract_declaration
+      optional = list(tools = chr0, depends = chr0, disclose = disclose, prompt_version = str),
+      contract = contract_stage
     )
   )
 }
@@ -344,6 +347,25 @@ contract_check <- function(label, expr) {
 }
 
 contract_declaration <- function(plugin) list()
+
+contract_stage <- function(plugin) {
+  layer_names <- vapply(plugins_of("layer"), `[[`, "", "name")
+  checks <- list(
+    contract_check("prompt is non-empty", nzchar(trimws(plugin$prompt))),
+    contract_check("reads are unique", !anyDuplicated(plugin$reads)),
+    contract_check("writes are unique", !anyDuplicated(plugin$writes)),
+    contract_check("reads name registered layers", !length(setdiff(plugin$reads, layer_names))),
+    contract_check("writes name registered layers", !length(setdiff(plugin$writes, layer_names))),
+    contract_check("tools are unique", is.null(plugin$tools) || !anyDuplicated(plugin$tools)),
+    contract_check("tools are registered", is.null(plugin$tools) ||
+      !length(setdiff(plugin$tools, get("agent_tool_catalog", inherits = TRUE)))),
+    contract_check("disclosure has one value", is.null(plugin$disclose) || length(plugin$disclose) == 1L)
+  )
+  if (!is.null(plugin$depends)) {
+    checks <- c(checks, list(contract_check("dependencies are unique", !anyDuplicated(plugin$depends))))
+  }
+  checks
+}
 
 contract_operation <- function(plugin) {
   list(contract_check("R materializer is callable", is.function(plugin$r)))

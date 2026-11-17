@@ -4,47 +4,24 @@
 \alias{gl_tools}
 \title{Tools for an agent over one figure}
 \usage{
-gl_tools(fig, hide = NULL)
+gl_tools(fig, hide = NULL, stage = NULL, disclose = NULL, state = NULL)
 }
 \arguments{
 \item{fig}{A \code{gloss_figure}.}
 
-\item{hide}{Leaf ids whose bindings \code{get_binding} does not disclose, for
-runs that ask an agent to work them out. \code{propose} checks all the same.}
+\item{hide}{Leaf ids whose bindings \code{get_binding} does not disclose.}
+
+\item{stage}{Optional registered stage name.}
+
+\item{disclose}{Disclosure level for a stage.}
+
+\item{state}{Optional internal stage state created for a registered stage.}
 }
 \value{
-A list of \code{aisdk} tools. \code{\link[=gl_tool_state]{gl_tool_state()}} gives what happened
-through them.
+A list of \code{aisdk} tools. \code{\link[=gl_tool_state]{gl_tool_state()}} gives what happened.
 }
 \description{
-Read-only queries over a figure and one \code{propose}, as tools for
-\href{https://github.com/YuLab-SMU/aisdk}{aisdk} (\code{aisdk::generate_text(tools = )},
-\code{aisdk::create_agent(tools = )}). gloss runs no agent loop of its own.
-}
-\details{
-An agent given these tools can read the figure and can submit a binding,
-which is checked on submit exactly as \code{\link[=gl_propose]{gl_propose()}} checks it: accepted,
-rejected with the reason, or refused. It has no tool that writes the
-figure, runs code or reaches outside. Every tool answers with JSON; a call
-a tool cannot serve answers \code{{"error": ...}}.\tabular{ll}{
-   tool \tab what it returns \cr
-   \code{overview} \tab size, panels with their boxes and scales, tables with their columns \cr
-   \code{find_elements} \tab the elements drawn at a point of the page \cr
-   \code{get_element} \tab one element, its leaf and its panel \cr
-   \code{get_binding} \tab the row an element draws, as checked at capture (\code{\link[=gl_bindings]{gl_bindings()}}) \cr
-   \code{describe_table} \tab a table's columns, types and ranges \cr
-   \code{get_rows} \tab rows of a table by number, at most 20 \cr
-   \code{find_rows} \tab the rows of a layer's built data nearest to data values in a panel \cr
-   \code{to_data} \tab the data values at a point of the page \cr
-   \code{propose} \tab the outcome of a submitted binding \cr
-}
-}
-\examples{
-\dontrun{
-fig <- gloss(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point())
-tools <- gl_tools(fig)
-aisdk::generate_text(model = model, prompt = "Which row does the circle at (120, 80) pt draw?",
-                     tools = tools, max_steps = 10)
-gl_tool_state(tools)$proposals
-}
+The default form keeps the binding-only API from M3. Supplying \code{stage}
+restricts tools and record layers to that stage and applies a disclosure
+level of \code{none}, \code{schema}, \code{summary} or \code{rows}.
 }

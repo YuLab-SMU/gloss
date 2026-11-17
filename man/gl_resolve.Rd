@@ -4,7 +4,7 @@
 \alias{gl_resolve}
 \title{Append a conflict-resolution record}
 \usage{
-gl_resolve(fig, conflict, keep, rationale, by = "user")
+gl_resolve(fig, conflict, keep, rationale, by = "user", evidence = NULL)
 }
 \arguments{
 \item{fig}{A \code{gloss_figure}.}

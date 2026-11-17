@@ -30,6 +30,7 @@ register_builtin_plugins <- function() {
   register_context_env()
   register_context_doc()
   register_context_git()
+  register_builtin_stages()
   register_projection_html()
   register_projection_svg()
   register_projection_aria()

@@ -10,10 +10,7 @@ gl_tool_state(tools)
 \item{tools}{Tools made by \code{\link[=gl_tools]{gl_tools()}}.}
 }
 \value{
-A list: \code{calls}, one entry per tool call (the tool, its arguments,
-whether it was served, the start of its answer), and \code{proposals}, one
-entry per call of \code{propose} (the proposal, its \code{outcome}, \code{stage},
-\code{reasons} and, when accepted, its \code{record}).
+A list containing tool calls, proposals, candidates and stage metadata.
 }
 \description{
 What happened through a figure's tools

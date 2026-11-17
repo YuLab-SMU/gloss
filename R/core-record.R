@@ -589,14 +589,16 @@ gl_conflicts <- function(fig) {
 #' @param keep Record id(s) retained by the judgment.
 #' @param rationale Explanation for the judgment.
 #' @param by Provenance identity.
+#' @param evidence Optional JSON-like evidence attached to the resolution.
 #' @return The updated figure.
 #' @export
-gl_resolve <- function(fig, conflict, keep, rationale, by = "user") {
+gl_resolve <- function(fig, conflict, keep, rationale, by = "user", evidence = NULL) {
   ids <- if (is.data.frame(conflict)) unlist(conflict$records[[1L]]) else as.character(conflict)
   layer <- record_by_id(fig, ids[1L])$layer
   anchor <- record_by_id(fig, ids[1L])$anchors
   body <- list(type = "resolution", keep = as.character(keep),
                rationale = as.character(rationale)[1L])
+  if (!is.null(evidence)) body$evidence <- evidence
   gl_record(fig, layer, anchor, body, by = by, depends_on = ids)
 }
 
