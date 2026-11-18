@@ -114,6 +114,7 @@ binding_write_material <- function(fig, svg, dir, figure_id = NA_character_, sou
     d <- facts$tables[[nm]]
     drop <- grep("(^|[._])geometry([._]|$)|^geom$", names(d), ignore.case = TRUE, value = TRUE)
     if (length(drop)) {
+      d <- as.data.frame(d, stringsAsFactors = FALSE)
       facts$tables[[nm]] <- d <- d[, setdiff(names(d), drop), drop = FALSE]
     }
     utils::write.csv(cbind(row = seq_len(nrow(d)), d),
