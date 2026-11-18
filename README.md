@@ -12,7 +12,7 @@ Export the usual faceted mtcars scatter plot with svglite and you get 134 drawn 
 
 ![Schematic, AI-generated. Two panels show the same scatter plot with a downward trend. Left, "plain SVG export": a cursor points at one dot under a speech bubble asking "Which car is this?", and the footer reads "134 shapes, 0 ids: no answer". Right, "with gloss": the same dot is ringed in blue and labelled "Mazda RX4 · mtcars row 1 · panel am = 1".](man/figures/README-question-v3.png)
 
-*The same question, put to a plain SVG export and to gloss. Schematic (AI-generated), not a screenshot: the interactive view is not built yet (milestone M3), and the plot is drawn as one simplified panel. The 134 shapes are the svglite export of the faceted mtcars plot described above; Mazda RX4 is row 1 of `mtcars`, with `am = 1`. Prompt, rounds and the one pixel fix: [`README-question-v3.prompt.md`](https://github.com/YuLab-SMU/gloss/blob/main/dev_docs/figures/design/README-question-v3.prompt.md).*
+*The same question, put to a plain SVG export and to gloss. This AI-generated schematic uses one simplified panel. The current package provides an HTML runtime plus ARIA, text and Web Annotation exports. The 134 shapes are the svglite export of the faceted mtcars plot described above; Mazda RX4 is row 1 of `mtcars`, with `am = 1`. Prompt, rounds and the one pixel fix: [`README-question-v3.prompt.md`](https://github.com/YuLab-SMU/gloss/blob/main/dev_docs/figures/design/README-question-v3.prompt.md).*
 
 Existing tools each solve half of the problem. ggiraph, gridSVG and maidr tag elements while they are drawn, so the geometry stays exact, but they bind data only for geoms someone has written a handler for. A model reading the SVG can take any figure but has no ground truth: on the same R figures, GPT-4o and DeepSeek-V3 identify element roles with F1 of 0.692 and 0.959, and neither can tell when it is wrong.
 
@@ -49,7 +49,7 @@ gl_write(fig, "fig.html")            # the figure, with the whole bundle embedde
 fig <- gl_read("fig.html")           # restored; what a bundle cannot store of a table is left out and named
 ```
 
-A binding names a row of the layer's built data; the link from there to the rows of your own data frame is not built yet. The record core is available for hand-written and programmatic semantic notes. Still planned: `gl_annotate()` (staged agents propose records, each one verified), the interactive and accessible projection, and benchmark-wide update evaluation.
+A binding names a row of the layer's built data; the link from there to the rows of your own data frame is not built yet. The record core, checked semantic proposals, browser runtime and ARIA, text and Web Annotation projections are available for hand-written, programmatic and agent-driven workflows. `gl_annotate()` runs registered stages when `aisdk` and a model are supplied, and replays validated caches without a live model. Benchmark-wide update and live-model evaluation remain open research work.
 
 ## Six capabilities
 
@@ -58,9 +58,9 @@ A binding names a row of the layer's built data; the link from there to the rows
 | Identify | Traces each drawn element to its leaf grob, viewport and panel | Implemented; 50 of 54 held-out figures equal to the page drawn, none captured as another figure |
 | Classify | Labels each element as a data mark, guide, reference line, decoration or annotation, using rules first and an agent for the rest | 481 of 486 elements by naming rules alone |
 | Organize | Builds the structure tree, the data tree and semantic groups, and maps each onto the others | Structure tree rebuilt for ggplot |
-| Attach semantics | Binds elements to data rows; records meaning, relations, checkable claims and narrative as anchored, layered records | Binding implemented; M2 records use eight registered layers, JSONL logs, structured anchors and checked statuses. One claim check run by script; benchmark-wide semantic coverage remains for M5 |
-| Operate | Provides one set of operations (select, style, show/hide, tooltip, overlay, ...) shared by R, the browser and agents | Design |
-| Update | Re-captures after the code or data changes, re-anchors records, and sends only the broken ones for repair | `gl_rebase()` implemented; controlled fixture hit rates are archived in `bench/runs/2026-11-15-m2-rebase/` |
+| Attach semantics | Binds elements to data rows; records meaning, relations, checkable claims and narrative as anchored, layered records | Implemented; eight registered layers, JSONL logs, structured anchors, checked statuses and provenance are available. Deterministic evaluation archives cover claims, updates and anchor selectors. Open-world human audit and repeated or held-out model evaluation remain open |
+| Operate | Provides one set of operations (select, style, show/hide, tooltip, overlay, ...) shared by R, the browser and agents | Implemented; `gl_apply()` materialises selection, styling, visibility, focus, ordering, links, overlays and tooltips, and HTML projections embed the browser runtime |
+| Update | Re-captures after the code or data changes, re-anchors records, and sends only the broken ones for repair | `gl_rebase()`, `gl_status()`, `gl_diff()` and `gl_repair()` are implemented; controlled fixture and container update/anchor results are archived in `bench/runs/2026-11-15-m2-rebase/` and `bench/runs/m6-deterministic/` |
 
 ## The name
 
