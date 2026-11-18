@@ -24,6 +24,7 @@ binding_fact_tables <- function(fig) {
       is.atomic(x) && is.null(dim(x)) && !is.list(x) &&
         !inherits(x, c("sf", "sfc", "sfg", "wk", "geometry"))
     }, logical(1))
+    keep[grepl("(^|[._])geometry([._]|$)|^geom$", names(d), ignore.case = TRUE)] <- FALSE
     out[[nm]] <- d[, keep, drop = FALSE]
   }
   out
