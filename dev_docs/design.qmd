@@ -493,6 +493,8 @@ figure: Weight vs fuel use
 
 包的画法仍然是设计，没有代码，也没有数据。它改由提议进入，提议用封闭的词表写：丢哪些行、什么顺序、每行几个图元、按哪个参数平移、对在元素的哪一点、是哪个叶子的副本。里面不许有自由的数字，核验沿用上面的回代；每一种提议都要先有“打乱行必须不通过”的变异测试。没有自由数字时，一个叶子的提议是有限的，代码同样可以全部试一遍，未必需要模型；谁来提出还没有测（`idea/2026-11-12-binding-proposals.md`）。两个开发集上没核验的 5232 个图层元素，按缺什么分：某个包自己的画法 2070 个，其中 1829 个是画成轮廓的文字；绘图系统本身定义的计数或比法 1898 个；没有可绑的数据表 1218 个；没读 46 个（`research/bind-dev/d3-residue.out`，按原因的文字归类，没有逐叶核对）。
 
+（2026-11-17 补记，agent-first binding prototype 计划开启。）包特异绑定规则冻结为 `legacy` 比较臂，新的规则不再进入 `R/`。bench 内部新增 `contract`、`enumeration` 和 `agent` 三个臂，共用 84 张开发图的公开材料、隐藏 oracle 和独立 checker。提议只允许有限 DSL（行筛选、顺序、逐行元素数、已有参数平移、锚点、文字匹配、副本和固定 `none` 原因）；分析代码只能在每图持久的断网 sandbox 中读公开材料并写 scratch。checker 分开报告 schema、对象缺失、几何、数量/顺序、含糊、归属和 mutation 失败，只有唯一通过且 mutation 通过的提议进入 `accepted`。这是一条 bench 能力，不改变公共 API、`DESCRIPTION`、用户文档或留出集；完整开发集运行结果决定是否把 checker 提升为正式内部能力。
+
 ## 底座每变一次，核验就重跑一次
 
 核验是始终有效的约束，不只在出口处查一次（原则 4）。每次写入都要过三道检查（@fig-verify-loop）：
@@ -1185,6 +1187,7 @@ A 和 B 的比较回答主论断；A + 核验和 B − 核验把结构和核验�
 | **M4 agent 阶段** | 工具、提示词、各阶段插件、编排、缓存、审稿阶段的冲突裁决、脚本化模型测试 | 离线测试通过；真实模型在小样本上产出能通过核验的记录 |
 | **M5 评测** | 按 @sec-eval 执行：留出集、扰动集和反事实子集上的条件 A、B 与 2×2 消融，条件 C、D，工程基线；两人标注；遮蔽评测对照人工标注；更新实验与锚点消融；运行前提交预测 | @tbl-claims 的每个分句都报告为成立、收窄或不成立，并对照 @sec-research-card 的证伪条件；所有数字能从 `bench/` 的存档重新算出 |
 | **M6 评测闭环** | 修复固定设备环境；验证材料迁移、遮蔽审计契约、锚点消融、SVG-only 与 prepared visual；以成本闸门决定模型扩展 | 固定容器材料与泄漏契约通过；更新和条件 sizing 有存档；未完成的人审、重复和留出条款以 scope change 明确保留 |
+| **M7 agent-first 绑定原型** | 冻结 legacy 规则；在完整开发集比较 contract、有限 DSL enumeration 和 sandbox agent；保存公开材料、隐藏 oracle、proposal trace 与 mutation 结果 | 84 张开发图有内容 hash 和 outcome row；legacy 逐行一致；所有 accepted 结果唯一且通过 mutation；host 与 pinned-container suite 零失败；路线决策按覆盖、错误接受和成本记录 |
 
 : 里程碑 {#tbl-plan}
 

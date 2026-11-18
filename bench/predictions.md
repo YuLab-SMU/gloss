@@ -1209,3 +1209,29 @@ Gemini A run took 135.7 seconds. The held-out semantic slice therefore uses
 repeat per condition, the four conditions and the same loop limits. The Gemini
 trace remains a development cost record. The two-model and five-repeat parts
 of predictions 153, 156 and 159 remain open and are reported as untested.
+
+## Agent-first binding prototype predictions
+
+Written 2026-11-17 before any binding-v1 development material is scored. These
+predictions concern the 84 development figures only. The legacy rows are the
+frozen comparison and are not retuned by this slice.
+
+161. **The legacy arm is byte-identical to the binding rows recorded in each
+material oracle.** A mismatch is an archive failure and does not become a
+model or enumeration result.
+
+162. **Every accepted enumeration or agent proposal has a unique device
+comparison and a passing mutation test.** Swapping order, changing an existing
+table filter or replacing the target leaf never remains accepted.
+
+163. **The checker emits an explicit outcome row for every proposal and every
+figure, including schema errors, missing objects, geometry failures, count or
+order failures, ambiguity, ownership failures, mutation failures and sandbox
+failures.**
+
+164. **The public material contains no hidden binding or geometry answer, and
+the persistent sandbox leaves its public hash unchanged.**
+
+165. **No package-specific binding rule is added to `R/`.** The four arms share
+the same serialized material and checker, and the prototype does not read the
+held-out set.

@@ -317,6 +317,17 @@ vendor_data <- function(chunks, dir, gallery = FALSE, base = if (gallery) source
 launch_worker <- function(worker, args) {
   home <- new.env(parent = baseenv())
   environment(worker) <- home
+  # Bench export callbacks may need a small, explicitly supplied helper
+  # namespace.  Keeping this opt-in preserves the old self-contained worker
+  # contract and avoids exposing the repository or the parent session.
+  helpers <- args$export_helpers
+  if (!is.null(helpers)) {
+    for (nm in names(helpers)) {
+      value <- helpers[[nm]]
+      if (is.function(value)) environment(value) <- home
+      home[[nm]] <- value
+    }
+  }
   for (a in names(args)) if (is.function(args[[a]])) environment(args[[a]]) <- home
   do.call(worker, args)
 }
@@ -324,7 +335,8 @@ launch_worker <- function(worker, args) {
 # Runs inside a fresh R process. Self-contained: callr ships only this function.
 run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, recover, capture, repo,
                        device = "pdf", fidelity_verdict = NULL, compare_pages = NULL, bind = FALSE,
-                       keep = NULL, recheck = FALSE, export = NULL, export_fun = NULL) {
+                       keep = NULL, recheck = FALSE, export = NULL, export_fun = NULL,
+                       export_helpers = NULL) {
   setwd(dir)
   set.seed(seed)
   # The device the code draws on. "svg" (capture runs) is gloss's own device,
@@ -782,7 +794,7 @@ gloss_snapshot <- function(repo = ".") {
 
 run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
                        recover = FALSE, capture = FALSE, device = "pdf", bind = FALSE, keep = NULL,
-                       recheck = FALSE, export = NULL, export_fun = NULL) {
+                       recheck = FALSE, export = NULL, export_fun = NULL, export_helpers = NULL) {
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   env <- c(callr::rcmd_safe_env(), R_LIBS_USER = paste(bench_libpaths(), collapse = .Platform$path.sep))
   if (offline) env <- c(env, offline_env)
@@ -796,7 +808,8 @@ run_script <- function(script, dir, seed, timeout = 300, offline = FALSE,
                                      fidelity_verdict = fidelity_verdict, compare_pages = compare_pages,
                                      bind = bind, keep = keep, recheck = recheck, export = export,
                                      export_fun = if (is.null(export)) NULL
-                                                  else export_fun %||% get0("write_material", envir = globalenv()))),
+                                                  else export_fun %||% get0("write_material", envir = globalenv()),
+                                     export_helpers = export_helpers)),
              libpath = bench_libpaths(), env = env, timeout = timeout, show = FALSE,
              package = FALSE),
     error = function(e) e)

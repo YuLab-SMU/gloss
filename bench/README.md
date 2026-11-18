@@ -43,7 +43,34 @@ scene hashes before any new held-out model run.
 | `semantic/m6_env.R`, `semantic/m6_updates.R`, `semantic/m6_audit.R` | M6 container parity, selector ablation and audit-contract archives |
 | `agent/m6-pilot.R` | M6 development sizing for raw, checked gloss, SVG-only and prepared-visual conditions |
 | `baselines/m6_inventory.R` | M6 comparison-package availability and integration inventory |
+| `agent/binding-dsl.R`, `agent/binding-checker.R` | Closed proposal DSL, replay checker and mutation tests for the agent-first binding prototype |
+| `agent/material-v1.R`, `agent/binding-run.R` | Development-only public material/oracle writer and four-arm binding archive runner |
+| `agent/binding-agent.R`, `agent/sandbox.R` | Fixed-model agent loop with a persistent read-only analysis sandbox and `run_analysis` result contract |
 | `docker/` | the pinned container (`run.sh`, `image`) in which all third-party code runs |
+
+## Agent-first binding prototype (2026-11-17)
+
+The first binding prototype is bench-only. It freezes the current package
+binding rows as the `legacy` arm and compares them with `contract`, finite
+`enumeration` and fixed-model `agent` arms. All arms use the same 84 development
+figures, public facts and independent checker. The held-out set is refused by
+the material writer and runner.
+
+Write the complete development material in the pinned container after the
+predictions section has been committed:
+
+```sh
+GLOSS_BENCH_OFFLINE=true GLOSS_BINDING_NAMESPACE=binding-v1 \
+  bench/docker/run.sh Rscript bench/agent/material-v1.R dev
+```
+
+Each material directory has `public/` and `oracle/` siblings. Public facts,
+tables, SVG and grob tree can be mounted read-only in the sandbox. The oracle
+holds the captured figure, legacy rows, device geometry and contract replay.
+`binding-run.R --dry` exercises all four arms without a model gateway. A real
+agent run records the fixed model id, proposal, analysis code hash, tool calls,
+usage, elapsed time, sandbox resets and failure reason in
+`bench/runs/binding-v1/`.
 
 Data vendored from URLs (`figures/<id>/data/`, 7 figures) is not in git: several sources state no license (owner's decision, 2026-11-10). Its checksums are in `MANIFEST.md5` and its URLs in `meta.json`.
 

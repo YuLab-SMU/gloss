@@ -26,7 +26,7 @@ See [`_template.md`](_template.md).
 
 ## Active plans
 
-There is no active plan after the M6 feasibility slice closed. The next slice should start from the unlabelled open-world audit queue, the container-canonical held-out materials, the data-key anchor failures and the unrun repeated/held-out model comparison.
+The active slice is [2026-11-17-agent-first-binding.md](2026-11-17-agent-first-binding.md). It freezes package-specific binding rules as a legacy baseline and builds a bench-only proposal/checker path on the 84 development figures. The held-out audit queue, container-canonical held-out materials, data-key anchor failures and repeated/held-out model comparison remain outside this slice.
 
 The M3 semantic, operations and projection slice is in [done/2026-11-16-m3-semantic-operations-projection.md](done/2026-11-16-m3-semantic-operations-projection.md). The M2 record and anchor slice is in [done/2026-11-15-m2-records-and-anchors.md](done/2026-11-15-m2-records-and-anchors.md). The prepared visual evidence pilot is closed with its model comparison deferred in [done/2026-11-15-visual-semantic-pilot.md](done/2026-11-15-visual-semantic-pilot.md). The preceding claim pilot is closed in [done/2026-11-15-semantic-pilot.md](done/2026-11-15-semantic-pilot.md); M1 remains closed in [done/2026-11-11-m1-roles-and-binding.md](done/2026-11-11-m1-roles-and-binding.md).
 
