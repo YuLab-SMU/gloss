@@ -65,7 +65,13 @@ binding_agent_run <- function(material, model_id = Sys.getenv("GLOSS_BINDING_MOD
                               gateway = Sys.getenv("GLOSS_BINDING_GATEWAY", "http://127.0.0.1:3425/v1"),
                               timeout = 180L, max_steps = 8L, dry = FALSE) {
   public <- file.path(material$dir, "public")
-  sandbox_env <- material$facts$environment %||% "cran"
+  sandbox_env <- material$facts$environment
+  if (is.null(sandbox_env) || !length(sandbox_env) || is.na(sandbox_env[1L])) {
+    source_meta <- file.path(material$dir, "public", "source-meta.json")
+    source_environment <- tryCatch(jsonlite::read_json(source_meta, simplifyVector = FALSE)$environment$name,
+                                    error = function(e) NULL)
+    sandbox_env <- source_environment %||% "cran"
+  }
   if (!sandbox_env %in% c("cran", "bioc")) sandbox_env <- "cran"
   sb <- sandbox_open_persistent(public, env = sandbox_env)
   on.exit(sandbox_close_persistent(sb), add = TRUE)
@@ -79,7 +85,7 @@ binding_agent_run <- function(material, model_id = Sys.getenv("GLOSS_BINDING_MOD
                   failure = "public material hash changed during analysis", sandbox_calls = sb$calls,
                   sandbox_resets = sb$resets))
     }
-    enum <- binding_enumeration_arm(material, max_candidates = 2000L)
+    enum <- binding_enumeration_arm(material, max_candidates = as.integer(Sys.getenv("GLOSS_BINDING_MAX_CANDIDATES", "2000")))
     accepted <- Filter(function(x) identical(x$outcome, "accepted"), enum$traces)
     if (length(accepted)) {
       proposal <- accepted[[1L]]$proposal

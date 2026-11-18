@@ -10,6 +10,9 @@ source("bench/agent/binding-agent.R")
 
 args <- commandArgs(trailingOnly = TRUE)
 dry <- "--dry" %in% args || identical(tolower(Sys.getenv("GLOSS_BINDING_DRY", "false")), "true")
+arms_arg <- grep("^--arms=", args, value = TRUE)
+arms <- if (length(arms_arg)) strsplit(sub("^--arms=", "", arms_arg[1L]), ",", fixed = TRUE)[[1L]] else c("legacy", "contract", "enumeration", "agent")
+if (!length(arms) || any(!arms %in% c("legacy", "contract", "enumeration", "agent"))) stop("--arms must be a comma-separated subset of legacy,contract,enumeration,agent")
 cache_root <- path.expand(Sys.getenv("GLOSS_BENCH_CACHE", "~/.cache/gloss-bench"))
 namespace <- Sys.getenv("GLOSS_BINDING_NAMESPACE", "binding-v1")
 root <- file.path(cache_root, "agent", namespace, "dev")
@@ -41,7 +44,7 @@ for (id in ids) {
   dir <- file.path(root, id)
   material <- tryCatch(binding_load_material(dir), error = function(e) e)
   if (inherits(material, "error")) {
-    for (arm in c("legacy", "contract", "enumeration", "agent")) {
+    for (arm in arms) {
       row <- data.frame(figure = id, arm = arm, outcome = "operational_failure", accepted = FALSE,
                         ambiguous = FALSE, candidates = NA_integer_, calls = NA_integer_, seconds = NA_real_,
                         failure = conditionMessage(material), stringsAsFactors = FALSE)
@@ -50,7 +53,7 @@ for (id in ids) {
     }
     next
   }
-  for (arm in c("legacy", "contract", "enumeration", "agent")) {
+  for (arm in arms) {
     started <- Sys.time()
     result <- tryCatch({
       if (arm == "agent") binding_agent_run(material, dry = dry)
@@ -105,7 +108,7 @@ summary <- do.call(rbind, summary_rows)
 write.csv(summary, summary_file, row.names = FALSE)
 jsonlite::write_json(list(format = "gloss-agent-binding-run", version = binding_material_version,
                           predictions = "bench/predictions.md", set = "dev", dry = dry,
-                          figures = length(ids), summary = summary),
+                          figures = length(ids), arms = arms, summary = summary),
                      sub("\\.csv$", ".json", summary_file), auto_unbox = TRUE, pretty = TRUE,
                      null = "null", dataframe = "rows")
 cat(sprintf("archived %d figures x 4 arms: %s\n", length(ids), summary_file))
