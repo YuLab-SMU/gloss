@@ -1,0 +1,115 @@
+"figure","arm","outcome","accepted","ambiguous","candidates","calls","seconds","failure"
+"bioc-001","contract","measured",FALSE,FALSE,NA,0,0.39,""
+"bioc-004","contract","measured",FALSE,FALSE,NA,0,0.57,""
+"bioc-009","contract","measured",FALSE,FALSE,NA,0,0.07,""
+"bioc-013","contract","measured",FALSE,FALSE,NA,0,0.42,""
+"bioc-016","contract","measured",FALSE,FALSE,NA,0,0.28,""
+"bioc-017","contract","measured",FALSE,FALSE,NA,0,0.28,""
+"exts-001","contract","refused",FALSE,FALSE,NA,0,0.01,"Problem while computing stat.
+ℹ Error occurred in the 1st layer.
+Caused by error:
+! object 'Stat' not found"
+"exts-007","contract","measured",FALSE,FALSE,NA,0,0.13,""
+"exts-008","contract","refused",FALSE,FALSE,NA,0,0.01,"Problem while setting up layer.
+ℹ Error occurred in the 1st layer.
+Caused by error:
+! object 'GeomError' not found"
+"exts-013","contract","refused",FALSE,FALSE,NA,0,0.01,"Problem while setting up layer.
+ℹ Error occurred in the 1st layer.
+Caused by error:
+! object 'GeomTextpath' not found"
+"exts-014","contract","refused",FALSE,FALSE,NA,0,0.02,"Problem while setting up layer.
+ℹ Error occurred in the 1st layer.
+Caused by error:
+! object 'Geom' not found"
+"exts-017","contract","refused",FALSE,FALSE,NA,0,0.34,"Problem while computing stat.
+ℹ Error occurred in the 1st layer.
+Caused by error in `pull_crs()`:
+! could not find function ""pull_crs"""
+"exts-018","contract","measured",FALSE,FALSE,NA,0,0.1,""
+"exts-019","contract","refused",FALSE,FALSE,NA,0,0.01,"Problem while computing aesthetics.
+ℹ Error occurred in the 1st layer.
+Caused by error:
+! object 'GeomBar' not found"
+"exts-021","contract","refused",FALSE,FALSE,NA,0,0.01,"Problem while computing aesthetics.
+ℹ Error occurred in the 2nd layer.
+Caused by error in `qq_theoretical_quantiles()`:
+! could not find function ""qq_theoretical_quantiles"""
+"exts-022","contract","measured",FALSE,FALSE,NA,0,26.47,""
+"exts-024","contract","refused",FALSE,FALSE,NA,0,0,"object 'ScaleMergeList' not found"
+"exts-027","contract","measured",FALSE,FALSE,NA,0,1.46,""
+"exts-030","contract","measured",FALSE,FALSE,NA,0,0.18,""
+"gallery-001","contract","measured",FALSE,FALSE,NA,0,0.05,""
+"gallery-002","contract","measured",FALSE,FALSE,NA,0,0.21,""
+"gallery-005","contract","measured",FALSE,FALSE,NA,0,0.1,""
+"gallery-006","contract","measured",FALSE,FALSE,NA,0,0.16,""
+"gallery-008","contract","measured",FALSE,FALSE,NA,0,0.41,""
+"gallery-011","contract","measured",FALSE,FALSE,NA,0,0.11,""
+"gallery-013","contract","measured",FALSE,FALSE,NA,0,0.58,""
+"gallery-015","contract","measured",FALSE,FALSE,NA,0,0.69,""
+"gallery-020","contract","measured",FALSE,FALSE,NA,0,0.12,""
+"gallery-021","contract","measured",FALSE,FALSE,NA,0,0.31,""
+"gallery-023","contract","measured",FALSE,FALSE,NA,0,17.77,""
+"gallery-024","contract","measured",FALSE,FALSE,NA,0,5.45,""
+"gallery-029","contract","measured",FALSE,FALSE,NA,0,192.41,""
+"gallery-032","contract","measured",FALSE,FALSE,NA,0,0.11,""
+"gallery-038","contract","measured",FALSE,FALSE,NA,0,1.83,""
+"gallery-040","contract","measured",FALSE,FALSE,NA,0,0.14,""
+"gallery-047","contract","measured",FALSE,FALSE,NA,0,0.1,""
+"gallery-048","contract","measured",FALSE,FALSE,NA,0,7.83,""
+"gallery-050","contract","measured",FALSE,FALSE,NA,0,0.14,""
+"gallery-052","contract","measured",FALSE,FALSE,NA,0,0.09,""
+"gallery-053","contract","operational_failure",FALSE,FALSE,NA,NA,NA,"public material is incomplete"
+"gallery-054","contract","refused",FALSE,FALSE,NA,0,0.01,"Problem while setting up layer.
+ℹ Error occurred in the 1st layer.
+Caused by error:
+! object 'GeomLabelpath' not found"
+"gallery-056","contract","measured",FALSE,FALSE,NA,0,0.03,""
+"gallery-058","contract","measured",FALSE,FALSE,NA,0,0.13,""
+"gallery-059","contract","measured",FALSE,FALSE,NA,0,0.16,""
+"gallery-068","contract","measured",FALSE,FALSE,NA,0,0.11,""
+"gallery-070","contract","measured",FALSE,FALSE,NA,0,0.09,""
+"heatmap-008","contract","measured",FALSE,FALSE,NA,0,0.66,""
+"heatmap-026","contract","measured",FALSE,FALSE,NA,0,0.46,""
+"heatmap-036","contract","measured",FALSE,FALSE,NA,0,0.09,""
+"patchwork-001","contract","measured",FALSE,FALSE,NA,0,0.11,""
+"patchwork-006","contract","measured",FALSE,FALSE,NA,0,0.27,""
+"patchwork-008","contract","measured",FALSE,FALSE,NA,0,0.3,""
+"patchwork-010","contract","measured",FALSE,FALSE,NA,0,2.59,""
+"patchwork-011","contract","measured",FALSE,FALSE,NA,0,0.81,""
+"patchwork-012","contract","measured",FALSE,FALSE,NA,0,0.64,""
+"tree-003","contract","measured",FALSE,FALSE,NA,0,0.12,""
+"tree-008","contract","measured",FALSE,FALSE,NA,0,0.1,""
+"tree-010","contract","measured",FALSE,FALSE,NA,0,0.08,""
+"tree-011","contract","measured",FALSE,FALSE,NA,0,0.21,""
+"tree-012","contract","measured",FALSE,FALSE,NA,0,0.1,""
+"tree-014","contract","measured",FALSE,FALSE,NA,0,7.24,""
+"tree-017","contract","measured",FALSE,FALSE,NA,0,0.09,""
+"tree-021","contract","measured",FALSE,FALSE,NA,0,0.08,""
+"tree-025","contract","measured",FALSE,FALSE,NA,0,0.09,""
+"tree-032","contract","measured",FALSE,FALSE,NA,0,0.09,""
+"tree-037","contract","measured",FALSE,FALSE,NA,0,0.14,""
+"tree-038","contract","measured",FALSE,FALSE,NA,0,0.09,""
+"tree-041","contract","refused",FALSE,FALSE,NA,0,0.05,"Problem while converting geom to grob.
+ℹ Error occurred in the 4th layer.
+Caused by error:
+! R: UnableToOpenBlob `/cache/lib-bioc/aarch64-unknown-linux-gnu/4.5/TDbook/extdata/frogs/bufonidae.jpg': No such file or directory @ error/blob.c/OpenBlob/2967"
+"tree-045","contract","measured",FALSE,FALSE,NA,0,0.18,""
+"tree-046","contract","measured",FALSE,FALSE,NA,0,0.27,""
+"tree-050","contract","measured",FALSE,FALSE,NA,0,0.08,""
+"tree-054","contract","refused",FALSE,FALSE,NA,0,0.05,"'gpar' element 'lwd' must not be length 0"
+"tree-057","contract","measured",FALSE,FALSE,NA,0,0.11,""
+"tree-060","contract","measured",FALSE,FALSE,NA,0,0.14,""
+"tree-061","contract","measured",FALSE,FALSE,NA,0,1.98,""
+"tree-062","contract","measured",FALSE,FALSE,NA,0,0.16,""
+"tree-066","contract","measured",FALSE,FALSE,NA,0,0.3,""
+"tree-068","contract","measured",FALSE,FALSE,NA,0,0.16,""
+"tree-069","contract","measured",FALSE,FALSE,NA,0,0.09,""
+"tree-072","contract","refused",FALSE,FALSE,NA,0,0.01,"Problem while computing aesthetics.
+ℹ Error occurred in the 3rd layer.
+Caused by error:
+! object 'Geom' not found"
+"tree-074","contract","measured",FALSE,FALSE,NA,0,0.09,""
+"tree-077","contract","measured",FALSE,FALSE,NA,0,0.2,""
+"tree-079","contract","measured",FALSE,FALSE,NA,0,0.47,""
+"tree-083","contract","measured",FALSE,FALSE,NA,0,0.1,""

@@ -1,0 +1,13 @@
+{
+  "format": "gloss-agent-binding-material-run",
+  "version": "0.1.0",
+  "run": "2026-11-18-041130-binding-material-dev.csv",
+  "set": "dev",
+  "figures": 84,
+  "written": 83,
+  "statuses": {
+    "replay_not_captured": 1,
+    "written": 83
+  },
+  "ids": ["gallery-001", "gallery-002", "gallery-005", "gallery-006", "gallery-008", "gallery-011", "gallery-013", "gallery-015", "gallery-020", "gallery-021", "gallery-023", "gallery-024", "gallery-029", "gallery-032", "gallery-038", "gallery-040", "gallery-047", "gallery-048", "gallery-050", "gallery-052", "gallery-053", "gallery-054", "gallery-056", "gallery-058", "gallery-059", "gallery-068", "gallery-070", "exts-001", "exts-007", "exts-008", "exts-013", "exts-014", "exts-017", "exts-018", "exts-019", "exts-021", "exts-022", "exts-024", "exts-027", "exts-030", "bioc-001", "bioc-004", "bioc-009", "bioc-013", "bioc-016", "bioc-017", "patchwork-001", "patchwork-006", "patchwork-008", "patchwork-010", "patchwork-011", "patchwork-012", "heatmap-008", "heatmap-026", "heatmap-036", "tree-003", "tree-008", "tree-010", "tree-011", "tree-012", "tree-014", "tree-017", "tree-021", "tree-025", "tree-032", "tree-037", "tree-038", "tree-041", "tree-045", "tree-046", "tree-050", "tree-054", "tree-057", "tree-060", "tree-061", "tree-062", "tree-066", "tree-068", "tree-069", "tree-072", "tree-074", "tree-077", "tree-079", "tree-083"]
+}

@@ -22,15 +22,20 @@
   `run_analysis` result contract. The smoke check returned separate stdout and
   stderr, exit status 1 for an R error and status 124 plus `sandbox_reset` for
   a timeout; the public hash stayed unchanged.
-- [ ] Write the v0/tree development material with public facts and an isolated
-  oracle, content hashes and a run manifest.
-- [ ] Add the four internal comparison arms and an archive writer. `legacy`
+- [x] Write the v0/tree development material with public facts and an isolated
+  oracle, content hashes and a run manifest. The pinned-container run covered
+  all 84 development ids, wrote 83 materials and kept one explicit
+  `replay_not_captured` row for `gallery-053`.
+- [x] Add the four internal comparison arms and an archive writer. `legacy`
   must compare byte-for-byte with the frozen binding rows; `contract` uses the
   engine contract plus device geometry; `enumeration` and `agent` go through the
-  same checker.
-- [ ] Run the prototype on the complete development set, archive every outcome
+  same checker. The prototype archives are under `bench/runs/binding-v1/`.
+- [x] Run the prototype on the complete development set, archive every outcome
   row, and record coverage, ambiguity, refusals, mutation outcomes and costs.
-- [ ] Run host and pinned-container suites, update the design/NEWS only if
+  The full development enumeration used a 500-candidate cap per figure; the
+  agent arm used the dry sandbox driver because no model gateway token was
+  available in this session.
+- [x] Run host and pinned-container suites, update the design/NEWS only if
   user-facing behaviour changes, and close this plan with measured counts.
 
 ## Acceptance criteria
@@ -46,5 +51,27 @@
 
 ## Scope changes
 
-None yet. Evidence from the synthetic fixture and the first development run is
-recorded here before later tasks are expanded.
+The live model comparison and route decision are deferred until a fixed model
+gateway is available. The held-out set remains untouched.
+
+## Closing notes — 2026-11-18
+
+- Host suite after the internal binding-mode test: 23 files, 1648 expectations,
+  0 failures and 0 skips. The pinned-container suite: 23 files, 187 tests,
+  1633 expectations, 0 failures, 0 errors, 5 aisdk-dependent skips and 0
+  warnings.
+- Material archive `2026-11-18-041130-binding-material-dev.csv` has 84 outcome
+  rows, 83 `written` and one `replay_not_captured` for the known `gganim`
+  build refusal.
+- Legacy archive `2026-11-18-050943-summary.csv` has 83 measured legacy rows
+  and one explicit material failure. Enumeration has 4 accepted figure-level
+  results, 1 ambiguous result, 72 `none`, 6 refused and one material failure.
+  Its proposal trace has 135 accepted candidate traces and every one has
+  `mutation.status = passed`.
+- Contract archive `2026-11-18-045836-summary.csv` measured 71 figures, refused
+  12 and retained one material failure. The slowest contract replay was the
+  192.4-second `gallery-029` run.
+- Agent dry archive `2026-11-18-051450-summary.csv` covers all 84 figure rows.
+  It has one accepted proposal with a passing mutation test, 82 `none` rows
+  and one material failure. No live model call was made because the gateway
+  token was absent. A real fixed-model run remains the next measurement.

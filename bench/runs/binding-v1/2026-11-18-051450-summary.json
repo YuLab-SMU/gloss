@@ -1,0 +1,849 @@
+{
+  "format": "gloss-agent-binding-run",
+  "version": "0.1.0",
+  "predictions": "bench/predictions.md",
+  "set": "dev",
+  "dry": true,
+  "figures": 84,
+  "arms": "agent",
+  "summary": [
+    {
+      "figure": "bioc-001",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.63,
+      "failure": ""
+    },
+    {
+      "figure": "bioc-004",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.62,
+      "failure": ""
+    },
+    {
+      "figure": "bioc-009",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.38,
+      "failure": ""
+    },
+    {
+      "figure": "bioc-013",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.4,
+      "failure": ""
+    },
+    {
+      "figure": "bioc-016",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.44,
+      "failure": ""
+    },
+    {
+      "figure": "bioc-017",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.6,
+      "failure": ""
+    },
+    {
+      "figure": "exts-001",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.44,
+      "failure": ""
+    },
+    {
+      "figure": "exts-007",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.4,
+      "failure": ""
+    },
+    {
+      "figure": "exts-008",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.45,
+      "failure": ""
+    },
+    {
+      "figure": "exts-013",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.45,
+      "failure": ""
+    },
+    {
+      "figure": "exts-014",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.44,
+      "failure": ""
+    },
+    {
+      "figure": "exts-017",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 2.84,
+      "failure": ""
+    },
+    {
+      "figure": "exts-018",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.51,
+      "failure": ""
+    },
+    {
+      "figure": "exts-019",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.45,
+      "failure": ""
+    },
+    {
+      "figure": "exts-021",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.48,
+      "failure": ""
+    },
+    {
+      "figure": "exts-022",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 1.34,
+      "failure": ""
+    },
+    {
+      "figure": "exts-024",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.47,
+      "failure": ""
+    },
+    {
+      "figure": "exts-027",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.75,
+      "failure": ""
+    },
+    {
+      "figure": "exts-030",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.59,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-001",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.57,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-002",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.57,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-005",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.56,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-006",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.53,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-008",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.46,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-011",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.47,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-013",
+      "arm": "agent",
+      "outcome": "accepted",
+      "accepted": true,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.62,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-015",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.95,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-020",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.52,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-021",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.74,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-023",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 8.25,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-024",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.88,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-029",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.81,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-032",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.45,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-038",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.6,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-040",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.46,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-047",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.51,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-048",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 3.82,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-050",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.59,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-052",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.43,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-053",
+      "arm": "agent",
+      "outcome": "operational_failure",
+      "accepted": false,
+      "ambiguous": false,
+      "failure": "public material is incomplete"
+    },
+    {
+      "figure": "gallery-054",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.54,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-056",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.4,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-058",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.45,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-059",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.51,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-068",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.48,
+      "failure": ""
+    },
+    {
+      "figure": "gallery-070",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.47,
+      "failure": ""
+    },
+    {
+      "figure": "heatmap-008",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.53,
+      "failure": ""
+    },
+    {
+      "figure": "heatmap-026",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.45,
+      "failure": ""
+    },
+    {
+      "figure": "heatmap-036",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.52,
+      "failure": ""
+    },
+    {
+      "figure": "patchwork-001",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.36,
+      "failure": ""
+    },
+    {
+      "figure": "patchwork-006",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.44,
+      "failure": ""
+    },
+    {
+      "figure": "patchwork-008",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.55,
+      "failure": ""
+    },
+    {
+      "figure": "patchwork-010",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.73,
+      "failure": ""
+    },
+    {
+      "figure": "patchwork-011",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.58,
+      "failure": ""
+    },
+    {
+      "figure": "patchwork-012",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.46,
+      "failure": ""
+    },
+    {
+      "figure": "tree-003",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.61,
+      "failure": ""
+    },
+    {
+      "figure": "tree-008",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.52,
+      "failure": ""
+    },
+    {
+      "figure": "tree-010",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.68,
+      "failure": ""
+    },
+    {
+      "figure": "tree-011",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.58,
+      "failure": ""
+    },
+    {
+      "figure": "tree-012",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.47,
+      "failure": ""
+    },
+    {
+      "figure": "tree-014",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 1.89,
+      "failure": ""
+    },
+    {
+      "figure": "tree-017",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.58,
+      "failure": ""
+    },
+    {
+      "figure": "tree-021",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.47,
+      "failure": ""
+    },
+    {
+      "figure": "tree-025",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.63,
+      "failure": ""
+    },
+    {
+      "figure": "tree-032",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.63,
+      "failure": ""
+    },
+    {
+      "figure": "tree-037",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.61,
+      "failure": ""
+    },
+    {
+      "figure": "tree-038",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.72,
+      "failure": ""
+    },
+    {
+      "figure": "tree-041",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.65,
+      "failure": ""
+    },
+    {
+      "figure": "tree-045",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 1,
+      "failure": ""
+    },
+    {
+      "figure": "tree-046",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.66,
+      "failure": ""
+    },
+    {
+      "figure": "tree-050",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 1.38,
+      "failure": ""
+    },
+    {
+      "figure": "tree-054",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.83,
+      "failure": ""
+    },
+    {
+      "figure": "tree-057",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.54,
+      "failure": ""
+    },
+    {
+      "figure": "tree-060",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.64,
+      "failure": ""
+    },
+    {
+      "figure": "tree-061",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.98,
+      "failure": ""
+    },
+    {
+      "figure": "tree-062",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.58,
+      "failure": ""
+    },
+    {
+      "figure": "tree-066",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.99,
+      "failure": ""
+    },
+    {
+      "figure": "tree-068",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.81,
+      "failure": ""
+    },
+    {
+      "figure": "tree-069",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.68,
+      "failure": ""
+    },
+    {
+      "figure": "tree-072",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.61,
+      "failure": ""
+    },
+    {
+      "figure": "tree-074",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.5,
+      "failure": ""
+    },
+    {
+      "figure": "tree-077",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.67,
+      "failure": ""
+    },
+    {
+      "figure": "tree-079",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.79,
+      "failure": ""
+    },
+    {
+      "figure": "tree-083",
+      "arm": "agent",
+      "outcome": "none",
+      "accepted": false,
+      "ambiguous": false,
+      "calls": 1,
+      "seconds": 0.58,
+      "failure": ""
+    }
+  ]
+}
