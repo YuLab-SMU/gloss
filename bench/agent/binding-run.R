@@ -81,8 +81,8 @@ for (id in ids) {
                                                                                 model = result$model %||% NA_character_,
                                                                                 calls = length(result$calls %||% list()), seconds = seconds,
                                                                                 failure = result$failure %||% NA_character_))
-      append_trace(list(material_version = material$facts$version, material = id, arm = arm,
-                        model = result$model %||% NA_character_, outcome = outcome,
+      append_trace(list(record_type = "run_summary", material_version = material$facts$version, material = id, arm = arm,
+                        model = result$model %||% NA_character_, outcome = "summary", agent_outcome = outcome,
                         calls = result$calls %||% list(), usage = result$usage %||% list(),
                         analysis_code_sha256 = unname(analysis_hashes), text = result$text %||% "",
                         seconds = seconds, sandbox_calls = result$sandbox_calls %||% NA_integer_,

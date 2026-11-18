@@ -90,7 +90,7 @@ binding_trace_record <- function(material, arm, result, model = NA_character_, c
                                  calls = NA_integer_, seconds = NA_real_, failure = NA_character_) {
   p <- result$proposal %||% list()
   list(
-    material_version = material$facts$version %||% binding_material_version,
+    record_type = "proposal", material_version = material$facts$version %||% binding_material_version,
     material = basename(material$dir), arm = arm, model = model,
     proposal = p, proposal_sha256 = digest::digest(p, algo = "sha256"),
     code_sha256 = if (is.na(code)[1L]) NA_character_ else digest::digest(code, algo = "sha256", serialize = FALSE),
