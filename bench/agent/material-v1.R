@@ -62,9 +62,23 @@ for (k in seq_len(nrow(todo))) {
   id <- todo$id[k]
   started <- Sys.time()
   work <- file.path(out_root, id)
+  reuse <- identical(tolower(Sys.getenv("GLOSS_BINDING_REUSE", "false")), "true")
+  if (reuse && dir.exists(work) && file.exists(file.path(work, "oracle", "oracle.rds"))) {
+    public_check <- tryCatch(binding_check_public_material(work), error = function(e) list(ok = FALSE, reason = conditionMessage(e)))
+    if (isTRUE(public_check$ok)) {
+      rows[[k]] <- write_row(id, todo[k, ], "written", "reused validated material", started, work)
+      write_csv(do.call(rbind, rows[seq_len(k)]), run_file)
+      cat(sprintf("[%d/%d] %s reused in %.1fs\n", k, nrow(todo), id, rows[[k]]$seconds))
+      next
+    }
+  }
   unlink(work, recursive = TRUE)
   dir.create(work, recursive = TRUE)
-  export <- function(fig, svg, dir) binding_write_material(fig, svg, dir, figure_id = figure_id)
+  export <- function(fig, svg, dir, source_figure) {
+    binding_write_material(fig, svg, dir, figure_id = figure_id, source_figure = source_figure)
+  }
+  attr(export, "gloss_capture") <- TRUE
+  attr(export, "gloss_capture_bind") <- TRUE
   export_helpers <- binding_export_helpers()
   export_helpers$figure_id <- id
   result <- tryCatch(check_eligibility(file.path(bench_root, "figures", id), todo$engine[k],

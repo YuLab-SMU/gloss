@@ -516,8 +516,9 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
       suppressMessages(pkgload::load_all(repo, quiet = TRUE, export_all = FALSE, helpers = FALSE))
       t1 <- Sys.time()
       warns <- character()
-      # bind = FALSE: `seconds` is the capture alone, as in every archived
-      # run; the bind step is timed by the bind run below (bind_capture()).
+      # Normal capture keeps the historical bind = FALSE timing.  A material
+      # exporter may opt into binding the same captured substrate once so it
+      # can write a hidden oracle without recapturing the raw figure.
       # A recovered recorded plot no longer carries the code chunk that drew
       # it. Keep the frozen script as an opt-in attribute for rules plugins;
       # the core uses it only when the normal context sniffer has no code.
@@ -526,7 +527,8 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
       } else {
         attr(fig, "gloss_bench_no_code") <- TRUE
       }
-      g <- tryCatch(withCallingHandlers(gloss::gloss(fig, bind = FALSE), warning = function(w) {
+      g <- tryCatch(withCallingHandlers(gloss::gloss(fig,
+                                                     bind = isTRUE(attr(export_fun, "gloss_capture_bind"))), warning = function(w) {
         warns <<- c(warns, conditionMessage(w))
         invokeRestart("muffleWarning")
       }), error = function(e) e)
@@ -681,7 +683,14 @@ run_worker <- function(setup, chunks, dir, seed, figure_classes, skip_print, rec
         if (!is.null(export) && is.function(export_fun)) {
           ex <- tryCatch({
             if (is.na(alone[1])) stop("the figure could not be drawn alone on svglite")
-            export_fun(fig, alone[1], export)
+            if (isTRUE(attr(export_fun, "gloss_capture"))) {
+              # A material writer may opt into the already captured substrate
+              # while receiving the raw figure as a fourth argument for a
+              # hidden source/oracle copy.  Existing three-argument writers
+              # keep the historical raw-figure contract.
+              if (length(formals(export_fun)) >= 4L) export_fun(g, alone[1], export, fig)
+              else export_fun(g, alone[1], export)
+            } else export_fun(fig, alone[1], export)
           }, error = function(e) conditionMessage(e))
           if (is.list(ex)) {
             cap$export <- TRUE

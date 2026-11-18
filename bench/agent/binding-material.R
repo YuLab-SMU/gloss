@@ -91,10 +91,11 @@ binding_legacy_result <- function(fig) {
        rows = gloss::gl_bindings(fig, by = "row"))
 }
 
-binding_write_material <- function(fig, svg, dir, figure_id = NA_character_) {
+binding_write_material <- function(fig, svg, dir, figure_id = NA_character_, source_figure = NULL) {
   dir.create(file.path(dir, "public", "tables"), recursive = TRUE, showWarnings = FALSE)
   dir.create(file.path(dir, "oracle"), recursive = TRUE, showWarnings = FALSE)
-  gx <- suppressWarnings(gloss::gloss(fig, context = TRUE))
+  gx <- if (inherits(fig, "gloss_figure")) fig else suppressWarnings(gloss::gloss(fig, context = TRUE))
+  source_figure <- source_figure %||% if (!inherits(fig, "gloss_figure")) fig else NULL
   scene <- gx$substrate$scene
   scene_hash <- digest::digest(scene, algo = "sha256", serialize = FALSE)
   facts <- binding_public_facts(gx, figure_id = figure_id, source_scene_sha256 = scene_hash)
@@ -110,7 +111,7 @@ binding_write_material <- function(fig, svg, dir, figure_id = NA_character_) {
     grDevices::pdf(NULL, width = gx$meta$width, height = gx$meta$height)
     dev <- grDevices::dev.cur()
     on.exit(if (dev %in% grDevices::dev.list()) grDevices::dev.off(dev), add = TRUE)
-    gt <- if (inherits(fig, "patchwork")) patchwork::patchworkGrob(fig) else ggplot2::ggplotGrob(fig)
+    gt <- if (inherits(source_figure, "patchwork")) patchwork::patchworkGrob(source_figure) else ggplot2::ggplotGrob(source_figure %||% fig)
     utils::capture.output(grid::grid.ls(grid::grid.force(gt)))
   }, error = function(e) paste("the grob tree could not be listed:", conditionMessage(e)))
   writeLines(tree, file.path(dir, "public", "grob_tree.txt"), useBytes = TRUE)
@@ -121,7 +122,7 @@ binding_write_material <- function(fig, svg, dir, figure_id = NA_character_) {
   # defer this replay to the contract arm, where its cost is measured.
   contract <- list(status = "deferred", reason = "contract replay is run by the contract arm")
   oracle <- list(format = "gloss-agent-binding-oracle", version = binding_material_version,
-                 figure = as.character(figure_id), figure_object = gx, source_figure = fig, legacy = legacy,
+                 figure = as.character(figure_id), figure_object = gx, source_figure = source_figure, legacy = legacy,
                  geometry = geometry, contract = contract,
                  scene_sha256 = scene_hash)
   saveRDS(oracle, file.path(dir, "oracle", "oracle.rds"), version = 3)
