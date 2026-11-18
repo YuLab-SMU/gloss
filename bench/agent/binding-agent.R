@@ -65,7 +65,9 @@ binding_agent_run <- function(material, model_id = Sys.getenv("GLOSS_BINDING_MOD
                               gateway = Sys.getenv("GLOSS_BINDING_GATEWAY", "http://127.0.0.1:3425/v1"),
                               timeout = 180L, max_steps = 8L, dry = FALSE) {
   public <- file.path(material$dir, "public")
-  sb <- sandbox_open_persistent(public, env = material$oracle$figure_object$context$env$value$environment %||% "cran")
+  sandbox_env <- material$facts$environment %||% "cran"
+  if (!sandbox_env %in% c("cran", "bioc")) sandbox_env <- "cran"
+  sb <- sandbox_open_persistent(public, env = sandbox_env)
   on.exit(sandbox_close_persistent(sb), add = TRUE)
   calls <- list(); proposals <- list(); usage <- list(prompt_tokens = 0, completion_tokens = 0, total_tokens = 0)
   if (isTRUE(dry)) {

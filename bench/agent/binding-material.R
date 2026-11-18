@@ -52,12 +52,14 @@ binding_layer_params <- function(fig, tables = binding_fact_tables(fig)) {
   out
 }
 
-binding_public_facts <- function(fig, figure_id = NA_character_, source_scene_sha256 = NA_character_) {
+binding_public_facts <- function(fig, figure_id = NA_character_, source_scene_sha256 = NA_character_,
+                                 environment_name = NA_character_) {
   tabs <- binding_fact_tables(fig)
   list(
     format = "gloss-agent-binding-material",
     version = binding_material_version,
     figure = as.character(figure_id),
+    environment = as.character(environment_name),
     engine = as.character(fig$meta$engine %||% fig$context$engine$value$engine %||% NA_character_),
     width_pt = as.numeric(fig$meta$width %||% NA_real_) * 72,
     height_pt = as.numeric(fig$meta$height %||% NA_real_) * 72,
@@ -91,14 +93,16 @@ binding_legacy_result <- function(fig) {
        rows = gloss::gl_bindings(fig, by = "row"))
 }
 
-binding_write_material <- function(fig, svg, dir, figure_id = NA_character_, source_figure = NULL) {
+binding_write_material <- function(fig, svg, dir, figure_id = NA_character_, source_figure = NULL,
+                                   environment_name = NA_character_) {
   dir.create(file.path(dir, "public", "tables"), recursive = TRUE, showWarnings = FALSE)
   dir.create(file.path(dir, "oracle"), recursive = TRUE, showWarnings = FALSE)
   gx <- if (inherits(fig, "gloss_figure")) fig else suppressWarnings(gloss::gloss(fig, context = TRUE))
   source_figure <- source_figure %||% if (!inherits(fig, "gloss_figure")) fig else NULL
   scene <- gx$substrate$scene
   scene_hash <- digest::digest(scene, algo = "sha256", serialize = FALSE)
-  facts <- binding_public_facts(gx, figure_id = figure_id, source_scene_sha256 = scene_hash)
+  facts <- binding_public_facts(gx, figure_id = figure_id, source_scene_sha256 = scene_hash,
+                                environment_name = environment_name)
   jsonlite::write_json(facts, file.path(dir, "public", "facts.json"), auto_unbox = TRUE,
                        pretty = TRUE, null = "null", na = "null", dataframe = "rows")
   writeLines(enc2utf8(scene), file.path(dir, "public", "figure.svg"), useBytes = TRUE)

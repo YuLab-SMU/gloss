@@ -11,6 +11,7 @@
 suppressMessages(pkgload::load_all(".", quiet = TRUE, export_all = FALSE, helpers = FALSE))
 source("bench/R/harvest.R")
 source("bench/agent/binding-material.R")
+source("bench/agent/binding-checker.R")
 
 args <- commandArgs(trailingOnly = TRUE)
 set_name <- if (length(args)) args[1L] else "dev"
@@ -65,7 +66,9 @@ for (k in seq_len(nrow(todo))) {
   reuse <- identical(tolower(Sys.getenv("GLOSS_BINDING_REUSE", "false")), "true")
   if (reuse && dir.exists(work) && file.exists(file.path(work, "oracle", "oracle.rds"))) {
     public_check <- tryCatch(binding_check_public_material(work), error = function(e) list(ok = FALSE, reason = conditionMessage(e)))
-    if (isTRUE(public_check$ok)) {
+    public_facts <- if (isTRUE(public_check$ok)) tryCatch(binding_read_public(work), error = function(e) NULL) else NULL
+    expected_environment <- env_for_stratum(todo$stratum[k])$name
+    if (isTRUE(public_check$ok) && !is.null(public_facts) && identical(public_facts$environment, expected_environment)) {
       rows[[k]] <- write_row(id, todo[k, ], "written", "reused validated material", started, work)
       write_csv(do.call(rbind, rows[seq_len(k)]), run_file)
       cat(sprintf("[%d/%d] %s reused in %.1fs\n", k, nrow(todo), id, rows[[k]]$seconds))
@@ -75,12 +78,14 @@ for (k in seq_len(nrow(todo))) {
   unlink(work, recursive = TRUE)
   dir.create(work, recursive = TRUE)
   export <- function(fig, svg, dir, source_figure) {
-    binding_write_material(fig, svg, dir, figure_id = figure_id, source_figure = source_figure)
+    binding_write_material(fig, svg, dir, figure_id = figure_id, source_figure = source_figure,
+                           environment_name = environment_name)
   }
   attr(export, "gloss_capture") <- TRUE
   attr(export, "gloss_capture_bind") <- TRUE
   export_helpers <- binding_export_helpers()
   export_helpers$figure_id <- id
+  export_helpers$environment_name <- env_for_stratum(todo$stratum[k])$name
   result <- tryCatch(check_eligibility(file.path(bench_root, "figures", id), todo$engine[k],
                                        timeout = 900, capture = TRUE, export = normalizePath(work),
                                        export_fun = export, export_helpers = export_helpers), error = function(e) e)
