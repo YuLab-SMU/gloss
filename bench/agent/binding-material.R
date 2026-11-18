@@ -20,7 +20,10 @@ binding_fact_tables <- function(fig) {
   for (nm in names(tabs)) {
     d <- tabs[[nm]]$data
     if (!is.data.frame(d)) next
-    keep <- vapply(d, function(x) is.atomic(x) && is.null(dim(x)), logical(1))
+    keep <- vapply(d, function(x) {
+      is.atomic(x) && is.null(dim(x)) && !is.list(x) &&
+        !inherits(x, c("sf", "sfc", "sfg", "wk", "geometry"))
+    }, logical(1))
     out[[nm]] <- d[, keep, drop = FALSE]
   }
   out
