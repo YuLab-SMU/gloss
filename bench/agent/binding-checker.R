@@ -2,6 +2,8 @@
 
 source("bench/agent/binding-dsl.R")
 
+binding_checker_cache <- new.env(parent = emptyenv())
+
 binding_reason_row <- function(category, ok, reason, details = list()) {
   data.frame(category = as.character(category), ok = isTRUE(ok), reason = as.character(reason %||% ""),
              stringsAsFactors = FALSE)
@@ -43,6 +45,18 @@ binding_open_oracle <- function(dir) {
   path <- file.path(dir, "oracle", "oracle.rds")
   if (!file.exists(path)) stop("hidden binding oracle is absent")
   readRDS(path)
+}
+
+binding_checker_context <- function(dir) {
+  key <- normalizePath(dir, mustWork = FALSE)
+  if (exists(key, envir = binding_checker_cache, inherits = FALSE)) {
+    return(get(key, envir = binding_checker_cache, inherits = FALSE))
+  }
+  facts <- binding_read_public(dir)
+  oracle <- binding_open_oracle(dir)
+  value <- list(facts = facts, oracle = oracle, placed = new.env(parent = emptyenv()))
+  assign(key, value, envir = binding_checker_cache)
+  value
 }
 
 binding_leaf <- function(fig, id) {
@@ -103,7 +117,8 @@ binding_match_rows <- function(fig, leaf_id, table, match_spec) {
   as.integer(rows)
 }
 
-binding_pred_all <- function(fig, table_name, table, leaf, proposal, material_facts = NULL) {
+binding_pred_all <- function(fig, table_name, table, leaf, proposal, material_facts = NULL,
+                             placed_cache = NULL) {
   panel <- as.character(leaf$panel[1L])
   base_rows <- binding_panel_rows(table, panel)
   all_spec <- proposal
@@ -125,23 +140,44 @@ binding_pred_all <- function(fig, table_name, table, leaf, proposal, material_fa
     if (length(attr(matched, "reason"))) return(list(ok = FALSE, reason = attr(matched, "reason")))
     selected_expanded <- matched
   }
-  # Candidate rows are first, so the core comparison sees the proposal order.
-  # The remaining rows stay in the prediction set for ambiguity detection.
-  rest <- all_expanded[!seq_along(all_expanded) %in% match(seq_along(all_expanded), match(selected_expanded, all_expanded), nomatch = 0L)]
-  # The expression above removes only one occurrence of each selected row.
-  # For repeated rows, remove by a stable multiset count instead.
-  counts <- table(selected_expanded)
-  used <- integer()
-  rest <- all_expanded[vapply(all_expanded, function(x) {
-    key <- as.character(x)
-    if (key %in% names(counts) && (sum(used == key) < counts[[key]])) {
-      used <<- c(used, key)
-      FALSE
-    } else TRUE
-  }, logical(1))]
-  ordered <- c(selected_expanded, rest)
-  placed <- gloss:::placed_rows(fig, table_name, ordered, panel)
-  if (is.character(placed)) return(list(ok = FALSE, reason = placed))
+  cache_key <- paste(table_name, panel, paste(all_expanded, collapse = ","), sep = "|")
+  canonical <- if (!is.null(placed_cache) && exists(cache_key, envir = placed_cache, inherits = FALSE)) {
+    get(cache_key, envir = placed_cache, inherits = FALSE)
+  } else {
+    value <- gloss:::placed_rows(fig, table_name, all_expanded, panel)
+    if (is.character(value)) return(list(ok = FALSE, reason = value))
+    if (!is.null(placed_cache)) assign(cache_key, value, envir = placed_cache)
+    value
+  }
+  if (identical(selected_expanded, all_expanded)) {
+    placed <- canonical
+  } else {
+    counts <- table(selected_expanded)
+    used <- character()
+    rest <- all_expanded[vapply(all_expanded, function(x) {
+      key <- as.character(x)
+      if (key %in% names(counts) && (sum(used == key) < counts[[key]])) {
+        used <<- c(used, key)
+        FALSE
+      } else TRUE
+    }, logical(1))]
+    candidate <- gloss:::placed_rows(fig, table_name, selected_expanded, panel)
+    if (is.character(candidate)) return(list(ok = FALSE, reason = candidate))
+    if (!length(rest)) {
+      placed <- candidate
+    } else {
+      rest_counts <- table(rest)
+      used <- character()
+      keep <- vapply(canonical$row, function(x) {
+        key <- as.character(x)
+        if (key %in% names(rest_counts) && (sum(used == key) < rest_counts[[key]])) {
+          used <<- c(used, key)
+          TRUE
+        } else FALSE
+      }, logical(1))
+      placed <- rbind(candidate, canonical[keep, , drop = FALSE])
+    }
+  }
   shifted <- binding_shift(placed, proposal, table, material_facts)
   if (!shifted$ok) return(shifted)
   list(ok = TRUE, panel = panel, selected = selected_expanded, all = ordered, pred = shifted$pred,
@@ -186,13 +222,13 @@ binding_check_mutations <- function(dir, proposal, table, leaves, oracle, facts)
 }
 
 binding_checker <- function(dir, proposal, mutation = TRUE, tol = gloss:::bind_tolerance) {
-  facts <- tryCatch(binding_read_public(dir), error = function(e) e)
-  if (inherits(facts, "error")) return(list(outcome = "operational_failure", reports = binding_reason_row("schema", FALSE, conditionMessage(facts))))
+  context <- tryCatch(binding_checker_context(dir), error = function(e) e)
+  if (inherits(context, "error")) return(list(outcome = "operational_failure", reports = binding_reason_row("schema", FALSE, conditionMessage(context))))
+  facts <- context$facts
   checked <- binding_validate_proposal(proposal, facts = facts)
   if (!checked$ok) return(list(outcome = "rejected", reports = do.call(rbind, lapply(checked$errors, function(e) binding_reason_row("schema", FALSE, e))), proposal = proposal))
   proposal <- checked$proposal
-  oracle <- tryCatch(binding_open_oracle(dir), error = function(e) e)
-  if (inherits(oracle, "error")) return(list(outcome = "operational_failure", reports = binding_reason_row("oracle", FALSE, conditionMessage(oracle)), proposal = proposal))
+  oracle <- context$oracle
   if (!is.null(proposal$none)) return(list(outcome = "none", reports = binding_reason_row("residue", TRUE, proposal$none), proposal = proposal))
   if (!is.null(proposal$copy_of)) {
     result <- binding_copy_result(oracle$figure_object, oracle, proposal, tol)
@@ -215,7 +251,8 @@ binding_checker <- function(dir, proposal, mutation = TRUE, tol = gloss:::bind_t
     reports[[length(reports) + 1L]] <- binding_reason_row("layer_ownership", FALSE, "proposal table disagrees with the captured layer owner")
     return(list(outcome = "rejected", reports = do.call(rbind, reports), proposal = proposal))
   }
-  candidate <- tryCatch(binding_pred_all(fig, proposal$table, table, leaf, proposal, facts), error = function(e) e)
+  candidate <- tryCatch(binding_pred_all(fig, proposal$table, table, leaf, proposal, facts,
+                                         context$placed), error = function(e) e)
   if (inherits(candidate, "error")) {
     reports[[1L]] <- binding_reason_row("geometry", FALSE, conditionMessage(candidate))
     return(list(outcome = "rejected", reports = do.call(rbind, reports), proposal = proposal))
