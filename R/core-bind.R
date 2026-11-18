@@ -62,14 +62,18 @@ bind_tolerance <- 0.5  # SVG user units, 1/72 in (design §绑定假设: 0.5 px)
 
 # Capture `x` and bind it, for the bench and the tests of the check: the
 # figure and the bindings as bind_figure() gives them, deviations unrounded.
-bind_capture <- function(x, width = 7, height = 5, dense = 10000, engine = NULL) {
+bind_capture <- function(x, width = 7, height = 5, dense = 10000, engine = NULL,
+                         binding_mode = c("legacy", "contract", "enumeration", "agent")) {
+  binding_mode <- match.arg(binding_mode)
   engines <- engine_candidates(x, engine)
   res <- capture_figure(x, engines, width = width, height = height, dense = dense, context = FALSE,
                         bind = FALSE)
-  c(list(fig = res$fig), bind_figure(res$fig, res$engine, res$state))
+  c(list(fig = res$fig), bind_figure(res$fig, res$engine, res$state, binding_mode = binding_mode))
 }
 
-bind_figure <- function(fig, eng, state, tol = bind_tolerance) {
+bind_figure <- function(fig, eng, state, tol = bind_tolerance,
+                        binding_mode = c("legacy", "contract", "enumeration", "agent")) {
+  binding_mode <- match.arg(binding_mode)
   sub <- fig$substrate
   leaves <- sub$leaves
   geo <- scene_geometry(sub)
