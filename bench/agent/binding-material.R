@@ -112,9 +112,15 @@ binding_write_material <- function(fig, svg, dir, figure_id = NA_character_, sou
   writeLines(enc2utf8(scene), file.path(dir, "public", "figure.svg"), useBytes = TRUE)
   for (nm in names(facts$tables)) {
     d <- facts$tables[[nm]]
+    drop <- grep("(^|[._])geometry([._]|$)|^geom$", names(d), ignore.case = TRUE, value = TRUE)
+    if (length(drop)) {
+      facts$tables[[nm]] <- d <- d[, setdiff(names(d), drop), drop = FALSE]
+    }
     utils::write.csv(cbind(row = seq_len(nrow(d)), d),
                      file.path(dir, "public", "tables", paste0(nm, ".csv")), row.names = FALSE)
   }
+  jsonlite::write_json(facts, file.path(dir, "public", "facts.json"), auto_unbox = TRUE,
+                       pretty = TRUE, null = "null", na = "null", dataframe = "rows")
   tree <- tryCatch({
     grDevices::pdf(NULL, width = gx$meta$width, height = gx$meta$height)
     dev <- grDevices::dev.cur()
