@@ -1,0 +1,10 @@
+test_that("binding modes stay internal to the binder", {
+  skip_if_not_installed("ggplot2")
+  plot <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  modes <- c("legacy", "contract", "enumeration", "agent")
+  results <- lapply(modes, function(mode) gloss:::bind_capture(plot, binding_mode = mode))
+  expect_length(results, length(modes))
+  expect_true(all(vapply(results, function(x) is.data.frame(x$leaves), logical(1))))
+  expect_error(gloss:::bind_capture(plot, binding_mode = "other"), "should be one of")
+  expect_false("binding_mode" %in% names(formals(gloss)))
+})

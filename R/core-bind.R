@@ -84,7 +84,14 @@ bind_figure <- function(fig, eng, state, tol = bind_tolerance,
   grDevices::pdf(NULL)
   null_dev <- grDevices::dev.cur()
   on.exit(if (null_dev %in% grDevices::dev.list()) grDevices::dev.off(null_dev), add = TRUE)
-  stated <- if (is.null(eng$bind)) {
+  stated <- if (binding_mode %in% c("enumeration", "agent") && is.null(state$binding_proposals)) {
+    list(claims = list(), unbound = data.frame(
+      leaf = leaves$id,
+      reason = sprintf("binding mode '%s' requires a checked proposal", binding_mode),
+      stringsAsFactors = FALSE))
+  } else if (binding_mode %in% c("enumeration", "agent") && !is.null(state$binding_proposals)) {
+    state$binding_proposals
+  } else if (is.null(eng$bind)) {
     list(claims = list(), unbound = data.frame(
       leaf = leaves$id, reason = sprintf("engine '%s' states no bindings", eng$name),
       stringsAsFactors = FALSE))
