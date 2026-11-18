@@ -111,4 +111,4 @@ jsonlite::write_json(list(format = "gloss-agent-binding-run", version = binding_
                           figures = length(ids), arms = arms, summary = summary),
                      sub("\\.csv$", ".json", summary_file), auto_unbox = TRUE, pretty = TRUE,
                      null = "null", dataframe = "rows")
-cat(sprintf("archived %d figures x 4 arms: %s\n", length(ids), summary_file))
+cat(sprintf("archived %d figures x %d arms: %s\n", length(ids), length(arms), summary_file))
