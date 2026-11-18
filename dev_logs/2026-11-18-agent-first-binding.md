@@ -46,6 +46,8 @@
   `GLOSS_BENCH_OFFLINE=true bench/docker/run.sh Rscript bench/R/suite.R` → 23
   files, 187 tests, 1633 expectations, 0 failures, 0 errors, 5 explicit
   aisdk-dependent skips and 0 warnings.
+- `R CMD build --no-build-vignettes .` followed by `R CMD check --no-manual`
+  → `Status: OK`.
 - No held-out material, label or model score was read.
 
 ## Surprises
