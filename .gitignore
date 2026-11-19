@@ -69,3 +69,9 @@ bench/labels/**/.workbench/
 
 # The demo tour's outputs are rebuilt by dev_docs/demo/gloss-tour.R
 dev_docs/demo/mtcars-*
+
+# Workbench frontend dependencies and build outputs
+workbench/node_modules/
+workbench/dist/
+workbench/dist-singlefile/
+workbench/dist-lite/

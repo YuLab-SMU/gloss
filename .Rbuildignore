@@ -13,4 +13,5 @@
 ^\.claude$
 ^\.rho$
 ^\.workbuddy$
+^workbench$
 (^|/)Rplots.*\.pdf$
