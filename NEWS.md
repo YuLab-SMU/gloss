@@ -1,5 +1,17 @@
 # gloss 0.0.0.9000
 
+## Browser Workbench and contextual record provenance (2026-11-18)
+
+- Added `gl_workbench()` and the `"workbench"` projection plugin, writing a
+  self-contained single-file HTML browser workbench (React, AG Grid Community,
+  Rive state-machine adapter, React Flow lineage DAG, CodeMirror 6, Flatbush
+  dense-leaf spatial index) that opens directly in any browser without an R
+  session while preserving the embedded `<script id="gloss-bundle">` payload for
+  lossless `gl_read()` round trips.
+- Extended core record body schemas with optional external-context provenance
+  fields (`source`, `source_type`, `confidence`) alongside `evidence` and
+  `provenance`.
+
 ## Agent stages and checked semantic proposals (2026-11-17)
 
 - Added ten registered agent stages with versioned prompts, stage-scoped tools
