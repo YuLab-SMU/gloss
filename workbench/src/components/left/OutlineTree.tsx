@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import {
   buildOutlineTree,
+  humanizeOutlineLabel,
   resolveNaturalFocus,
   type FocusScope,
   type OutlineIconKind,
@@ -105,6 +106,7 @@ function filterTree(nodes: OutlineNode[], query: string): OutlineNode[] {
 
 export const OutlineTree: React.FC = () => {
   const bundle = useWorkbenchStore((s) => s.bundle);
+  const viewMode = useWorkbenchStore((s) => s.viewMode);
   const outlineMode = useWorkbenchStore((s) => s.outlineMode);
   const setOutlineMode = useWorkbenchStore((s) => s.setOutlineMode);
   const focusScope = useWorkbenchStore((s) => s.focusScope);
@@ -146,7 +148,7 @@ export const OutlineTree: React.FC = () => {
     if (allData && allData.elementIds.length > 0) {
       chips.push({
         id: allData.id,
-        label: "Data Layer",
+        label: viewMode === "reader" ? "All Data" : "Data Layer",
         kind: "data",
         elementIds: allData.elementIds,
       });
@@ -180,7 +182,7 @@ export const OutlineTree: React.FC = () => {
       });
     }
     return chips;
-  }, [bundle]);
+  }, [bundle, viewMode]);
 
   if (!bundle) return null;
 
@@ -263,12 +265,18 @@ export const OutlineTree: React.FC = () => {
     const isPartiallyHidden =
       !isHidden && node.elementIds.some((id) => hiddenSet.has(id));
 
+    const display =
+      viewMode === "reader"
+        ? humanizeOutlineLabel(node.id, node.label, node.subtitle, bundle)
+        : { label: node.label, subtitle: node.subtitle };
+    const indentPx = viewMode === "reader" ? 10 : 14;
+
     return (
       <div key={node.id} className="relative">
         <div
           className="group relative flex items-center gap-1 rounded-lg py-1 pr-1.5 transition-colors"
           style={{
-            paddingLeft: `${depth * 14 + 6}px`,
+            paddingLeft: `${depth * indentPx + 4}px`,
             background: isFocused
               ? "var(--st-focus-soft)"
               : isSelectedSingle
@@ -282,7 +290,7 @@ export const OutlineTree: React.FC = () => {
             <span
               className="pointer-events-none absolute bottom-0 top-0 w-[1px]"
               style={{
-                left: `${depth * 14 - 1}px`,
+                left: `${depth * indentPx - 1}px`,
                 background: "var(--border-subtle)",
               }}
             />
@@ -310,7 +318,7 @@ export const OutlineTree: React.FC = () => {
             type="button"
             onClick={() => handleRowClick(node)}
             onDoubleClick={() => focusNode(node, true)}
-            title={`${node.label}${node.subtitle ? ` — ${node.subtitle}` : ""} (click to focus, double-click to zoom)`}
+            title={`${display.label}${display.subtitle ? ` — ${display.subtitle}` : ""} (click to focus, double-click to zoom)`}
             className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
           >
             <NodeTypeIcon icon={node.icon} swatch={node.swatch} />
@@ -322,20 +330,20 @@ export const OutlineTree: React.FC = () => {
                   color: isFocused ? "var(--st-focus)" : "var(--ink-primary)",
                 }}
               >
-                {node.label}
+                {display.label}
               </div>
-              {node.subtitle && depth <= 2 && (
+              {display.subtitle && depth <= 2 && (
                 <div
                   className="truncate text-[10px] leading-tight"
                   style={{ color: "var(--ink-muted)" }}
                 >
-                  {node.subtitle}
+                  {display.subtitle}
                 </div>
               )}
             </div>
           </button>
 
-          {/* Right-side design-tool action strip: focus crosshair, blue annotation pill, eye toggle */}
+          {/* Right-side design-tool action strip: hover-revealed focus/eye actions so labels stay clean and readable */}
           <div className="flex shrink-0 items-center gap-1">
             {node.id !== "root:figure" && node.id !== "grob:root" && node.elementIds.length > 0 && (
               <button
@@ -346,8 +354,8 @@ export const OutlineTree: React.FC = () => {
                   else focusNode(node, true);
                 }}
                 title={isFocused ? "Exit focus" : "Focus & zoom to this layer/group"}
-                className={`flex h-5 w-5 items-center justify-center rounded transition-opacity ${
-                  isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-90"
+                className={`h-5 w-5 items-center justify-center rounded ${
+                  isFocused ? "flex" : "hidden group-hover:flex"
                 }`}
                 style={{
                   color: isFocused ? "var(--st-focus)" : "var(--ink-secondary)",
@@ -365,13 +373,13 @@ export const OutlineTree: React.FC = () => {
                 style={{
                   background: node.hasWarning ? "var(--st-warn)" : "var(--st-focus)",
                 }}
-                title={`${node.recordCount} semantic record(s)`}
+                title={`${node.recordCount} note(s)`}
               >
                 {node.recordCount}
               </span>
             )}
 
-            {/* Eye visibility toggle (Figma / BioRender style) */}
+            {/* Eye visibility toggle (revealed on hover or when hidden, freeing ~24px for labels) */}
             {node.elementIds.length > 0 && (
               <button
                 type="button"
@@ -380,8 +388,8 @@ export const OutlineTree: React.FC = () => {
                   toggleElementsVisibility(node.elementIds);
                 }}
                 title={isHidden ? "Show elements" : "Hide elements on canvas"}
-                className={`flex h-5 w-5 items-center justify-center rounded transition-opacity ${
-                  isHidden || isPartiallyHidden ? "opacity-100" : "opacity-35 group-hover:opacity-90"
+                className={`h-5 w-5 items-center justify-center rounded ${
+                  isHidden || isPartiallyHidden ? "flex" : "hidden group-hover:flex"
                 }`}
                 style={{
                   color: isHidden
@@ -406,21 +414,27 @@ export const OutlineTree: React.FC = () => {
     );
   };
 
+  const modeOptions: Array<[OutlineViewMode, string]> =
+    viewMode === "reader"
+      ? [
+          ["semantic", "Outline"],
+          ["data", "Data Groups"],
+        ]
+      : [
+          ["semantic", "Outline"],
+          ["data", "Data Groups"],
+          ["grob", "SVG / Grob"],
+        ];
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* Mode Switcher (Outline / Data / Grob) + Natural-Language Focus Search */}
       <div className="space-y-2 border-b p-2" style={{ borderColor: "var(--border-subtle)" }}>
         <div
-          className="grid grid-cols-3 rounded-lg p-0.5 text-[10.5px] font-semibold"
+          className={`grid ${viewMode === "reader" ? "grid-cols-2" : "grid-cols-3"} rounded-lg p-0.5 text-[10.5px] font-semibold`}
           style={{ background: "var(--bg-canvas)", border: "1px solid var(--border-subtle)" }}
         >
-          {(
-            [
-              ["semantic", "Outline"],
-              ["data", "Data Groups"],
-              ["grob", "SVG / Grob"],
-            ] as Array<[OutlineViewMode, string]>
-          ).map(([m, lbl]) => {
+          {modeOptions.map(([m, lbl]) => {
             const active = outlineMode === m;
             return (
               <button
@@ -454,7 +468,11 @@ export const OutlineTree: React.FC = () => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Focus: cyl 6, exception, Mazda, legend..."
+            placeholder={
+              viewMode === "reader"
+                ? "Find group, sample, or finding..."
+                : "Focus: cyl 6, exception, Mazda, legend..."
+            }
             className="w-full bg-transparent text-[11.5px] focus:outline-none"
             style={{ color: "var(--ink-primary)" }}
           />
@@ -568,7 +586,7 @@ export const OutlineTree: React.FC = () => {
           }}
         >
           <Plus className="h-3.5 w-3.5" style={{ color: "var(--st-focus)" }} />
-          Add semantic note / claim
+          {viewMode === "reader" ? "Add note" : "Add semantic note / claim"}
         </button>
       </div>
     </div>

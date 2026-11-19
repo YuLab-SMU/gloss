@@ -1,10 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import {
+  AlertTriangle,
+  BookOpen,
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
   Command as CommandIcon,
+  Compass,
   FolderOpen,
+  Image as ImageIcon,
+  Microscope,
   Moon,
   Radio,
   ShieldAlert,
@@ -12,12 +18,19 @@ import {
   Sun,
   Table2,
   Upload,
+  Wrench,
 } from "lucide-react";
-import { SEMANTIC_STAGES } from "./codec";
+import {
+  getFigureDisplayTitle,
+  resolveNaturalFocus,
+  SEMANTIC_STAGES,
+  type ReaderLens,
+} from "./codec";
 import { CommandPalette } from "./components/CommandPalette";
 import { DataWorkbenchGrid } from "./components/grid/DataWorkbenchGrid";
 import { LeftPanel } from "./components/left/LeftPanel";
 import { ProposalModal } from "./components/ProposalModal";
+import { ReaderInspector } from "./components/right/ReaderInspector";
 import { RightInspector } from "./components/right/RightInspector";
 import { DropzoneHero } from "./components/rive/DropzoneHero";
 import { StageRail } from "./components/rive/StageRail";
@@ -33,8 +46,14 @@ declare global {
 
 export const App: React.FC = () => {
   const bundle = useWorkbenchStore((s) => s.bundle);
+  const viewMode = useWorkbenchStore((s) => s.viewMode);
+  const readerLens = useWorkbenchStore((s) => s.readerLens);
   const theme = useWorkbenchStore((s) => s.theme);
   const bottomOpen = useWorkbenchStore((s) => s.bottomOpen);
+  const liveApiBaseUrl = useWorkbenchStore((s) => s.liveApiBaseUrl);
+
+  const setViewMode = useWorkbenchStore((s) => s.setViewMode);
+  const setReaderLens = useWorkbenchStore((s) => s.setReaderLens);
   const toggleTheme = useWorkbenchStore((s) => s.toggleTheme);
   const setBottomOpen = useWorkbenchStore((s) => s.setBottomOpen);
   const setCommandOpen = useWorkbenchStore((s) => s.setCommandOpen);
@@ -42,22 +61,22 @@ export const App: React.FC = () => {
   const loadFromEmbeddedJson = useWorkbenchStore((s) => s.loadFromEmbeddedJson);
   const loadFromFiles = useWorkbenchStore((s) => s.loadFromFiles);
   const setConfig = useWorkbenchStore((s) => s.setConfig);
-  const liveApiBaseUrl = useWorkbenchStore((s) => s.liveApiBaseUrl);
   const setLiveApiBaseUrl = useWorkbenchStore((s) => s.setLiveApiBaseUrl);
   const setActiveStage = useWorkbenchStore((s) => s.setActiveStage);
   const stepStage = useWorkbenchStore((s) => s.stepStage);
   const clearSelection = useWorkbenchStore((s) => s.clearSelection);
+  const setFocusScope = useWorkbenchStore((s) => s.setFocusScope);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [sampleUrl, setSampleUrl] = useState<string | null>(null);
   const [dragOverlay, setDragOverlay] = useState(false);
 
-  // Sync theme attribute on root document
+  const isReader = viewMode === "reader";
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
-  // Auto-boot from embedded <script id="gloss-bundle">, ?artifact= URL, or detect dev demo
   useEffect(() => {
     if (window.__GLOSS_WORKBENCH_CONFIG__) {
       setConfig(window.__GLOSS_WORKBENCH_CONFIG__);
@@ -70,7 +89,7 @@ export const App: React.FC = () => {
     if (embeddedTag && embeddedTag.textContent?.trim()) {
       const title =
         window.__GLOSS_WORKBENCH_CONFIG__?.title ||
-        document.title.replace(/\s*—.*$/, "") ||
+        document.title.replace(/\s*[-—].*$/, "") ||
         "gloss-figure.html";
       void loadFromEmbeddedJson(embeddedTag.textContent, title);
       return;
@@ -88,13 +107,10 @@ export const App: React.FC = () => {
           const nm = artifactUrl.split("/").pop() || "artifact.html";
           return loadFromText(txt, nm);
         })
-        .catch(() => {
-          // stay on dropzone if remote sample isn't available
-        });
+        .catch(() => {});
       return;
     }
 
-    // In Vite dev mode, probe if sample artifact is available for one-click preview
     if (import.meta.env.DEV) {
       const candidate = "/sample-mtcars-workbench.html";
       const fallback = "/sample-mtcars-context.html";
@@ -112,7 +128,7 @@ export const App: React.FC = () => {
     }
   }, [loadFromEmbeddedJson, loadFromText, setConfig, setLiveApiBaseUrl]);
 
-  // Global keyboard shortcuts (1..9 stages, arrows, Esc)
+  // Global keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -124,12 +140,12 @@ export const App: React.FC = () => {
       ) {
         return;
       }
-      if (!useWorkbenchStore.getState().bundle) return;
-      if (useWorkbenchStore.getState().commandOpen) return;
+      const st = useWorkbenchStore.getState();
+      if (!st.bundle || st.commandOpen) return;
 
       if (e.key === "Escape") {
         clearSelection();
-      } else if (!e.metaKey && !e.ctrlKey && !e.altKey) {
+      } else if (!e.metaKey && !e.ctrlKey && !e.altKey && st.viewMode === "inspector") {
         const num = Number(e.key);
         if (num >= 1 && num <= SEMANTIC_STAGES.length) {
           setActiveStage(SEMANTIC_STAGES[num - 1].id);
@@ -144,6 +160,12 @@ export const App: React.FC = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [clearSelection, setActiveStage, stepStage]);
 
+  const figureTitle = useMemo(() => (bundle ? getFigureDisplayTitle(bundle) : ""), [bundle]);
+  const exceptionScope = useMemo(
+    () => (bundle ? resolveNaturalFocus(bundle, "exception") : null),
+    [bundle]
+  );
+
   const handleLoadSample = async () => {
     if (!sampleUrl) return;
     const res = await fetch(sampleUrl);
@@ -156,8 +178,17 @@ export const App: React.FC = () => {
     bundle?.derived.bindingsElements.filter((b) => b.status === "verified").length ?? 0;
   const partialOrFailedClaims =
     bundle?.records.filter(
-      (r) => r.layer === "claim" && (r.projectionStatus === "partial" || r.projectionStatus === "rejected")
+      (r) =>
+        r.layer === "claim" &&
+        (r.projectionStatus === "partial" || r.projectionStatus === "rejected")
     ).length ?? 0;
+
+  const readerLenses: Array<{ id: ReaderLens; label: string; icon: React.ReactNode }> = [
+    { id: "figure", label: "Figure", icon: <ImageIcon className="h-3.5 w-3.5" /> },
+    { id: "explore", label: "Explore", icon: <Compass className="h-3.5 w-3.5" /> },
+    { id: "findings", label: "Findings", icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
+    { id: "story", label: "Story", icon: <BookOpen className="h-3.5 w-3.5" /> },
+  ];
 
   return (
     <div
@@ -180,17 +211,17 @@ export const App: React.FC = () => {
         }
       }}
     >
-      {/* Top Precision Header Bar */}
+      {/* Top Header Bar: Calm & Publication-Grade in Scientific Reader Mode; Full Audit Controls in Inspector Mode */}
       <header
-        className="flex h-11 shrink-0 items-center justify-between gap-3 border-b px-3"
+        className="flex h-12 shrink-0 items-center justify-between gap-3 border-b px-3.5"
         style={{
           background: "var(--bg-surface)",
           borderColor: "var(--border-subtle)",
         }}
       >
+        {/* Left: Brand + Figure Title + Calm Trust Signals */}
         <div className="flex min-w-0 items-center gap-2.5">
-          {/* Brand mark */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1.5">
             <span
               className="flex h-6 w-6 items-center justify-center rounded-md text-xs font-black tracking-tighter text-white"
               style={{
@@ -203,127 +234,208 @@ export const App: React.FC = () => {
             <span className="text-sm font-bold tracking-tight" style={{ color: "var(--ink-primary)" }}>
               gloss
             </span>
-            <span
-              className="hidden rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider sm:inline"
-              style={{ background: "var(--bg-subtle)", color: "var(--ink-secondary)" }}
-            >
-              Workbench
-            </span>
           </div>
 
           {bundle && (
             <>
-              <span className="text-xs opacity-30">/</span>
+              <span className="text-xs opacity-25">/</span>
               <span
-                className="truncate text-xs font-semibold"
+                className="truncate text-[13px] font-semibold"
                 style={{ color: "var(--ink-primary)" }}
-                title={bundle.sourceName}
+                title={figureTitle}
               >
-                {bundle.sourceName}
+                {figureTitle}
               </span>
 
-              <div className="hidden items-center gap-1.5 lg:flex">
-                {liveApiBaseUrl !== null && (
-                  <span
-                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
-                    style={{ background: "var(--st-verified-soft)", color: "var(--st-verified)" }}
-                  >
-                    <Radio className="h-3 w-3" />
-                    LIVE R
-                  </span>
-                )}
+              {liveApiBaseUrl !== null && (
                 <span
-                  className="font-mono-num rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                  style={{ background: "var(--bg-subtle)", color: "var(--ink-secondary)" }}
-                >
-                  {bundle.engine ?? "svg"}
-                </span>
-                <span
-                  className="font-mono-num rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
                   style={{ background: "var(--st-verified-soft)", color: "var(--st-verified)" }}
                 >
-                  {verifiedCount} verified bindings
+                  <Radio className="h-3 w-3" />
+                  LIVE
                 </span>
-                {partialOrFailedClaims > 0 && (
+              )}
+
+              {isReader ? (
+                <div className="hidden items-center gap-1.5 xl:flex">
+                  {verifiedCount > 0 && (
+                    <span
+                      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                      style={{ background: "var(--st-verified-soft)", color: "var(--st-verified)" }}
+                      title="Every plotted observation is checked against source data"
+                    >
+                      <CheckCircle2 className="h-3 w-3" />
+                      Verified Data
+                    </span>
+                  )}
+                  {partialOrFailedClaims > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReaderLens("findings");
+                        if (exceptionScope) setFocusScope(exceptionScope, false);
+                      }}
+                      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-transform hover:scale-[1.02]"
+                      style={{ background: "var(--st-warn-soft)", color: "var(--st-warn)" }}
+                      title="Click to spotlight the statistical exception on the figure"
+                    >
+                      <AlertTriangle className="h-3 w-3" />
+                      {partialOrFailedClaims} Exception
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="hidden items-center gap-1.5 lg:flex">
                   <span
                     className="font-mono-num rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                    style={{ background: "var(--st-warn-soft)", color: "var(--st-warn)" }}
+                    style={{ background: "var(--bg-subtle)", color: "var(--ink-secondary)" }}
                   >
-                    {partialOrFailedClaims} claim exception
+                    {bundle.engine ?? "svg"}
                   </span>
-                )}
-                {bundle.integrity.checked > 0 && (
                   <span
-                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                    style={{
-                      background:
-                        bundle.integrity.mismatches.length === 0
-                          ? "var(--st-verified-soft)"
-                          : "var(--st-fail-soft)",
-                      color:
-                        bundle.integrity.mismatches.length === 0
-                          ? "var(--st-verified)"
-                          : "var(--st-fail)",
-                    }}
+                    className="font-mono-num rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                    style={{ background: "var(--st-verified-soft)", color: "var(--st-verified)" }}
                   >
-                    {bundle.integrity.mismatches.length === 0 ? (
-                      <ShieldCheck className="h-3 w-3" />
-                    ) : (
-                      <ShieldAlert className="h-3 w-3" />
-                    )}
-                    SHA-256
+                    {verifiedCount} verified bindings
                   </span>
-                )}
-              </div>
+                  {bundle.integrity.checked > 0 && (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                      style={{
+                        background:
+                          bundle.integrity.mismatches.length === 0
+                            ? "var(--st-verified-soft)"
+                            : "var(--st-fail-soft)",
+                        color:
+                          bundle.integrity.mismatches.length === 0
+                            ? "var(--st-verified)"
+                            : "var(--st-fail)",
+                      }}
+                    >
+                      {bundle.integrity.mismatches.length === 0 ? (
+                        <ShieldCheck className="h-3 w-3" />
+                      ) : (
+                        <ShieldAlert className="h-3 w-3" />
+                      )}
+                      SHA-256
+                    </span>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
 
+        {/* Center: Clean 4-Lens Scientific Switcher (Reader Mode only) */}
+        {bundle && isReader && (
+          <nav
+            aria-label="Figure reading lens"
+            className="hidden items-center gap-0.5 rounded-xl border p-0.5 md:flex"
+            style={{ background: "var(--bg-canvas)", borderColor: "var(--border-subtle)" }}
+          >
+            {readerLenses.map((lens) => {
+              const active = readerLens === lens.id;
+              return (
+                <button
+                  key={lens.id}
+                  type="button"
+                  onClick={() => setReaderLens(lens.id)}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11.5px] font-semibold transition-all"
+                  style={{
+                    background: active ? "var(--bg-surface)" : "transparent",
+                    color: active ? "var(--st-focus)" : "var(--ink-secondary)",
+                    boxShadow: active ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                  }}
+                >
+                  {lens.icon}
+                  <span>{lens.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        )}
+
+        {/* Right: Data Drawer + Reader/Inspector Mode Toggle + Open + Theme */}
         <div className="flex shrink-0 items-center gap-1.5">
           {bundle && (
             <>
-              <button
-                type="button"
-                onClick={() => setCommandOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors hover:bg-[var(--bg-subtle)]"
-                style={{
-                  borderColor: "var(--border-subtle)",
-                  color: "var(--ink-secondary)",
-                }}
-              >
-                <CommandIcon className="h-3 w-3" />
-                <span className="hidden sm:inline">Jump</span>
-                <kbd className="font-mono-num text-[10px] opacity-70">⌘K</kbd>
-              </button>
+              {!isReader && (
+                <button
+                  type="button"
+                  onClick={() => setCommandOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors hover:bg-[var(--bg-subtle)]"
+                  style={{
+                    borderColor: "var(--border-subtle)",
+                    color: "var(--ink-secondary)",
+                  }}
+                >
+                  <CommandIcon className="h-3 w-3" />
+                  <kbd className="font-mono-num text-[10px] opacity-70">⌘K</kbd>
+                </button>
+              )}
 
               <button
                 type="button"
                 onClick={() => setBottomOpen(!bottomOpen)}
-                className="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors hover:bg-[var(--bg-subtle)]"
+                className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11.5px] font-medium transition-colors hover:bg-[var(--bg-subtle)]"
                 style={{
                   borderColor: bottomOpen ? "var(--st-focus)" : "var(--border-subtle)",
                   background: bottomOpen ? "var(--st-focus-soft)" : "transparent",
                   color: bottomOpen ? "var(--st-focus)" : "var(--ink-secondary)",
                 }}
-                title="Toggle AG Grid data drawer"
+                title="Toggle source data table"
               >
                 <Table2 className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Grid</span>
+                <span className="hidden sm:inline">{isReader ? "Data" : "Grid"}</span>
                 {bottomOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
               </button>
+
+              {/* Progressive Disclosure Toggle: Scientific Reader <-> Engineering Inspector */}
+              <div
+                className="flex items-center rounded-lg border p-0.5 text-[11px] font-semibold"
+                style={{ background: "var(--bg-canvas)", borderColor: "var(--border-subtle)" }}
+                title="Switch between Scientific Reader and Engineering Inspector"
+              >
+                <button
+                  type="button"
+                  onClick={() => setViewMode("reader")}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 transition-colors"
+                  style={{
+                    background: isReader ? "var(--bg-surface)" : "transparent",
+                    color: isReader ? "var(--ink-primary)" : "var(--ink-muted)",
+                    boxShadow: isReader ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
+                  }}
+                >
+                  <Microscope className="h-3 w-3" />
+                  <span className="hidden sm:inline">Scientific</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("inspector")}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 transition-colors"
+                  style={{
+                    background: !isReader ? "var(--bg-surface)" : "transparent",
+                    color: !isReader ? "var(--st-focus)" : "var(--ink-muted)",
+                    boxShadow: !isReader ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
+                  }}
+                >
+                  <Wrench className="h-3 w-3" />
+                  <span className="hidden sm:inline">Inspector</span>
+                </button>
+              </div>
 
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors hover:bg-[var(--bg-subtle)]"
+                className="rounded-lg border p-1.5 transition-colors hover:bg-[var(--bg-subtle)]"
                 style={{
                   borderColor: "var(--border-subtle)",
                   color: "var(--ink-secondary)",
                 }}
-                title="Open another gloss HTML / SVG artifact"
+                title="Open another gloss artifact"
               >
                 <FolderOpen className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Open</span>
               </button>
             </>
           )}
@@ -331,7 +443,7 @@ export const App: React.FC = () => {
           <button
             type="button"
             onClick={toggleTheme}
-            title={`Switch to ${theme === "paper" ? "Obsidian Lab (dark)" : "Paper Studio (light)"}`}
+            title={`Switch to ${theme === "paper" ? "Dark Studio" : "Light Paper"}`}
             className="rounded-lg border p-1.5 transition-colors hover:bg-[var(--bg-subtle)]"
             style={{
               borderColor: "var(--border-subtle)",
@@ -363,23 +475,21 @@ export const App: React.FC = () => {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {/* Signature 9-Stage Semantic Ladder Rail */}
-          <StageRail />
+          {/* 9-Stage Engineering Pipeline Rail appears cleanly in Inspector Mode */}
+          {!isReader && <StageRail />}
 
-          {/* 4-Zone Resizable IDE Workspace */}
+          {/* Workspace Panels */}
           <div className="min-h-0 flex-1">
-            <PanelGroup direction="horizontal" autoSaveId="gloss-wb-cols-v1">
-              {/* LEFT: Structure, Context, R Code, Exports */}
-              <Panel defaultSize={22} minSize={15} maxSize={38}>
+            <PanelGroup direction="horizontal" autoSaveId="gloss-wb-cols-v2">
+              <Panel defaultSize={22} minSize={15} maxSize={36}>
                 <LeftPanel />
               </Panel>
 
               <PanelResizeHandle className="resize-handle-h" />
 
-              {/* CENTER + BOTTOM: Lossless SVG Stage + AG Grid Multi-Table Drawer */}
-              <Panel defaultSize={52} minSize={30}>
+              <Panel defaultSize={52} minSize={32}>
                 {bottomOpen ? (
-                  <PanelGroup direction="vertical" autoSaveId="gloss-wb-rows-v1">
+                  <PanelGroup direction="vertical" autoSaveId="gloss-wb-rows-v2">
                     <Panel defaultSize={64} minSize={30}>
                       <FigureStage />
                     </Panel>
@@ -395,9 +505,8 @@ export const App: React.FC = () => {
 
               <PanelResizeHandle className="resize-handle-h" />
 
-              {/* RIGHT: Semantic Evidence Chain, Audit Records, React Flow Lineage DAG */}
-              <Panel defaultSize={26} minSize={18} maxSize={42}>
-                <RightInspector />
+              <Panel defaultSize={26} minSize={18} maxSize={40}>
+                {isReader ? <ReaderInspector /> : <RightInspector />}
               </Panel>
             </PanelGroup>
           </div>
@@ -406,9 +515,7 @@ export const App: React.FC = () => {
 
       {/* Drag-and-drop overlay when a bundle is already open */}
       {dragOverlay && (
-        <div
-          className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]"
-        >
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
           <div
             className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed px-10 py-8 shadow-2xl"
             style={{
@@ -418,9 +525,9 @@ export const App: React.FC = () => {
             }}
           >
             <Upload className="h-8 w-8" style={{ color: "var(--st-focus)" }} />
-            <div className="text-base font-bold">Drop to load new gloss artifact</div>
+            <div className="text-base font-bold">Drop to open a new gloss figure</div>
             <div className="text-xs" style={{ color: "var(--ink-secondary)" }}>
-              Replaces current view with full SHA-256 verification
+              Decoded locally in your browser with data verification
             </div>
           </div>
         </div>

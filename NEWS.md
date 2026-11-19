@@ -24,6 +24,14 @@
   browser workbench connected to the active R session, supporting live checked
   proposals (`/api/propose`), dry-run checks (`/api/check`), and context
   attachment (`/api/context`).
+- Added a default **Scientific Reader** view (`view = "reader"`, switchable in
+  the UI or via `view = "inspector"`) for `gl_workbench()` and
+  `gl_workbench_serve()`, presenting a calm publication-grade reading surface
+  with 4 lenses (`Figure`, `Explore`, `Findings`, `Story`), humanized data
+  units and check-group labels (e.g. `am = 0 · cyl = 4`), automatic group
+  summary statistics, interaction-driven behaviors (SVG legend click filtering,
+  hover tooltips, on-demand comparison links, guided reading stepper), and a
+  collapsible provenance footer leading to the full Engineering Inspector.
 
 ## Agent stages and checked semantic proposals (2026-11-17)
 

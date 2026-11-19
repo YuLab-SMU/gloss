@@ -42,13 +42,13 @@ workbench_live_bundle_payload <- function(fig, embed = "all") {
   )
 }
 
-workbench_live_html <- function(fig, mode = "full", theme = "paper",
+workbench_live_html <- function(fig, mode = "full", view = "reader", theme = "paper",
                                 initial_stage = NULL, title = NULL,
                                 template = NULL, embed = "all") {
   tmp <- tempfile("gloss-live-", fileext = ".html")
   on.exit(unlink(tmp), add = TRUE)
   write_workbench(
-    fig = fig, path = tmp, embed = embed, mode = mode, theme = theme,
+    fig = fig, path = tmp, embed = embed, mode = mode, view = view, theme = theme,
     initial_stage = initial_stage, title = title, template = template
   )
   txt <- read_workbench_template(tmp)
@@ -63,7 +63,7 @@ workbench_live_handler <- function(state) {
 
     if (identical(method, "GET") && (identical(path, "/") || identical(path, "/index.html"))) {
       html <- workbench_live_html(
-        state$fig, mode = state$mode, theme = state$theme,
+        state$fig, mode = state$mode, view = state$view %||% "reader", theme = state$theme,
         initial_stage = state$initial_stage, title = state$title,
         template = state$template, embed = state$embed
       )
@@ -182,6 +182,7 @@ workbench_live_handler <- function(state) {
 #' @param port Port number, or `NULL` to pick a free local port automatically.
 #' @param embed Data embedding policy for bundles sent to the browser.
 #' @param mode `"full"` or `"lite"`.
+#' @param view Initial view mode (`"reader"` or `"inspector"`).
 #' @param theme Initial theme (`"paper"` or `"obsidian"`).
 #' @param initial_stage Optional initial semantic stage.
 #' @param title Optional page title.
@@ -195,6 +196,7 @@ gl_workbench_serve <- function(fig,
                                port = NULL,
                                embed = c("all", "default", "summary", "none"),
                                mode = c("full", "lite"),
+                               view = c("reader", "inspector"),
                                theme = c("paper", "obsidian"),
                                initial_stage = NULL,
                                title = NULL,
@@ -209,12 +211,14 @@ gl_workbench_serve <- function(fig,
   }
   embed <- match.arg(embed)
   mode <- match.arg(mode)
+  view <- match.arg(view)
   theme <- match.arg(theme)
 
   state <- new.env(parent = emptyenv())
   state$fig <- fig
   state$embed <- embed
   state$mode <- mode
+  state$view <- view
   state$theme <- theme
   state$initial_stage <- initial_stage
   state$title <- title %||% fig$context$doc$value$caption %||% "Live gloss figure"

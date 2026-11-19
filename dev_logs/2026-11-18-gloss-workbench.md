@@ -81,3 +81,41 @@
 - **ggplot2 facet strip paths include `titleGrob` and classify with `role = "guide"`, and `subtitle` precedes `title` in SVG draw order.** Initial Outline classification picked `"am: 0"` and `"Faceted by..."` as the plot title and labeled Legend as `"Legend · am: 0"`. Fixed by distinguishing `guide-box`/`legend` from `strip`/`axis` and sorting title candidates top-to-bottom by `y0`, locked in with Vitest assertions. → `workbench/src/codec/outline.ts` and `outline.test.ts`.
 - **`utils::help(name)` uses NSE on its first argument.** Calling `utils::help(name)` inside `dataset_rd_summary()` looked up the literal topic `"name"` instead of the variable's value; passing `topic = (name)` fixed Rd help extraction for `datasets::mtcars`. → `R/context-external.R` and `test-context.R`.
 - **`read_req_body()` evaluated `$read` before `is.character()` on test string inputs.** Fixed by checking `is.character(inp)` first. → `R/workbench-live.R` and `test-workbench-live.R`.
+
+---
+
+## Follow-up update (2026-11-19 — Scientific Reader Default View & Interaction-Driven Behavior)
+
+- **Triggered by:** Owner review of the live workbench noting (1) the default UI felt too engineering-heavy for statisticians, biologists, and pharma users, and (2) `behavior` annotations were statically drawn onto the figure instead of guiding users to interact.
+
+### What changed
+
+- **Progressive disclosure (`view = "reader" | "inspector"`)** (`R/project-workbench.R`, `R/workbench-live.R`, `workbench/src/store/useWorkbenchStore.ts`, `workbench/src/App.tsx`):
+  - Default landing view is now **Scientific Reader** (`view = "reader"`), replacing the 9-stage developer pipeline rail and bottom grid with a calm 4-lens switcher (`Figure | Explore | Findings | Story`), `Verified Data` / clickable `1 Exception` pills, on-demand `Data` drawer, and a top-right `Scientific | Inspector` switch.
+  - Full 9-stage rail, `SVG / Grob` tree, SHA-256 integrity panel, R Code / JSONL tabs, React Flow lineage DAG, and raw element/binding audit tables remain one click away in `Inspector` mode (or via `gl_workbench(..., view = "inspector")`).
+- **Humanized scientific presentation (`workbench/src/codec/humanize.ts`, `ReaderInspector.tsx`, `OutlineTree.tsx`, `LeftPanel.tsx`, `DataWorkbenchGrid.tsx`)**:
+  - Added `humanizeCheckGroupLabel()` translating technical check group keys (`"1 / 1"`) into self-explanatory labels (`"am = 0 · cyl = 4"`), `humanizeStatus()`, `humanizeCheckKind()`, `humanizeToken()`, `humanizeOutlineLabel()`, `extractDataDictionaryMap()`, and `formatReaderTooltip()`.
+  - Built `ReaderInspector.tsx`: opens on a **Scientific Summary** with research question, clickable **Guided Reading** steps, and **Checked Statistical Findings**; selecting a data group computes **Group Summary Statistics** (`mean`, `range` with units from `data_dictionary`); selecting an observation leads with measured values + units, domain context/citations, interactive peer comparison button (`Compare with Hornet 4 Drive`), statistical verification, and a collapsed `Technical provenance & audit details` footer.
+  - Compacted Outline indentation and hover-revealed action icons so entity and subgroup labels render cleanly without truncation.
+- **Interaction-driven behavior (`workbench/src/components/stage/FigureStage.tsx`)**:
+  - Default `reader` landing state starts with empty selection (`selectedElementIds: []`), leaving the original `svglite` SVG completely uncluttered except for whisper-quiet dotted cue rings on annotated marks.
+  - Static contextual pills and leader callouts are no longer stamped over the figure in `reader` mode; instead, hovering points reveals unit-aware tooltips with interaction hints, hovering/clicking SVG legend keys (`4`, `6`, `8`) displays `"Click to filter N observations"` and filters the matching data group across panels, clicking/hovering linked points reveals one deduplicated comparison arc (`6-cyl: manual vs auto`), and the `Story` lens drives an interactive floating step-by-step bar (`Step 1 of 3`, persisted in Zustand across `Data` drawer toggles).
+
+### Measured
+
+- **TypeScript & Vitest:** `tsc --noEmit` (0 errors); Vitest `2 files, 6 passed, 0 failed` (610 ms), including humanized exception labels (`am = 0 · cyl = 4`), `humanizeToken()`, and `humanizeOutlineLabel()`.
+- **Single-file builds & demo:**
+  - `full`: `2,422.75 kB` (`696.60 kB` gzip; `inst/workbench/workbench-full.html.gz` = `677 KB`).
+  - `lite`: `2,026.79 kB` (`593.94 kB` gzip).
+  - `dev_docs/demo/mtcars-workbench.html`: `2,450,161` bytes; `gl_read()` round-trip identical (`elements: TRUE`, `bindings: TRUE`, `records: 10`).
+- **Full R test suite (before → after):**
+  - Before: 25 files, `1642` passed, `0` failed, `0` warnings, `8` sandbox skips.
+  - After (`R_LIBS_USER=/nonexistent NOT_CRAN=true Rscript -e "devtools::test()"`): **25 files, `1646` passed, `0` failed, `0` warnings, `8` sandbox skips** (`aisdk` 5, `sf` 1, `showtext` 2), including new `view = "reader"` / `view = "inspector"` tests in `test-workbench.R` (`16` pass) and `test-workbench-live.R` (`19` pass).
+- **Live Chromium verification (`http://127.0.0.1:4188/mtcars-workbench.html`, `1440×900`):**
+  - `0` console errors, `0` uncaught page errors.
+  - Verified clean uncluttered initial landing state (`Scientific Summary` + `Guided Reading (3 steps)` + `Checked Statistical Findings`, 0 static boxes/arcs on SVG), SVG legend hover tooltip + click group filter (`cyl = 6` with Group Summary Stats), Story stepper persistence on `Step 2 of 3` across `Data` drawer open/close, single deduplicated comparison arc + `Compare with Hornet 4 Drive` interactive jump on clicking `Mazda RX4`, and non-overflowing citations.
+
+### Surprises
+
+- **Toggling the `Data` drawer unmounted `FigureStage` and reset local Story stepper state from Step 2 back to Step 1.** Caught during live browser testing because `App.tsx` switches between `<PanelGroup><FigureStage />...</PanelGroup>` and `<FigureStage />`. Fixed by moving `storyStepIdx` into Zustand (`useWorkbenchStore.ts`) and re-verified in Chromium (`staysOnStep2AfterDataOpen: true`).
+- **Default `vite build` builds the SPA (`dist/`), not `dist-singlefile/index.html`.** Single-file and lite builds require `--config vite.singlefile.config.ts` (and `VITE_WORKBENCH_MODE=lite`). Caught immediately from Vite output before syncing `inst/workbench/workbench-full.html.gz`.

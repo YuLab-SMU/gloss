@@ -1,3 +1,4 @@
+import { humanizeCheckGroupLabel } from "./humanize";
 import type {
   GlossBundle,
   GlossCheck,
@@ -276,13 +277,14 @@ function buildSemanticRecordsBranch(bundle: GlossBundle): OutlineNode | null {
         for (const g of check.groups) {
           const gEls = resolveCheckGroupElements(bundle, check, tblName, g);
           if (g.passed === false) {
+            const niceLabel = humanizeCheckGroupLabel(bundle, check, tblName, g);
             exceptionChildren.push({
               id: `sem:exc:${rec.id}:${g.group}`,
-              label: `Exception · ${g.group} (n=${g.n})`,
+              label: `Exception · ${niceLabel} (n=${g.n})`,
               subtitle:
                 typeof g.estimate === "number"
-                  ? `slope ${g.estimate >= 0 ? "+" : ""}${g.estimate.toFixed(3)} · failed ${check.kind}`
-                  : "failed check",
+                  ? `slope ${g.estimate >= 0 ? "+" : ""}${g.estimate.toFixed(3)} · contradicts trend`
+                  : "does not match claim",
               icon: "exception",
               elementIds: gEls,
               recordCount: 1,

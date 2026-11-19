@@ -63,8 +63,8 @@ read_workbench_template <- function(path) {
   txt
 }
 
-workbench_config_script <- function(title, theme, initial_stage) {
-  cfg <- list(title = title, theme = theme)
+workbench_config_script <- function(title, theme, initial_stage, view = "reader") {
+  cfg <- list(title = title, theme = theme, view = view)
   if (!is.null(initial_stage)) cfg$initialStage <- initial_stage
   json <- json_write(cfg, pretty = FALSE)
   # Escape closing script sequences so user/model strings cannot break out.
@@ -83,10 +83,11 @@ replace_literal_once <- function(haystack, needle, replacement) {
 }
 
 write_workbench <- function(fig, path, embed = "all", mode = "full",
-                            theme = "paper", initial_stage = NULL,
+                            view = "reader", theme = "paper", initial_stage = NULL,
                             title = NULL, template = NULL, ...) {
   embed <- match.arg(embed, embed_modes)
   mode <- match.arg(mode, c("full", "lite"))
+  view <- match.arg(view, c("reader", "inspector"))
   theme <- match.arg(theme, c("paper", "obsidian"))
   if (!is.null(initial_stage)) {
     initial_stage <- match.arg(
@@ -114,7 +115,7 @@ write_workbench <- function(fig, path, embed = "all", mode = "full",
   html <- replace_literal_once(
     html,
     "<!-- __GLOSS_WORKBENCH_CONFIG_SLOT__ -->",
-    workbench_config_script(title = title, theme = theme, initial_stage = initial_stage)
+    workbench_config_script(title = title, theme = theme, initial_stage = initial_stage, view = view)
   )
 
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
@@ -136,6 +137,10 @@ write_workbench <- function(fig, path, embed = "all", mode = "full",
 #'   and raw entity lookups have full fidelity.
 #' @param mode `"full"` (includes the Rive canvas state-machine runtime) or
 #'   `"lite"` (smaller single file using the native SVG fallback).
+#' @param view Initial presentation mode: `"reader"` (calm Scientific Reader
+#'   designed for statisticians, biologists and domain reviewers) or
+#'   `"inspector"` (full engineering audit view with 9-stage rail, code/JSONL,
+#'   and SVG/Grob tree). Users can switch between both in the browser.
 #' @param theme Initial visual theme: `"paper"` (light) or `"obsidian"` (dark).
 #' @param initial_stage Optional initial semantic stage (`"raw"`, `"structure"`,
 #'   `"binding"`, `"analytical"`, `"contextual"`, `"relation"`, `"claim"`,
@@ -151,6 +156,7 @@ gl_workbench <- function(fig,
                          path = tempfile("gloss-workbench-", fileext = ".html"),
                          embed = c("all", "default", "summary", "none"),
                          mode = c("full", "lite"),
+                         view = c("reader", "inspector"),
                          theme = c("paper", "obsidian"),
                          initial_stage = NULL,
                          title = NULL,
@@ -160,13 +166,15 @@ gl_workbench <- function(fig,
   check_figure(fig)
   embed <- match.arg(embed)
   mode <- match.arg(mode)
+  view <- match.arg(view)
   theme <- match.arg(theme)
   if (file.exists(path) && !overwrite) {
     cli::cli_abort("{.path {path}} exists; use {.code overwrite = TRUE}.")
   }
   write_workbench(
-    fig = fig, path = path, embed = embed, mode = mode, theme = theme,
-    initial_stage = initial_stage, title = title, template = template
+    fig = fig, path = path, embed = embed, mode = mode, view = view,
+    theme = theme, initial_stage = initial_stage, title = title,
+    template = template
   )
   if (isTRUE(open) && interactive()) utils::browseURL(path)
   invisible(path)

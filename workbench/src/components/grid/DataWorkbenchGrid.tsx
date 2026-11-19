@@ -17,7 +17,7 @@ import {
   Table2,
   X,
 } from "lucide-react";
-import { dfToObjects, type DecodedDataFrame, type GlossTable } from "../../codec";
+import { dfToObjects, extractDataDictionaryMap, type DecodedDataFrame, type GlossTable } from "../../codec";
 import { useWorkbenchStore } from "../../store/useWorkbenchStore";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -139,6 +139,7 @@ const RValueCellRenderer: React.FC<
 
 export const DataWorkbenchGrid: React.FC = () => {
   const bundle = useWorkbenchStore((s) => s.bundle);
+  const viewMode = useWorkbenchStore((s) => s.viewMode);
   const activeTableTab = useWorkbenchStore((s) => s.activeTableTab);
   const setActiveTableTab = useWorkbenchStore((s) => s.setActiveTableTab);
   const selectedElementIds = useWorkbenchStore((s) => s.selectedElementIds);
@@ -317,13 +318,15 @@ export const DataWorkbenchGrid: React.FC = () => {
       };
     });
 
+    const dict = extractDataDictionaryMap(bundle);
+    const isReader = viewMode === "reader";
     const keySet = new Set(tbl.meta.key);
     const cols: ColDef[] = [
       {
         field: "__row1",
         headerName: "#",
         pinned: "left",
-        width: 56,
+        width: 52,
         cellClass: "font-mono-num opacity-70",
       },
     ];
@@ -331,7 +334,7 @@ export const DataWorkbenchGrid: React.FC = () => {
     if (df.rownames) {
       cols.push({
         field: ".rownames",
-        headerName: keySet.has(".rownames") ? "🔑 .rownames" : ".rownames",
+        headerName: isReader ? "Name" : keySet.has(".rownames") ? "🔑 .rownames" : ".rownames",
         headerTooltip: keySet.has(".rownames")
           ? `Row Key (rule ${tbl.meta.key_rule ?? "?"}): ${tbl.meta.key_basis ?? ""}`
           : "R row names",
@@ -341,33 +344,42 @@ export const DataWorkbenchGrid: React.FC = () => {
       });
     }
 
-    cols.push({
-      field: "__elements",
-      headerName: "Elements",
-      pinned: "left",
-      width: 96,
-      cellClass: "font-mono-num",
-    });
+    if (!isReader) {
+      cols.push({
+        field: "__elements",
+        headerName: "Elements",
+        pinned: "left",
+        width: 96,
+        cellClass: "font-mono-num",
+      });
+    }
 
     for (const colName of df.names) {
       const isKey = keySet.has(colName);
       const colInfo = df.columns[colName];
+      const meta = dict.get(colName);
       cols.push({
         field: colName,
-        headerName: isKey ? `🔑 ${colName}` : colName,
-        headerTooltip: `${colName} (${colInfo?.rType ?? "unknown"})${
-          isKey ? ` · Row Key (rule ${tbl.meta.key_rule ?? "?"}: ${tbl.meta.key_basis ?? ""})` : ""
-        }`,
+        headerName: isReader
+          ? meta?.unit
+            ? `${colName} (${meta.unit})`
+            : colName
+          : isKey
+            ? `🔑 ${colName}`
+            : colName,
+        headerTooltip: meta?.description
+          ? `${colName}${meta.unit ? ` [${meta.unit}]` : ""} — ${meta.description}`
+          : `${colName} (${colInfo?.rType ?? "unknown"})`,
         pinned: isKey ? "left" : undefined,
         minWidth: 86,
-        width: colInfo?.rType === "character" || colInfo?.rType === "factor" ? 115 : 92,
+        width: isReader && meta?.unit ? 130 : colInfo?.rType === "character" || colInfo?.rType === "factor" ? 115 : 92,
         cellRenderer: RValueCellRenderer,
         cellRendererParams: { df, colName },
       });
     }
 
     return { rowData: rows, columnDefs: cols, tableMeta: tbl.meta };
-  }, [bundle, activeTableTab]);
+  }, [bundle, activeTableTab, viewMode]);
 
   // Figure -> AG Grid sync: scroll & highlight matching row(s) when SVG selection changes
   useEffect(() => {
@@ -434,20 +446,38 @@ export const DataWorkbenchGrid: React.FC = () => {
 
   if (!bundle) return null;
 
-  const tabs: Array<{ id: string; label: string; count: number; warn?: boolean }> = [
-    ...bundle.tableOrder.map((nm) => ({
-      id: nm,
-      label: nm,
-      count: bundle.tables[nm]?.meta.nrow ?? 0,
-      warn:
-        bundle.tables[nm]?.meta.status === "partial_data" ||
-        bundle.tables[nm]?.meta.status === "missing_data",
-    })),
-    { id: "__bindings__", label: "Bindings", count: bundle.derived.bindingsElements.length },
-    { id: "__elements__", label: "Elements", count: bundle.substrate.elements.length },
-    { id: "__roles__", label: "Roles", count: bundle.derived.rolesElements.length },
-    { id: "__records__", label: "Records", count: bundle.records.length },
-  ];
+  const isReader = viewMode === "reader";
+  const rawTableName = bundle.tableOrder.find((n) => bundle.tables[n]?.meta.role === "raw") ?? bundle.tableOrder[0];
+  const tabs: Array<{ id: string; label: string; count: number; warn?: boolean }> = isReader
+    ? [
+        ...(rawTableName
+          ? [
+              {
+                id: rawTableName,
+                label: "Source Data",
+                count: bundle.tables[rawTableName]?.meta.nrow ?? 0,
+                warn:
+                  bundle.tables[rawTableName]?.meta.status === "partial_data" ||
+                  bundle.tables[rawTableName]?.meta.status === "missing_data",
+              },
+            ]
+          : []),
+        { id: "__records__", label: "Findings & Notes", count: bundle.records.length },
+      ]
+    : [
+        ...bundle.tableOrder.map((nm) => ({
+          id: nm,
+          label: nm,
+          count: bundle.tables[nm]?.meta.nrow ?? 0,
+          warn:
+            bundle.tables[nm]?.meta.status === "partial_data" ||
+            bundle.tables[nm]?.meta.status === "missing_data",
+        })),
+        { id: "__bindings__", label: "Bindings", count: bundle.derived.bindingsElements.length },
+        { id: "__elements__", label: "Elements", count: bundle.substrate.elements.length },
+        { id: "__roles__", label: "Roles", count: bundle.derived.rolesElements.length },
+        { id: "__records__", label: "Records", count: bundle.records.length },
+      ];
 
   return (
     <div
@@ -494,7 +524,7 @@ export const DataWorkbenchGrid: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          {tableMeta && (
+          {!isReader && tableMeta && (
             <span
               className="hidden items-center gap-1 rounded px-2 py-0.5 text-[10.5px] md:inline-flex"
               style={{ background: "var(--bg-subtle)", color: "var(--ink-secondary)" }}

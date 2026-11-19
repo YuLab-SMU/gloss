@@ -195,6 +195,7 @@ const ExternalContextCard: React.FC<{ item: GlossContextItem }> = ({ item }) => 
 
 export const LeftPanel: React.FC = () => {
   const bundle = useWorkbenchStore((s) => s.bundle);
+  const viewMode = useWorkbenchStore((s) => s.viewMode);
   const leftTab = useWorkbenchStore((s) => s.leftTab);
   const setLeftTab = useWorkbenchStore((s) => s.setLeftTab);
 
@@ -246,12 +247,18 @@ export const LeftPanel: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const navTabs: Array<{ id: LeftPanelTab; label: string; icon: React.ReactNode }> = [
-    { id: "structure", label: "Outline", icon: <FolderTree className="h-3.5 w-3.5" /> },
-    { id: "context", label: "Context", icon: <BookOpen className="h-3.5 w-3.5" /> },
-    { id: "code", label: "Code", icon: <Code2 className="h-3.5 w-3.5" /> },
-    { id: "exports", label: "Export", icon: <FileJson className="h-3.5 w-3.5" /> },
-  ];
+  const navTabs: Array<{ id: LeftPanelTab; label: string; icon: React.ReactNode }> =
+    viewMode === "reader"
+      ? [
+          { id: "structure", label: "Outline", icon: <FolderTree className="h-3.5 w-3.5" /> },
+          { id: "context", label: "Background", icon: <BookOpen className="h-3.5 w-3.5" /> },
+        ]
+      : [
+          { id: "structure", label: "Outline", icon: <FolderTree className="h-3.5 w-3.5" /> },
+          { id: "context", label: "Context", icon: <BookOpen className="h-3.5 w-3.5" /> },
+          { id: "code", label: "Code", icon: <Code2 className="h-3.5 w-3.5" /> },
+          { id: "exports", label: "Export", icon: <FileJson className="h-3.5 w-3.5" /> },
+        ];
 
   const contextItems = Object.values(bundle.context);
   const builtinContext = contextItems.filter((c) => BUILTIN_CONTEXT_ITEMS.has(c.item));
@@ -264,9 +271,9 @@ export const LeftPanel: React.FC = () => {
       className="flex h-full w-full flex-col overflow-hidden"
       style={{ background: "var(--bg-surface)" }}
     >
-      {/* Top 4-tab switcher */}
+      {/* Top tab switcher (2 calm tabs in Reader mode; 4 engineering tabs in Inspector mode) */}
       <div
-        className="grid grid-cols-4 border-b p-1"
+        className={`grid ${viewMode === "reader" ? "grid-cols-2" : "grid-cols-4"} border-b p-1`}
         style={{ borderColor: "var(--border-subtle)", background: "var(--bg-canvas)" }}
       >
         {navTabs.map((t) => {
@@ -296,68 +303,78 @@ export const LeftPanel: React.FC = () => {
       {/* TAB 2: CONTEXT & EXTERNAL SOURCES */}
       {leftTab === "context" && (
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 text-xs">
-          {/* Integrity & Bundle Health */}
-          <div
-            className="rounded-lg border p-2.5"
-            style={{ background: "var(--bg-canvas)", borderColor: "var(--border-subtle)" }}
-          >
-            <div className="mb-1.5 flex items-center justify-between">
-              <span className="flex items-center gap-1.5 font-semibold" style={{ color: "var(--ink-primary)" }}>
-                <ShieldCheck className="h-3.5 w-3.5" style={{ color: "var(--st-verified)" }} />
-                Bundle Integrity
-              </span>
-              <span
-                className="font-mono-num rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                style={{
-                  background:
-                    bundle.integrity.mismatches.length === 0
-                      ? "var(--st-verified-soft)"
-                      : "var(--st-fail-soft)",
-                  color:
-                    bundle.integrity.mismatches.length === 0
-                      ? "var(--st-verified)"
-                      : "var(--st-fail)",
-                }}
-              >
-                {bundle.integrity.mismatches.length === 0
-                  ? `${bundle.integrity.passed}/${bundle.integrity.checked} SHA-256 OK`
-                  : `${bundle.integrity.mismatches.length} Mismatch`}
-              </span>
+          {/* Integrity & Bundle Health (Inspector mode only) */}
+          {viewMode === "inspector" && (
+            <div
+              className="rounded-lg border p-2.5"
+              style={{ background: "var(--bg-canvas)", borderColor: "var(--border-subtle)" }}
+            >
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 font-semibold" style={{ color: "var(--ink-primary)" }}>
+                  <ShieldCheck className="h-3.5 w-3.5" style={{ color: "var(--st-verified)" }} />
+                  Bundle Integrity
+                </span>
+                <span
+                  className="font-mono-num rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                  style={{
+                    background:
+                      bundle.integrity.mismatches.length === 0
+                        ? "var(--st-verified-soft)"
+                        : "var(--st-fail-soft)",
+                    color:
+                      bundle.integrity.mismatches.length === 0
+                        ? "var(--st-verified)"
+                        : "var(--st-fail)",
+                  }}
+                >
+                  {bundle.integrity.mismatches.length === 0
+                    ? `${bundle.integrity.passed}/${bundle.integrity.checked} SHA-256 OK`
+                    : `${bundle.integrity.mismatches.length} Mismatch`}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-1 font-mono-num text-[10.5px]" style={{ color: "var(--ink-secondary)" }}>
+                <div>format: v{bundle.formatVersion ?? "—"}</div>
+                <div>embed: {bundle.embed ?? "—"}</div>
+                <div>gloss: {bundle.glossVersion ?? "—"}</div>
+                <div>files: {bundle.files.length}</div>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-1 font-mono-num text-[10.5px]" style={{ color: "var(--ink-secondary)" }}>
-              <div>format: v{bundle.formatVersion ?? "—"}</div>
-              <div>embed: {bundle.embed ?? "—"}</div>
-              <div>gloss: {bundle.glossVersion ?? "—"}</div>
-              <div>files: {bundle.files.length}</div>
-            </div>
-          </div>
+          )}
 
           {/* External Context Sources (Task 5A) */}
           <div>
             <div
               className="mb-1.5 flex items-center justify-between text-[10.5px] font-bold uppercase tracking-wider"
-              style={{ color: "var(--st-contextual)" }}
+              style={{ color: viewMode === "reader" ? "var(--ink-muted)" : "var(--st-contextual)" }}
             >
-              <span>External Context ({externalFound.length})</span>
+              <span>{viewMode === "reader" ? "Study & Dataset Background" : `External Context (${externalFound.length})`}</span>
             </div>
             {externalFound.length === 0 && contextualRecords.length === 0 ? (
               <div
                 className="rounded-lg border border-dashed p-3 text-[11px] leading-relaxed"
                 style={{ borderColor: "var(--border-strong)", color: "var(--ink-muted)" }}
               >
-                Attach domain metadata with <code className="font-mono-num">gl_add_context()</code>{" "}
-                (<code className="font-mono-num">data_dictionary</code>,{" "}
-                <code className="font-mono-num">project_notes</code>,{" "}
-                <code className="font-mono-num">ontology</code>,{" "}
-                <code className="font-mono-num">literature</code>,{" "}
-                <code className="font-mono-num">user_context</code>).
+                {viewMode === "reader"
+                  ? "No study background, data dictionary, or literature notes were attached to this figure."
+                  : (
+                    <>
+                      Attach domain metadata with <code className="font-mono-num">gl_add_context()</code>{" "}
+                      (<code className="font-mono-num">data_dictionary</code>,{" "}
+                      <code className="font-mono-num">project_notes</code>,{" "}
+                      <code className="font-mono-num">ontology</code>,{" "}
+                      <code className="font-mono-num">literature</code>,{" "}
+                      <code className="font-mono-num">user_context</code>).
+                    </>
+                  )}
               </div>
             ) : (
-              <div className="space-y-2">
-                {externalFound.map((c) => (
-                  <ExternalContextCard key={c.item} item={c} />
-                ))}
-                {externalMissing.length > 0 && (
+              <div className="space-y-2.5">
+                {externalFound
+                  .filter((c) => viewMode === "inspector" || c.item !== "project_notes" || !String((c.value as Record<string, unknown>)?.source ?? "").endsWith("/README.md"))
+                  .map((c) => (
+                    <ExternalContextCard key={c.item} item={c} />
+                  ))}
+                {viewMode === "inspector" && externalMissing.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-0.5">
                     {externalMissing.map((m) => (
                       <span
@@ -375,61 +392,63 @@ export const LeftPanel: React.FC = () => {
             )}
           </div>
 
-          {/* Core Sniffed Context */}
-          <div>
-            <div
-              className="mb-1.5 text-[10.5px] font-bold uppercase tracking-wider"
-              style={{ color: "var(--ink-muted)" }}
-            >
-              Core Capture Context (gl_context)
-            </div>
-            <div className="space-y-1.5">
-              {builtinContext.map((c) => (
-                <div
-                  key={c.item}
-                  className="rounded-lg border p-2"
-                  style={{ borderColor: "var(--border-subtle)", background: "var(--bg-surface)" }}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono-num font-semibold" style={{ color: "var(--ink-primary)" }}>
-                      {c.item}
-                    </span>
-                    {c.found ? (
-                      <span
-                        className="inline-flex items-center gap-1 text-[10px] font-semibold"
-                        style={{ color: "var(--st-verified)" }}
-                      >
-                        <CheckCircle2 className="h-3 w-3" /> found
+          {/* Core Sniffed Context (Inspector mode only) */}
+          {viewMode === "inspector" && (
+            <div>
+              <div
+                className="mb-1.5 text-[10.5px] font-bold uppercase tracking-wider"
+                style={{ color: "var(--ink-muted)" }}
+              >
+                Core Capture Context (gl_context)
+              </div>
+              <div className="space-y-1.5">
+                {builtinContext.map((c) => (
+                  <div
+                    key={c.item}
+                    className="rounded-lg border p-2"
+                    style={{ borderColor: "var(--border-subtle)", background: "var(--bg-surface)" }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono-num font-semibold" style={{ color: "var(--ink-primary)" }}>
+                        {c.item}
                       </span>
-                    ) : (
-                      <span
-                        className="inline-flex items-center gap-1 text-[10px]"
-                        style={{ color: "var(--ink-muted)" }}
-                      >
-                        <XCircle className="h-3 w-3" /> empty
-                      </span>
+                      {c.found ? (
+                        <span
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold"
+                          style={{ color: "var(--st-verified)" }}
+                        >
+                          <CheckCircle2 className="h-3 w-3" /> found
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex items-center gap-1 text-[10px]"
+                          style={{ color: "var(--ink-muted)" }}
+                        >
+                          <XCircle className="h-3 w-3" /> empty
+                        </span>
+                      )}
+                    </div>
+                    {!c.found && c.reason && (
+                      <p className="mt-1 text-[10.5px]" style={{ color: "var(--ink-muted)" }}>
+                        {c.reason}
+                      </p>
+                    )}
+                    {c.found && c.item === "engine" && Boolean(c.value && typeof c.value === "object") && (
+                      <p className="mt-1 font-mono-num text-[10.5px]" style={{ color: "var(--ink-secondary)" }}>
+                        {JSON.stringify(c.value).slice(0, 140)}
+                      </p>
+                    )}
+                    {c.found && c.item === "git" && Boolean(c.value && typeof c.value === "object") && (
+                      <p className="mt-1 font-mono-num text-[10.5px]" style={{ color: "var(--ink-secondary)" }}>
+                        branch: {String((c.value as Record<string, unknown>).branch ?? "—")} · commit:{" "}
+                        {String((c.value as Record<string, unknown>).commit ?? "—").slice(0, 8)}
+                      </p>
                     )}
                   </div>
-                  {!c.found && c.reason && (
-                    <p className="mt-1 text-[10.5px]" style={{ color: "var(--ink-muted)" }}>
-                      {c.reason}
-                    </p>
-                  )}
-                  {c.found && c.item === "engine" && Boolean(c.value && typeof c.value === "object") && (
-                    <p className="mt-1 font-mono-num text-[10.5px]" style={{ color: "var(--ink-secondary)" }}>
-                      {JSON.stringify(c.value).slice(0, 140)}
-                    </p>
-                  )}
-                  {c.found && c.item === "git" && Boolean(c.value && typeof c.value === "object") && (
-                    <p className="mt-1 font-mono-num text-[10.5px]" style={{ color: "var(--ink-secondary)" }}>
-                      branch: {String((c.value as Record<string, unknown>).branch ?? "—")} · commit:{" "}
-                      {String((c.value as Record<string, unknown>).commit ?? "—").slice(0, 8)}
-                    </p>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 

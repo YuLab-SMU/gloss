@@ -1,7 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildOutlineTree, decodeArtifactText, resolveNaturalFocus } from "./index";
+import {
+  buildOutlineTree,
+  decodeArtifactText,
+  humanizeOutlineLabel,
+  humanizeToken,
+  resolveNaturalFocus,
+} from "./index";
 
 const REPO_ROOT = path.resolve(__dirname, "../../..");
 
@@ -36,6 +42,8 @@ describe("design-tool outline tree & natural-language focus", () => {
 
     const fExc = resolveNaturalFocus(bundle, "exception");
     expect(fExc?.isException).toBe(true);
+    expect(fExc?.label).toContain("am = 0");
+    expect(fExc?.label).toContain("cyl = 4");
     expect(fExc?.elementIds.length).toBe(3);
 
     const fLegend = resolveNaturalFocus(bundle, "legend");
@@ -48,5 +56,15 @@ describe("design-tool outline tree & natural-language focus", () => {
 
     const fMazda = resolveNaturalFocus(bundle, "Mazda RX4");
     expect(fMazda?.elementIds.length).toBeGreaterThanOrEqual(1);
+
+    expect(humanizeToken("cross_panel_comparison")).toBe("Cross panel comparison");
+    expect(humanizeOutlineLabel("root:data", "Data Layer", "32 bound marks", bundle)).toEqual({
+      label: "Plotted Data",
+      subtitle: "32 observations",
+    });
+    expect(humanizeOutlineLabel("root:semantics", "Natural-Language Semantics", "10 records", bundle)).toEqual({
+      label: "Notes & Findings",
+      subtitle: "10 notes",
+    });
   });
 });

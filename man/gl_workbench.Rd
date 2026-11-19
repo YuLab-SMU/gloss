@@ -9,6 +9,7 @@ gl_workbench(
   path = tempfile("gloss-workbench-", fileext = ".html"),
   embed = c("all", "default", "summary", "none"),
   mode = c("full", "lite"),
+  view = c("reader", "inspector"),
   theme = c("paper", "obsidian"),
   initial_stage = NULL,
   title = NULL,
@@ -28,6 +29,11 @@ and raw entity lookups have full fidelity.}
 
 \item{mode}{\code{"full"} (includes the Rive canvas state-machine runtime) or
 \code{"lite"} (smaller single file using the native SVG fallback).}
+
+\item{view}{Initial presentation mode: \code{"reader"} (calm Scientific Reader
+designed for statisticians, biologists and domain reviewers) or
+\code{"inspector"} (full engineering audit view with 9-stage rail, code/JSONL,
+and SVG/Grob tree). Users can switch between both in the browser.}
 
 \item{theme}{Initial visual theme: \code{"paper"} (light) or \code{"obsidian"} (dark).}
 

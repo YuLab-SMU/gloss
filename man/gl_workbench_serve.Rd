@@ -10,6 +10,7 @@ gl_workbench_serve(
   port = NULL,
   embed = c("all", "default", "summary", "none"),
   mode = c("full", "lite"),
+  view = c("reader", "inspector"),
   theme = c("paper", "obsidian"),
   initial_stage = NULL,
   title = NULL,
@@ -27,6 +28,8 @@ gl_workbench_serve(
 \item{embed}{Data embedding policy for bundles sent to the browser.}
 
 \item{mode}{\code{"full"} or \code{"lite"}.}
+
+\item{view}{Initial view mode (\code{"reader"} or \code{"inspector"}).}
 
 \item{theme}{Initial theme (\code{"paper"} or \code{"obsidian"}).}
 

@@ -55,6 +55,25 @@ test_that("gl_workbench writes a standalone HTML file that gl_read restores loss
   expect_equal(meaning_body$confidence, 0.92)
 })
 
+test_that("gl_workbench respects view = 'reader' (default) and view = 'inspector'", {
+  skip_if_no("ggplot2")
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  fig <- gloss(p, width = 6, height = 4, context = FALSE)
+
+  out_reader <- withr::local_tempfile(fileext = ".html")
+  gl_workbench(fig, out_reader)
+  txt_reader <- paste(readLines(out_reader, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+  expect_true(grepl('"view":"reader"', txt_reader, fixed = TRUE))
+
+  out_insp <- withr::local_tempfile(fileext = ".html")
+  gl_workbench(fig, out_insp, view = "inspector")
+  txt_insp <- paste(readLines(out_insp, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+  expect_true(grepl('"view":"inspector"', txt_insp, fixed = TRUE))
+
+  expect_identical(gl_elements(gl_read(out_reader)), gl_elements(fig))
+  expect_identical(gl_elements(gl_read(out_insp)), gl_elements(fig))
+})
+
 test_that("workbench projection plugin passes its contract", {
   res <- gl_test_plugin("projection", "workbench")
   expect_false(any(res$passed %in% FALSE),

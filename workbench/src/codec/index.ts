@@ -5,3 +5,4 @@ export * from "./decodeBundle";
 export * from "./spatial";
 export * from "./projections";
 export * from "./outline";
+export * from "./humanize";

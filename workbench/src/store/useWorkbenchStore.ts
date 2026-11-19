@@ -9,9 +9,11 @@ import {
   type FocusScope,
   type GlossBundle,
   type OutlineViewMode,
+  type ReaderLens,
   type SemanticStageId,
   type SpatialIndex,
   type StageStatusSummary,
+  type WorkbenchViewMode,
 } from "../codec";
 
 export type WorkbenchTheme = "paper" | "obsidian";
@@ -26,6 +28,7 @@ export interface HighlightedGroup {
 }
 
 export interface WorkbenchConfig {
+  view?: WorkbenchViewMode;
   theme?: WorkbenchTheme;
   initialStage?: SemanticStageId;
   title?: string;
@@ -46,6 +49,9 @@ interface WorkbenchState {
   liveApiBaseUrl: string | null;
   proposalModalOpen: boolean;
 
+  viewMode: WorkbenchViewMode;
+  readerLens: ReaderLens;
+  storyStepIdx: number;
   activeStage: SemanticStageId;
   selectedElementIds: string[];
   hoveredElementId: string | null;
@@ -82,6 +88,9 @@ interface WorkbenchState {
   refreshLiveBundle: () => Promise<void>;
   clearBundle: () => void;
 
+  setViewMode: (mode: WorkbenchViewMode) => void;
+  setReaderLens: (lens: ReaderLens) => void;
+  setStoryStepIdx: (idx: number) => void;
   setActiveStage: (stage: SemanticStageId) => void;
   stepStage: (delta: -1 | 1) => void;
   selectElement: (id: string | null, additive?: boolean) => void;
@@ -146,6 +155,14 @@ function chooseInitialElement(bundle: GlossBundle): string[] {
   return [];
 }
 
+function chooseInitialLens(bundle: GlossBundle): ReaderLens {
+  if (bundle.records.some((r) => r.layer === "claim" || r.workbenchStage === "contextual")) {
+    return "findings";
+  }
+  if (bundle.records.some((r) => r.layer === "narrative")) return "story";
+  return "explore";
+}
+
 function hydrateBundle(
   bundle: GlossBundle,
   config: WorkbenchConfig,
@@ -154,12 +171,16 @@ function hydrateBundle(
 ): Partial<WorkbenchState> {
   const spatial = buildSpatialIndex(bundle.substrate.elements);
   const stageStats = computeStageStats(bundle);
+  const viewMode = preserveSelection && prev ? prev.viewMode : (config.view ?? prev?.viewMode ?? "reader");
+  const readerLens = preserveSelection && prev ? prev.readerLens : chooseInitialLens(bundle);
   const activeStage =
     preserveSelection && prev ? prev.activeStage : chooseInitialStage(bundle, config.initialStage);
   const initialSelected =
     preserveSelection && prev && prev.selectedElementIds.length > 0
       ? prev.selectedElementIds
-      : chooseInitialElement(bundle);
+      : viewMode === "inspector"
+        ? chooseInitialElement(bundle)
+        : [];
   const defaultTable =
     preserveSelection && prev ? prev.activeTableTab : bundle.tableOrder[0] ?? "__elements__";
 
@@ -169,6 +190,10 @@ function hydrateBundle(
     stageStats,
     loading: false,
     error: null,
+    viewMode,
+    readerLens,
+    storyStepIdx: preserveSelection && prev ? prev.storyStepIdx : 0,
+    bottomOpen: preserveSelection && prev ? prev.bottomOpen : viewMode === "inspector",
     activeStage,
     selectedElementIds: initialSelected,
     hoveredElementId: null,
@@ -194,6 +219,9 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   liveApiBaseUrl: null,
   proposalModalOpen: false,
 
+  viewMode: "reader",
+  readerLens: "findings",
+  storyStepIdx: 0,
   activeStage: "behavior",
   selectedElementIds: [],
   hoveredElementId: null,
@@ -209,7 +237,7 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   activeTableTab: "raw",
   leftTab: "structure",
   rightTab: "chain",
-  bottomOpen: true,
+  bottomOpen: false,
   splitCompare: false,
   splitRatio: 0.45,
   theme: "paper",
@@ -222,7 +250,30 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
     set((s) => ({
       config: { ...s.config, ...cfg },
       theme: cfg.theme ?? s.theme,
+      viewMode: cfg.view ?? s.viewMode,
+      bottomOpen: cfg.view ? cfg.view === "inspector" : s.bottomOpen,
     })),
+
+  setViewMode: (mode) =>
+    set((s) => ({
+      viewMode: mode,
+      bottomOpen: mode === "inspector" ? true : s.bottomOpen,
+      leftTab: mode === "reader" && (s.leftTab === "code" || s.leftTab === "exports") ? "structure" : s.leftTab,
+      outlineMode: mode === "reader" && s.outlineMode === "grob" ? "semantic" : s.outlineMode,
+      splitCompare: mode === "reader" ? false : s.splitCompare,
+    })),
+
+  setReaderLens: (lens) => {
+    const stageMap: Record<ReaderLens, SemanticStageId> = {
+      figure: "raw",
+      explore: "analytical",
+      findings: "claim",
+      story: "narrative",
+    };
+    set({ readerLens: lens, activeStage: stageMap[lens] });
+  },
+
+  setStoryStepIdx: (idx) => set({ storyStepIdx: Math.max(0, idx) }),
 
   setLiveApiBaseUrl: (url) => set({ liveApiBaseUrl: url }),
   setProposalModalOpen: (open) => set({ proposalModalOpen: open }),
@@ -320,6 +371,7 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
       selectedElementIds: [],
       hoveredElementId: null,
       selectedRecordId: null,
+      storyStepIdx: 0,
       focusScope: null,
       highlightedGroup: null,
       gridFilterElementIds: null,
