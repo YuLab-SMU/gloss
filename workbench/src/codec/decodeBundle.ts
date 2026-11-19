@@ -37,6 +37,7 @@ import type {
   GlossTableMeta,
   InferredRawMatch,
   IntegrityReport,
+  MatrixCellInfo,
   SemanticStageId,
 } from "./types";
 
@@ -203,6 +204,15 @@ function normalizeCheck(raw: unknown): GlossCheck | null {
       groups = obj.groups as GlossCheckGroup[];
     }
   }
+  groups = groups.map((g, idx) => ({
+    ...g,
+    group:
+      typeof g.group === "string" && g.group.length > 0
+        ? g.group
+        : typeof g.row === "number"
+          ? `row:${g.row}`
+          : `group:${idx + 1}`,
+  }));
 
   let reason: string | null = null;
   if (typeof obj.reason === "string" && obj.reason.trim()) {
@@ -465,35 +475,173 @@ function normalizeOperations(raw: unknown): GlossOperations {
 }
 
 /**
- * Infer a best-effort built_layer -> raw row correspondence when gloss hasn't persisted one yet.
- * Always tagged as "inferred" or "ambiguous", never presented as code-verified.
+ * Decode code-verified ComplexHeatmap column-major matrix cell bindings (`table = "matrix_<name>"`,
+ * `row = (col - 1) * nrow + row_in_matrix`).
+ */
+function buildMatrixCellIndex(
+  bindings: GlossBindingElement[],
+  tables: Record<string, GlossTable>
+): Map<string, MatrixCellInfo> {
+  const out = new Map<string, MatrixCellInfo>();
+  for (const b of bindings) {
+    if (!b.table || !b.row || b.status === "unbound" || !b.table.startsWith("matrix_")) continue;
+    const tbl = tables[b.table];
+    const df = tbl?.data;
+    if (!df || df.nrow <= 0 || df.names.length <= 0) continue;
+    const flat = b.row;
+    const total = df.nrow * df.names.length;
+    if (flat < 1 || flat > total) continue;
+    const rowIdx0 = (flat - 1) % df.nrow;
+    const colIdx0 = Math.floor((flat - 1) / df.nrow);
+    const colLabel = df.names[colIdx0] ?? `Col ${colIdx0 + 1}`;
+    const rowLabel = df.rownames?.[rowIdx0] ?? `Row ${rowIdx0 + 1}`;
+    const rawVal = df.columns[colLabel]?.values[rowIdx0];
+    const value =
+      typeof rawVal === "number" || typeof rawVal === "string" ? rawVal : null;
+    out.set(b.element, {
+      matrixTable: b.table,
+      matrixName: b.table.replace(/^matrix_/, ""),
+      flatIndex: flat,
+      rowIndex: rowIdx0 + 1,
+      colIndex: colIdx0 + 1,
+      rowLabel,
+      colLabel,
+      value,
+    });
+  }
+  return out;
+}
+
+function quantKey(v: number): string {
+  return Number.isFinite(v) ? v.toPrecision(7) : "NA";
+}
+
+/**
+ * Resolve the matching raw table for a built table (supports both single-plot `raw`
+ * and patchwork multi-plot `plot1_raw`, `plot2_raw`, ...).
+ */
+function matchingRawTable(
+  builtTableName: string,
+  tables: Record<string, GlossTable>
+): GlossTable | null {
+  const pm = builtTableName.match(/^(plot\d+)_/);
+  if (pm) {
+    const candidate = tables[`${pm[1]}_raw`];
+    if (candidate?.data && candidate.data.nrow > 0) return candidate;
+  }
+  const primary = tables["raw"] ?? Object.values(tables).find((t) => t.meta.role === "raw");
+  return primary?.data && primary.data.nrow > 0 ? primary : null;
+}
+
+/**
+ * Infer a best-effort built_layer -> raw row correspondence in O(N) using hash indices.
+ * Supports single-plot & patchwork multi-plot tables, continuous (x, y) pairs, and discrete/factor axes
+ * (e.g. Forest plots & Marker dotplots). Always tagged as "inferred" or "ambiguous", never code-verified.
  */
 function inferRawJoins(
   bindings: GlossBindingElement[],
   tables: Record<string, GlossTable>
 ): Map<string, InferredRawMatch> {
   const out = new Map<string, InferredRawMatch>();
-  const rawTable = tables["raw"] ?? Object.values(tables).find((t) => t.meta.role === "raw");
-  if (!rawTable?.data || rawTable.data.nrow === 0) return out;
 
-  const rawDf = rawTable.data;
-  const numericRawCols = rawDf.names.filter((nm) => {
-    const t = rawDf.columns[nm]?.rType;
-    return t === "double" || t === "integer";
-  });
-
-  // Pair aesthetic names (`x`, `y`) to referenced numeric columns of raw when possible
-  const referencedNumeric = rawTable.meta.referenced.filter((nm) => numericRawCols.includes(nm));
-  const candidatePairs: Array<[string, string]> = [];
-  if (referencedNumeric.length >= 2) {
-    candidatePairs.push([referencedNumeric[0], referencedNumeric[1]]);
-    candidatePairs.push([referencedNumeric[1], referencedNumeric[0]]);
+  // Cache per-raw-table O(1) lookup structures lazily
+  interface RawLookupCache {
+    table: GlossTable;
+    pairMaps: Array<{ colX: string; colY: string; map: Map<string, number[]> }>;
+    singleNumMaps: Array<{ col: string; map: Map<string, number[]> }>;
+    discreteCols: Array<{ col: string; levels: string[]; byLevel: Map<string, number[]> }>;
   }
+  const cacheByRaw = new Map<string, RawLookupCache>();
+
+  const getCache = (rawTable: GlossTable): RawLookupCache => {
+    const existing = cacheByRaw.get(rawTable.meta.name);
+    if (existing) return existing;
+    const rawDf = rawTable.data!;
+    const refCols = rawTable.meta.referenced.filter((nm) => Boolean(rawDf.columns[nm]));
+    const numericCols = (refCols.length > 0 ? refCols : rawDf.names).filter((nm) => {
+      const t = rawDf.columns[nm]?.rType;
+      return t === "double" || t === "integer";
+    });
+    const discreteColNames = (refCols.length > 0 ? refCols : rawDf.names).filter((nm) => {
+      const t = rawDf.columns[nm]?.rType;
+      return t === "character" || t === "factor";
+    });
+
+    const pairMaps: RawLookupCache["pairMaps"] = [];
+    if (numericCols.length >= 2) {
+      const pairs: Array<[string, string]> = [];
+      const top = numericCols.slice(0, 4);
+      for (let i = 0; i < top.length; i += 1) {
+        for (let j = 0; j < top.length; j += 1) {
+          if (i !== j) pairs.push([top[i], top[j]]);
+        }
+      }
+      for (const [colX, colY] of pairs) {
+        const vx = rawDf.columns[colX]?.values;
+        const vy = rawDf.columns[colY]?.values;
+        if (!vx || !vy) continue;
+        const map = new Map<string, number[]>();
+        for (let r = 0; r < rawDf.nrow; r += 1) {
+          const rx = vx[r];
+          const ry = vy[r];
+          if (typeof rx === "number" && typeof ry === "number") {
+            const k = `${quantKey(rx)}|${quantKey(ry)}`;
+            const arr = map.get(k);
+            if (arr) arr.push(r + 1);
+            else map.set(k, [r + 1]);
+          }
+        }
+        pairMaps.push({ colX, colY, map });
+      }
+    }
+
+    const singleNumMaps: RawLookupCache["singleNumMaps"] = [];
+    for (const col of numericCols.slice(0, 4)) {
+      const vals = rawDf.columns[col]?.values;
+      if (!vals) continue;
+      const map = new Map<string, number[]>();
+      for (let r = 0; r < rawDf.nrow; r += 1) {
+        const rv = vals[r];
+        if (typeof rv === "number") {
+          const k = quantKey(rv);
+          const arr = map.get(k);
+          if (arr) arr.push(r + 1);
+          else map.set(k, [r + 1]);
+        }
+      }
+      singleNumMaps.push({ col, map });
+    }
+
+    const discreteCols: RawLookupCache["discreteCols"] = [];
+    for (const col of discreteColNames.slice(0, 4)) {
+      const colObj = rawDf.columns[col];
+      if (!colObj) continue;
+      const levels =
+        colObj.factorLevels && colObj.factorLevels.length > 0
+          ? colObj.factorLevels
+          : Array.from(new Set(colObj.values.map((v) => String(v ?? "")))).sort();
+      const byLevel = new Map<string, number[]>();
+      for (let r = 0; r < rawDf.nrow; r += 1) {
+        const lbl = String(colObj.values[r] ?? "");
+        const arr = byLevel.get(lbl);
+        if (arr) arr.push(r + 1);
+        else byLevel.set(lbl, [r + 1]);
+      }
+      discreteCols.push({ col, levels, byLevel });
+    }
+
+    const builtCache: RawLookupCache = { table: rawTable, pairMaps, singleNumMaps, discreteCols };
+    cacheByRaw.set(rawTable.meta.name, builtCache);
+    return builtCache;
+  };
 
   for (const b of bindings) {
-    if (!b.table || !b.row || b.status === "unbound") continue;
+    if (!b.table || !b.row || b.status === "unbound" || b.table.startsWith("matrix_")) continue;
     const built = tables[b.table];
     if (!built?.data) continue;
+    const rawTable = matchingRawTable(b.table, tables);
+    if (!rawTable?.data) continue;
+    const rawDf = rawTable.data;
     const builtRowIdx = b.row - 1;
     if (builtRowIdx < 0 || builtRowIdx >= built.data.nrow) continue;
 
@@ -519,38 +667,118 @@ function inferRawJoins(
       }
     }
 
-    // 2. Match built (x, y) against referenced numeric column pair in raw (e.g., wt & mpg in mtcars)
+    const cache = getCache(rawTable);
     const bx = built.data.columns["x"]?.values[builtRowIdx];
     const by = built.data.columns["y"]?.values[builtRowIdx];
-    if (typeof bx === "number" && typeof by === "number" && candidatePairs.length > 0) {
-      for (const [colX, colY] of candidatePairs) {
-        const vx = rawDf.columns[colX]?.values;
-        const vy = rawDf.columns[colY]?.values;
-        if (!vx || !vy) continue;
-        const hits: number[] = [];
-        for (let r = 0; r < rawDf.nrow; r += 1) {
-          const rx = vx[r];
-          const ry = vy[r];
-          if (
-            typeof rx === "number" &&
-            typeof ry === "number" &&
-            Math.abs(rx - bx) < 1e-7 &&
-            Math.abs(ry - by) < 1e-7
-          ) {
-            hits.push(r + 1);
-          }
-        }
-        if (hits.length > 0) {
+
+    // 2. O(1) lookup for continuous (x, y) numeric column pairs
+    let matched = false;
+    if (typeof bx === "number" && typeof by === "number" && cache.pairMaps.length > 0) {
+      const k = `${quantKey(bx)}|${quantKey(by)}`;
+      for (const pm of cache.pairMaps) {
+        const hits = pm.map.get(k);
+        if (hits && hits.length > 0) {
           out.set(b.element, {
             rawTable: rawTable.meta.name,
             rawRows: hits,
             rawKeyLabels: hits.map((r) => rawKeyLabel(rawTable, r - 1)),
             status: hits.length === 1 ? "inferred" : "ambiguous",
-            matchedColumns: [`x≈${colX}`, `y≈${colY}`],
+            matchedColumns: [`x≈${pm.colX}`, `y≈${pm.colY}`],
           });
+          matched = true;
           break;
         }
       }
+    }
+    if (matched) continue;
+
+    // 3. Discrete x & discrete y grid (e.g. Marker Gene Dotplot: x = gene factor, y = cluster factor)
+    if (
+      typeof bx === "number" &&
+      typeof by === "number" &&
+      Number.isInteger(bx) &&
+      Number.isInteger(by) &&
+      cache.discreteCols.length >= 2
+    ) {
+      outer: for (let i = 0; i < cache.discreteCols.length; i += 1) {
+        for (let j = 0; j < cache.discreteCols.length; j += 1) {
+          if (i === j) continue;
+          const dcX = cache.discreteCols[i];
+          const dcY = cache.discreteCols[j];
+          const lx = dcX.levels[bx - 1];
+          const ly = dcY.levels[by - 1];
+          if (!lx || !ly) continue;
+          const rx = dcX.byLevel.get(lx);
+          const ry = dcY.byLevel.get(ly);
+          if (!rx || !ry) continue;
+          const rySet = new Set(ry);
+          const inter = rx.filter((r) => rySet.has(r));
+          if (inter.length > 0) {
+            out.set(b.element, {
+              rawTable: rawTable.meta.name,
+              rawRows: inter,
+              rawKeyLabels: inter.map((r) => rawKeyLabel(rawTable, r - 1)),
+              status: inter.length === 1 ? "inferred" : "ambiguous",
+              matchedColumns: [`x→${dcX.col}`, `y→${dcY.col}`],
+            });
+            matched = true;
+            break outer;
+          }
+        }
+      }
+    }
+    if (matched) continue;
+
+    // 4. One continuous numeric axis + one discrete factor axis (e.g. Forest Plot or Pathway Dotplot)
+    if (typeof bx === "number" && typeof by === "number" && cache.singleNumMaps.length > 0) {
+      const checkAxis = (numVal: number, numAxis: "x" | "y", discVal: number) => {
+        for (const sm of cache.singleNumMaps) {
+          const numHits = sm.map.get(quantKey(numVal));
+          if (!numHits || numHits.length === 0) continue;
+          if (numHits.length === 1) {
+            out.set(b.element, {
+              rawTable: rawTable.meta.name,
+              rawRows: numHits,
+              rawKeyLabels: numHits.map((r) => rawKeyLabel(rawTable, r - 1)),
+              status: "inferred",
+              matchedColumns: [`${numAxis}≈${sm.col}`],
+            });
+            return true;
+          }
+          if (Number.isInteger(discVal)) {
+            for (const dc of cache.discreteCols) {
+              const lvl = dc.levels[discVal - 1];
+              if (!lvl) continue;
+              const discRows = new Set(dc.byLevel.get(lvl) ?? []);
+              const inter = numHits.filter((r) => discRows.has(r));
+              if (inter.length > 0) {
+                out.set(b.element, {
+                  rawTable: rawTable.meta.name,
+                  rawRows: inter,
+                  rawKeyLabels: inter.map((r) => rawKeyLabel(rawTable, r - 1)),
+                  status: inter.length === 1 ? "inferred" : "ambiguous",
+                  matchedColumns: [`${numAxis}≈${sm.col}`, `${numAxis === "x" ? "y" : "x"}→${dc.col}`],
+                });
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      };
+      if (checkAxis(bx, "x", by) || checkAxis(by, "y", bx)) continue;
+    }
+
+    // 5. Fallback for 1-to-1 same-length single-layer plots when row order matches (e.g. transformed axis)
+    if (built.data.nrow === rawDf.nrow && builtRowIdx < rawDf.nrow && b.n_rows === 1) {
+      const r1 = builtRowIdx + 1;
+      out.set(b.element, {
+        rawTable: rawTable.meta.name,
+        rawRows: [r1],
+        rawKeyLabels: [rawKeyLabel(rawTable, builtRowIdx)],
+        status: "inferred",
+        matchedColumns: ["row_order"],
+      });
     }
   }
   return out;
@@ -874,6 +1102,18 @@ export async function decodeFileMap(
     }
   });
 
+  const matrixCellByElement = buildMatrixCellIndex(bindingsElements, tables);
+  // Also index ComplexHeatmap matrix rows so clicking a gene row in the matrix AG Grid highlights that entire row!
+  for (const [eid, cell] of matrixCellByElement.entries()) {
+    const k = `${cell.matrixTable}:${cell.rowIndex}`;
+    const list = elementsByTableRow.get(k);
+    if (list) {
+      if (!list.includes(eid)) list.push(eid);
+    } else {
+      elementsByTableRow.set(k, [eid]);
+    }
+  }
+
   const inferredRawByElement = inferRawJoins(bindingsElements, tables);
   // Also index inferred raw rows so clicking a row in the `raw` AG Grid highlights its SVG elements!
   for (const [eid, match] of inferredRawByElement.entries()) {
@@ -933,6 +1173,7 @@ export async function decodeFileMap(
       recordById,
       elementsByTableRow,
       inferredRawByElement,
+      matrixCellByElement,
     },
     files: fileStats,
   };
@@ -1020,6 +1261,7 @@ export async function decodeArtifactText(
         recordById: new Map(),
         elementsByTableRow: new Map(),
         inferredRawByElement: new Map(),
+        matrixCellByElement: new Map(),
       },
       files: [],
     };

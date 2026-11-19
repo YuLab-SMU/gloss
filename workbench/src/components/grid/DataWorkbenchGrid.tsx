@@ -447,21 +447,29 @@ export const DataWorkbenchGrid: React.FC = () => {
   if (!bundle) return null;
 
   const isReader = viewMode === "reader";
-  const rawTableName = bundle.tableOrder.find((n) => bundle.tables[n]?.meta.role === "raw") ?? bundle.tableOrder[0];
+  const readerTables = bundle.tableOrder.filter((n) => {
+    const t = bundle.tables[n];
+    return t?.meta.role === "raw" || n.startsWith("matrix_");
+  });
+  const effectiveReaderTables = readerTables.length > 0 ? readerTables : bundle.tableOrder.slice(0, 1);
   const tabs: Array<{ id: string; label: string; count: number; warn?: boolean }> = isReader
     ? [
-        ...(rawTableName
-          ? [
-              {
-                id: rawTableName,
-                label: "Source Data",
-                count: bundle.tables[rawTableName]?.meta.nrow ?? 0,
-                warn:
-                  bundle.tables[rawTableName]?.meta.status === "partial_data" ||
-                  bundle.tables[rawTableName]?.meta.status === "missing_data",
-              },
-            ]
-          : []),
+        ...effectiveReaderTables.map((nm) => {
+          const pretty =
+            nm.startsWith("matrix_")
+              ? `${nm.replace(/^matrix_/, "")} Matrix`
+              : effectiveReaderTables.length === 1
+                ? "Source Data"
+                : nm.replace(/^plot(\d+)_raw$/, "Panel $1 Data");
+          return {
+            id: nm,
+            label: pretty,
+            count: bundle.tables[nm]?.meta.nrow ?? 0,
+            warn:
+              bundle.tables[nm]?.meta.status === "partial_data" ||
+              bundle.tables[nm]?.meta.status === "missing_data",
+          };
+        }),
         { id: "__records__", label: "Findings & Notes", count: bundle.records.length },
       ]
     : [

@@ -220,7 +220,7 @@ export const App: React.FC = () => {
         }}
       >
         {/* Left: Brand + Figure Title + Calm Trust Signals */}
-        <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
           <div className="flex shrink-0 items-center gap-1.5">
             <span
               className="flex h-6 w-6 items-center justify-center rounded-md text-xs font-black tracking-tighter text-white"
@@ -238,9 +238,9 @@ export const App: React.FC = () => {
 
           {bundle && (
             <>
-              <span className="text-xs opacity-25">/</span>
+              <span className="shrink-0 text-xs opacity-25">/</span>
               <span
-                className="truncate text-[13px] font-semibold"
+                className="min-w-0 max-w-[210px] truncate text-[13px] font-semibold xl:max-w-[270px] 2xl:max-w-[360px]"
                 style={{ color: "var(--ink-primary)" }}
                 title={figureTitle}
               >
@@ -258,15 +258,15 @@ export const App: React.FC = () => {
               )}
 
               {isReader ? (
-                <div className="hidden items-center gap-1.5 xl:flex">
+                <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
                   {verifiedCount > 0 && (
                     <span
-                      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-medium"
                       style={{ background: "var(--st-verified-soft)", color: "var(--st-verified)" }}
-                      title="Every plotted observation is checked against source data"
+                      title="Plotted observations checked against source data"
                     >
                       <CheckCircle2 className="h-3 w-3" />
-                      Verified Data
+                      Verified
                     </span>
                   )}
                   {partialOrFailedClaims > 0 && (
@@ -276,7 +276,7 @@ export const App: React.FC = () => {
                         setReaderLens("findings");
                         if (exceptionScope) setFocusScope(exceptionScope, false);
                       }}
-                      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-transform hover:scale-[1.02]"
+                      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-semibold transition-transform hover:scale-[1.02]"
                       style={{ background: "var(--st-warn-soft)", color: "var(--st-warn)" }}
                       title="Click to spotlight the statistical exception on the figure"
                     >

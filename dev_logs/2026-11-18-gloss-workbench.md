@@ -119,3 +119,42 @@
 
 - **Toggling the `Data` drawer unmounted `FigureStage` and reset local Story stepper state from Step 2 back to Step 1.** Caught during live browser testing because `App.tsx` switches between `<PanelGroup><FigureStage />...</PanelGroup>` and `<FigureStage />`. Fixed by moving `storyStepIdx` into Zustand (`useWorkbenchStore.ts`) and re-verified in Chromium (`staysOnStep2AfterDataOpen: true`).
 - **Default `vite build` builds the SPA (`dist/`), not `dist-singlefile/index.html`.** Single-file and lite builds require `--config vite.singlefile.config.ts` (and `VITE_WORKBENCH_MODE=lite`). Caught immediately from Vite output before syncing `inst/workbench/workbench-full.html.gz`.
+
+---
+
+## Follow-up update (2026-11-19 — 5 High-Difficulty Scientific Cases & Engine-Grade Workbench Hardening)
+
+- **Triggered by:** Owner asked to push far beyond `mtcars` ("上难度") and build all 5 high-difficulty scientific / pharma / bioinformatics showcase cases.
+
+### What changed
+
+- **5 Reproducible High-Difficulty Showcase Scripts + Gallery Launcher (`dev_docs/demo/cases/`, `dev_docs/demo/index.html`)**:
+  1. `case1-clinical-trial.R` (`patchwork`, real `survival::colon`, `n = 929`): Kaplan-Meier OS curves + 95% CI ribbons + 1–5y landmarks paired with a 10-subgroup Cox PH forest plot (`NEJM 1990` context; verified arm trend + partial subgroup CI check surfacing 6 inconclusive subgroups; cross-panel `5y OS -> Overall HR 0.69` link).
+  2. `case2-rnaseq-volcano.R` (`patchwork` + `ggrepel`): 2,400-gene Anti-PD-1 melanoma differential expression volcano plot paired with Hallmark/GO GSEA enrichment dotplot (`GO`/`MSigDB` ontology; verified DE counts + partial pathway check surfacing 4 resistance/exclusion programs; `CXCL9 -> IFN-gamma` and `CTNNB1 -> WNT` links).
+  3. `case3-scrna-umap.R` (`patchwork`): 1,800-cell TME UMAP atlas (8 Leiden clusters) + 8×10 canonical marker dotplot (`Cell Ontology CL:*`; verified cluster sample sizes + partial marker cutoff check flagging `M1 Macrophage`; explicit `speculative` hypothesis badge on M2 TAM).
+  4. `case4-pkpd-er.R` (`patchwork`): 48-patient 4-cohort oral kinase inhibitor PK concentration-time spaghetti curves (`geom_line` multi-row bindings) + therapeutic window (`120–450 ng/mL`) paired with RECIST Exposure-Response scatter (`FDA Project Optimus`; verified E-R shrinkage trend + partial cohort safety ceiling check flagging `200 mg QD` and CYP3A4 poor metabolizer `PT-100-09`).
+  5. `case5-multiomics-heatmap.R` (pure `ComplexHeatmap` / `grid`, non-ggplot2): 24 PAM50 genes × 36 breast tumor biopsies (`864` vector cells, `use_raster = FALSE`) split into 3 gene modules × 3 molecular subtypes with clinical top annotations (`Subtype`, `ER`, `Stage`, `Ki-67 %` barplot) and hierarchical dendrograms (`St. Gallen` pathology context; verified `LumA_04` range check + partial `LumA_11` range check flagging discordant `MKI67 = +2.35`).
+- **Engine-Grade Codec & Workbench Fixes Uncovered by Stress Testing**:
+  - `workbench/src/codec/decodeBundle.ts`, `types.ts`: added `buildMatrixCellIndex()` (`matrixCellByElement`) decoding `engine-heatmap.R` column-major flat indices `(col - 1) * nrow + row` into exact `(rowLabel, colLabel, value)` cells and indexing matrix rows so clicking a gene row in AG Grid highlights all 36 cells across the heatmap; rewrote `inferRawJoins()` to O(N) hash-indexed multi-plot `patchwork` lookup (`plot{k}_built_layer* -> plot{k}_raw`) supporting continuous `(x, y)` pairs, discrete×discrete dotplots, and continuous×discrete forest/pathway plots; normalized all 6 `gl_check()` schemas (`trend`, `count`, `compare`, `range`, `value`, `exists`) so row-level checks never have `undefined` group keys.
+  - `workbench/src/codec/spatial.ts`: prioritized exact point-in-box containment for edge-to-edge `ComplexHeatmap` tiles and dense scatterplots.
+  - `workbench/src/codec/outline.ts`, `humanize.ts`, `ReaderInspector.tsx`, `RightInspector.tsx`, `DataWorkbenchGrid.tsx`, `OutlineTree.tsx`, `FigureStage.tsx`, `App.tsx`: per-raw-table `patchwork` group naming; continuous-gradient guard (`> 16` swatches skips hex-color explosion); `ComplexHeatmap` slice/cell inspection and `zscore Matrix` grid tab; multi-panel `Panel 1 Data` / `Panel 2 Data` reader tabs; check-kind-aware metric formatting (eliminating `(n = undefined)`) with failed-first collapsible lists for wide checks; responsive top-header title truncation preventing badge overlap; downward-bowed comparison arcs when endpoints sit in the upper 36% of the figure.
+
+### Measured
+
+- **Showcase artifacts (all `gl_read()` round-trip identical = `TRUE`)**:
+  - Case 1 (`case1-clinical-trial.html`): `2,472,012` bytes | `128` elements | `38` verified | claims: `1 verified (3/3)`, `1 partial (4/10 pass, 6 fail)`.
+  - Case 2 (`case2-rnaseq-volcano.html`): `2,659,612` bytes | `2,512` elements | `1,381` verified, `1,039` ambiguous (dense overlap, `0` failed) | claims: `1 verified (3/3)`, `1 partial (6/10 pass, 4 fail)`.
+  - Case 3 (`case3-scrna-umap.html`): `2,614,918` bytes | `1,981` elements | `1,708` verified, `172` ambiguous (`0` failed) | claims: `1 verified (8/8)`, `1 partial (7/8 pass, 1 fail)`.
+  - Case 4 (`case4-pkpd-er.html`): `2,472,560` bytes | `175` elements | `101 / 101` verified (`0` ambiguous, `0` failed) | claims: `1 verified (1/1)`, `1 partial (3/4 pass, 1 fail)`.
+  - Case 5 (`case5-multiomics-heatmap.html`): `2,523,240` bytes | `1,445` elements | `864 / 864` verified (`0` ambiguous, `0` failed) | claims: `1 verified (24/24)`, `1 partial (18/24 pass, 6 fail)`.
+- **Frontend & R verification**:
+  - `tsc --noEmit`: 0 errors; Vitest: `2 files, 7 passed, 0 failed` (added regression test decoding real `case5-multiomics-heatmap.html`, asserting `864` matrix cells, `MKI67 × LumA_11 = 2.35`, and zero `"undefined"` labels).
+  - Single-file builds: `full` = `2,433.44 kB` (`699.82 kB` gzip; `inst/workbench/workbench-full.html.gz` = `680 KB`); `lite` = `2,037.32 kB` (`597.33 kB` gzip).
+  - Full R test suite (`R_LIBS_USER=/nonexistent NOT_CRAN=true Rscript -e "devtools::test()"`): **25 files, `1646` passed, `0` failed, `0` warnings, `8` sandbox skips** (unchanged before → after: `1646 → 1646`).
+  - Live Chromium (`1440×900`) verification across all 5 cases + `index.html`: **0 console errors, 0 uncaught page errors, 0 `"undefined"` strings**; confirmed Case 5 `ComplexHeatmap` cell spotlight (`MKI67 × LumA_11`), `zscore Matrix` (`24` rows), Case 1–2 header clearance & arc routing.
+
+### Surprises
+
+- **Row-level `gl_check()` plugins (`range`, `value`, `exists`) return `{ row, value, passed }` with NO `group` column, and `check_compare` returns `{ group, left, right, passed }` with NO `n` column.** The first browser test on Case 5 (`ComplexHeatmap` with `check_range`) immediately threw `TypeError: Cannot read properties of undefined (reading 'includes')`, and Cases 1–4 displayed `(n = undefined)` on `check_compare` exceptions. Fixed universally in `normalizeCheck()`, `humanizeCheckGroupLabel()`, `resolveCheckGroupElements()`, `outline.ts`, `ReaderInspector.tsx`, and `RightInspector.tsx`, and locked down with a Vitest regression test on Case 5.
+- **`gl_check()` `by` argument must be an atomic character vector (`c("arm")`), not a list (`list("arm")`).** Passing `list(...)` caused `semantic_check_groups()` (`table[by]`) to return `refused: invalid subscript type 'list'`. Caught by our R claim audit script before browser testing.
+- **`ComplexHeatmap` body bindings use flat column-major matrix indices `(col - 1) * nrow + row` in `bindings$row`, and continuous heatmap fill gradients exceed discrete group palettes.** Adding dedicated `matrixCellByElement` decoding and guarding `inferDataGroups()` against `> 16` unique hex colors turned `ComplexHeatmap` into a first-class interactive workbench citizen.

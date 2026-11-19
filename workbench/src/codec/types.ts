@@ -299,11 +299,13 @@ export interface GlossAnchorResolution {
 
 export interface GlossCheckGroup {
   group: string;
-  n: number;
+  row?: number | null;
+  n?: number | null;
   estimate?: number | null;
   value?: unknown;
   left?: number | null;
   right?: number | null;
+  expected?: unknown;
   passed: boolean | null;
   reason?: string | null;
   [k: string]: unknown;
@@ -462,6 +464,17 @@ export interface InferredRawMatch {
   matchedColumns: string[];
 }
 
+export interface MatrixCellInfo {
+  matrixTable: string;
+  matrixName: string;
+  flatIndex: number;
+  rowIndex: number; // 1-based row in matrix
+  colIndex: number; // 1-based column in matrix
+  rowLabel: string;
+  colLabel: string;
+  value: number | string | null;
+}
+
 export interface GlossBundle {
   sourceName: string;
   sourceKind: "embedded-html" | "embedded-svg" | "directory" | "plain-svg";
@@ -508,6 +521,7 @@ export interface GlossBundle {
     recordById: Map<string, GlossRecord>;
     elementsByTableRow: Map<string, string[]>; // `${table}:${row}` -> elementIds
     inferredRawByElement: Map<string, InferredRawMatch>;
+    matrixCellByElement: Map<string, MatrixCellInfo>;
   };
   /** Raw unpacked file stats for manifest inspection */
   files: Array<{ path: string; bytes: number; sha256?: string }>;

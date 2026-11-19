@@ -98,10 +98,27 @@ export function humanizeCheckGroupLabel(
   tableName: string | undefined,
   groupRow: GlossCheckGroup
 ): string {
-  if (groupRow.group === "all") return "All observations";
+  const rawGroup = String(groupRow.group ?? "");
+  if (rawGroup === "all") return "All observations";
+
+  // Row-level checks (`range`, `value`, `exists`): resolve rowname (e.g. gene symbol MKI67) + checked column!
+  if (typeof groupRow.row === "number" && groupRow.row >= 1) {
+    const tblName = tableName ?? bundle.tableOrder.find((n) => n.startsWith("matrix_") || n.startsWith("built")) ?? "";
+    const df = tblName ? bundle.tables[tblName]?.data : null;
+    const colArg = typeof check.args.column === "string" ? check.args.column : null;
+    const rowLabel = df?.rownames?.[groupRow.row - 1] ?? `Row ${groupRow.row}`;
+    return colArg ? `${rowLabel} (${colArg})` : rowLabel;
+  }
+
+  // If the check already ran on a human raw table (not opaque numeric built_layer indices like "1 / 1"),
+  // keep the descriptive label cleanly!
+  const looksOpaqueNumeric = /^\s*\d+(?:\s*\/\s*\d+)*\s*$/.test(rawGroup);
+  if (rawGroup && !looksOpaqueNumeric && !rawGroup.includes("PANEL=")) {
+    return rawGroup.replace(/\s*\/\s*/g, " · ");
+  }
 
   const els = resolveCheckGroupElements(bundle, check, tableName, groupRow);
-  if (els.length === 0) return groupRow.group;
+  if (els.length === 0) return rawGroup || "Group";
 
   const parts: string[] = [];
 
@@ -112,13 +129,19 @@ export function humanizeCheckGroupLabel(
   if (panelIds.size === 1) {
     const pid = Array.from(panelIds)[0];
     const panel = bundle.index.panelById.get(pid);
-    if (panel?.key) {
+    if (panel?.key && panel.key !== "1" && !panel.key.endsWith("_1")) {
       parts.push(panel.key.replace(/=/g, " = "));
     }
   }
 
   // 2. Any referenced discrete raw column that is constant across this group's elements (e.g. "cyl = 4")
-  const rawTable = bundle.tables["raw"] ?? Object.values(bundle.tables).find((t) => t.meta.role === "raw");
+  const firstRawName = els
+    .map((id) => bundle.index.inferredRawByElement.get(id)?.rawTable)
+    .find((n): n is string => Boolean(n));
+  const rawTable =
+    (firstRawName ? bundle.tables[firstRawName] : null) ??
+    bundle.tables["raw"] ??
+    Object.values(bundle.tables).find((t) => t.meta.role === "raw");
   const rawDf = rawTable?.data ?? null;
   if (rawTable && rawDf) {
     const panelVarNames = new Set(
@@ -129,7 +152,7 @@ export function humanizeCheckGroupLabel(
       const vals = new Set<string>();
       for (const eid of els) {
         const rm = bundle.index.inferredRawByElement.get(eid);
-        if (!rm || rm.rawRows.length === 0) continue;
+        if (!rm || rm.rawTable !== rawTable.meta.name || rm.rawRows.length === 0) continue;
         const v = rawDf.columns[cn].values[rm.rawRows[0] - 1];
         if (v !== null && v !== undefined) vals.add(String(v));
       }
@@ -202,15 +225,18 @@ export function humanizeOutlineLabel(
   bundle: GlossBundle
 ): { label: string; subtitle?: string } {
   if (id === "root:figure") {
-    const nObs = bundle.derived.bindingsElements.filter((b) => b.status === "verified").length;
+    const nVerified = bundle.derived.bindingsElements.filter((b) => b.status === "verified").length;
+    const nAmb = bundle.derived.bindingsElements.filter((b) => b.status === "ambiguous").length;
     const nPanels = bundle.substrate.panels.length;
-    return {
-      label,
-      subtitle:
-        nObs > 0
-          ? `${nObs} observations${nPanels > 1 ? ` · ${nPanels} panels` : ""}`
-          : undefined,
-    };
+    if (nVerified > 0 || nAmb > 0) {
+      const countText =
+        nAmb > 0 ? `${nVerified} verified · ${nAmb} overlapping` : `${nVerified} observations`;
+      return {
+        label,
+        subtitle: `${countText}${nPanels > 1 ? ` · ${nPanels} panels` : ""}`,
+      };
+    }
+    return { label, subtitle: undefined };
   }
   switch (id) {
     case "root:data":
@@ -256,8 +282,28 @@ export function formatReaderTooltip(bundle: GlossBundle, el: GlossElement): {
 } {
   const dict = extractDataDictionaryMap(bundle);
   const binding = bundle.index.bindingByElement.get(el.id);
-  const rawMatch = bundle.index.inferredRawByElement.get(el.id);
+  const matCell = bundle.index.matrixCellByElement.get(el.id);
   const panel = el.panel ? bundle.index.panelById.get(el.panel) : null;
+
+  if (matCell) {
+    const valStr =
+      typeof matCell.value === "number"
+        ? matCell.value.toFixed(2).replace(/\.?0+$/, "")
+        : String(matCell.value ?? "NA");
+    const unitMeta = dict.get(matCell.matrixName);
+    return {
+      title: `${matCell.rowLabel} × ${matCell.colLabel}`,
+      subtitle: panel?.key ?? matCell.matrixName,
+      metrics: [
+        { label: matCell.matrixName, value: valStr, unit: unitMeta?.unit },
+        { label: "row", value: String(matCell.rowIndex) },
+        { label: "col", value: String(matCell.colIndex) },
+      ],
+      verified: binding?.status === "verified",
+    };
+  }
+
+  const rawMatch = bundle.index.inferredRawByElement.get(el.id);
   const role = bundle.index.roleByElement.get(el.id);
 
   const title =

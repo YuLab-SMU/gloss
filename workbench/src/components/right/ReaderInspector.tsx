@@ -56,8 +56,21 @@ const ScientificCheckBlock: React.FC<{
   const bundle = useWorkbenchStore((s) => s.bundle);
   const focusScope = useWorkbenchStore((s) => s.focusScope);
   const setFocusScope = useWorkbenchStore((s) => s.setFocusScope);
+  const [showAllRows, setShowAllRows] = useState(false);
 
   if (!bundle) return null;
+
+  // For wide row-level checks (e.g. 24 heatmap genes), surface failed exceptions first and let user expand all
+  const orderedGroups = [...check.groups].sort((a, b) => {
+    const af = a.passed === false ? 0 : 1;
+    const bf = b.passed === false ? 0 : 1;
+    return af - bf;
+  });
+  const collapseLimit = 8;
+  const visibleGroups =
+    showAllRows || orderedGroups.length <= collapseLimit
+      ? orderedGroups
+      : orderedGroups.slice(0, collapseLimit);
 
   return (
     <div
@@ -76,13 +89,38 @@ const ScientificCheckBlock: React.FC<{
         </span>
       </div>
 
-      {check.groups.length > 0 && (
+      {visibleGroups.length > 0 && (
         <div className="space-y-1.5">
-          {check.groups.map((g, idx) => {
+          {visibleGroups.map((g, idx) => {
             const niceLabel = humanizeCheckGroupLabel(bundle, check, tableName, g);
             const scopeId = `check:${recordId}:${g.group}`;
             const isActive = focusScope?.id === scopeId;
             const failed = g.passed === false;
+            const subLine =
+              typeof g.n === "number"
+                ? `${g.n} observations${failed ? " · click to spotlight" : ""}`
+                : typeof g.left === "number" && typeof g.right === "number"
+                  ? `${g.left.toFixed(2)} vs ${g.right.toFixed(2)}${failed ? " · click to spotlight" : ""}`
+                  : typeof g.value === "number"
+                    ? `${failed ? "Outside range · click to spotlight" : "Within expected range"}`
+                    : failed
+                      ? "Exception · click to spotlight"
+                      : "Passed check";
+            const metricText =
+              typeof g.estimate === "number"
+                ? g.estimate >= 0
+                  ? `+${g.estimate.toFixed(2)}`
+                  : g.estimate.toFixed(2)
+                : typeof g.left === "number"
+                  ? g.left.toFixed(2)
+                  : typeof g.value === "number"
+                    ? g.value >= 0
+                      ? `+${g.value.toFixed(2)}`
+                      : g.value.toFixed(2)
+                    : typeof g.n === "number" && check.kind === "count"
+                      ? `n=${g.n}`
+                      : null;
+
             return (
               <button
                 key={`${g.group}-${idx}`}
@@ -120,16 +158,16 @@ const ScientificCheckBlock: React.FC<{
                     {niceLabel}
                   </div>
                   <div className="text-[10px]" style={{ color: "var(--ink-muted)" }}>
-                    {g.n} observations{failed ? " · click to spotlight on figure" : ""}
+                    {subLine}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5 font-mono-num text-[11px]">
-                  {typeof g.estimate === "number" && (
+                  {metricText !== null && (
                     <span
                       className="font-semibold"
                       style={{ color: failed ? "var(--st-fail)" : "var(--ink-primary)" }}
                     >
-                      {g.estimate >= 0 ? `+${g.estimate.toFixed(2)}` : g.estimate.toFixed(2)}
+                      {metricText}
                     </span>
                   )}
                   {g.passed === true && (
@@ -142,6 +180,16 @@ const ScientificCheckBlock: React.FC<{
               </button>
             );
           })}
+          {orderedGroups.length > collapseLimit && (
+            <button
+              type="button"
+              onClick={() => setShowAllRows(!showAllRows)}
+              className="w-full rounded-lg py-1 text-center text-[10.5px] font-semibold hover:bg-[var(--bg-subtle)]"
+              style={{ color: "var(--st-focus)" }}
+            >
+              {showAllRows ? "Show top 8 only" : `Show all ${orderedGroups.length} checked items`}
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -243,22 +291,67 @@ export const ReaderInspector: React.FC = () => {
 
   const dict = useMemo(() => (bundle ? extractDataDictionaryMap(bundle) : new Map()), [bundle]);
 
-  // Compute summary stats when a multi-element data group is focused (e.g. "cyl = 6" -> 7 observations)
+  // Compute summary stats when a multi-element data group is focused (supports single-plot, patchwork & ComplexHeatmap slices!)
   const groupSummary = useMemo(() => {
     if (!bundle || !focusScope || focusScope.elementIds.length <= 1) return null;
-    const rawTable = bundle.tables["raw"] ?? Object.values(bundle.tables).find((t) => t.meta.role === "raw");
+
+    // ComplexHeatmap matrix slice summary
+    const matCells = focusScope.elementIds
+      .map((eid) => bundle.index.matrixCellByElement.get(eid))
+      .filter((c): c is NonNullable<typeof c> => Boolean(c));
+    if (matCells.length > 0) {
+      const nums = matCells
+        .map((c) => c.value)
+        .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+      const rows = Array.from(new Set(matCells.map((c) => c.rowLabel)));
+      const cols = Array.from(new Set(matCells.map((c) => c.colLabel)));
+      const stats: Array<{ name: string; unit?: string; mean: string; range: string }> = [];
+      if (nums.length > 0) {
+        const mean = nums.reduce((a, b) => a + b, 0) / nums.length;
+        const min = Math.min(...nums);
+        const max = Math.max(...nums);
+        const mName = matCells[0].matrixName;
+        stats.push({
+          name: mName,
+          unit: dict.get(mName)?.unit,
+          mean: mean.toFixed(2).replace(/\.?0+$/, ""),
+          range: `${min.toFixed(2)}–${max.toFixed(2)}`,
+        });
+      }
+      return {
+        n: matCells.length,
+        subtitle: `${rows.length} rows × ${cols.length} columns (${matCells.length} cells)`,
+        stats,
+        names: rows.slice(0, 10),
+      };
+    }
+
+    // Dynamic raw table lookup (works across patchwork plot1_raw, plot2_raw, ...)
+    const rawNames = new Map<string, number[]>();
+    for (const eid of focusScope.elementIds) {
+      const rm = bundle.index.inferredRawByElement.get(eid);
+      if (rm && rm.rawRows.length > 0) {
+        const arr = rawNames.get(rm.rawTable) ?? [];
+        arr.push(rm.rawRows[0] - 1);
+        rawNames.set(rm.rawTable, arr);
+      }
+    }
+    let bestTableName: string | null = null;
+    let bestRows: number[] = [];
+    for (const [tn, rows] of rawNames.entries()) {
+      if (rows.length > bestRows.length) {
+        bestTableName = tn;
+        bestRows = rows;
+      }
+    }
+    const rawTable = bestTableName ? bundle.tables[bestTableName] : null;
     const df = rawTable?.data;
     if (!rawTable || !df) return null;
 
-    const rowIndices: number[] = [];
-    for (const eid of focusScope.elementIds) {
-      const rm = bundle.index.inferredRawByElement.get(eid);
-      if (rm && rm.rawRows.length > 0) rowIndices.push(rm.rawRows[0] - 1);
-    }
-    const uniqRows = Array.from(new Set(rowIndices));
+    const uniqRows = Array.from(new Set(bestRows));
     if (uniqRows.length === 0) return null;
 
-    const numericCols = rawTable.meta.referenced.filter((cn) => {
+    const numericCols = (rawTable.meta.referenced.length > 0 ? rawTable.meta.referenced : df.names).filter((cn) => {
       const t = df.columns[cn]?.rType;
       return t === "double" || t === "integer";
     });
@@ -275,12 +368,16 @@ export const ReaderInspector: React.FC = () => {
         name: cn,
         unit: meta?.unit,
         mean: mean.toFixed(2).replace(/\.?0+$/, ""),
-        range: min === max ? String(min) : `${min}–${max}`,
+        range: min === max ? String(min) : `${min.toFixed(2).replace(/\.?0+$/, "")}–${max.toFixed(2).replace(/\.?0+$/, "")}`,
       };
     }).filter((x): x is NonNullable<typeof x> => Boolean(x));
 
-    const names = uniqRows.slice(0, 8).map((r) => df.rownames?.[r] ?? `Row ${r + 1}`);
-    return { n: uniqRows.length, stats, names };
+    const names = uniqRows.slice(0, 8).map((r) => {
+      if (df.rownames?.[r]) return df.rownames[r];
+      const keyCol = rawTable.meta.key.find((k) => k !== ".rownames" && df.columns[k]);
+      return keyCol ? String(df.columns[keyCol].values[r] ?? `Row ${r + 1}`) : `Row ${r + 1}`;
+    });
+    return { n: uniqRows.length, subtitle: `${uniqRows.length} data observations`, stats, names };
   }, [bundle, focusScope, dict]);
 
   const singleElement = useMemo(() => {
@@ -290,11 +387,38 @@ export const ReaderInspector: React.FC = () => {
     if (!el) return null;
     const binding = bundle.index.bindingByElement.get(id) ?? null;
     const rawMatch = bundle.index.inferredRawByElement.get(id) ?? null;
+    const matCell = bundle.index.matrixCellByElement.get(id) ?? null;
     const panel = el.panel ? bundle.index.panelById.get(el.panel) ?? null : null;
     const records = bundle.index.recordsByElement.get(id) ?? [];
 
     const variables: Array<{ name: string; value: string; unit?: string; description?: string; primary: boolean }> = [];
-    if (rawMatch && rawMatch.rawRows.length > 0) {
+    if (matCell) {
+      const matMeta = dict.get(matCell.matrixName);
+      const df = bundle.tables[matCell.matrixTable]?.data;
+      const valStr =
+        typeof matCell.value === "number"
+          ? matCell.value.toFixed(2).replace(/\.?0+$/, "")
+          : String(matCell.value ?? "NA");
+      variables.push(
+        { name: matCell.matrixName, value: valStr, unit: matMeta?.unit, description: matMeta?.description, primary: true },
+        { name: "Feature / Row", value: matCell.rowLabel, primary: true },
+        { name: "Sample / Col", value: matCell.colLabel, primary: true }
+      );
+      if (df) {
+        const rowVals = df.names
+          .map((cn) => df.columns[cn]?.values[matCell.rowIndex - 1])
+          .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+        if (rowVals.length > 0) {
+          const rMean = rowVals.reduce((a, b) => a + b, 0) / rowVals.length;
+          variables.push({
+            name: `${matCell.rowLabel} mean`,
+            value: rMean.toFixed(2),
+            unit: `across ${rowVals.length} samples`,
+            primary: true,
+          });
+        }
+      }
+    } else if (rawMatch && rawMatch.rawRows.length > 0) {
       const tbl = bundle.tables[rawMatch.rawTable];
       const df = tbl?.data;
       const r0 = rawMatch.rawRows[0] - 1;
@@ -320,7 +444,9 @@ export const ReaderInspector: React.FC = () => {
       }
     }
 
-    const title = rawMatch?.rawKeyLabels[0] ?? el.text?.trim() ?? "Selected Element";
+    const title = matCell
+      ? `${matCell.rowLabel} × ${matCell.colLabel}`
+      : rawMatch?.rawKeyLabels[0] ?? el.text?.trim() ?? "Selected Element";
     const status = records.some((r) => r.projectionStatus === "partial")
       ? "partial"
       : binding?.status === "verified"
@@ -393,7 +519,7 @@ export const ReaderInspector: React.FC = () => {
                   </h2>
                 </div>
                 <p className="mt-1 text-xs" style={{ color: "var(--ink-secondary)" }}>
-                  {groupSummary ? `${groupSummary.n} data observations` : `${focusScope.elementIds.length} figure elements`}
+                  {groupSummary ? groupSummary.subtitle : `${focusScope.elementIds.length} figure elements`}
                 </p>
               </div>
               <VerificationSeal status={focusScope.isException ? "partial" : "verified"} size={36} showLabel={false} />

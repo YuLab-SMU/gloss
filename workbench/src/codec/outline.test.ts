@@ -67,4 +67,24 @@ describe("design-tool outline tree & natural-language focus", () => {
       subtitle: "10 notes",
     });
   });
+
+  it("handles ComplexHeatmap matrix cells and range/compare checks with zero undefined labels", async () => {
+    const hmPath = path.join(REPO_ROOT, "dev_docs/demo/case5-multiomics-heatmap.html");
+    if (!fs.existsSync(hmPath)) return;
+    const bundle = await decodeArtifactText(fs.readFileSync(hmPath, "utf8"), "case5-multiomics-heatmap.html");
+
+    expect(bundle.index.matrixCellByElement.size).toBe(864);
+    const mki67Cell = Array.from(bundle.index.matrixCellByElement.values()).find(
+      (c) => c.rowLabel === "MKI67" && c.colLabel === "LumA_11"
+    );
+    expect(mki67Cell).toBeDefined();
+    expect(mki67Cell?.value).toBe(2.35);
+
+    const sem = buildOutlineTree(bundle, "semantic");
+    const collectLabels = (nodes: typeof sem): string[] =>
+      nodes.flatMap((n) => [n.label, n.subtitle ?? "", ...collectLabels(n.children)]);
+    const allText = collectLabels(sem).join(" | ");
+    expect(allText).not.toContain("undefined");
+    expect(allText).toContain("MKI67 (LumA_11)");
+  });
 });

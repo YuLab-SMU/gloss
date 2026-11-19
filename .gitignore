@@ -67,8 +67,9 @@ bench/labels/**/.workbench/
 .rho/
 .workbuddy/
 
-# The demo tour's outputs are rebuilt by dev_docs/demo/gloss-tour.R
+# The demo tour's outputs are rebuilt by dev_docs/demo/gloss-tour.R and dev_docs/demo/cases/*.R
 dev_docs/demo/mtcars-*
+dev_docs/demo/case*.html
 
 # Workbench frontend dependencies and build outputs
 workbench/node_modules/

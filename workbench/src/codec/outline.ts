@@ -58,7 +58,7 @@ export interface FocusScope {
   isException?: boolean;
 }
 
-/** Resolve elements belonging to a gl_check() group row (e.g. `1 / 1`, `PANEL=1, group=2`, `all`). */
+/** Resolve elements belonging to a gl_check() group or row (`1 / 1`, `PANEL=1, group=2`, `all`, or `row`). */
 export function resolveCheckGroupElements(
   bundle: GlossBundle,
   check: GlossCheck,
@@ -69,7 +69,23 @@ export function resolveCheckGroupElements(
   const tbl = bundle.tables[tblName];
   if (!tbl?.data) return [];
 
-  if (groupRow.group === "all") {
+  // Row-level checks (`range`, `value`, `exists`): resolve exact matrix cell or table row elements!
+  if (typeof groupRow.row === "number" && groupRow.row >= 1) {
+    const colArg = typeof check.args.column === "string" ? check.args.column : null;
+    if (tblName.startsWith("matrix_") && colArg) {
+      const hits: string[] = [];
+      for (const [eid, cell] of bundle.index.matrixCellByElement.entries()) {
+        if (cell.matrixTable === tblName && cell.rowIndex === groupRow.row && cell.colLabel === colArg) {
+          hits.push(eid);
+        }
+      }
+      if (hits.length > 0) return hits;
+    }
+    return bundle.index.elementsByTableRow.get(`${tblName}:${groupRow.row}`) ?? [];
+  }
+
+  const rawGroup = String(groupRow.group ?? "");
+  if (rawGroup === "all") {
     return bundle.derived.bindingsElements
       .filter((b) => b.table === tblName)
       .map((b) => b.element);
@@ -82,7 +98,7 @@ export function resolveCheckGroupElements(
       : [];
 
   const keyPairs: Array<[string, string]> = [];
-  const parts = String(groupRow.group).split(/\s*(?:[,|]|\/)\s*/);
+  const parts = rawGroup.split(/\s*(?:[,|]|\/)\s*/);
   parts.forEach((part, idx) => {
     const eq = part.indexOf("=");
     if (eq > 0) {
@@ -119,6 +135,7 @@ interface DataGroupInfo {
 /**
  * Infer clean human-readable data groups (e.g. `cyl = 4`, `cyl = 6`, `cyl = 8`) from
  * built_layer aesthetic groups + referenced raw columns (without hardcoding any dataset).
+ * Handles multi-plot patchwork tables cleanly and avoids color-bucket explosion on continuous gradients / heatmaps.
  */
 function inferDataGroups(bundle: GlossBundle, candidateElementIds?: Set<string>): DataGroupInfo[] {
   const bindings = bundle.derived.bindingsElements.filter(
@@ -126,12 +143,18 @@ function inferDataGroups(bundle: GlossBundle, candidateElementIds?: Set<string>)
   );
   if (bindings.length === 0) return [];
 
-  const rawTable = bundle.tables["raw"] ?? Object.values(bundle.tables).find((t) => t.meta.role === "raw");
-  const rawDf = rawTable?.data ?? null;
+  // ComplexHeatmap matrix cells use a continuous gradient; grouping by heatmap slice/panel is clean and meaningful.
+  if (bindings.every((b) => b.table?.startsWith("matrix_"))) {
+    return [];
+  }
 
   // Group bound elements by their built (colour || fill || group) aesthetic signature
-  const buckets = new Map<string, { swatch: string | null; elements: string[]; builtGroupVals: Set<string> }>();
+  const buckets = new Map<
+    string,
+    { swatch: string | null; elements: string[]; builtGroupVals: Set<string>; rawTables: Set<string> }
+  >();
   for (const b of bindings) {
+    if (b.table?.startsWith("matrix_")) continue;
     const builtDf = b.table ? bundle.tables[b.table]?.data : null;
     if (!builtDf || !b.row || b.row < 1 || b.row > builtDf.nrow) continue;
     const r0 = b.row - 1;
@@ -147,57 +170,88 @@ function inferDataGroups(bundle: GlossBundle, candidateElementIds?: Set<string>)
     const sig = swatch ?? (groupVal !== null && groupVal !== undefined ? `group:${String(groupVal)}` : "all");
     let bucket = buckets.get(sig);
     if (!bucket) {
-      bucket = { swatch, elements: [], builtGroupVals: new Set() };
+      bucket = { swatch, elements: [], builtGroupVals: new Set(), rawTables: new Set() };
       buckets.set(sig, bucket);
     }
     bucket.elements.push(b.element);
     if (groupVal !== null && groupVal !== undefined) bucket.builtGroupVals.add(String(groupVal));
+    const rm = bundle.index.inferredRawByElement.get(b.element);
+    if (rm) bucket.rawTables.add(rm.rawTable);
   }
 
-  // Try to discover a referenced raw discrete column that is constant within every bucket (e.g. `cyl`)
-  let namingColumn: string | null = null;
-  if (rawDf && rawTable && buckets.size > 1) {
-    const panelKeys = new Set(
-      bundle.substrate.panels.map((p) => (p.key ?? "").split("=")[0]?.trim()).filter(Boolean)
-    );
-    const candidates = rawTable.meta.referenced.filter((cn) => !panelKeys.has(cn) && Boolean(rawDf.columns[cn]));
+  // Continuous colour scales (e.g. > 16 unique hex colours) shouldn't explode into dozens of fake groups
+  if (buckets.size > 16) return [];
+
+  const groups: DataGroupInfo[] = [];
+  let idx = 1;
+
+  // Resolve a naming column per raw table (so patchwork Panel 1 and Panel 2 each name their own groups cleanly!)
+  const namingColByRaw = new Map<string, string>();
+  const rawTableNames = new Set<string>();
+  for (const bk of buckets.values()) {
+    for (const rn of bk.rawTables) rawTableNames.add(rn);
+  }
+  const panelKeys = new Set(
+    bundle.substrate.panels.map((p) => (p.key ?? "").split("=")[0]?.trim()).filter(Boolean)
+  );
+  for (const rn of rawTableNames) {
+    const rt = bundle.tables[rn];
+    const rdf = rt?.data;
+    if (!rt || !rdf) continue;
+    const rtBuckets = Array.from(buckets.values()).filter((bk) => bk.rawTables.has(rn));
+    if (rtBuckets.length < 2) continue;
+    const candidates = rt.meta.referenced.filter((cn) => {
+      if (panelKeys.has(cn) || !rdf.columns[cn]) return false;
+      const t = rdf.columns[cn].rType;
+      return t === "character" || t === "factor" || t === "integer" || t === "logical" || t === "double";
+    });
     for (const cn of candidates) {
-      const allConstant = Array.from(buckets.values()).every((bucket) => {
+      const seenAcross = new Set<string>();
+      const allConstant = rtBuckets.every((bucket) => {
         const vals = new Set<string>();
         for (const eid of bucket.elements) {
           const rm = bundle.index.inferredRawByElement.get(eid);
-          if (!rm || rm.rawRows.length === 0) continue;
-          const v = rawDf.columns[cn].values[rm.rawRows[0] - 1];
+          if (!rm || rm.rawTable !== rn || rm.rawRows.length === 0) continue;
+          const v = rdf.columns[cn].values[rm.rawRows[0] - 1];
           if (v !== null && v !== undefined) vals.add(String(v));
         }
-        return vals.size === 1;
+        if (vals.size !== 1) return false;
+        seenAcross.add(Array.from(vals)[0]);
+        return true;
       });
-      if (allConstant) {
-        namingColumn = cn;
+      if (allConstant && seenAcross.size >= 2) {
+        namingColByRaw.set(rn, cn);
         break;
       }
     }
   }
 
-  const groups: DataGroupInfo[] = [];
-  let idx = 1;
   for (const [sig, bucket] of buckets.entries()) {
     let label = `Group ${idx}`;
-    if (namingColumn && rawDf) {
+    let named = false;
+    for (const rn of bucket.rawTables) {
+      const col = namingColByRaw.get(rn);
+      const rdf = col ? bundle.tables[rn]?.data : null;
+      if (!col || !rdf) continue;
       for (const eid of bucket.elements) {
         const rm = bundle.index.inferredRawByElement.get(eid);
-        if (rm && rm.rawRows.length > 0) {
-          const v = rawDf.columns[namingColumn].values[rm.rawRows[0] - 1];
+        if (rm && rm.rawTable === rn && rm.rawRows.length > 0) {
+          const v = rdf.columns[col].values[rm.rawRows[0] - 1];
           if (v !== null && v !== undefined) {
-            label = `${namingColumn} = ${String(v)}`;
+            label = `${col} = ${String(v)}`;
+            named = true;
             break;
           }
         }
       }
-    } else if (bucket.builtGroupVals.size === 1) {
-      label = `group ${Array.from(bucket.builtGroupVals)[0]}`;
-    } else if (bucket.swatch) {
-      label = `series ${bucket.swatch}`;
+      if (named) break;
+    }
+    if (!named) {
+      if (bucket.builtGroupVals.size === 1) {
+        label = `group ${Array.from(bucket.builtGroupVals)[0]}`;
+      } else if (bucket.swatch) {
+        label = `series ${bucket.swatch}`;
+      }
     }
     groups.push({
       key: sig,
@@ -223,6 +277,8 @@ function countRecordsForElements(bundle: GlossBundle, elementIds: string[]): num
 }
 
 function elementDisplayLabel(bundle: GlossBundle, el: GlossElement): string {
+  const mat = bundle.index.matrixCellByElement.get(el.id);
+  if (mat) return `${mat.rowLabel} × ${mat.colLabel}`;
   const raw = bundle.index.inferredRawByElement.get(el.id);
   if (raw && raw.rawKeyLabels.length > 0) return raw.rawKeyLabels[0];
   if (el.text && el.text.trim()) return el.text.trim();
@@ -278,13 +334,26 @@ function buildSemanticRecordsBranch(bundle: GlossBundle): OutlineNode | null {
           const gEls = resolveCheckGroupElements(bundle, check, tblName, g);
           if (g.passed === false) {
             const niceLabel = humanizeCheckGroupLabel(bundle, check, tblName, g);
+            const statSuffix =
+              typeof g.n === "number"
+                ? ` (n=${g.n})`
+                : typeof g.value === "number"
+                  ? ` (${g.value >= 0 ? "+" : ""}${g.value.toFixed(2)})`
+                  : typeof g.left === "number" && typeof g.right === "number"
+                    ? ` (${g.left.toFixed(2)} vs ${g.right.toFixed(2)})`
+                    : "";
+            const subDetail =
+              typeof g.estimate === "number"
+                ? `slope ${g.estimate >= 0 ? "+" : ""}${g.estimate.toFixed(3)} · contradicts trend`
+                : typeof g.left === "number" && typeof g.right === "number"
+                  ? `${g.left.toFixed(2)} vs ${g.right.toFixed(2)} · fails comparison`
+                  : typeof g.value === "number"
+                    ? `value ${g.value >= 0 ? "+" : ""}${g.value.toFixed(2)} · outside range`
+                    : g.reason ?? "does not match claim";
             exceptionChildren.push({
               id: `sem:exc:${rec.id}:${g.group}`,
-              label: `Exception · ${niceLabel} (n=${g.n})`,
-              subtitle:
-                typeof g.estimate === "number"
-                  ? `slope ${g.estimate >= 0 ? "+" : ""}${g.estimate.toFixed(3)} · contradicts trend`
-                  : "does not match claim",
+              label: `Exception · ${niceLabel}${statSuffix}`,
+              subtitle: subDetail,
               icon: "exception",
               elementIds: gEls,
               recordCount: 1,

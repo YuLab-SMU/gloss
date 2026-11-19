@@ -155,10 +155,14 @@ export const OutlineTree: React.FC = () => {
     }
     const byGroup = allData?.children.find((c) => c.id === "data:by-group");
     if (byGroup) {
-      for (const g of byGroup.children.slice(0, 3)) {
+      const cleanGroups = byGroup.children.filter(
+        (g) => !/^series\s+#/i.test(g.label) && !/^group\s+\d+$/i.test(g.label)
+      );
+      const chosen = cleanGroups.length > 0 ? cleanGroups : byGroup.children;
+      for (const g of chosen.slice(0, 3)) {
         chips.push({
           id: g.id,
-          label: g.label,
+          label: g.label.includes(" = ") ? g.label.split(" = ").slice(1).join(" = ") : g.label,
           kind: "group",
           swatch: g.swatch,
           elementIds: g.elementIds,

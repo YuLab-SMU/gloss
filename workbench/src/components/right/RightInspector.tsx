@@ -170,7 +170,15 @@ const CheckEvidenceCard: React.FC<{
                     {g.group}
                   </div>
                   <div className="font-mono-num text-[9.5px]" style={{ color: "var(--ink-muted)" }}>
-                    n = {g.n}
+                    {typeof g.n === "number"
+                      ? `n = ${g.n}`
+                      : typeof g.left === "number" && typeof g.right === "number"
+                        ? `${g.left.toFixed(2)} vs ${g.right.toFixed(2)}`
+                        : typeof g.value === "number"
+                          ? `val = ${g.value.toFixed(2)}`
+                          : typeof g.row === "number"
+                            ? `row ${g.row}`
+                            : "checked"}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5 font-mono-num text-[10.5px]">

@@ -42,17 +42,22 @@ export function buildSpatialIndex(elements: GlossElement[]): SpatialIndex {
         svgY + tolerancePt
       );
       if (ids.length === 0) return null;
-      // Prefer smallest-area bound/data marks closest to cursor (matches gloss-core nearest-mark behavior)
+      // Prefer exact containment (crucial for ComplexHeatmap tiles) & smallest-area marks closest to cursor
       let best: GlossElement | null = null;
       let bestScore = Infinity;
       for (const idx of ids) {
         const el = elements[idx];
-        const cx = (el.x0 + el.x1) / 2;
-        const cy = (el.y0 + el.y1) / 2;
+        const minX = Math.min(el.x0, el.x1);
+        const maxX = Math.max(el.x0, el.x1);
+        const minY = Math.min(el.y0, el.y1);
+        const maxY = Math.max(el.y0, el.y1);
+        const inside = svgX >= minX && svgX <= maxX && svgY >= minY && svgY <= maxY;
+        const cx = (minX + maxX) / 2;
+        const cy = (minY + maxY) / 2;
         const dist = Math.hypot(svgX - cx, svgY - cy);
-        const area = Math.max(1, Math.abs(el.x1 - el.x0) * Math.abs(el.y1 - el.y0));
-        // Penalize huge background rects so small data points win on overlap
-        const score = dist + Math.log10(area) * 2.2;
+        const area = Math.max(1, (maxX - minX) * (maxY - minY));
+        // Penalize huge background rects so small data points & exact heatmap cells win on overlap
+        const score = (inside ? dist * 0.25 : dist + 4) + Math.log10(area) * 2.2;
         if (score < bestScore) {
           bestScore = score;
           best = el;

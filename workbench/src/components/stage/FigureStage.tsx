@@ -867,13 +867,19 @@ export const FigureStage: React.FC = () => {
                 const p1 = elementCenter(arc.from);
                 const p2 = elementCenter(arc.to);
                 const mx = (p1.x + p2.x) / 2;
-                const bow =
-                  arc.pairIndex % 2 === 0
+                const nearTop = Math.min(p1.y, p2.y) < viewBox.y + viewBox.height * 0.36;
+                const bow = nearTop
+                  ? 34 + arc.pairIndex * 18
+                  : arc.pairIndex % 2 === 0
                     ? -(28 + arc.pairIndex * 16)
                     : 34 + (arc.pairIndex - 1) * 16;
                 const my = (p1.y + p2.y) / 2 + bow;
-                const txt = arc.label.slice(0, 26);
-                const pillW = txt.length * 4.5 + 14;
+                const txt = arc.label.length > 42 ? `${arc.label.slice(0, 41)}…` : arc.label;
+                const pillW = txt.length * 4.35 + 16;
+                const clampedMx = Math.max(
+                  viewBox.x + pillW / 2 + 8,
+                  Math.min(viewBox.x + viewBox.width - pillW / 2 - 8, mx)
+                );
                 const labelY = bow < 0 ? my - 6 : my + 12;
                 return (
                   <g key={`rel-${idx}`}>
@@ -886,18 +892,18 @@ export const FigureStage: React.FC = () => {
                       markerEnd="url(#gloss-arrow)"
                     />
                     <rect
-                      x={mx - pillW / 2}
+                      x={clampedMx - pillW / 2}
                       y={labelY - 10}
                       width={pillW}
                       height="13.5"
                       rx="4"
                       fill="#ffffff"
-                      fillOpacity="0.95"
+                      fillOpacity="0.96"
                       stroke={arc.verified ? "#93c5fd" : "#fcd34d"}
                       strokeWidth="0.8"
                     />
                     <text
-                      x={mx}
+                      x={clampedMx}
                       y={labelY - 1}
                       textAnchor="middle"
                       fontSize="7.5"
