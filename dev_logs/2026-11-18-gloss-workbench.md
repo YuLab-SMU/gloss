@@ -52,3 +52,32 @@
 
 - Task 5 in `plan/2026-11-18-gloss-workbench.md`: add read-only external `gl_context()` plugins (`data_dictionary`, `project_notes`, `user_context`, `ontology`) so contextual semantics flow automatically into `gl_annotate()` and the Workbench's External Context panel, and optionally add `gl_workbench_serve()` (`httpuv`) for live R-session stage execution and interactive human `gl_propose()`.
 - Author bespoke `.riv` binary animations in Rive Editor and drop them into `workbench/public/rive/` to hot-swap the Stage Rail, Verification Seal, and Dropzone Unfold fallbacks with zero code changes.
+
+---
+
+## Follow-up update (2026-11-18, later same session — Outline Tree, Multi-Level Focus, External Context & Live Mode)
+
+- **Related plan:** [plan/done/2026-11-18-gloss-workbench.md](../plan/done/2026-11-18-gloss-workbench.md) (closed)
+
+### What changed
+
+- **Design-tool Outline & Multi-Level Focus (`workbench/src/codec/outline.ts`, `OutlineTree.tsx`, `FigureStage.tsx`, `CommandPalette.tsx`, `ProposalModal.tsx`)**:
+  - Replaced the raw leaf list with a Figma/BioRender-inspired **Outline** panel offering three views (`Outline`, `Data Groups`, `SVG / Grob`), vertical tree rails, type icons, color swatches, circular semantic record count badges, hover focus crosshairs, per-node eye visibility toggles, quick focus chips, natural-language focus search (`Focus: cyl 6, exception, Mazda, legend...`), Zoom-to-Focus framing, and a bottom `+ Add semantic note / claim` modal (live-submitting when connected to `gl_workbench_serve()`, or generating copyable `gl_record()` R code when static).
+  - Upgraded the left `Context` tab to render rich cards for `data_dictionary` variable tables, `dataset_documentation` Rd help, `project_notes`, `literature`, and `user_context`.
+- **External `gl_context()` plugins & Live Mode (`R/context-external.R`, `R/workbench-live.R`, `DESCRIPTION`, `R/zzz.R`)**:
+  - Registered seven read-only external context plugins (`data_dictionary`, `project_notes`, `dataset_documentation`, `ontology`, `literature`, `external_metadata`, `user_context`) and exported `gl_add_context()` with `payload_issues()` safety checks.
+  - Exported `gl_workbench_serve()` (optional `httpuv` in `Suggests`) backed by a pure unit-tested router `workbench_live_handler()` (`/`, `/api/status`, `/api/bundle`, `/api/propose`, `/api/check`, `/api/context`).
+  - Updated `tests/testthat/test-context.R` (expanded built-in context catalog from 6 to 13 items + external sniffing & round-trip tests), added `tests/testthat/test-workbench-live.R`, and refreshed `dev_docs/demo/workbench-demo.R`.
+
+### Measured
+
+- Frontend Vitest: `2 files, 6 passed, 0 failed` (58 ms), covering `outline.ts` data-group inference (`cyl = 4/6/8`), natural-language focus (`"cyl 6"` → 7 marks, `"exception"` → 3 marks, `"legend"` → `Legend · Cylinders`), and `Title`/`Subtitle` ordering on `mtcars-workbench.html`.
+- Single-file build sizes: `full` = `2,384.70 kB` (`687.18 kB` gzipped; `inst/workbench/workbench-full.html.gz` = `667 KB`); `lite` = `1,988.98 kB` (`585.18 kB` gzipped); `dev_docs/demo/mtcars-workbench.html` = `2,412,107` bytes with `gl_read()` round-trip identical.
+- Full R host suite (`R_LIBS_USER=/nonexistent NOT_CRAN=true Rscript -e "devtools::test()"`): **25 files, 1642 expectations passed, 0 failures, 0 warnings, 8 sandbox skips** (`aisdk` 5, `sf` 1, `showtext` 2). Targeted new/updated suites: `test-context.R` (`44`), `test-workbench-live.R` (`19`), `test-plugin.R` (`99`), `test-workbench.R` (`12`) — all 0 failures, 0 warnings, 0 skips.
+- Live Chromium verification (`http://127.0.0.1:4188/mtcars-workbench.html`, `1440×900`): 0 console errors, 0 uncaught page errors; confirmed `cyl = 6` focus + dashed frame + AG Grid sync, Zoom-to-Focus (`167%`), natural-language `exception` focus, 46-element gridline hide/restore via Eye toggle, External Context cards, and Proposal modal.
+
+### Surprises
+
+- **ggplot2 facet strip paths include `titleGrob` and classify with `role = "guide"`, and `subtitle` precedes `title` in SVG draw order.** Initial Outline classification picked `"am: 0"` and `"Faceted by..."` as the plot title and labeled Legend as `"Legend · am: 0"`. Fixed by distinguishing `guide-box`/`legend` from `strip`/`axis` and sorting title candidates top-to-bottom by `y0`, locked in with Vitest assertions. → `workbench/src/codec/outline.ts` and `outline.test.ts`.
+- **`utils::help(name)` uses NSE on its first argument.** Calling `utils::help(name)` inside `dataset_rd_summary()` looked up the literal topic `"name"` instead of the variable's value; passing `topic = (name)` fixed Rd help extraction for `datasets::mtcars`. → `R/context-external.R` and `test-context.R`.
+- **`read_req_body()` evaluated `$read` before `is.character()` on test string inputs.** Fixed by checking `is.character(inp)` first. → `R/workbench-live.R` and `test-workbench-live.R`.
