@@ -3,7 +3,12 @@ test_that("context items are sniffed, and missing ones carry a reason", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
   fig <- gloss(p, width = 4, height = 3)
   ctx <- gl_context(fig)
-  expect_setequal(ctx$item, c("code", "data", "engine", "env", "doc", "git"))
+  expect_setequal(
+    ctx$item,
+    c("code", "data", "engine", "env", "doc", "git",
+      "data_dictionary", "project_notes", "dataset_documentation",
+      "ontology", "literature", "external_metadata", "user_context")
+  )
   expect_true(all(ctx$found | !is.na(ctx$reason)))
   expect_equal(gl_context(fig, "code")$value$expr, "p")
   expect_equal(gl_context(fig, "code")$value$call, "gloss(p, width = 4, height = 3)")
@@ -82,4 +87,63 @@ test_that("inside knitr the chunk, its label, caption and size are sniffed", {
   expect_equal(c(fig$meta$width, fig$meta$height), c(6, 4))
   expect_equal(fig$meta$size_basis, "knitr chunk")
   expect_equal(gl_context(fig, "data")$value$objects, "mtcars")
+})
+
+test_that("external context plugins sniff project files and dataset help, and gl_add_context round-trips", {
+  skip_if_no("ggplot2")
+  dir <- withr::local_tempdir()
+  writeLines(c(
+    "column,unit,description",
+    "wt,1000 lbs,Vehicle curb weight",
+    "mpg,miles/gallon,Fuel economy"
+  ), file.path(dir, "data_dictionary.csv"))
+  writeLines(c(
+    "# Analysis Notes",
+    "Comparing automatic and manual transmissions in 1974 road tests."
+  ), file.path(dir, "project-notes.md"))
+  script <- file.path(dir, "plot.R")
+  writeLines(c(
+    "p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()",
+    "fig <- gloss(p, width = 4, height = 3)"
+  ), script)
+
+  env <- new.env()
+  withr::with_dir(dir, sys.source_like(script, env))
+  fig <- env$fig
+
+  dd <- gl_context(fig, "data_dictionary")
+  expect_true(dd$found)
+  expect_equal(dd$value$source_type, "data_dictionary_file")
+  expect_equal(nrow(dd$value$entries), 2L)
+
+  pn <- gl_context(fig, "project_notes")
+  expect_true(pn$found)
+  expect_match(pn$value$excerpt, "Analysis Notes")
+
+  ds <- gl_context(fig, "dataset_documentation")
+  expect_true(ds$found)
+  expect_equal(ds$value$datasets[[1L]]$dataset, "mtcars")
+  expect_match(ds$value$datasets[[1L]]$title, "Motor Trend")
+
+  fig <- gl_add_context(
+    fig, "user_context",
+    list(question = "Explain every mark, group and panel", audience = "data analyst"),
+    source = "analyst-session", source_type = "user_prompt"
+  )
+  expect_true(gl_context(fig, "user_context")$found)
+  expect_equal(gl_context(fig, "user_context")$value$audience, "data analyst")
+
+  # Unsafe HTML payload must be rejected
+  expect_error(
+    gl_add_context(fig, "literature", list(note = "<script>alert(1)</script>")),
+    "safety validation"
+  )
+
+  # Round-trip through bundle preserves external context
+  out <- withr::local_tempfile(fileext = ".html")
+  gl_write(fig, out)
+  back <- gl_read(out)
+  expect_true(gl_context(back, "data_dictionary")$found)
+  expect_true(gl_context(back, "user_context")$found)
+  expect_equal(gl_context(back, "user_context")$value$question, "Explain every mark, group and panel")
 })

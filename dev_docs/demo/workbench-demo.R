@@ -23,6 +23,51 @@ p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
 
 fig <- gloss(p, width = 8, height = 4.8)
 
+# 0. External Context (Task 5A: data dictionary, literature, user context;
+#    dataset_documentation is also auto-sniffed from datasets::mtcars!)
+fig <- gl_add_context(
+  fig, "data_dictionary",
+  list(
+    variables = list(
+      list(name = "wt", unit = "1000 lbs", description = "Vehicle curb weight in thousands of US pounds"),
+      list(name = "mpg", unit = "miles / US gallon", description = "Motor Trend highway/city fuel economy"),
+      list(name = "cyl", unit = "count", description = "Number of engine cylinders (4, 6, or 8; rotary mapped to 6)"),
+      list(name = "am", unit = "binary (0/1)", description = "Transmission type: 0 = automatic, 1 = manual")
+    )
+  ),
+  source = "Motor Trend US 1974 codebook",
+  source_type = "data_dictionary"
+)
+fig <- gl_add_context(
+  fig, "literature",
+  list(
+    citation = "Henderson, H. V., & Velleman, P. F. (1981). Building multiple regression models interactively. Biometrics, 37(2), 391-411.",
+    doi = "10.2307/2530428"
+  ),
+  source = "Biometrics 37(2)",
+  source_type = "literature"
+)
+fig <- gl_add_context(
+  fig, "user_context",
+  list(
+    question = "Explain every mark, cylinder group, transmission panel, and any exception to the negative weight-mpg trend.",
+    audience = "data analyst & domain reviewer"
+  ),
+  source = "workbench-demo",
+  source_type = "user_prompt"
+)
+if (!isTRUE(gl_context(fig, "dataset_documentation")$found)) {
+  rd_doc <- gloss:::dataset_rd_summary("mtcars")
+  if (!is.null(rd_doc)) {
+    fig <- gl_add_context(
+      fig, "dataset_documentation",
+      list(source_type = "r_package_help", datasets = list(rd_doc)),
+      source = "datasets::mtcars",
+      source_type = "r_package_help"
+    )
+  }
+}
+
 # Locate two verified points across panels for rich anchored semantics
 hit_rx4 <- gl_hit(fig, 2.62, 21.0, space = "data", panel = "panel2")
 e_rx4 <- hit_rx4$id[hit_rx4$tag == "circle"][1L]

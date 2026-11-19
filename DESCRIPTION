@@ -35,6 +35,7 @@ Suggests:
     ggExtra,
     ggplot2,
     ggrepel,
+    httpuv,
     knitr,
     patchwork,
     R6,

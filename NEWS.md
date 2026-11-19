@@ -1,6 +1,6 @@
 # gloss 0.0.0.9000
 
-## Browser Workbench and contextual record provenance (2026-11-18)
+## Browser Workbench, design-tool Outline, external context and live mode (2026-11-18)
 
 - Added `gl_workbench()` and the `"workbench"` projection plugin, writing a
   self-contained single-file HTML browser workbench (React, AG Grid Community,
@@ -8,9 +8,22 @@
   dense-leaf spatial index) that opens directly in any browser without an R
   session while preserving the embedded `<script id="gloss-bundle">` payload for
   lossless `gl_read()` round trips.
+- Added a Figma/BioRender-style Outline tree (`Outline` / `Data Groups` /
+  `SVG / Grob`) with multi-level Focus & Zoom-to-Focus across data layers,
+  inferred data subgroups, natural-language semantic nodes (claims, exceptions,
+  contextual notes, relations, narrative) and guides, plus per-node visibility
+  toggles and a `+ Add semantic note / claim` proposal modal.
 - Extended core record body schemas with optional external-context provenance
   fields (`source`, `source_type`, `confidence`) alongside `evidence` and
   `provenance`.
+- Added seven read-only external `gl_context()` plugins (`data_dictionary`,
+  `project_notes`, `dataset_documentation`, `ontology`, `literature`,
+  `external_metadata`, `user_context`) and `gl_add_context()` to attach
+  validated domain context that travels inside `context.json`.
+- Added `gl_workbench_serve()` (using optional `httpuv`) for a local live
+  browser workbench connected to the active R session, supporting live checked
+  proposals (`/api/propose`), dry-run checks (`/api/check`), and context
+  attachment (`/api/context`).
 
 ## Agent stages and checked semantic proposals (2026-11-17)
 
