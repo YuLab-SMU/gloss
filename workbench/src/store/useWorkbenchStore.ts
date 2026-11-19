@@ -6,7 +6,9 @@ import {
   decodeEmbeddedJsonText,
   decodeFileMap,
   SEMANTIC_STAGES,
+  type FocusScope,
   type GlossBundle,
+  type OutlineViewMode,
   type SemanticStageId,
   type SpatialIndex,
   type StageStatusSummary,
@@ -41,15 +43,22 @@ interface WorkbenchState {
   loading: boolean;
   error: string | null;
 
+  liveApiBaseUrl: string | null;
+  proposalModalOpen: boolean;
+
   activeStage: SemanticStageId;
   selectedElementIds: string[];
   hoveredElementId: string | null;
   selectedRecordId: string | null;
   selectedLeafId: string | null;
   selectedPanelId: string | null;
+  /** Unified design-tool Focus / Isolate scope (data layer, subgroup, semantic node, or guide). */
+  focusScope: FocusScope | null;
+  zoomRequestCounter: number;
   highlightedGroup: HighlightedGroup | null;
   gridFilterElementIds: string[] | null;
 
+  outlineMode: OutlineViewMode;
   activeTableTab: string;
   leftTab: LeftPanelTab;
   rightTab: RightPanelTab;
@@ -59,14 +68,18 @@ interface WorkbenchState {
   theme: WorkbenchTheme;
   commandOpen: boolean;
   hiddenLeafIds: string[];
+  hiddenElementIds: string[];
   config: WorkbenchConfig;
 
   // Actions
   setConfig: (cfg: WorkbenchConfig) => void;
+  setLiveApiBaseUrl: (url: string | null) => void;
+  setProposalModalOpen: (open: boolean) => void;
   loadFromText: (text: string, sourceName?: string) => Promise<void>;
   loadFromEmbeddedJson: (jsonText: string, sourceName?: string) => Promise<void>;
   loadFromFileMap: (files: Map<string, Uint8Array>, sourceName: string) => Promise<void>;
   loadFromFiles: (fileList: FileList | File[]) => Promise<void>;
+  refreshLiveBundle: () => Promise<void>;
   clearBundle: () => void;
 
   setActiveStage: (stage: SemanticStageId) => void;
@@ -78,10 +91,15 @@ interface WorkbenchState {
   selectLeaf: (leafId: string | null) => void;
   selectPanel: (panelId: string | null) => void;
   selectTableRow: (tableName: string, row1: number) => void;
+  setFocusScope: (scope: FocusScope | null, autoZoom?: boolean) => void;
+  requestZoomToFocus: () => void;
   setHighlightedGroup: (group: HighlightedGroup | null) => void;
   setGridFilterElementIds: (ids: string[] | null) => void;
   toggleLeafVisibility: (leafId: string) => void;
+  toggleElementsVisibility: (elementIds: string[]) => void;
+  resetVisibility: () => void;
 
+  setOutlineMode: (mode: OutlineViewMode) => void;
   setActiveTableTab: (tab: string) => void;
   setLeftTab: (tab: LeftPanelTab) => void;
   setRightTab: (tab: RightPanelTab) => void;
@@ -100,7 +118,6 @@ function chooseInitialStage(
 ): SemanticStageId {
   if (preferred) return preferred;
   const stats = computeStageStats(bundle);
-  // Pick the richest populated stage so the user immediately sees gloss's value
   const order: SemanticStageId[] = [
     "behavior",
     "narrative",
@@ -119,7 +136,6 @@ function chooseInitialStage(
 }
 
 function chooseInitialElement(bundle: GlossBundle): string[] {
-  // Prefer an element that has both semantic records and a verified binding (e.g. e65 Mazda RX4)
   for (const rec of bundle.records) {
     for (const eid of rec.resolvedTargets) {
       if (bundle.index.bindingByElement.has(eid)) return [eid];
@@ -132,13 +148,20 @@ function chooseInitialElement(bundle: GlossBundle): string[] {
 
 function hydrateBundle(
   bundle: GlossBundle,
-  config: WorkbenchConfig
+  config: WorkbenchConfig,
+  preserveSelection = false,
+  prev?: WorkbenchState
 ): Partial<WorkbenchState> {
   const spatial = buildSpatialIndex(bundle.substrate.elements);
   const stageStats = computeStageStats(bundle);
-  const activeStage = chooseInitialStage(bundle, config.initialStage);
-  const initialSelected = chooseInitialElement(bundle);
-  const defaultTable = bundle.tableOrder[0] ?? "__elements__";
+  const activeStage =
+    preserveSelection && prev ? prev.activeStage : chooseInitialStage(bundle, config.initialStage);
+  const initialSelected =
+    preserveSelection && prev && prev.selectedElementIds.length > 0
+      ? prev.selectedElementIds
+      : chooseInitialElement(bundle);
+  const defaultTable =
+    preserveSelection && prev ? prev.activeTableTab : bundle.tableOrder[0] ?? "__elements__";
 
   return {
     bundle,
@@ -149,12 +172,14 @@ function hydrateBundle(
     activeStage,
     selectedElementIds: initialSelected,
     hoveredElementId: null,
-    selectedRecordId: null,
+    selectedRecordId: preserveSelection && prev ? prev.selectedRecordId : null,
     selectedLeafId: null,
     selectedPanelId: null,
+    focusScope: preserveSelection && prev ? prev.focusScope : null,
     highlightedGroup: null,
     gridFilterElementIds: null,
-    hiddenLeafIds: [],
+    hiddenLeafIds: preserveSelection && prev ? prev.hiddenLeafIds : [],
+    hiddenElementIds: preserveSelection && prev ? prev.hiddenElementIds : [],
     activeTableTab: defaultTable,
   };
 }
@@ -166,15 +191,21 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   loading: false,
   error: null,
 
+  liveApiBaseUrl: null,
+  proposalModalOpen: false,
+
   activeStage: "behavior",
   selectedElementIds: [],
   hoveredElementId: null,
   selectedRecordId: null,
   selectedLeafId: null,
   selectedPanelId: null,
+  focusScope: null,
+  zoomRequestCounter: 0,
   highlightedGroup: null,
   gridFilterElementIds: null,
 
+  outlineMode: "semantic",
   activeTableTab: "raw",
   leftTab: "structure",
   rightTab: "chain",
@@ -184,6 +215,7 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   theme: "paper",
   commandOpen: false,
   hiddenLeafIds: [],
+  hiddenElementIds: [],
   config: {},
 
   setConfig: (cfg) =>
@@ -191,6 +223,9 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
       config: { ...s.config, ...cfg },
       theme: cfg.theme ?? s.theme,
     })),
+
+  setLiveApiBaseUrl: (url) => set({ liveApiBaseUrl: url }),
+  setProposalModalOpen: (open) => set({ proposalModalOpen: open }),
 
   loadFromText: async (text, sourceName = "artifact.html") => {
     set({ loading: true, error: null });
@@ -218,6 +253,17 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
     }
   },
 
+  refreshLiveBundle: async () => {
+    const base = get().liveApiBaseUrl;
+    if (base === null) return;
+    const res = await fetch(`${base}/api/bundle`);
+    if (!res.ok) throw new Error(`Failed to reload live bundle (HTTP ${res.status})`);
+    const txt = await res.text();
+    const cur = get();
+    const bundle = await decodeEmbeddedJsonText(txt, cur.bundle?.sourceName ?? "live-figure.html");
+    set(hydrateBundle(bundle, cur.config, true, cur));
+  },
+
   loadFromFileMap: async (files, sourceName) => {
     set({ loading: true, error: null });
     try {
@@ -236,23 +282,18 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
     if (files.length === 0) return;
     set({ loading: true, error: null });
     try {
-      // Single HTML or SVG artifact
       if (files.length === 1 && /\.(html?|svg)$/i.test(files[0].name)) {
         const text = await files[0].text();
         await get().loadFromText(text, files[0].name);
         return;
       }
 
-      // Directory bundle (.gloss/ dropped or selected via webkitdirectory)
       const map = new Map<string, Uint8Array>();
       let rootName = "gloss-bundle";
       for (const f of files) {
         const relRaw = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
         const parts = relRaw.replace(/^\/+/, "").split("/");
-        if (parts.length > 1) {
-          rootName = parts[0];
-        }
-        // Strip leading directory folder name so paths start with manifest.json, substrate/...
+        if (parts.length > 1) rootName = parts[0];
         const idxManifest = parts.findIndex((p) =>
           ["manifest.json", "context.json", "substrate", "layers", "projections"].includes(p)
         );
@@ -279,8 +320,11 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
       selectedElementIds: [],
       hoveredElementId: null,
       selectedRecordId: null,
+      focusScope: null,
       highlightedGroup: null,
       gridFilterElementIds: null,
+      hiddenLeafIds: [],
+      hiddenElementIds: [],
     }),
 
   setActiveStage: (stage) => set({ activeStage: stage }),
@@ -308,7 +352,6 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
         selectedElementIds: next,
         selectedLeafId: el?.leaf ?? s.selectedLeafId,
         selectedRecordId: null,
-        highlightedGroup: null,
       };
     });
   },
@@ -317,7 +360,6 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
     set({
       selectedElementIds: Array.from(new Set(ids)),
       selectedRecordId: null,
-      highlightedGroup: null,
     }),
 
   setHoveredElement: (id) => set({ hoveredElementId: id }),
@@ -332,7 +374,6 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
     set({
       selectedRecordId: id,
       selectedElementIds: rec && rec.resolvedTargets.length > 0 ? rec.resolvedTargets : get().selectedElementIds,
-      highlightedGroup: null,
     });
   },
 
@@ -345,8 +386,7 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
     const els = bundle.substrate.elements.filter((e) => e.leaf === leafId).map((e) => e.id);
     set({
       selectedLeafId: leafId,
-      selectedElementIds: els.slice(0, 500), // cap visual selection ring array for dense leaves
-      highlightedGroup: null,
+      selectedElementIds: els.slice(0, 500),
     });
   },
 
@@ -357,11 +397,42 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
     if (!bundle) return;
     const ids = bundle.index.elementsByTableRow.get(`${tableName}:${row1}`) ?? [];
     if (ids.length > 0) {
-      set({ selectedElementIds: ids, selectedRecordId: null, highlightedGroup: null });
+      set({ selectedElementIds: ids, selectedRecordId: null });
     }
   },
 
-  setHighlightedGroup: (group) => set({ highlightedGroup: group }),
+  setFocusScope: (scope, autoZoom = false) => {
+    set((s) => {
+      const nextSelected =
+        scope && scope.elementIds.length > 0 ? scope.elementIds.slice(0, 500) : s.selectedElementIds;
+      return {
+        focusScope: scope,
+        selectedElementIds: scope ? nextSelected : s.selectedElementIds,
+        selectedRecordId: scope?.recordId ?? null,
+        highlightedGroup:
+          scope?.isException
+            ? { label: scope.label, status: "exception", elementIds: scope.elementIds }
+            : null,
+        zoomRequestCounter: autoZoom && scope ? s.zoomRequestCounter + 1 : s.zoomRequestCounter,
+      };
+    });
+  },
+
+  requestZoomToFocus: () => set((s) => ({ zoomRequestCounter: s.zoomRequestCounter + 1 })),
+
+  setHighlightedGroup: (group) =>
+    set({
+      highlightedGroup: group,
+      focusScope: group
+        ? {
+            id: `check-group:${group.label}`,
+            label: `Group ${group.label}`,
+            kind: group.status === "exception" ? "exception" : "group",
+            elementIds: group.elementIds,
+            isException: group.status === "exception",
+          }
+        : null,
+    }),
 
   setGridFilterElementIds: (ids) => set({ gridFilterElementIds: ids }),
 
@@ -372,6 +443,23 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
         : [...s.hiddenLeafIds, leafId],
     })),
 
+  toggleElementsVisibility: (elementIds) => {
+    if (elementIds.length === 0) return;
+    set((s) => {
+      const cur = new Set(s.hiddenElementIds);
+      const allHidden = elementIds.every((id) => cur.has(id));
+      if (allHidden) {
+        for (const id of elementIds) cur.delete(id);
+      } else {
+        for (const id of elementIds) cur.add(id);
+      }
+      return { hiddenElementIds: Array.from(cur) };
+    });
+  },
+
+  resetVisibility: () => set({ hiddenElementIds: [], hiddenLeafIds: [] }),
+
+  setOutlineMode: (mode) => set({ outlineMode: mode }),
   setActiveTableTab: (tab) => set({ activeTableTab: tab }),
   setLeftTab: (tab) => set({ leftTab: tab }),
   setRightTab: (tab) => set({ rightTab: tab }),
@@ -386,6 +474,7 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
       selectedElementIds: [],
       selectedRecordId: null,
       selectedLeafId: null,
+      focusScope: null,
       highlightedGroup: null,
       gridFilterElementIds: null,
     }),

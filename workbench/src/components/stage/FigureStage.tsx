@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Columns2,
+  Crosshair,
   Eye,
   Maximize2,
   MousePointerClick,
   RotateCcw,
+  ScanSearch,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -58,14 +60,19 @@ export const FigureStage: React.FC = () => {
   const activeStage = useWorkbenchStore((s) => s.activeStage);
   const selectedElementIds = useWorkbenchStore((s) => s.selectedElementIds);
   const hoveredElementId = useWorkbenchStore((s) => s.hoveredElementId);
+  const focusScope = useWorkbenchStore((s) => s.focusScope);
+  const zoomRequestCounter = useWorkbenchStore((s) => s.zoomRequestCounter);
   const highlightedGroup = useWorkbenchStore((s) => s.highlightedGroup);
   const gridFilterElementIds = useWorkbenchStore((s) => s.gridFilterElementIds);
   const splitCompare = useWorkbenchStore((s) => s.splitCompare);
   const splitRatio = useWorkbenchStore((s) => s.splitRatio);
   const hiddenLeafIds = useWorkbenchStore((s) => s.hiddenLeafIds);
+  const hiddenElementIds = useWorkbenchStore((s) => s.hiddenElementIds);
 
   const selectElement = useWorkbenchStore((s) => s.selectElement);
   const setHoveredElement = useWorkbenchStore((s) => s.setHoveredElement);
+  const setFocusScope = useWorkbenchStore((s) => s.setFocusScope);
+  const requestZoomToFocus = useWorkbenchStore((s) => s.requestZoomToFocus);
   const setSplitCompare = useWorkbenchStore((s) => s.setSplitCompare);
   const setSplitRatio = useWorkbenchStore((s) => s.setSplitRatio);
   const clearSelection = useWorkbenchStore((s) => s.clearSelection);
@@ -94,38 +101,27 @@ export const FigureStage: React.FC = () => {
     setPan({ x: 0, y: 0 });
   }, [bundle]);
 
-  // Apply non-destructive visibility toggles for hidden leaves via CSS class on original SVG nodes
-  useEffect(() => {
-    const host = svgHostRef.current;
-    if (!host || !bundle) return;
-    const hiddenSet = new Set(hiddenLeafIds);
-    const nodes = host.querySelectorAll<SVGElement>("[data-gloss-element]");
-    nodes.forEach((node) => {
-      const id = node.getAttribute("data-gloss-element") ?? "";
-      const el = bundle.index.elementById.get(id);
-      if (el?.leaf && hiddenSet.has(el.leaf)) {
-        node.style.opacity = "0.06";
-      } else {
-        node.style.opacity = "";
-      }
-    });
-  }, [bundle, hiddenLeafIds]);
-
-  // Apply gentle fade to non-filtered elements when AG Grid filter sync or group highlight is active
+  // Apply non-destructive visibility toggles + Focus / Grid Sync spotlighting on original SVG nodes
   useEffect(() => {
     const host = svgHostRef.current;
     if (!host || !bundle) return;
     const activeSubset =
-      highlightedGroup?.elementIds ?? gridFilterElementIds ?? null;
+      focusScope?.elementIds ?? highlightedGroup?.elementIds ?? gridFilterElementIds ?? null;
     const subsetSet = activeSubset ? new Set(activeSubset) : null;
-    const hiddenSet = new Set(hiddenLeafIds);
+    const hiddenLeafSet = new Set(hiddenLeafIds);
+    const hiddenElSet = new Set(hiddenElementIds);
+
+    // Determine whether the active focus targets non-data elements (e.g. Title / Legend / Axes)
+    const focusingNonData =
+      subsetSet !== null &&
+      Array.from(subsetSet).some((id) => !bundle.index.bindingByElement.has(id));
 
     const nodes = host.querySelectorAll<SVGElement>("[data-gloss-element]");
     nodes.forEach((node) => {
       const id = node.getAttribute("data-gloss-element") ?? "";
       const el = bundle.index.elementById.get(id);
-      if (el?.leaf && hiddenSet.has(el.leaf)) {
-        node.style.opacity = "0.06";
+      if (hiddenElSet.has(id) || (el?.leaf && hiddenLeafSet.has(el.leaf))) {
+        node.style.opacity = "0.05";
         return;
       }
       if (!subsetSet || curStageIdx === 0) {
@@ -133,13 +129,55 @@ export const FigureStage: React.FC = () => {
         return;
       }
       const isBound = bundle.index.bindingByElement.has(id);
-      if (isBound && !subsetSet.has(id)) {
-        node.style.opacity = "0.18";
-      } else {
+      // Keep page background opaque so the figure never turns transparent
+      if (!el?.leaf) {
         node.style.opacity = "";
+        return;
+      }
+      if (subsetSet.has(id)) {
+        node.style.opacity = "1";
+      } else if (focusingNonData) {
+        node.style.opacity = "0.14";
+      } else if (isBound) {
+        node.style.opacity = "0.15";
+      } else {
+        node.style.opacity = focusScope ? "0.45" : "";
       }
     });
-  }, [bundle, highlightedGroup, gridFilterElementIds, hiddenLeafIds, curStageIdx]);
+  }, [bundle, focusScope, highlightedGroup, gridFilterElementIds, hiddenLeafIds, hiddenElementIds, curStageIdx]);
+
+  // Smooth Zoom-to-Focus when triggered from Outline double-click / Focus crosshair / Zoom-to-Fit button
+  useEffect(() => {
+    if (zoomRequestCounter === 0 || !bundle || !focusScope || !svgHostRef.current) return;
+    const els = focusScope.elementIds
+      .map((id) => bundle.index.elementById.get(id))
+      .filter((e): e is GlossElement => Boolean(e));
+    if (els.length === 0) return;
+
+    const vb = bundle.substrate.viewBox;
+    const minX = Math.min(...els.map((e) => Math.min(e.x0, e.x1)));
+    const minY = Math.min(...els.map((e) => Math.min(e.y0, e.y1)));
+    const maxX = Math.max(...els.map((e) => Math.max(e.x0, e.x1)));
+    const maxY = Math.max(...els.map((e) => Math.max(e.y0, e.y1)));
+
+    const boxW = Math.max(48, maxX - minX + 44);
+    const boxH = Math.max(40, maxY - minY + 44);
+    const targetZoom = Math.max(1.05, Math.min(3.4, Math.min(vb.width / boxW, vb.height / boxH) * 0.78));
+
+    // Compute pixel pan offset to bring the focus center to the center of the card
+    const rect = svgHostRef.current.getBoundingClientRect();
+    const baseW = rect.width / Math.max(0.1, zoom);
+    const baseH = rect.height / Math.max(0.1, zoom);
+    const cxFrac = ((minX + maxX) / 2 - vb.x) / vb.width - 0.5;
+    const cyFrac = ((minY + maxY) / 2 - vb.y) / vb.height - 0.5;
+
+    setZoom(+targetZoom.toFixed(2));
+    setPan({
+      x: Math.round(-cxFrac * baseW * targetZoom),
+      y: Math.round(-cyFrac * baseH * targetZoom),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoomRequestCounter]);
 
   // Expose live `window.gloss` read-only workbench API for agents / console users
   useEffect(() => {
@@ -335,7 +373,46 @@ export const FigureStage: React.FC = () => {
               Geometry Only (No Bundle)
             </span>
           )}
-          {highlightedGroup && (
+          {focusScope && (
+            <div
+              className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-semibold"
+              style={{
+                borderColor: focusScope.isException ? "var(--st-warn)" : "var(--st-focus)",
+                background: focusScope.isException ? "var(--st-warn-soft)" : "var(--st-focus-soft)",
+                color: focusScope.isException ? "var(--st-warn)" : "var(--st-focus)",
+              }}
+            >
+              {focusScope.swatch ? (
+                <span className="h-2 w-2 rounded-full" style={{ background: focusScope.swatch }} />
+              ) : (
+                <Crosshair className="h-3 w-3" />
+              )}
+              <span className="max-w-[180px] truncate">
+                Focus: {focusScope.label} ({focusScope.elementIds.length})
+              </span>
+              <button
+                type="button"
+                onClick={requestZoomToFocus}
+                title="Zoom & center viewport on focused scope"
+                className="ml-0.5 rounded px-1 hover:bg-black/10"
+              >
+                <ScanSearch className="h-3 w-3" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFocusScope(null);
+                  setZoom(1);
+                  setPan({ x: 0, y: 0 });
+                }}
+                title="Exit focus (Esc)"
+                className="rounded px-1 hover:bg-black/10"
+              >
+                ×
+              </button>
+            </div>
+          )}
+          {!focusScope && highlightedGroup && (
             <button
               type="button"
               onClick={() => useWorkbenchStore.getState().setHighlightedGroup(null)}
@@ -778,6 +855,33 @@ export const FigureStage: React.FC = () => {
                   );
                 })}
 
+              {/* Focus Scope subtle bounding frame (when focusing a data group, panel, or guide) */}
+              {focusScope && focusScope.elementIds.length > 1 && focusScope.elementIds.length < bundle.substrate.elements.length && (() => {
+                const fEls = focusScope.elementIds
+                  .map((id) => bundle.index.elementById.get(id))
+                  .filter((e): e is GlossElement => Boolean(e));
+                if (fEls.length === 0) return null;
+                const fx0 = Math.min(...fEls.map((e) => Math.min(e.x0, e.x1))) - 6;
+                const fy0 = Math.min(...fEls.map((e) => Math.min(e.y0, e.y1))) - 6;
+                const fx1 = Math.max(...fEls.map((e) => Math.max(e.x0, e.x1))) + 6;
+                const fy1 = Math.max(...fEls.map((e) => Math.max(e.y0, e.y1))) + 6;
+                const strokeColor = focusScope.isException ? "#d97706" : "#2563eb";
+                return (
+                  <rect
+                    x={fx0}
+                    y={fy0}
+                    width={Math.max(12, fx1 - fx0)}
+                    height={Math.max(12, fy1 - fy0)}
+                    rx="6"
+                    fill={strokeColor}
+                    fillOpacity="0.04"
+                    stroke={strokeColor}
+                    strokeWidth="1.25"
+                    strokeDasharray="4 3"
+                  />
+                );
+              })()}
+
               {/* Selected elements crisp blue focus rings */}
               {selectedElements.map((el) => {
                 const pad = 3.5;
@@ -971,12 +1075,12 @@ export const FigureStage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3 text-[10.5px]" style={{ color: "var(--ink-muted)" }}>
-          {hiddenLeafIds.length > 0 && (
+          {(hiddenLeafIds.length > 0 || hiddenElementIds.length > 0) && (
             <span className="inline-flex items-center gap-1" style={{ color: "var(--st-warn)" }}>
-              <Eye className="h-3 w-3" /> {hiddenLeafIds.length} leaf hidden
+              <Eye className="h-3 w-3" /> {hiddenElementIds.length || hiddenLeafIds.length} hidden
             </span>
           )}
-          <span>Ctrl/⌘ + Scroll to zoom · Alt + Drag to pan · Click mark to inspect</span>
+          <span>Ctrl/⌘ + Scroll to zoom · Alt + Drag to pan · Double-click Outline to zoom</span>
         </div>
       </div>
     </div>

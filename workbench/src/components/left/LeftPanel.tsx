@@ -1,20 +1,13 @@
 import React, { useMemo, useState } from "react";
 import {
-  AlertTriangle,
   BookOpen,
   Check,
   CheckCircle2,
-  ChevronDown,
-  ChevronRight,
   Code2,
   Copy,
   Download,
-  Eye,
-  EyeOff,
   FileJson,
   FolderTree,
-  Layers,
-  Search,
   ShieldCheck,
   XCircle,
 } from "lucide-react";
@@ -22,10 +15,11 @@ import {
   buildAriaProjection,
   buildTextProjection,
   buildWebAnnotationProjection,
-  type GlossLeaf,
+  type GlossContextItem,
 } from "../../codec";
 import { useWorkbenchStore, type LeftPanelTab } from "../../store/useWorkbenchStore";
 import { CodeViewer } from "./CodeViewer";
+import { OutlineTree } from "./OutlineTree";
 
 const BUILTIN_CONTEXT_ITEMS = new Set(["code", "data", "engine", "env", "doc", "git"]);
 
@@ -51,34 +45,162 @@ function extractRCode(bundle: NonNullable<ReturnType<typeof useWorkbenchStore.ge
   return parts.length > 0 ? parts.join("\n\n") : JSON.stringify(codeVal, null, 2);
 }
 
+const ExternalContextCard: React.FC<{ item: GlossContextItem }> = ({ item }) => {
+  const val = item.value as Record<string, unknown> | null;
+  if (!item.found || !val) return null;
+
+  // Render structured data_dictionary variables cleanly
+  if (item.item === "data_dictionary" && Array.isArray(val.variables)) {
+    const vars = val.variables as Array<Record<string, unknown>>;
+    return (
+      <div
+        className="rounded-lg border p-2.5"
+        style={{ borderColor: "var(--st-contextual)", background: "var(--bg-surface)" }}
+      >
+        <div className="mb-1.5 flex items-center justify-between">
+          <span className="font-mono-num text-[11px] font-bold" style={{ color: "var(--st-contextual)" }}>
+            data_dictionary
+          </span>
+          {typeof val.source === "string" && (
+            <span className="truncate text-[9.5px]" style={{ color: "var(--ink-muted)" }}>
+              {val.source}
+            </span>
+          )}
+        </div>
+        <div className="space-y-1.5">
+          {vars.map((v, i) => (
+            <div
+              key={i}
+              className="rounded border px-2 py-1 text-[10.5px]"
+              style={{ borderColor: "var(--border-subtle)", background: "var(--bg-canvas)" }}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <code className="font-mono-num font-bold" style={{ color: "var(--ink-primary)" }}>
+                  {String(v.name ?? v.column ?? "")}
+                </code>
+                {v.unit !== undefined && (
+                  <span
+                    className="font-mono-num rounded px-1.5 py-0 text-[9.5px]"
+                    style={{ background: "var(--st-contextual-soft)", color: "var(--st-contextual)" }}
+                  >
+                    {String(v.unit)}
+                  </span>
+                )}
+              </div>
+              {v.description !== undefined && (
+                <div className="mt-0.5 text-[10px]" style={{ color: "var(--ink-secondary)" }}>
+                  {String(v.description)}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Render dataset_documentation (Rd help summaries)
+  if (item.item === "dataset_documentation" && Array.isArray(val.datasets)) {
+    const docs = val.datasets as Array<Record<string, unknown>>;
+    return (
+      <div
+        className="rounded-lg border p-2.5"
+        style={{ borderColor: "var(--st-contextual)", background: "var(--bg-surface)" }}
+      >
+        <div className="mb-1 flex items-center justify-between">
+          <span className="font-mono-num text-[11px] font-bold" style={{ color: "var(--st-contextual)" }}>
+            dataset_documentation
+          </span>
+          <span className="text-[9.5px]" style={{ color: "var(--ink-muted)" }}>
+            R package help
+          </span>
+        </div>
+        {docs.map((d, i) => (
+          <div key={i} className="mt-1 space-y-0.5 text-[10.5px]">
+            <div className="font-semibold" style={{ color: "var(--ink-primary)" }}>
+              {String(d.package ?? "")}::{String(d.dataset ?? "")} — {String(d.title ?? "")}
+            </div>
+            {typeof d.description === "string" && (
+              <p className="leading-snug" style={{ color: "var(--ink-secondary)" }}>
+                {d.description}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Render user_context (question + audience)
+  if (item.item === "user_context") {
+    return (
+      <div
+        className="rounded-lg border p-2.5"
+        style={{ borderColor: "var(--st-focus)", background: "var(--st-focus-soft)" }}
+      >
+        <div className="mb-1 font-mono-num text-[11px] font-bold" style={{ color: "var(--st-focus)" }}>
+          user_context
+        </div>
+        {typeof val.question === "string" && (
+          <div className="text-[11px] font-medium" style={{ color: "var(--ink-primary)" }}>
+            “{val.question}”
+          </div>
+        )}
+        {typeof val.audience === "string" && (
+          <div className="mt-1 text-[10px]" style={{ color: "var(--ink-secondary)" }}>
+            Audience: <strong>{val.audience}</strong>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Generic external context card (literature, project_notes, ontology, external_metadata)
+  return (
+    <div
+      className="rounded-lg border p-2.5"
+      style={{ borderColor: "var(--border-strong)", background: "var(--bg-surface)" }}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-mono-num text-[11px] font-bold" style={{ color: "var(--st-contextual)" }}>
+          {item.item}
+        </span>
+        {typeof val.source === "string" && (
+          <span className="truncate text-[9.5px]" style={{ color: "var(--ink-muted)" }}>
+            {val.source}
+          </span>
+        )}
+      </div>
+      {typeof val.citation === "string" ? (
+        <p className="mt-1 text-[10.5px] leading-snug" style={{ color: "var(--ink-primary)" }}>
+          {val.citation}
+          {typeof val.doi === "string" && (
+            <span className="ml-1 font-mono-num text-[10px]" style={{ color: "var(--ink-muted)" }}>
+              (DOI: {val.doi})
+            </span>
+          )}
+        </p>
+      ) : typeof val.excerpt === "string" ? (
+        <pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap font-mono-num text-[10px]" style={{ color: "var(--ink-secondary)" }}>
+          {val.excerpt}
+        </pre>
+      ) : (
+        <pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap break-words font-mono-num text-[10px]" style={{ color: "var(--ink-secondary)" }}>
+          {JSON.stringify(val, null, 2)}
+        </pre>
+      )}
+    </div>
+  );
+};
+
 export const LeftPanel: React.FC = () => {
   const bundle = useWorkbenchStore((s) => s.bundle);
   const leftTab = useWorkbenchStore((s) => s.leftTab);
   const setLeftTab = useWorkbenchStore((s) => s.setLeftTab);
-  const selectedElementIds = useWorkbenchStore((s) => s.selectedElementIds);
-  const selectedLeafId = useWorkbenchStore((s) => s.selectedLeafId);
-  const hiddenLeafIds = useWorkbenchStore((s) => s.hiddenLeafIds);
-  const selectElement = useWorkbenchStore((s) => s.selectElement);
-  const selectLeaf = useWorkbenchStore((s) => s.selectLeaf);
-  const toggleLeafVisibility = useWorkbenchStore((s) => s.toggleLeafVisibility);
 
-  const [treeSearch, setTreeSearch] = useState("");
-  const [expandedLeaves, setExpandedLeaves] = useState<Record<string, boolean>>({});
   const [codeSubTab, setCodeSubTab] = useState<"r" | "jsonl" | "manifest">("r");
   const [exportFormat, setExportFormat] = useState<"aria" | "text" | "annotation">("aria");
   const [copied, setCopied] = useState(false);
-
-  const leavesByPanel = useMemo(() => {
-    if (!bundle) return new Map<string, GlossLeaf[]>();
-    const map = new Map<string, GlossLeaf[]>();
-    for (const lf of bundle.substrate.leaves) {
-      const key = lf.panel ?? "__chrome__";
-      const list = map.get(key);
-      if (list) list.push(lf);
-      else map.set(key, [lf]);
-    }
-    return map;
-  }, [bundle]);
 
   const jsonlCombined = useMemo(() => {
     if (!bundle) return "";
@@ -104,17 +226,13 @@ export const LeftPanel: React.FC = () => {
 
   if (!bundle) return null;
 
-  const selectedElSet = new Set(selectedElementIds);
-  const hiddenSet = new Set(hiddenLeafIds);
-  const q = treeSearch.trim().toLowerCase();
-
   const handleCopy = async (txt: string) => {
     try {
       await navigator.clipboard.writeText(txt);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // ignore clipboard errors in restricted frames
+      // ignore
     }
   };
 
@@ -129,7 +247,7 @@ export const LeftPanel: React.FC = () => {
   };
 
   const navTabs: Array<{ id: LeftPanelTab; label: string; icon: React.ReactNode }> = [
-    { id: "structure", label: "Tree", icon: <FolderTree className="h-3.5 w-3.5" /> },
+    { id: "structure", label: "Outline", icon: <FolderTree className="h-3.5 w-3.5" /> },
     { id: "context", label: "Context", icon: <BookOpen className="h-3.5 w-3.5" /> },
     { id: "code", label: "Code", icon: <Code2 className="h-3.5 w-3.5" /> },
     { id: "exports", label: "Export", icon: <FileJson className="h-3.5 w-3.5" /> },
@@ -137,17 +255,9 @@ export const LeftPanel: React.FC = () => {
 
   const contextItems = Object.values(bundle.context);
   const builtinContext = contextItems.filter((c) => BUILTIN_CONTEXT_ITEMS.has(c.item));
-  const externalContext = contextItems.filter((c) => !BUILTIN_CONTEXT_ITEMS.has(c.item));
+  const externalFound = contextItems.filter((c) => !BUILTIN_CONTEXT_ITEMS.has(c.item) && c.found);
+  const externalMissing = contextItems.filter((c) => !BUILTIN_CONTEXT_ITEMS.has(c.item) && !c.found);
   const contextualRecords = bundle.records.filter((r) => r.workbenchStage === "contextual");
-
-  const panelGroups: Array<{ key: string; title: string; subtitle: string }> = [
-    ...bundle.substrate.panels.map((p) => ({
-      key: p.id,
-      title: p.key ?? p.id,
-      subtitle: `${p.id} · ${p.x_type ?? ""} × ${p.y_type ?? ""}`,
-    })),
-    { key: "__chrome__", title: "Guides, Axes & Chrome", subtitle: "outside panels" },
-  ];
 
   return (
     <div
@@ -180,250 +290,8 @@ export const LeftPanel: React.FC = () => {
         })}
       </div>
 
-      {/* TAB 1: STRUCTURE TREE */}
-      {leftTab === "structure" && (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="border-b p-2" style={{ borderColor: "var(--border-subtle)" }}>
-            <div
-              className="flex items-center gap-1.5 rounded-md border px-2 py-1"
-              style={{ background: "var(--bg-canvas)", borderColor: "var(--border-subtle)" }}
-            >
-              <Search className="h-3.5 w-3.5" style={{ color: "var(--ink-muted)" }} />
-              <input
-                type="text"
-                value={treeSearch}
-                onChange={(e) => setTreeSearch(e.target.value)}
-                placeholder="Filter leaf, role, e65, Mazda..."
-                className="w-full bg-transparent text-xs focus:outline-none"
-                style={{ color: "var(--ink-primary)" }}
-              />
-            </div>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto p-2 text-xs">
-            {/* Engine & Page Verdict Summary */}
-            <div
-              className="mb-2.5 rounded-lg border p-2"
-              style={{ background: "var(--bg-canvas)", borderColor: "var(--border-subtle)" }}
-            >
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="font-semibold" style={{ color: "var(--ink-primary)" }}>
-                  <Layers className="mr-1 inline h-3.5 w-3.5" style={{ color: "var(--st-focus)" }} />
-                  {bundle.engine ?? "plain SVG"} engine
-                </span>
-                <span className="font-mono-num text-[10.5px]" style={{ color: "var(--ink-muted)" }}>
-                  {bundle.substrate.leaves.length} leaves · {bundle.substrate.elements.length} els
-                </span>
-              </div>
-            </div>
-
-            {panelGroups.map((pg) => {
-              const leaves = (leavesByPanel.get(pg.key) ?? []).filter((lf) => {
-                if (!q) return true;
-                if (
-                  lf.id.toLowerCase().includes(q) ||
-                  lf.name.toLowerCase().includes(q) ||
-                  lf.path.toLowerCase().includes(q)
-                ) {
-                  return true;
-                }
-                const els = bundle.substrate.elements.filter((e) => e.leaf === lf.id);
-                return els.some((e) => {
-                  const raw = bundle.index.inferredRawByElement.get(e.id);
-                  return (
-                    e.id.toLowerCase().includes(q) ||
-                    (e.text ?? "").toLowerCase().includes(q) ||
-                    (raw?.rawKeyLabels.join(" ").toLowerCase().includes(q) ?? false)
-                  );
-                });
-              });
-
-              if (leaves.length === 0) return null;
-
-              return (
-                <div key={pg.key} className="mb-3">
-                  <div className="mb-1 flex items-center justify-between px-1">
-                    <span
-                      className="text-[10.5px] font-bold uppercase tracking-wider"
-                      style={{ color: "var(--ink-muted)" }}
-                    >
-                      {pg.title}
-                    </span>
-                    <span className="font-mono-num text-[10px]" style={{ color: "var(--ink-muted)" }}>
-                      {leaves.length}
-                    </span>
-                  </div>
-
-                  <div className="space-y-0.5">
-                    {leaves.map((lf) => {
-                      const roleLeaf = bundle.derived.rolesLeaves.find((r) => r.leaf === lf.id);
-                      const bindLeaf = bundle.derived.bindingsLeaves.find((b) => b.leaf === lf.id);
-                      const isOpen = Boolean(expandedLeaves[lf.id]) || Boolean(q);
-                      const isHidden = hiddenSet.has(lf.id);
-                      const isSelectedLeaf = selectedLeafId === lf.id;
-
-                      const childEls = isOpen
-                        ? bundle.substrate.elements
-                            .filter((e) => e.leaf === lf.id)
-                            .filter((e) => {
-                              if (!q) return true;
-                              const raw = bundle.index.inferredRawByElement.get(e.id);
-                              return (
-                                e.id.toLowerCase().includes(q) ||
-                                e.tag.toLowerCase().includes(q) ||
-                                (e.text ?? "").toLowerCase().includes(q) ||
-                                (raw?.rawKeyLabels.join(" ").toLowerCase().includes(q) ?? false)
-                              );
-                            })
-                            .slice(0, 120)
-                        : [];
-
-                      return (
-                        <div key={lf.id}>
-                          <div
-                            className="group flex items-center gap-1 rounded-md px-1 py-1 transition-colors hover:bg-[var(--bg-subtle)]"
-                            style={{
-                              background: isSelectedLeaf ? "var(--st-focus-soft)" : undefined,
-                            }}
-                          >
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setExpandedLeaves((prev) => ({ ...prev, [lf.id]: !prev[lf.id] }))
-                              }
-                              className="p-0.5"
-                              style={{ color: "var(--ink-muted)" }}
-                            >
-                              {isOpen ? (
-                                <ChevronDown className="h-3 w-3" />
-                              ) : (
-                                <ChevronRight className="h-3 w-3" />
-                              )}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => selectLeaf(lf.id)}
-                              className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
-                            >
-                              <span
-                                className="font-mono-num shrink-0 text-[10.5px] font-semibold"
-                                style={{ color: "var(--st-focus)" }}
-                              >
-                                {lf.id}
-                              </span>
-                              <span
-                                className="truncate text-[11px]"
-                                style={{ color: "var(--ink-primary)" }}
-                                title={lf.path}
-                              >
-                                {roleLeaf?.kind ?? lf.name}
-                              </span>
-                            </button>
-
-                            <div className="flex shrink-0 items-center gap-1">
-                              {lf.status !== "ok" && (
-                                <span
-                                  title={`Leaf status: ${lf.status} (expected ${lf.n_expected}, drawn ${lf.n_drawn})`}
-                                  style={{ color: "var(--st-warn)" }}
-                                >
-                                  <AlertTriangle className="h-3 w-3" />
-                                </span>
-                              )}
-                              {bindLeaf && bindLeaf.verified > 0 && (
-                                <span
-                                  className="font-mono-num rounded px-1 text-[9.5px] font-semibold"
-                                  style={{
-                                    background: "var(--st-verified-soft)",
-                                    color: "var(--st-verified)",
-                                  }}
-                                >
-                                  {bindLeaf.verified}✓
-                                </span>
-                              )}
-                              <span className="font-mono-num text-[10px]" style={{ color: "var(--ink-muted)" }}>
-                                {lf.n_drawn}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => toggleLeafVisibility(lf.id)}
-                                title={isHidden ? "Show leaf" : "Dim/hide leaf on canvas"}
-                                className="opacity-40 transition-opacity hover:opacity-100 group-hover:opacity-80"
-                                style={{ color: isHidden ? "var(--st-warn)" : "var(--ink-muted)" }}
-                              >
-                                {isHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                              </button>
-                            </div>
-                          </div>
-
-                          {isOpen && childEls.length > 0 && (
-                            <div
-                              className="ml-4 border-l pl-2"
-                              style={{ borderColor: "var(--border-subtle)" }}
-                            >
-                              {childEls.map((el) => {
-                                const b = bundle.index.bindingByElement.get(el.id);
-                                const raw = bundle.index.inferredRawByElement.get(el.id);
-                                const recs = bundle.index.recordsByElement.get(el.id) ?? [];
-                                const isSel = selectedElSet.has(el.id);
-                                return (
-                                  <button
-                                    key={el.id}
-                                    type="button"
-                                    onClick={() => selectElement(el.id)}
-                                    className="flex w-full items-center justify-between gap-1 rounded px-1.5 py-0.5 text-left text-[11px] hover:bg-[var(--bg-subtle)]"
-                                    style={{
-                                      background: isSel ? "var(--st-focus-soft)" : undefined,
-                                      color: isSel ? "var(--st-focus)" : "var(--ink-primary)",
-                                    }}
-                                  >
-                                    <span className="flex min-w-0 items-center gap-1.5">
-                                      <span className="font-mono-num font-semibold">{el.id}</span>
-                                      <span className="truncate text-[10.5px]" style={{ color: "var(--ink-secondary)" }}>
-                                        {raw?.rawKeyLabels[0] ?? el.text ?? el.tag}
-                                      </span>
-                                    </span>
-                                    <span className="flex shrink-0 items-center gap-1">
-                                      {recs.length > 0 && (
-                                        <span
-                                          className="h-1.5 w-1.5 rounded-full"
-                                          style={{ background: "var(--st-contextual)" }}
-                                          title={`${recs.length} semantic record(s)`}
-                                        />
-                                      )}
-                                      {b && (
-                                        <span
-                                          className="h-1.5 w-1.5 rounded-full"
-                                          style={{
-                                            background:
-                                              b.status === "verified"
-                                                ? "var(--st-verified)"
-                                                : "var(--st-warn)",
-                                          }}
-                                          title={`Binding: ${b.status}`}
-                                        />
-                                      )}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                              {lf.n_drawn > 120 && (
-                                <div className="px-1.5 py-1 text-[10px]" style={{ color: "var(--ink-muted)" }}>
-                                  Showing first 120 of {lf.n_drawn.toLocaleString()} elements (use AG Grid for all rows)
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* TAB 1: DESIGN-TOOL OUTLINE TREE + MULTI-LEVEL FOCUS */}
+      {leftTab === "structure" && <OutlineTree />}
 
       {/* TAB 2: CONTEXT & EXTERNAL SOURCES */}
       {leftTab === "context" && (
@@ -464,13 +332,56 @@ export const LeftPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Built-in Sniffed Context */}
+          {/* External Context Sources (Task 5A) */}
+          <div>
+            <div
+              className="mb-1.5 flex items-center justify-between text-[10.5px] font-bold uppercase tracking-wider"
+              style={{ color: "var(--st-contextual)" }}
+            >
+              <span>External Context ({externalFound.length})</span>
+            </div>
+            {externalFound.length === 0 && contextualRecords.length === 0 ? (
+              <div
+                className="rounded-lg border border-dashed p-3 text-[11px] leading-relaxed"
+                style={{ borderColor: "var(--border-strong)", color: "var(--ink-muted)" }}
+              >
+                Attach domain metadata with <code className="font-mono-num">gl_add_context()</code>{" "}
+                (<code className="font-mono-num">data_dictionary</code>,{" "}
+                <code className="font-mono-num">project_notes</code>,{" "}
+                <code className="font-mono-num">ontology</code>,{" "}
+                <code className="font-mono-num">literature</code>,{" "}
+                <code className="font-mono-num">user_context</code>).
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {externalFound.map((c) => (
+                  <ExternalContextCard key={c.item} item={c} />
+                ))}
+                {externalMissing.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-0.5">
+                    {externalMissing.map((m) => (
+                      <span
+                        key={m.item}
+                        title={m.reason ?? "not attached"}
+                        className="font-mono-num rounded border border-dashed px-1.5 py-0.5 text-[9.5px]"
+                        style={{ borderColor: "var(--border-strong)", color: "var(--ink-muted)" }}
+                      >
+                        {m.item}: empty
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Core Sniffed Context */}
           <div>
             <div
               className="mb-1.5 text-[10.5px] font-bold uppercase tracking-wider"
               style={{ color: "var(--ink-muted)" }}
             >
-              Sniffed Context (gl_context)
+              Core Capture Context (gl_context)
             </div>
             <div className="space-y-1.5">
               {builtinContext.map((c) => (
@@ -518,66 +429,6 @@ export const LeftPanel: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* External Context Sources (Forward-compatible with extended gl_context plugins) */}
-          <div>
-            <div
-              className="mb-1.5 text-[10.5px] font-bold uppercase tracking-wider"
-              style={{ color: "var(--st-contextual)" }}
-            >
-              External Context Sources
-            </div>
-            {externalContext.length === 0 && contextualRecords.length === 0 ? (
-              <div
-                className="rounded-lg border border-dashed p-3 text-[11px] leading-relaxed"
-                style={{ borderColor: "var(--border-strong)", color: "var(--ink-muted)" }}
-              >
-                No external context plugins (<code className="font-mono-num">data_dictionary</code>,{" "}
-                <code className="font-mono-num">project_notes</code>,{" "}
-                <code className="font-mono-num">ontology</code>,{" "}
-                <code className="font-mono-num">user_context</code>) attached to this bundle yet.
-              </div>
-            ) : (
-              <div className="space-y-1.5">
-                {externalContext.map((c) => (
-                  <div
-                    key={c.item}
-                    className="rounded-lg border p-2"
-                    style={{
-                      borderColor: "var(--st-contextual)",
-                      background: "var(--st-contextual-soft)",
-                    }}
-                  >
-                    <div className="font-mono-num text-[11px] font-semibold" style={{ color: "var(--st-contextual)" }}>
-                      {c.item}
-                    </div>
-                    <pre className="mt-1 whitespace-pre-wrap break-words font-mono-num text-[10px]" style={{ color: "var(--ink-primary)" }}>
-                      {typeof c.value === "string" ? c.value : JSON.stringify(c.value, null, 2)}
-                    </pre>
-                  </div>
-                ))}
-                {contextualRecords.map((rec) => (
-                  <div
-                    key={rec.id}
-                    className="rounded-lg border p-2"
-                    style={{ borderColor: "var(--border-subtle)", background: "var(--bg-canvas)" }}
-                  >
-                    <div className="flex items-center justify-between text-[10.5px]">
-                      <span className="font-semibold" style={{ color: "var(--st-contextual)" }}>
-                        {rec.body.source_type ?? rec.body.type ?? "domain_context"}
-                      </span>
-                      <span className="font-mono-num text-[10px]" style={{ color: "var(--ink-muted)" }}>
-                        {rec.body.source ?? rec.provenance.by}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-[11px]" style={{ color: "var(--ink-primary)" }}>
-                      {rec.body.text ?? rec.body.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}

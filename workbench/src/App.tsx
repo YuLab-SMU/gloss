@@ -6,6 +6,7 @@ import {
   Command as CommandIcon,
   FolderOpen,
   Moon,
+  Radio,
   ShieldAlert,
   ShieldCheck,
   Sun,
@@ -16,6 +17,7 @@ import { SEMANTIC_STAGES } from "./codec";
 import { CommandPalette } from "./components/CommandPalette";
 import { DataWorkbenchGrid } from "./components/grid/DataWorkbenchGrid";
 import { LeftPanel } from "./components/left/LeftPanel";
+import { ProposalModal } from "./components/ProposalModal";
 import { RightInspector } from "./components/right/RightInspector";
 import { DropzoneHero } from "./components/rive/DropzoneHero";
 import { StageRail } from "./components/rive/StageRail";
@@ -25,6 +27,7 @@ import { useWorkbenchStore, type WorkbenchConfig } from "./store/useWorkbenchSto
 declare global {
   interface Window {
     __GLOSS_WORKBENCH_CONFIG__?: WorkbenchConfig;
+    __GLOSS_LIVE_API__?: { baseUrl: string };
   }
 }
 
@@ -39,6 +42,8 @@ export const App: React.FC = () => {
   const loadFromEmbeddedJson = useWorkbenchStore((s) => s.loadFromEmbeddedJson);
   const loadFromFiles = useWorkbenchStore((s) => s.loadFromFiles);
   const setConfig = useWorkbenchStore((s) => s.setConfig);
+  const liveApiBaseUrl = useWorkbenchStore((s) => s.liveApiBaseUrl);
+  const setLiveApiBaseUrl = useWorkbenchStore((s) => s.setLiveApiBaseUrl);
   const setActiveStage = useWorkbenchStore((s) => s.setActiveStage);
   const stepStage = useWorkbenchStore((s) => s.stepStage);
   const clearSelection = useWorkbenchStore((s) => s.clearSelection);
@@ -56,6 +61,9 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (window.__GLOSS_WORKBENCH_CONFIG__) {
       setConfig(window.__GLOSS_WORKBENCH_CONFIG__);
+    }
+    if (window.__GLOSS_LIVE_API__) {
+      setLiveApiBaseUrl(window.__GLOSS_LIVE_API__.baseUrl ?? "");
     }
 
     const embeddedTag = document.getElementById("gloss-bundle");
@@ -102,7 +110,7 @@ export const App: React.FC = () => {
         })
         .catch(() => {});
     }
-  }, [loadFromEmbeddedJson, loadFromText, setConfig]);
+  }, [loadFromEmbeddedJson, loadFromText, setConfig, setLiveApiBaseUrl]);
 
   // Global keyboard shortcuts (1..9 stages, arrows, Esc)
   useEffect(() => {
@@ -215,6 +223,15 @@ export const App: React.FC = () => {
               </span>
 
               <div className="hidden items-center gap-1.5 lg:flex">
+                {liveApiBaseUrl !== null && (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                    style={{ background: "var(--st-verified-soft)", color: "var(--st-verified)" }}
+                  >
+                    <Radio className="h-3 w-3" />
+                    LIVE R
+                  </span>
+                )}
                 <span
                   className="font-mono-num rounded-full px-2 py-0.5 text-[10px] font-semibold"
                   style={{ background: "var(--bg-subtle)", color: "var(--ink-secondary)" }}
@@ -410,6 +427,7 @@ export const App: React.FC = () => {
       )}
 
       <CommandPalette />
+      <ProposalModal />
     </div>
   );
 };

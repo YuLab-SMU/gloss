@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Command } from "cmdk";
-import { Columns2, Layers, Moon, Search, Sparkles, Sun, Target } from "lucide-react";
-import { SEMANTIC_STAGES } from "../codec";
+import { Columns2, Crosshair, Layers, Moon, Search, Sparkles, Sun, Target } from "lucide-react";
+import { buildOutlineTree, SEMANTIC_STAGES, type OutlineNode } from "../codec";
 import { useWorkbenchStore } from "../store/useWorkbenchStore";
 
 export const CommandPalette: React.FC = () => {
@@ -11,6 +11,7 @@ export const CommandPalette: React.FC = () => {
   const setActiveStage = useWorkbenchStore((s) => s.setActiveStage);
   const selectElement = useWorkbenchStore((s) => s.selectElement);
   const selectRecord = useWorkbenchStore((s) => s.selectRecord);
+  const setFocusScope = useWorkbenchStore((s) => s.setFocusScope);
   const toggleTheme = useWorkbenchStore((s) => s.toggleTheme);
   const theme = useWorkbenchStore((s) => s.theme);
   const splitCompare = useWorkbenchStore((s) => s.splitCompare);
@@ -28,6 +29,24 @@ export const CommandPalette: React.FC = () => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [setOpen]);
+
+  const focusTargets = useMemo(() => {
+    if (!bundle) return [] as OutlineNode[];
+    const dataTree = buildOutlineTree(bundle, "data");
+    const semTree = buildOutlineTree(bundle, "semantic");
+    const walk = (nodes: OutlineNode[]): OutlineNode[] =>
+      nodes.flatMap((n) => [n, ...walk(n.children)]);
+    const seen = new Set<string>();
+    return [...walk(dataTree), ...walk(semTree)]
+      .filter((n) => {
+        if (n.elementIds.length === 0 || n.id === "root:figure" || n.icon === "point") return false;
+        const k = `${n.label}:${n.elementIds.length}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
+      .slice(0, 28);
+  }, [bundle]);
 
   if (!open) return null;
 
@@ -73,6 +92,47 @@ export const CommandPalette: React.FC = () => {
             <Command.Empty className="py-8 text-center text-xs" style={{ color: "var(--ink-muted)" }}>
               No matching stage, element, entity, or record.
             </Command.Empty>
+
+            {focusTargets.length > 0 && (
+              <Command.Group heading="Focus Layer, Group or Semantic Scope" className="mb-2">
+                {focusTargets.map((n) => (
+                  <Command.Item
+                    key={n.id}
+                    value={`focus ${n.label} ${n.subtitle ?? ""}`}
+                    onSelect={() => {
+                      setFocusScope(
+                        {
+                          id: n.id,
+                          label: n.label,
+                          kind: n.icon,
+                          elementIds: n.elementIds,
+                          recordId: n.recordId,
+                          swatch: n.swatch,
+                          isException: n.icon === "exception",
+                        },
+                        true
+                      );
+                      setOpen(false);
+                    }}
+                    className="flex cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 aria-selected:bg-[var(--st-focus-soft)]"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      {n.swatch ? (
+                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: n.swatch }} />
+                      ) : (
+                        <Crosshair className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--st-focus)" }} />
+                      )}
+                      <span className="truncate font-medium" style={{ color: "var(--ink-primary)" }}>
+                        {n.label}
+                      </span>
+                    </span>
+                    <span className="font-mono-num shrink-0 text-[10px]" style={{ color: "var(--ink-muted)" }}>
+                      {n.elementIds.length} el
+                    </span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
 
             <Command.Group heading="Semantic Stages" className="mb-2">
               {SEMANTIC_STAGES.map((st) => (
