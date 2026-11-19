@@ -26,6 +26,8 @@ See [`_template.md`](_template.md).
 
 ## Active plans
 
+- [2026-11-18-gloss-workbench.md](2026-11-18-gloss-workbench.md): v1 standalone browser Workbench (`gl_workbench()`, `@gloss/bundle-codec`, React 19 + AG Grid Community + Rive state-machine adapter + React Flow + CodeMirror 6 + Flatbush) and external record provenance fields (`source`, `source_type`, `confidence`). Tasks 1–4 are complete and verified in a live browser; Task 5 (external `gl_context()` plugins and local live `gl_workbench_serve()` mode) remains open.
+
 The agent-first binding prototype is closed in [done/2026-11-17-agent-first-binding.md](done/2026-11-17-agent-first-binding.md). It froze package-specific binding rules as a legacy baseline, wrote 84 development outcome rows, and archived the four internal arms. Live model calls and the route decision remain deferred because no fixed model gateway token was available. The held-out audit queue, container-canonical held-out materials, data-key anchor failures and repeated/held-out model comparison remain outside this slice.
 
 The M3 semantic, operations and projection slice is in [done/2026-11-16-m3-semantic-operations-projection.md](done/2026-11-16-m3-semantic-operations-projection.md). The M2 record and anchor slice is in [done/2026-11-15-m2-records-and-anchors.md](done/2026-11-15-m2-records-and-anchors.md). The prepared visual evidence pilot is closed with its model comparison deferred in [done/2026-11-15-visual-semantic-pilot.md](done/2026-11-15-visual-semantic-pilot.md). The preceding claim pilot is closed in [done/2026-11-15-semantic-pilot.md](done/2026-11-15-semantic-pilot.md); M1 remains closed in [done/2026-11-11-m1-roles-and-binding.md](done/2026-11-11-m1-roles-and-binding.md).

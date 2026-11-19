@@ -1,0 +1,54 @@
+# 2026-11-18 — gloss Artifact Viewer Workbench v1
+
+- **Related plan:** [plan/2026-11-18-gloss-workbench.md](../plan/2026-11-18-gloss-workbench.md) (active; Tasks 1–4 complete, Task 5 open)
+- **Related ADRs:** [ADR-0005](../dev_docs/decisions/0005-bundle-format-v0.md) (bundle format v0)
+- **Worked on by:** Antigravity
+
+## What changed
+
+- **Frontend Workbench (`workbench/`, excluded from CRAN tarball via `.Rbuildignore`)**:
+  - `@gloss/bundle-codec` (`workbench/src/codec/`): pure TypeScript client-side decoder for `gloss-bundle` v0.x (native `DecompressionStream("deflate")`, u32-BE unpacking, Web Crypto SHA-256 manifest verification, `f64le`/`i32le` byte-unshuffling, shared column references, `index.bin` dense-leaf decoding + Flatbush R-tree spatial index, derived compaction expansion, JSONL layer materialization, transparent plain-SVG geometry-only degradation, and WAI-ARIA / Text / W3C Web Annotation projections).
+  - UI workspace (`workbench/src/components/`):
+    - Top header + signature 9-Stage Semantic Ladder Rail (`Raw SVG → Structure → Binding → Analytical → Contextual → Relation → Claim → Narrative → Behavior`) backed by `@rive-app/react-canvas` State Machine adapter (`RiveAdapter.tsx`, `StageRail.tsx`, `VerificationSeal.tsx`, `DropzoneHero.tsx`) with native SVG fallbacks and hot-swap `.riv` asset slots.
+    - Central lossless `FigureStage.tsx` mounting the original `svglite` SVG untouched (Principle 1, scripts/`on*` stripped), synchronized non-destructive `viewBox` overlay, pan/zoom, Before/After curtain comparison slider, Flatbush hit-testing, and SVG↔data coordinate HUD.
+    - Bottom `DataWorkbenchGrid.tsx` using **AG Grid Community v33+** across `raw`, `built_layer*`, `Bindings`, `Elements`, `Roles`, and `Records` with pinned row-key columns, R special-value renderers (`NA`/`NaN`/`±Inf`), hex swatches, `dev` bars, CSV export, and bidirectional brushing & linking with the SVG canvas.
+    - Left panel (`LeftPanel.tsx`, `CodeViewer.tsx`): Structure tree with leaf visibility toggles, sniffed & external context cards + SHA-256 integrity status, CodeMirror 6 R code & JSONL event log viewer, and ARIA/Text/Web Annotation exports.
+    - Right inspector (`RightInspector.tsx`, `LineageDag.tsx`): 4-section evidence chain (Substrate Facts, Code-Checked Binding + transparently labeled `inferred` raw entity, Anchored Records with external `source`/`source_type`/`confidence`/`evidence`, Active Operations), interactive per-group `gl_check()` matrix that highlights exception points on the SVG, audit records tab, and interactive React Flow (`@xyflow/react`) provenance DAG.
+    - Global `⌘K` command palette (`CommandPalette.tsx`) and dual themes (`Paper Studio` light / `Obsidian Lab` dark).
+- **R Package Integration**:
+  - `R/project-workbench.R`: added `gl_workbench()` and registered the `"workbench"` projection plugin in `R/zzz.R`, embedding the identical `<script type="application/json" id="gloss-bundle">` payload into `inst/workbench/workbench-full.html.gz` (656 KB) so exported HTML files round-trip losslessly via `gl_read()`.
+  - `R/core-record.R`: extended `core_layer_body_schema()` with optional `"source?"`, `"source_type?"`, and `"confidence?"` fields for external contextual semantics.
+  - `tests/testthat/test-workbench.R`, `man/gl_workbench.Rd`, `NAMESPACE`, `NEWS.md`, `dev_docs/demo/workbench-demo.R`.
+
+## Measured
+
+- **Frontend typecheck & Vitest**:
+  - `node workbench/node_modules/typescript/bin/tsc -p workbench/tsconfig.json --noEmit` → 0 errors.
+  - `node workbench/node_modules/vitest/vitest.mjs run --config vite.config.ts --root workbench` → 1 file, 5 tests passed, 0 failed (519 ms): verified real `dev_docs/demo/mtcars-context.html` (21 files, SHA-256 100% pass, 125 elements, 32 verified bindings, `e65 -> Mazda RX4`), directory bundle `dev_docs/demo/mtcars-bundle/`, shuffled `f64le`/`i32le` binary vectors with R specials, 10,000-point dense `index.bin` + Flatbush hit-testing (14 ms), and plain-SVG fallback.
+- **Single-file build sizes**:
+  - `full` (`vite.singlefile.config.ts`, includes `@rive-app/react-canvas` + AG Grid + React Flow + CodeMirror 6): `2,339.13 kB` uncompressed / `676.05 kB` gzipped (`inst/workbench/workbench-full.html.gz` = `656 KB`).
+  - `lite` (`VITE_WORKBENCH_MODE=lite`, zero-WASM stub): `1,943.47 kB` uncompressed / `573.92 kB` gzipped (`-395.66 kB` uncompressed).
+  - Generated showcase `dev_docs/demo/mtcars-workbench.html` (`Rscript dev_docs/demo/workbench-demo.R`): `2,363,126` bytes; `gl_read()` round-trip identical elements (`TRUE`), bindings (`TRUE`), records (`10`).
+- **R test suite (before → after)**:
+  - Prior closing log (`2026-11-18-agent-first-binding.md`): 23 files, 1648 expectations, 0 failures, 0 skips.
+  - After (`R_LIBS_USER=/nonexistent NOT_CRAN=true Rscript -e "devtools::test()"`): **24 files, 1602 expectations passed, 0 failures, 0 warnings, 8 environment skips** (`aisdk` 5, `sf` 1, `showtext` 2, installed in `~/Library/R/arm64/4.5/library` outside the tool sandbox). Targeted new tests `test-workbench.R` (`12` pass), `test-plugin.R` (`92` pass, including `projection/workbench` contract), and `test-hygiene.R` (`1` pass): 0 failures, 0 warnings, 0 skips.
+- **Package check**:
+  - `_R_CHECK_FORCE_SUGGESTS_=false R_LIBS_USER=/nonexistent R CMD check --no-manual` → install, installed size, non-ASCII, codoc, Rd, examples, and `testthat.R` all `OK`. The sole warning/note came from the pre-existing untracked `City bike-share demand/` directory in the repo root; `workbench/` was cleanly excluded from the tarball.
+- **Live browser inspection** (`http://127.0.0.1:4188/mtcars-workbench.html` at `1440×900`):
+  - 0 console errors, 0 uncaught page errors; verified 9-stage rail, untouched SVG + staggered relation arcs + panel-clamped leader callouts, AG Grid pinned `.rownames` column (`Mazda RX4` etc.), clickable partial-claim exception group highlighting 3 automatic 4-cylinder points, React Flow lineage DAG, CodeMirror 6 R code, Before/After curtain compare, and Obsidian dark theme.
+- **Not run**:
+  - Bench Docker container suite (`bench/docker/run.sh`) was not required because no graphics-device capture code was modified.
+  - Live `aisdk`/`sf`/`showtext` tests were skipped because macOS sandbox restricts reading `~/Library/R/arm64/4.5/library/`.
+
+## Surprises
+
+- **Base R `substring(x, first)` defaults `last = 1000000L`.** Because the single-file workbench HTML template is ~2.34 MB (> 1,000,000 chars), omitting `last = nchar(haystack)` in `replace_literal_once()` truncated the tail and dropped the second injection marker. Fixed immediately by passing `nchar(haystack)`. → `R/project-workbench.R` and covered by `test-workbench.R`.
+- **Single-file JS bundle must never contain a literal `<script ... id="gloss-bundle">` string.** Wrapping `embeddedTag.textContent` back into a fake `<script>` string inside `App.tsx` would have caused R's `extract_embedded()` regex to match `<head>` JS instead of the `<body>` bundle tag. Added `decodeEmbeddedJsonText()` directly and verified 0 matches in the compiled shell. → `workbench/src/codec/decodeBundle.ts`, `App.tsx`, and verified by `gl_read()` round-trip test.
+- **AG Grid treats leading dots (`field: ".rownames"`) as nested dot-notation.** Real browser inspection caught empty cells in the pinned `.rownames` column despite data being decoded. Fixed with `suppressFieldDotNotation={true}` and verified visually. → `workbench/src/components/grid/DataWorkbenchGrid.tsx`.
+- **R `check_trend()` formats multi-column group labels with `" / "` (e.g. `"1 / 1"`), and clicking a group button inside `RecordCard` bubbled to `selectRecord()`.** Live browser inspection caught that clicking the exception group did not pulse the 3 exception points. Fixed with `e.stopPropagation()` and splitting group keys on `/\s*(?:[,|]|\/)\s*/`, then verified 3 amber pulsing exception points in the browser. → `workbench/src/components/right/RightInspector.tsx`.
+- **Duplicate cross-panel relation arcs and right-edge leader callouts collided on the SVG overlay.** Fixed by staggering arcs on opposing bezier bows with pill backdrops and clamping leader callouts inside panel bounds. → `workbench/src/components/stage/FigureStage.tsx`.
+
+## What's next
+
+- Task 5 in `plan/2026-11-18-gloss-workbench.md`: add read-only external `gl_context()` plugins (`data_dictionary`, `project_notes`, `user_context`, `ontology`) so contextual semantics flow automatically into `gl_annotate()` and the Workbench's External Context panel, and optionally add `gl_workbench_serve()` (`httpuv`) for live R-session stage execution and interactive human `gl_propose()`.
+- Author bespoke `.riv` binary animations in Rive Editor and drop them into `workbench/public/rive/` to hot-swap the Stage Rail, Verification Seal, and Dropzone Unfold fallbacks with zero code changes.
