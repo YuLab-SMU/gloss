@@ -1,14 +1,13 @@
 import React, { useMemo, useState } from "react";
 import {
-  AlertTriangle,
+  AlertCircle,
+  ArrowRight,
   ArrowRightLeft,
   BookOpen,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
   ExternalLink,
-  Microscope,
-  ShieldCheck,
   Sparkles,
   Wrench,
   XCircle,
@@ -17,38 +16,20 @@ import {
   extractDataDictionaryMap,
   getFigureDisplayTitle,
   humanizeCheckGroupLabel,
-  humanizeCheckKind,
-  humanizeStatus,
+  humanizePanelLabel,
   resolveCheckGroupElements,
+  summarizeCheckForReader,
   type GlossCheck,
   type GlossRecord,
 } from "../../codec";
 import { useWorkbenchStore } from "../../store/useWorkbenchStore";
-import { VerificationSeal } from "../rive/VerificationSeal";
 
-function badgeStyle(status: string): React.CSSProperties {
-  switch (status) {
-    case "verified":
-      return { background: "var(--st-verified-soft)", color: "var(--st-verified)" };
-    case "partial":
-    case "ambiguous":
-    case "proposed":
-      return { background: "var(--st-warn-soft)", color: "var(--st-warn)" };
-    case "failed":
-    case "rejected":
-      return { background: "var(--st-fail-soft)", color: "var(--st-fail)" };
-    case "speculative":
-      return {
-        background: "var(--st-spec-soft)",
-        color: "var(--st-spec)",
-        border: "1px dashed var(--st-spec)",
-      };
-    default:
-      return { background: "var(--bg-subtle)", color: "var(--ink-secondary)" };
-  }
-}
-
-const ScientificCheckBlock: React.FC<{
+/**
+ * Collapsible, plain-language data check drawer tucked beneath a takeaway.
+ * Collapsed by default so the reader reads clean scientific prose first — and can
+ * expand in one click to audit exact numbers or spotlight exceptions on the figure.
+ */
+const CollapsibleDataCheck: React.FC<{
   check: GlossCheck;
   tableName?: string;
   recordId: string;
@@ -56,11 +37,21 @@ const ScientificCheckBlock: React.FC<{
   const bundle = useWorkbenchStore((s) => s.bundle);
   const focusScope = useWorkbenchStore((s) => s.focusScope);
   const setFocusScope = useWorkbenchStore((s) => s.setFocusScope);
+  const [expanded, setExpanded] = useState(false);
   const [showAllRows, setShowAllRows] = useState(false);
 
   if (!bundle) return null;
 
-  // For wide row-level checks (e.g. 24 heatmap genes), surface failed exceptions first and let user expand all
+  const summary = summarizeCheckForReader(check);
+  const toneColor =
+    summary.tone === "verified"
+      ? "var(--st-verified)"
+      : summary.tone === "mixed"
+        ? "var(--st-warn)"
+        : summary.tone === "failed"
+          ? "var(--st-fail)"
+          : "var(--ink-muted)";
+
   const orderedGroups = [...check.groups].sort((a, b) => {
     const af = a.passed === false ? 0 : 1;
     const bf = b.passed === false ? 0 : 1;
@@ -73,39 +64,44 @@ const ScientificCheckBlock: React.FC<{
       : orderedGroups.slice(0, collapseLimit);
 
   return (
-    <div
-      className="mt-2.5 rounded-xl border p-2.5"
-      style={{ background: "var(--bg-canvas)", borderColor: "var(--border-subtle)" }}
-    >
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-[11px] font-semibold" style={{ color: "var(--ink-primary)" }}>
-          {humanizeCheckKind(check.kind)}
+    <div className="mt-2.5 border-t pt-2" style={{ borderColor: "var(--border-subtle)" }}>
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center justify-between gap-2 text-left text-[11px] transition-opacity hover:opacity-85"
+      >
+        <span className="inline-flex min-w-0 items-center gap-1.5 font-medium" style={{ color: toneColor }}>
+          {summary.tone === "verified" ? (
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+          ) : summary.tone === "failed" ? (
+            <XCircle className="h-3.5 w-3.5 shrink-0" />
+          ) : (
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          )}
+          <span className="truncate">{summary.label}</span>
         </span>
         <span
-          className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-          style={badgeStyle(check.status)}
+          className="inline-flex shrink-0 items-center gap-0.5 text-[10.5px] font-semibold"
+          style={{ color: "var(--ink-muted)" }}
         >
-          {humanizeStatus(check.status)}
+          {expanded ? "Hide" : summary.actionLabel}
+          {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
         </span>
-      </div>
+      </button>
 
-      {visibleGroups.length > 0 && (
-        <div className="space-y-1.5">
+      {expanded && visibleGroups.length > 0 && (
+        <div className="mt-2 space-y-1.5">
           {visibleGroups.map((g, idx) => {
             const niceLabel = humanizeCheckGroupLabel(bundle, check, tableName, g);
             const scopeId = `check:${recordId}:${g.group}`;
             const isActive = focusScope?.id === scopeId;
             const failed = g.passed === false;
-            const subLine =
+            const detailText =
               typeof g.n === "number"
-                ? `${g.n} observations${failed ? " · click to spotlight" : ""}`
+                ? `n = ${g.n}`
                 : typeof g.left === "number" && typeof g.right === "number"
-                  ? `${g.left.toFixed(2)} vs ${g.right.toFixed(2)}${failed ? " · click to spotlight" : ""}`
-                  : typeof g.value === "number"
-                    ? `${failed ? "Outside range · click to spotlight" : "Within expected range"}`
-                    : failed
-                      ? "Exception · click to spotlight"
-                      : "Passed check";
+                  ? `${g.left.toFixed(2)} vs ${g.right.toFixed(2)}`
+                  : null;
             const metricText =
               typeof g.estimate === "number"
                 ? g.estimate >= 0
@@ -117,9 +113,7 @@ const ScientificCheckBlock: React.FC<{
                     ? g.value >= 0
                       ? `+${g.value.toFixed(2)}`
                       : g.value.toFixed(2)
-                    : typeof g.n === "number" && check.kind === "count"
-                      ? `n=${g.n}`
-                      : null;
+                    : null;
 
             return (
               <button
@@ -148,24 +142,26 @@ const ScientificCheckBlock: React.FC<{
                   borderColor: isActive
                     ? "var(--st-focus)"
                     : failed
-                      ? "var(--st-fail)"
+                      ? "var(--st-warn)"
                       : "var(--border-subtle)",
-                  background: failed ? "var(--st-fail-soft)" : "var(--bg-surface)",
+                  background: isActive ? "var(--st-focus-soft)" : "var(--bg-canvas)",
                 }}
               >
                 <div className="min-w-0">
-                  <div className="truncate text-[11.5px] font-semibold" style={{ color: "var(--ink-primary)" }}>
+                  <div className="truncate text-[11.5px] font-medium" style={{ color: "var(--ink-primary)" }}>
                     {niceLabel}
                   </div>
-                  <div className="text-[10px]" style={{ color: "var(--ink-muted)" }}>
-                    {subLine}
-                  </div>
+                  {detailText && (
+                    <div className="font-mono-num text-[10px]" style={{ color: "var(--ink-muted)" }}>
+                      {detailText}
+                    </div>
+                  )}
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5 font-mono-num text-[11px]">
                   {metricText !== null && (
                     <span
                       className="font-semibold"
-                      style={{ color: failed ? "var(--st-fail)" : "var(--ink-primary)" }}
+                      style={{ color: failed ? "var(--st-warn)" : "var(--ink-primary)" }}
                     >
                       {metricText}
                     </span>
@@ -174,7 +170,7 @@ const ScientificCheckBlock: React.FC<{
                     <CheckCircle2 className="h-3.5 w-3.5" style={{ color: "var(--st-verified)" }} />
                   )}
                   {g.passed === false && (
-                    <XCircle className="h-3.5 w-3.5" style={{ color: "var(--st-fail)" }} />
+                    <AlertCircle className="h-3.5 w-3.5" style={{ color: "var(--st-warn)" }} />
                   )}
                 </div>
               </button>
@@ -187,7 +183,7 @@ const ScientificCheckBlock: React.FC<{
               className="w-full rounded-lg py-1 text-center text-[10.5px] font-semibold hover:bg-[var(--bg-subtle)]"
               style={{ color: "var(--st-focus)" }}
             >
-              {showAllRows ? "Show top 8 only" : `Show all ${orderedGroups.length} checked items`}
+              {showAllRows ? "Show fewer" : `Show all ${orderedGroups.length}`}
             </button>
           )}
         </div>
@@ -196,72 +192,46 @@ const ScientificCheckBlock: React.FC<{
   );
 };
 
-const ScientificRecordCard: React.FC<{ rec: GlossRecord }> = ({ rec }) => {
+/** Clean prose card for takeaways & notes — zero internal gloss schema labels. */
+const ReaderNoteCard: React.FC<{ rec: GlossRecord }> = ({ rec }) => {
   const text = rec.body.text ?? rec.body.description ?? rec.body.alt_text ?? "";
-  const confidence = typeof rec.body.confidence === "number" ? rec.body.confidence : null;
-  const isClaim = rec.layer === "claim";
+  const isHypothesis = rec.projectionStatus === "speculative";
 
   return (
     <div
       className="rounded-xl border p-3"
-      style={{ background: "var(--bg-surface)", borderColor: "var(--border-subtle)" }}
+      style={{
+        background: "var(--bg-surface)",
+        borderColor: "var(--border-subtle)",
+        borderStyle: isHypothesis ? "dashed" : "solid",
+      }}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: "var(--ink-secondary)" }}>
-          {isClaim ? (
-            rec.projectionStatus === "partial" || rec.projectionStatus === "rejected" ? (
-              <AlertTriangle className="h-3.5 w-3.5" style={{ color: "var(--st-warn)" }} />
-            ) : (
-              <ShieldCheck className="h-3.5 w-3.5" style={{ color: "var(--st-verified)" }} />
-            )
-          ) : (
-            <Sparkles className="h-3.5 w-3.5" style={{ color: "var(--st-contextual)" }} />
-          )}
-          {isClaim
-            ? "Statistical Finding"
-            : rec.workbenchStage === "contextual"
-              ? "Domain Context"
-              : rec.layer === "relation"
-                ? "Comparison"
-                : "Data Observation"}
-        </span>
-        <span
-          className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-          style={badgeStyle(rec.projectionStatus)}
+      {isHypothesis && (
+        <div
+          className="mb-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium italic"
+          style={{ background: "var(--st-spec-soft)", color: "var(--st-spec)" }}
         >
-          {humanizeStatus(rec.projectionStatus)}
-        </span>
-      </div>
+          Working hypothesis
+        </div>
+      )}
 
       {text && (
-        <p className="mt-2 text-[12.5px] leading-relaxed" style={{ color: "var(--ink-primary)" }}>
+        <p className="text-[12.5px] leading-relaxed" style={{ color: "var(--ink-primary)" }}>
           {text}
         </p>
       )}
 
-      {(rec.body.source || confidence !== null) && (
-        <div
-          className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t pt-2 text-[10.5px]"
-          style={{ borderColor: "var(--border-subtle)", color: "var(--ink-muted)" }}
-        >
-          {rec.body.source && (
-            <span
-              className="inline-flex min-w-0 max-w-full items-center gap-1"
-              style={{ color: "var(--st-contextual)" }}
-              title={rec.body.source}
-            >
-              <ExternalLink className="h-3 w-3 shrink-0" />
-              <span className="min-w-0 truncate">{rec.body.source}</span>
-            </span>
-          )}
-          {confidence !== null && (
-            <span className="font-mono-num shrink-0">Confidence {Math.round(confidence * 100)}%</span>
-          )}
+      {rec.body.source && (
+        <div className="mt-2 flex items-center gap-1 text-[10.5px]" style={{ color: "var(--ink-muted)" }}>
+          <ExternalLink className="h-3 w-3 shrink-0 opacity-70" />
+          <span className="min-w-0 truncate" title={rec.body.source}>
+            {rec.body.source}
+          </span>
         </div>
       )}
 
       {rec.check && (
-        <ScientificCheckBlock
+        <CollapsibleDataCheck
           check={rec.check}
           tableName={rec.body.check?.table ?? rec.body.table}
           recordId={rec.id}
@@ -272,30 +242,30 @@ const ScientificRecordCard: React.FC<{ rec: GlossRecord }> = ({ rec }) => {
 };
 
 /**
- * Calm, publication-grade right panel designed for biologists, statisticians,
- * and pharma reviewers: leads with human entity/group facts, units, domain
- * interpretation, and statistical verification — tucking engineering details
- * behind a collapsible accordion.
+ * Calm, publication-grade Figure Reader side panel.
+ * Speaks the reader's scientific language directly; gloss's internal checks,
+ * layers, and provenance work invisibly behind the scenes and stay expandable on demand.
  */
 export const ReaderInspector: React.FC = () => {
   const bundle = useWorkbenchStore((s) => s.bundle);
   const selectedElementIds = useWorkbenchStore((s) => s.selectedElementIds);
   const focusScope = useWorkbenchStore((s) => s.focusScope);
   const setViewMode = useWorkbenchStore((s) => s.setViewMode);
-  const setReaderLens = useWorkbenchStore((s) => s.setReaderLens);
+  const setWalkthroughOpen = useWorkbenchStore((s) => s.setWalkthroughOpen);
   const setStoryStepIdx = useWorkbenchStore((s) => s.setStoryStepIdx);
   const selectElement = useWorkbenchStore((s) => s.selectElement);
+  const setFocusScope = useWorkbenchStore((s) => s.setFocusScope);
 
   const [showAllVars, setShowAllVars] = useState(false);
+  const [showChecksOnItem, setShowChecksOnItem] = useState(false);
   const [showTechnical, setShowTechnical] = useState(false);
 
   const dict = useMemo(() => (bundle ? extractDataDictionaryMap(bundle) : new Map()), [bundle]);
 
-  // Compute summary stats when a multi-element data group is focused (supports single-plot, patchwork & ComplexHeatmap slices!)
+  // Descriptive summary statistics when a subset/group is focused
   const groupSummary = useMemo(() => {
     if (!bundle || !focusScope || focusScope.elementIds.length <= 1) return null;
 
-    // ComplexHeatmap matrix slice summary
     const matCells = focusScope.elementIds
       .map((eid) => bundle.index.matrixCellByElement.get(eid))
       .filter((c): c is NonNullable<typeof c> => Boolean(c));
@@ -320,66 +290,81 @@ export const ReaderInspector: React.FC = () => {
       }
       return {
         n: matCells.length,
-        subtitle: `${rows.length} rows × ${cols.length} columns (${matCells.length} cells)`,
+        subtitle: `${rows.length} rows × ${cols.length} columns`,
         stats,
-        names: rows.slice(0, 10),
+        members: rows.slice(0, 10).map((r) => ({ label: r, elementId: null as string | null })),
       };
     }
 
-    // Dynamic raw table lookup (works across patchwork plot1_raw, plot2_raw, ...)
-    const rawNames = new Map<string, number[]>();
+    const rawByTable = new Map<string, Array<{ row0: number; eid: string }>>();
     for (const eid of focusScope.elementIds) {
       const rm = bundle.index.inferredRawByElement.get(eid);
       if (rm && rm.rawRows.length > 0) {
-        const arr = rawNames.get(rm.rawTable) ?? [];
-        arr.push(rm.rawRows[0] - 1);
-        rawNames.set(rm.rawTable, arr);
+        const arr = rawByTable.get(rm.rawTable) ?? [];
+        arr.push({ row0: rm.rawRows[0] - 1, eid });
+        rawByTable.set(rm.rawTable, arr);
       }
     }
     let bestTableName: string | null = null;
-    let bestRows: number[] = [];
-    for (const [tn, rows] of rawNames.entries()) {
-      if (rows.length > bestRows.length) {
+    let bestEntries: Array<{ row0: number; eid: string }> = [];
+    for (const [tn, entries] of rawByTable.entries()) {
+      if (entries.length > bestEntries.length) {
         bestTableName = tn;
-        bestRows = rows;
+        bestEntries = entries;
       }
     }
     const rawTable = bestTableName ? bundle.tables[bestTableName] : null;
     const df = rawTable?.data;
     if (!rawTable || !df) return null;
 
-    const uniqRows = Array.from(new Set(bestRows));
-    if (uniqRows.length === 0) return null;
+    const seenRows = new Set<number>();
+    const uniqEntries = bestEntries.filter((e) => {
+      if (seenRows.has(e.row0)) return false;
+      seenRows.add(e.row0);
+      return true;
+    });
+    if (uniqEntries.length === 0) return null;
 
     const numericCols = (rawTable.meta.referenced.length > 0 ? rawTable.meta.referenced : df.names).filter((cn) => {
       const t = df.columns[cn]?.rType;
       return t === "double" || t === "integer";
     });
-    const stats = numericCols.slice(0, 4).map((cn) => {
-      const vals = uniqRows
-        .map((r) => df.columns[cn].values[r])
-        .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
-      if (vals.length === 0) return null;
-      const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
-      const min = Math.min(...vals);
-      const max = Math.max(...vals);
-      const meta = dict.get(cn);
-      return {
-        name: cn,
-        unit: meta?.unit,
-        mean: mean.toFixed(2).replace(/\.?0+$/, ""),
-        range: min === max ? String(min) : `${min.toFixed(2).replace(/\.?0+$/, "")}–${max.toFixed(2).replace(/\.?0+$/, "")}`,
-      };
-    }).filter((x): x is NonNullable<typeof x> => Boolean(x));
+    const stats = numericCols
+      .slice(0, 4)
+      .map((cn) => {
+        const vals = uniqEntries
+          .map((e) => df.columns[cn].values[e.row0])
+          .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+        if (vals.length === 0) return null;
+        const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+        const min = Math.min(...vals);
+        const max = Math.max(...vals);
+        const meta = dict.get(cn);
+        return {
+          name: cn,
+          unit: meta?.unit,
+          mean: mean.toFixed(2).replace(/\.?0+$/, ""),
+          range:
+            min === max
+              ? String(min)
+              : `${min.toFixed(2).replace(/\.?0+$/, "")}–${max.toFixed(2).replace(/\.?0+$/, "")}`,
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => Boolean(x));
 
-    const names = uniqRows.slice(0, 8).map((r) => {
-      if (df.rownames?.[r]) return df.rownames[r];
-      const keyCol = rawTable.meta.key.find((k) => k !== ".rownames" && df.columns[k]);
-      return keyCol ? String(df.columns[keyCol].values[r] ?? `Row ${r + 1}`) : `Row ${r + 1}`;
+    const members = uniqEntries.slice(0, 10).map((e) => {
+      let label = `Row ${e.row0 + 1}`;
+      if (df.rownames?.[e.row0]) label = df.rownames[e.row0];
+      else {
+        const keyCol = rawTable.meta.key.find((k) => k !== ".rownames" && df.columns[k]);
+        if (keyCol) label = String(df.columns[keyCol].values[e.row0] ?? label);
+      }
+      return { label, elementId: e.eid };
     });
-    return { n: uniqRows.length, subtitle: `${uniqRows.length} data observations`, stats, names };
+    return { n: uniqEntries.length, subtitle: `${uniqEntries.length} items`, stats, members };
   }, [bundle, focusScope, dict]);
 
+  // Single selected item (point, bar, or heatmap cell)
   const singleElement = useMemo(() => {
     if (!bundle || selectedElementIds.length !== 1) return null;
     const id = selectedElementIds[0];
@@ -397,13 +382,15 @@ export const ReaderInspector: React.FC = () => {
       const df = bundle.tables[matCell.matrixTable]?.data;
       const valStr =
         typeof matCell.value === "number"
-          ? matCell.value.toFixed(2).replace(/\.?0+$/, "")
+          ? `${matCell.value > 0 ? "+" : ""}${matCell.value.toFixed(2).replace(/\.?0+$/, "")}`
           : String(matCell.value ?? "NA");
-      variables.push(
-        { name: matCell.matrixName, value: valStr, unit: matMeta?.unit, description: matMeta?.description, primary: true },
-        { name: "Feature / Row", value: matCell.rowLabel, primary: true },
-        { name: "Sample / Col", value: matCell.colLabel, primary: true }
-      );
+      variables.push({
+        name: matCell.matrixName === "zscore" ? "Expression" : matCell.matrixName,
+        value: valStr,
+        unit: matMeta?.unit,
+        description: matMeta?.description,
+        primary: true,
+      });
       if (df) {
         const rowVals = df.names
           .map((cn) => df.columns[cn]?.values[matCell.rowIndex - 1])
@@ -411,7 +398,7 @@ export const ReaderInspector: React.FC = () => {
         if (rowVals.length > 0) {
           const rMean = rowVals.reduce((a, b) => a + b, 0) / rowVals.length;
           variables.push({
-            name: `${matCell.rowLabel} mean`,
+            name: `${matCell.rowLabel} average`,
             value: rMean.toFixed(2),
             unit: `across ${rowVals.length} samples`,
             primary: true,
@@ -431,7 +418,10 @@ export const ReaderInspector: React.FC = () => {
         for (const cn of ordered) {
           const v = df.columns[cn]?.values[r0];
           if (v === null || v === undefined) continue;
-          const valStr = typeof v === "number" && !Number.isInteger(v) ? v.toFixed(2).replace(/\.?0+$/, "") : String(v);
+          const valStr =
+            typeof v === "number" && !Number.isInteger(v)
+              ? v.toFixed(2).replace(/\.?0+$/, "")
+              : String(v);
           const meta = dict.get(cn);
           variables.push({
             name: cn,
@@ -445,22 +435,23 @@ export const ReaderInspector: React.FC = () => {
     }
 
     const title = matCell
-      ? `${matCell.rowLabel} × ${matCell.colLabel}`
-      : rawMatch?.rawKeyLabels[0] ?? el.text?.trim() ?? "Selected Element";
-    const status = records.some((r) => r.projectionStatus === "partial")
-      ? "partial"
-      : binding?.status === "verified"
-        ? "verified"
-        : binding?.status ?? "proposed";
+      ? `${matCell.rowLabel} · ${matCell.colLabel}`
+      : rawMatch?.rawKeyLabels[0] ?? el.text?.trim() ?? "Selected Item";
+    const kicker = matCell
+      ? "Heatmap Cell"
+      : humanizePanelLabel(panel?.key);
 
     const linkedPeers: Array<{ id: string; label: string; relation: string }> = [];
     const seenPeers = new Set<string>();
     const addPeer = (peerId: string, relation: string) => {
       if (peerId === id || seenPeers.has(peerId)) return;
       seenPeers.add(peerId);
+      const pm = bundle.index.matrixCellByElement.get(peerId);
       const rm = bundle.index.inferredRawByElement.get(peerId);
       const pel = bundle.index.elementById.get(peerId);
-      const lbl = rm?.rawKeyLabels[0] ?? pel?.text?.trim() ?? peerId;
+      const lbl = pm
+        ? `${pm.rowLabel} · ${pm.colLabel}`
+        : rm?.rawKeyLabels[0] ?? pel?.text?.trim() ?? peerId;
       linkedPeers.push({ id: peerId, label: lbl, relation });
     };
     for (const lk of bundle.operations.state.links) {
@@ -470,67 +461,56 @@ export const ReaderInspector: React.FC = () => {
     for (const r of records) {
       if (r.layer === "relation" && r.resolvedTargets.length >= 2) {
         const peer = r.resolvedTargets.find((t) => t !== id);
-        if (peer) addPeer(peer, "Related observation");
+        if (peer) addPeer(peer, "Related");
       }
     }
 
-    return { el, binding, rawMatch, panel, records, variables, title, status, linkedPeers };
+    return { el, binding, panel, records, variables, title, kicker, linkedPeers };
   }, [bundle, selectedElementIds, dict]);
 
   if (!bundle) return null;
 
-  const claims = bundle.records.filter((r) => r.layer === "claim");
+  const takeaways = bundle.records.filter((r) => r.layer === "claim");
+  const highlights = bundle.records.filter(
+    (r) => r.layer === "meaning" && r.resolvedTargets.length > 0 && (r.body.label || r.workbenchStage === "contextual")
+  );
   const narratives = bundle.records
-    .filter((r) => r.layer === "narrative")
+    .filter((r) => r.layer === "narrative" && r.resolvedTargets.length > 0)
     .sort((a, b) => Number(a.body.order ?? 99) - Number(b.body.order ?? 99));
   const userQuestion = (bundle.context.user_context?.value as Record<string, unknown> | null | undefined)?.question;
-  const verifiedTotal = bundle.derived.bindingsElements.filter((b) => b.status === "verified").length;
 
-  // Case A: Focused multi-element group (e.g., `cyl = 6` or `Exception · am = 0 · cyl = 4`)
+  // Case A: Focused multi-element subset/group
   if (focusScope && focusScope.elementIds.length > 1) {
     const groupRecs = focusScope.recordId
       ? bundle.records.filter((r) => r.id === focusScope.recordId)
-      : bundle.records.filter((r) =>
-          r.resolvedTargets.some((t) => focusScope.elementIds.includes(t)) && r.layer !== "behavior"
+      : bundle.records.filter(
+          (r) => r.resolvedTargets.some((t) => focusScope.elementIds.includes(t)) && r.layer !== "behavior" && r.layer !== "narrative"
         );
 
     return (
       <div className="flex h-full w-full flex-col overflow-hidden" style={{ background: "var(--bg-surface)" }}>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
-          {/* Group Hero */}
           <div
             className="rounded-2xl border p-3.5"
-            style={{
-              background: focusScope.isException ? "var(--st-warn-soft)" : "var(--bg-canvas)",
-              borderColor: focusScope.isException ? "var(--st-warn)" : "var(--border-subtle)",
-            }}
+            style={{ background: "var(--bg-canvas)", borderColor: "var(--border-subtle)" }}
           >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="text-[10.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
-                  {focusScope.isException ? "Statistical Exception" : "Focused Subset"}
-                </div>
-                <div className="mt-0.5 flex items-center gap-2">
-                  {focusScope.swatch && (
-                    <span className="h-3 w-3 rounded-full border border-black/15" style={{ background: focusScope.swatch }} />
-                  )}
-                  <h2 className="text-base font-bold tracking-tight" style={{ color: "var(--ink-primary)" }}>
-                    {focusScope.label}
-                  </h2>
-                </div>
-                <p className="mt-1 text-xs" style={{ color: "var(--ink-secondary)" }}>
-                  {groupSummary ? groupSummary.subtitle : `${focusScope.elementIds.length} figure elements`}
-                </p>
-              </div>
-              <VerificationSeal status={focusScope.isException ? "partial" : "verified"} size={36} showLabel={false} />
+            <div className="flex items-center gap-2">
+              {focusScope.swatch && (
+                <span className="h-3 w-3 shrink-0 rounded-full border border-black/15" style={{ background: focusScope.swatch }} />
+              )}
+              <h2 className="text-base font-bold tracking-tight" style={{ color: "var(--ink-primary)" }}>
+                {focusScope.label}
+              </h2>
             </div>
+            <p className="mt-1 text-xs" style={{ color: "var(--ink-secondary)" }}>
+              {groupSummary ? groupSummary.subtitle : `${focusScope.elementIds.length} elements`}
+            </p>
           </div>
 
-          {/* Automatic Group Descriptive Statistics */}
           {groupSummary && groupSummary.stats.length > 0 && (
             <section className="space-y-2">
               <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
-                Group Summary Statistics
+                Summary
               </h3>
               <div className="grid grid-cols-2 gap-2">
                 {groupSummary.stats.map((st) => (
@@ -540,8 +520,8 @@ export const ReaderInspector: React.FC = () => {
                     style={{ borderColor: "var(--border-subtle)", background: "var(--bg-canvas)" }}
                   >
                     <div className="text-[10.5px] font-semibold" style={{ color: "var(--ink-secondary)" }}>
-                      {st.name}{" "}
-                      {st.unit && <span className="font-normal opacity-75">({st.unit})</span>}
+                      {st.name}
+                      {st.unit && <span className="ml-1 font-normal opacity-75">({st.unit})</span>}
                     </div>
                     <div className="font-mono-num mt-1 text-sm font-bold" style={{ color: "var(--ink-primary)" }}>
                       {st.mean}
@@ -556,33 +536,47 @@ export const ReaderInspector: React.FC = () => {
                 ))}
               </div>
               <div className="flex flex-wrap gap-1 pt-0.5">
-                {groupSummary.names.map((nm, idx) => (
-                  <span
-                    key={idx}
-                    className="rounded-full px-2 py-0.5 text-[10.5px] font-medium"
-                    style={{ background: "var(--bg-subtle)", color: "var(--ink-primary)" }}
-                  >
-                    {nm}
-                  </span>
-                ))}
-                {groupSummary.n > groupSummary.names.length && (
+                {groupSummary.members.map((m, idx) =>
+                  m.elementId ? (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setFocusScope(null);
+                        selectElement(m.elementId);
+                      }}
+                      className="rounded-full px-2 py-0.5 text-[10.5px] font-medium transition-colors hover:brightness-95"
+                      style={{ background: "var(--bg-subtle)", color: "var(--ink-primary)" }}
+                    >
+                      {m.label}
+                    </button>
+                  ) : (
+                    <span
+                      key={idx}
+                      className="rounded-full px-2 py-0.5 text-[10.5px] font-medium"
+                      style={{ background: "var(--bg-subtle)", color: "var(--ink-primary)" }}
+                    >
+                      {m.label}
+                    </span>
+                  )
+                )}
+                {groupSummary.n > groupSummary.members.length && (
                   <span className="px-1 text-[10.5px]" style={{ color: "var(--ink-muted)" }}>
-                    +{groupSummary.n - groupSummary.names.length} more
+                    +{groupSummary.n - groupSummary.members.length} more
                   </span>
                 )}
               </div>
             </section>
           )}
 
-          {/* Related Findings & Context */}
           {groupRecs.length > 0 && (
             <section className="space-y-2">
               <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
-                Findings & Context
+                Notes
               </h3>
               <div className="space-y-2.5">
                 {groupRecs.map((rec) => (
-                  <ScientificRecordCard key={rec.id} rec={rec} />
+                  <ReaderNoteCard key={rec.id} rec={rec} />
                 ))}
               </div>
             </section>
@@ -592,7 +586,7 @@ export const ReaderInspector: React.FC = () => {
     );
   }
 
-  // Case B: Single Observation Selected (e.g. Mazda RX4)
+  // Case B: Single Selected Item (Point / Heatmap Cell / Bar)
   if (singleElement) {
     const visibleVars = showAllVars
       ? singleElement.variables
@@ -600,42 +594,36 @@ export const ReaderInspector: React.FC = () => {
         ? singleElement.variables.filter((v) => v.primary)
         : singleElement.variables.slice(0, 6);
 
-    const contextualAndAnalytical = singleElement.records.filter(
+    const itemNotes = singleElement.records.filter(
       (r) => r.layer === "meaning" || r.layer === "relation"
     );
-    const relevantClaims =
-      singleElement.records.filter((r) => r.layer === "claim").length > 0
-        ? singleElement.records.filter((r) => r.layer === "claim")
-        : claims;
+    const itemChecks = singleElement.records.filter((r) => r.layer === "claim");
 
     return (
       <div className="flex h-full w-full flex-col overflow-hidden" style={{ background: "var(--bg-surface)" }}>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
-          {/* Clean Scientific Entity Hero */}
+          {/* Calm Entity Hero — zero internal slice IDs or loud badges */}
           <div
-            className="flex items-start justify-between gap-3 rounded-2xl border p-3.5"
+            className="rounded-2xl border p-3.5"
             style={{ background: "var(--bg-canvas)", borderColor: "var(--border-subtle)" }}
           >
-            <div className="min-w-0">
+            {singleElement.kicker && (
               <div className="text-[10.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
-                {singleElement.panel?.key ? singleElement.panel.key.replace(/=/g, " = ") : "Selected Observation"}
+                {singleElement.kicker}
               </div>
-              <h2 className="mt-0.5 truncate text-base font-bold tracking-tight" style={{ color: "var(--ink-primary)" }}>
-                {singleElement.title}
-              </h2>
-              <div className="mt-1 flex items-center gap-1.5 text-[11px]" style={{ color: "var(--st-verified)" }}>
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>
-                  {singleElement.binding?.status === "verified"
-                    ? "Verified against plotted data"
-                    : "Visual figure element"}
-                </span>
+            )}
+            <h2 className="mt-0.5 truncate text-base font-bold tracking-tight" style={{ color: "var(--ink-primary)" }}>
+              {singleElement.title}
+            </h2>
+            {singleElement.binding?.status === "verified" && (
+              <div className="mt-1 inline-flex items-center gap-1 text-[11px]" style={{ color: "var(--st-verified)" }}>
+                <CheckCircle2 className="h-3 w-3" />
+                <span>Matches source data</span>
               </div>
-            </div>
-            <VerificationSeal status={singleElement.status} size={38} showLabel={false} />
+            )}
           </div>
 
-          {/* Interactive Comparison Shortcut (guides user to explore linked observations) */}
+          {/* Interactive Peer Jump (e.g. Gene -> Pathway or Sample -> Comparison) */}
           {singleElement.linkedPeers.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {singleElement.linkedPeers.map((peer) => (
@@ -657,12 +645,12 @@ export const ReaderInspector: React.FC = () => {
             </div>
           )}
 
-          {/* Measured Data Values with Units */}
+          {/* Measured Values with Units */}
           {visibleVars.length > 0 && (
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
-                  Data Values
+                  Values
                 </h3>
                 {singleElement.variables.length > visibleVars.length && (
                   <button
@@ -671,7 +659,7 @@ export const ReaderInspector: React.FC = () => {
                     className="text-[11px] font-semibold"
                     style={{ color: "var(--st-focus)" }}
                   >
-                    {showAllVars ? "Show key only" : `All ${singleElement.variables.length} variables`}
+                    {showAllVars ? "Show key only" : `All ${singleElement.variables.length} fields`}
                   </button>
                 )}
               </div>
@@ -683,7 +671,7 @@ export const ReaderInspector: React.FC = () => {
                     className="rounded-xl border p-2.5"
                     style={{ borderColor: "var(--border-subtle)", background: "var(--bg-canvas)" }}
                   >
-                    <div className="text-[10.5px] font-semibold" style={{ color: "var(--ink-secondary)" }}>
+                    <div className="truncate text-[10.5px] font-semibold" style={{ color: "var(--ink-secondary)" }}>
                       {v.name}
                     </div>
                     <div className="font-mono-num mt-0.5 text-sm font-bold" style={{ color: "var(--ink-primary)" }}>
@@ -700,35 +688,43 @@ export const ReaderInspector: React.FC = () => {
             </section>
           )}
 
-          {/* Domain Context & Notes */}
-          {contextualAndAnalytical.length > 0 && (
+          {/* Notes & Context (clean prose — zero gloss layer labels!) */}
+          {itemNotes.length > 0 && (
             <section className="space-y-2">
               <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
-                Interpretation & Context
+                Context
               </h3>
               <div className="space-y-2.5">
-                {contextualAndAnalytical.map((rec) => (
-                  <ScientificRecordCard key={rec.id} rec={rec} />
+                {itemNotes.map((rec) => (
+                  <ReaderNoteCard key={rec.id} rec={rec} />
                 ))}
               </div>
             </section>
           )}
 
-          {/* Statistical Findings & Checks */}
-          {relevantClaims.length > 0 && (
-            <section className="space-y-2">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
-                Statistical Verification ({relevantClaims.length})
-              </h3>
-              <div className="space-y-2.5">
-                {relevantClaims.map((rec) => (
-                  <ScientificRecordCard key={rec.id} rec={rec} />
-                ))}
-              </div>
-            </section>
+          {/* Related data takeaways (tucked behind a calm collapsible row so item reading stays focused) */}
+          {itemChecks.length > 0 && (
+            <div className="border-t pt-3" style={{ borderColor: "var(--border-subtle)" }}>
+              <button
+                type="button"
+                onClick={() => setShowChecksOnItem(!showChecksOnItem)}
+                className="flex w-full items-center justify-between text-[11px] font-semibold"
+                style={{ color: "var(--ink-secondary)" }}
+              >
+                <span>Related takeaways ({itemChecks.length})</span>
+                {showChecksOnItem ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+              </button>
+              {showChecksOnItem && (
+                <div className="mt-2 space-y-2">
+                  {itemChecks.map((rec) => (
+                    <ReaderNoteCard key={rec.id} rec={rec} />
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
-          {/* Collapsible Technical Audit Details (tucked cleanly out of the scientist's way) */}
+          {/* Subtle Technical Provenance Footer */}
           <div className="border-t pt-3" style={{ borderColor: "var(--border-subtle)" }}>
             <button
               type="button"
@@ -738,7 +734,7 @@ export const ReaderInspector: React.FC = () => {
             >
               <span className="inline-flex items-center gap-1.5">
                 <Wrench className="h-3 w-3" />
-                Technical provenance & audit details
+                Technical details
               </span>
               {showTechnical ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
             </button>
@@ -752,7 +748,7 @@ export const ReaderInspector: React.FC = () => {
                 </div>
                 {singleElement.binding && (
                   <div>
-                    Binding: {singleElement.binding.table}[row={singleElement.binding.row}] · dev{" "}
+                    Source: {singleElement.binding.table}[row={singleElement.binding.row}] · dev{" "}
                     {singleElement.binding.dev?.toFixed(3) ?? "—"} pt
                   </div>
                 )}
@@ -762,7 +758,7 @@ export const ReaderInspector: React.FC = () => {
                   className="mt-1 inline-flex items-center gap-1 font-sans text-[11px] font-semibold"
                   style={{ color: "var(--st-focus)" }}
                 >
-                  Open full Engineering Inspector →
+                  Open Technical Inspector →
                 </button>
               </div>
             )}
@@ -772,88 +768,117 @@ export const ReaderInspector: React.FC = () => {
     );
   }
 
-  // Case C: Figure-Level Scientific Summary (when nothing is selected)
+  // Case C: Calm Figure Overview (default landing state)
   return (
     <div className="flex h-full w-full flex-col overflow-hidden" style={{ background: "var(--bg-surface)" }}>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+        {/* Clean Figure Overview Header */}
         <div
           className="rounded-2xl border p-3.5"
           style={{ background: "var(--bg-canvas)", borderColor: "var(--border-subtle)" }}
         >
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="inline-flex items-center gap-1 text-[10.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--st-verified)" }}>
-                <Microscope className="h-3.5 w-3.5" /> Scientific Summary
-              </div>
-              <h2 className="mt-1 text-sm font-bold leading-snug" style={{ color: "var(--ink-primary)" }}>
-                {getFigureDisplayTitle(bundle)}
-              </h2>
-              <p className="mt-1 text-xs" style={{ color: "var(--ink-secondary)" }}>
-                {verifiedTotal} verified observations · {claims.length} checked claim(s). Click any point or group to inspect.
-              </p>
-            </div>
-            <VerificationSeal
-              status={claims.some((c) => c.projectionStatus === "partial") ? "partial" : "verified"}
-              size={36}
-              showLabel={false}
-            />
-          </div>
+          <h2 className="text-sm font-bold leading-snug" style={{ color: "var(--ink-primary)" }}>
+            {getFigureDisplayTitle(bundle)}
+          </h2>
           {typeof userQuestion === "string" && (
-            <div
-              className="mt-3 rounded-lg border px-2.5 py-2 text-[11.5px] italic"
-              style={{ borderColor: "var(--border-subtle)", background: "var(--bg-surface)", color: "var(--ink-secondary)" }}
-            >
-              “{userQuestion}”
-            </div>
+            <p className="mt-2 text-[12px] leading-relaxed" style={{ color: "var(--ink-secondary)" }}>
+              {userQuestion}
+            </p>
           )}
+          <p className="mt-2 text-[11px]" style={{ color: "var(--ink-muted)" }}>
+            Hover over the figure to read values, or click any highlighted point or legend item to explore.
+          </p>
         </div>
 
-        {/* Guided Reading Walkthrough */}
-        {narratives.length > 0 && (
+        {/* Key Takeaways (truthful prose + quiet collapsible data check underneath) */}
+        {takeaways.length > 0 && (
           <section className="space-y-2">
-            <h3 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
-              <BookOpen className="h-3.5 w-3.5" /> Guided Reading ({narratives.length} steps)
+            <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
+              Key Takeaways
             </h3>
-            <div className="space-y-2">
-              {narratives.map((n, idx) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => {
-                    setStoryStepIdx(idx);
-                    setReaderLens("story");
-                    if (n.resolvedTargets[0]) selectElement(n.resolvedTargets[0]);
-                  }}
-                  className="flex w-full items-start gap-2.5 rounded-xl border p-2.5 text-left transition-colors hover:bg-[var(--bg-subtle)]"
-                  style={{ borderColor: "var(--border-subtle)", background: "var(--bg-surface)" }}
-                >
-                  <span
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10.5px] font-bold text-white"
-                    style={{ background: "var(--st-focus)" }}
-                  >
-                    {Number(n.body.order ?? idx + 1)}
-                  </span>
-                  <span className="text-[12px] leading-snug" style={{ color: "var(--ink-primary)" }}>
-                    {n.body.text}
-                  </span>
-                </button>
+            <div className="space-y-2.5">
+              {takeaways.map((rec) => (
+                <ReaderNoteCard key={rec.id} rec={rec} />
               ))}
             </div>
           </section>
         )}
 
-        {/* Key Claims */}
-        {claims.length > 0 && (
+        {/* Clickable Highlights to Explore */}
+        {highlights.length > 0 && (
           <section className="space-y-2">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
-              Checked Statistical Findings
+            <h3 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
+              <Sparkles className="h-3.5 w-3.5" /> Highlights
             </h3>
-            <div className="space-y-2.5">
-              {claims.map((rec) => (
-                <ScientificRecordCard key={rec.id} rec={rec} />
-              ))}
+            <div className="space-y-1.5">
+              {highlights.map((rec) => {
+                const targetId = rec.resolvedTargets[0];
+                const el = targetId ? bundle.index.elementById.get(targetId) : undefined;
+                const label = rec.body.label ?? "Highlight";
+                const snippet = rec.body.text ?? "";
+                return (
+                  <button
+                    key={rec.id}
+                    type="button"
+                    onClick={() => {
+                      if (targetId) selectElement(targetId);
+                    }}
+                    className="group flex w-full items-start justify-between gap-2 rounded-xl border p-2.5 text-left transition-colors hover:bg-[var(--bg-subtle)]"
+                    style={{ borderColor: "var(--border-subtle)", background: "var(--bg-surface)" }}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        {el && (el.fill || el.stroke) && (
+                          <span
+                            className="h-2.5 w-2.5 shrink-0 rounded-full border border-black/15"
+                            style={{ background: el.fill ?? el.stroke ?? undefined }}
+                          />
+                        )}
+                        <span className="truncate text-[12px] font-semibold" style={{ color: "var(--ink-primary)" }}>
+                          {label}
+                        </span>
+                      </div>
+                      {snippet && (
+                        <p className="mt-1 line-clamp-2 text-[11px] leading-snug" style={{ color: "var(--ink-secondary)" }}>
+                          {snippet}
+                        </p>
+                      )}
+                    </div>
+                    <ArrowRight
+                      className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-40 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100"
+                      style={{ color: "var(--st-focus)" }}
+                    />
+                  </button>
+                );
+              })}
             </div>
           </section>
+        )}
+
+        {/* Optional Guided Walkthrough Launcher */}
+        {narratives.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setStoryStepIdx(0);
+              setWalkthroughOpen(true);
+            }}
+            className="flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors hover:bg-[var(--bg-subtle)]"
+            style={{ borderColor: "var(--border-subtle)", background: "var(--bg-canvas)" }}
+          >
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4 shrink-0" style={{ color: "var(--st-focus)" }} />
+              <div>
+                <div className="text-[12px] font-semibold" style={{ color: "var(--ink-primary)" }}>
+                  Guided walkthrough
+                </div>
+                <div className="text-[10.5px]" style={{ color: "var(--ink-muted)" }}>
+                  {narratives.length} steps highlighting the main story
+                </div>
+              </div>
+            </div>
+            <ArrowRight className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--st-focus)" }} />
+          </button>
         )}
       </div>
     </div>

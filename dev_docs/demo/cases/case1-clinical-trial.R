@@ -225,7 +225,7 @@ fig <- gl_record(
 fig <- gl_record(
   fig, "claim", gl_anchor(element = e_overall),
   list(
-    text = "Within every clinical subgroup, the upper 95% confidence bound of the Lev+5FU vs Observation hazard ratio remains strictly below 1.0.",
+    text = "Levamisole + 5-FU significantly reduces mortality in 4 of 10 subgroups (including Overall HR = 0.69 and high-risk Nodes > 4), while 6 smaller or lower-event strata have 95% confidence intervals crossing 1.0.",
     check = list(
       kind = "compare",
       table = "plot2_raw",

@@ -1,16 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import {
-  AlertTriangle,
   BookOpen,
-  CheckCircle2,
   ChevronDown,
   ChevronUp,
   Command as CommandIcon,
-  Compass,
+  EyeOff,
   FolderOpen,
-  Image as ImageIcon,
-  Microscope,
   Moon,
   Radio,
   ShieldAlert,
@@ -20,12 +16,7 @@ import {
   Upload,
   Wrench,
 } from "lucide-react";
-import {
-  getFigureDisplayTitle,
-  resolveNaturalFocus,
-  SEMANTIC_STAGES,
-  type ReaderLens,
-} from "./codec";
+import { getFigureDisplayTitle, SEMANTIC_STAGES } from "./codec";
 import { CommandPalette } from "./components/CommandPalette";
 import { DataWorkbenchGrid } from "./components/grid/DataWorkbenchGrid";
 import { LeftPanel } from "./components/left/LeftPanel";
@@ -47,13 +38,16 @@ declare global {
 export const App: React.FC = () => {
   const bundle = useWorkbenchStore((s) => s.bundle);
   const viewMode = useWorkbenchStore((s) => s.viewMode);
-  const readerLens = useWorkbenchStore((s) => s.readerLens);
+  const cleanFigure = useWorkbenchStore((s) => s.cleanFigure);
+  const walkthroughOpen = useWorkbenchStore((s) => s.walkthroughOpen);
   const theme = useWorkbenchStore((s) => s.theme);
   const bottomOpen = useWorkbenchStore((s) => s.bottomOpen);
   const liveApiBaseUrl = useWorkbenchStore((s) => s.liveApiBaseUrl);
 
   const setViewMode = useWorkbenchStore((s) => s.setViewMode);
-  const setReaderLens = useWorkbenchStore((s) => s.setReaderLens);
+  const setCleanFigure = useWorkbenchStore((s) => s.setCleanFigure);
+  const setWalkthroughOpen = useWorkbenchStore((s) => s.setWalkthroughOpen);
+  const setStoryStepIdx = useWorkbenchStore((s) => s.setStoryStepIdx);
   const toggleTheme = useWorkbenchStore((s) => s.toggleTheme);
   const setBottomOpen = useWorkbenchStore((s) => s.setBottomOpen);
   const setCommandOpen = useWorkbenchStore((s) => s.setCommandOpen);
@@ -65,7 +59,6 @@ export const App: React.FC = () => {
   const setActiveStage = useWorkbenchStore((s) => s.setActiveStage);
   const stepStage = useWorkbenchStore((s) => s.stepStage);
   const clearSelection = useWorkbenchStore((s) => s.clearSelection);
-  const setFocusScope = useWorkbenchStore((s) => s.setFocusScope);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [sampleUrl, setSampleUrl] = useState<string | null>(null);
@@ -161,8 +154,8 @@ export const App: React.FC = () => {
   }, [clearSelection, setActiveStage, stepStage]);
 
   const figureTitle = useMemo(() => (bundle ? getFigureDisplayTitle(bundle) : ""), [bundle]);
-  const exceptionScope = useMemo(
-    () => (bundle ? resolveNaturalFocus(bundle, "exception") : null),
+  const narrativeCount = useMemo(
+    () => (bundle ? bundle.records.filter((r) => r.layer === "narrative" && r.resolvedTargets.length > 0).length : 0),
     [bundle]
   );
 
@@ -176,19 +169,6 @@ export const App: React.FC = () => {
 
   const verifiedCount =
     bundle?.derived.bindingsElements.filter((b) => b.status === "verified").length ?? 0;
-  const partialOrFailedClaims =
-    bundle?.records.filter(
-      (r) =>
-        r.layer === "claim" &&
-        (r.projectionStatus === "partial" || r.projectionStatus === "rejected")
-    ).length ?? 0;
-
-  const readerLenses: Array<{ id: ReaderLens; label: string; icon: React.ReactNode }> = [
-    { id: "figure", label: "Figure", icon: <ImageIcon className="h-3.5 w-3.5" /> },
-    { id: "explore", label: "Explore", icon: <Compass className="h-3.5 w-3.5" /> },
-    { id: "findings", label: "Findings", icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
-    { id: "story", label: "Story", icon: <BookOpen className="h-3.5 w-3.5" /> },
-  ];
 
   return (
     <div
@@ -213,7 +193,7 @@ export const App: React.FC = () => {
     >
       {/* Top Header Bar: Calm & Publication-Grade in Scientific Reader Mode; Full Audit Controls in Inspector Mode */}
       <header
-        className="flex h-12 shrink-0 items-center justify-between gap-3 border-b px-3.5"
+        className="flex h-12 w-full max-w-full shrink-0 items-center justify-between gap-3 overflow-hidden border-b px-3.5"
         style={{
           background: "var(--bg-surface)",
           borderColor: "var(--border-subtle)",
@@ -240,7 +220,7 @@ export const App: React.FC = () => {
             <>
               <span className="shrink-0 text-xs opacity-25">/</span>
               <span
-                className="min-w-0 max-w-[210px] truncate text-[13px] font-semibold xl:max-w-[270px] 2xl:max-w-[360px]"
+                className="min-w-0 flex-1 truncate text-[13.5px] font-semibold"
                 style={{ color: "var(--ink-primary)" }}
                 title={figureTitle}
               >
@@ -257,35 +237,7 @@ export const App: React.FC = () => {
                 </span>
               )}
 
-              {isReader ? (
-                <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
-                  {verifiedCount > 0 && (
-                    <span
-                      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-medium"
-                      style={{ background: "var(--st-verified-soft)", color: "var(--st-verified)" }}
-                      title="Plotted observations checked against source data"
-                    >
-                      <CheckCircle2 className="h-3 w-3" />
-                      Verified
-                    </span>
-                  )}
-                  {partialOrFailedClaims > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setReaderLens("findings");
-                        if (exceptionScope) setFocusScope(exceptionScope, false);
-                      }}
-                      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-semibold transition-transform hover:scale-[1.02]"
-                      style={{ background: "var(--st-warn-soft)", color: "var(--st-warn)" }}
-                      title="Click to spotlight the statistical exception on the figure"
-                    >
-                      <AlertTriangle className="h-3 w-3" />
-                      {partialOrFailedClaims} Exception
-                    </button>
-                  )}
-                </div>
-              ) : (
+              {!isReader && (
                 <div className="hidden items-center gap-1.5 lg:flex">
                   <span
                     className="font-mono-num rounded-full px-2 py-0.5 text-[10px] font-semibold"
@@ -327,39 +279,47 @@ export const App: React.FC = () => {
           )}
         </div>
 
-        {/* Center: Clean 4-Lens Scientific Switcher (Reader Mode only) */}
-        {bundle && isReader && (
-          <nav
-            aria-label="Figure reading lens"
-            className="hidden items-center gap-0.5 rounded-xl border p-0.5 md:flex"
-            style={{ background: "var(--bg-canvas)", borderColor: "var(--border-subtle)" }}
-          >
-            {readerLenses.map((lens) => {
-              const active = readerLens === lens.id;
-              return (
-                <button
-                  key={lens.id}
-                  type="button"
-                  onClick={() => setReaderLens(lens.id)}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11.5px] font-semibold transition-all"
-                  style={{
-                    background: active ? "var(--bg-surface)" : "transparent",
-                    color: active ? "var(--st-focus)" : "var(--ink-secondary)",
-                    boxShadow: active ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-                  }}
-                >
-                  {lens.icon}
-                  <span>{lens.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        )}
-
-        {/* Right: Data Drawer + Reader/Inspector Mode Toggle + Open + Theme */}
+        {/* Right: Clean Reader Actions (Walkthrough, Clean View, Data, Reader/Inspector) */}
         <div className="flex shrink-0 items-center gap-1.5">
           {bundle && (
             <>
+              {isReader && narrativeCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!walkthroughOpen) setStoryStepIdx(0);
+                    setWalkthroughOpen(!walkthroughOpen);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11.5px] font-medium transition-colors hover:bg-[var(--bg-subtle)]"
+                  style={{
+                    borderColor: walkthroughOpen ? "var(--st-focus)" : "var(--border-subtle)",
+                    background: walkthroughOpen ? "var(--st-focus-soft)" : "transparent",
+                    color: walkthroughOpen ? "var(--st-focus)" : "var(--ink-secondary)",
+                  }}
+                  title="Step-by-step guided tour of this figure"
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                  <span className="hidden md:inline">Walkthrough</span>
+                </button>
+              )}
+
+              {isReader && (
+                <button
+                  type="button"
+                  onClick={() => setCleanFigure(!cleanFigure)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11.5px] font-medium transition-colors hover:bg-[var(--bg-subtle)]"
+                  style={{
+                    borderColor: cleanFigure ? "var(--st-focus)" : "var(--border-subtle)",
+                    background: cleanFigure ? "var(--st-focus-soft)" : "transparent",
+                    color: cleanFigure ? "var(--st-focus)" : "var(--ink-secondary)",
+                  }}
+                  title={cleanFigure ? "Restore interactive cues" : "Hide interactive rings to view bare figure"}
+                >
+                  <EyeOff className="h-3.5 w-3.5" />
+                  <span className="hidden lg:inline">Clean view</span>
+                </button>
+              )}
+
               {!isReader && (
                 <button
                   type="button"
@@ -391,11 +351,11 @@ export const App: React.FC = () => {
                 {bottomOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
               </button>
 
-              {/* Progressive Disclosure Toggle: Scientific Reader <-> Engineering Inspector */}
+              {/* Calm Mode Toggle: Reader <-> Technical Inspector */}
               <div
                 className="flex items-center rounded-lg border p-0.5 text-[11px] font-semibold"
                 style={{ background: "var(--bg-canvas)", borderColor: "var(--border-subtle)" }}
-                title="Switch between Scientific Reader and Engineering Inspector"
+                title="Switch between Figure Reader and Technical Inspector"
               >
                 <button
                   type="button"
@@ -407,8 +367,8 @@ export const App: React.FC = () => {
                     boxShadow: isReader ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
                   }}
                 >
-                  <Microscope className="h-3 w-3" />
-                  <span className="hidden sm:inline">Scientific</span>
+                  <span className="hidden sm:inline">Reader</span>
+                  <span className="sm:hidden">R</span>
                 </button>
                 <button
                   type="button"

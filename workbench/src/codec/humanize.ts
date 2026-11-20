@@ -4,6 +4,82 @@ import type { GlossBundle, GlossCheck, GlossCheckGroup, GlossElement } from "./t
 export type WorkbenchViewMode = "reader" | "inspector";
 export type ReaderLens = "figure" | "explore" | "findings" | "story";
 
+export interface ReaderCheckSummary {
+  tone: "verified" | "mixed" | "failed" | "neutral";
+  label: string;
+  actionLabel: string;
+  passedCount: number;
+  failedCount: number;
+  totalCount: number;
+}
+
+/**
+ * Translate a `gloss` deterministic check into calm, truthful reader-facing wording
+ * (preserving epistemic honesty: partial/failed checks are never presented as verified).
+ */
+export function summarizeCheckForReader(check: GlossCheck): ReaderCheckSummary {
+  const totalCount = check.groups.length;
+  const passedCount = check.groups.filter((g) => g.passed === true).length;
+  const failedCount = check.groups.filter((g) => g.passed === false).length;
+
+  if (check.status === "verified") {
+    return {
+      tone: "verified",
+      label: totalCount > 1 ? `Confirmed across all ${totalCount} items` : "Confirmed in source data",
+      actionLabel: "View numbers",
+      passedCount,
+      failedCount,
+      totalCount,
+    };
+  }
+  if (check.status === "partial") {
+    return {
+      tone: "mixed",
+      label:
+        failedCount > 0
+          ? `${passedCount} of ${totalCount} match · ${failedCount} ${failedCount === 1 ? "exception" : "exceptions"}`
+          : `Partially confirmed (${passedCount} of ${totalCount})`,
+      actionLabel: failedCount > 0 ? `Inspect ${failedCount}` : "View breakdown",
+      passedCount,
+      failedCount,
+      totalCount,
+    };
+  }
+  if (check.status === "failed" || check.status === "rejected") {
+    return {
+      tone: "failed",
+      label: "Not supported by source data",
+      actionLabel: "View details",
+      passedCount,
+      failedCount,
+      totalCount,
+    };
+  }
+  return {
+    tone: "neutral",
+    label: "Not automatically checked",
+    actionLabel: "Details",
+    passedCount,
+    failedCount,
+    totalCount,
+  };
+}
+
+/** Convert internal panel keys (e.g. `zscore slice 3_1`, `am=1`, `plot1_1`) into clean reader labels. */
+export function humanizePanelLabel(panelKey: string | null | undefined): string | null {
+  if (!panelKey) return null;
+  const trimmed = panelKey.trim();
+  if (!trimmed || /^\d+$/.test(trimmed)) return null;
+  if (/^plot\d+_\d+$/i.test(trimmed)) {
+    const m = trimmed.match(/^plot(\d+)_/i);
+    return m ? `Panel ${m[1]}` : null;
+  }
+  if (/_?slice\s+\d+_\d+$/i.test(trimmed)) {
+    return null;
+  }
+  return trimmed.replace(/=/g, " = ").replace(/\s+=\s+/g, " = ");
+}
+
 export interface VariableMeta {
   name: string;
   unit?: string;

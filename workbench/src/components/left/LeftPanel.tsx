@@ -45,9 +45,23 @@ function extractRCode(bundle: NonNullable<ReturnType<typeof useWorkbenchStore.ge
   return parts.length > 0 ? parts.join("\n\n") : JSON.stringify(codeVal, null, 2);
 }
 
-const ExternalContextCard: React.FC<{ item: GlossContextItem }> = ({ item }) => {
+const CONTEXT_TITLES: Record<string, string> = {
+  data_dictionary: "Variable Guide",
+  dataset_documentation: "Dataset Reference",
+  user_context: "Research Question",
+  literature: "References",
+  ontology: "Terminology & Ontology",
+  project_notes: "Analysis Notes",
+  external_metadata: "Study Details",
+};
+
+const ExternalContextCard: React.FC<{ item: GlossContextItem; reader?: boolean }> = ({
+  item,
+  reader = false,
+}) => {
   const val = item.value as Record<string, unknown> | null;
   if (!item.found || !val) return null;
+  const heading = reader ? (CONTEXT_TITLES[item.item] ?? item.item.replace(/_/g, " ")) : item.item;
 
   // Render structured data_dictionary variables cleanly
   if (item.item === "data_dictionary" && Array.isArray(val.variables)) {
@@ -55,14 +69,17 @@ const ExternalContextCard: React.FC<{ item: GlossContextItem }> = ({ item }) => 
     return (
       <div
         className="rounded-lg border p-2.5"
-        style={{ borderColor: "var(--st-contextual)", background: "var(--bg-surface)" }}
+        style={{ borderColor: reader ? "var(--border-subtle)" : "var(--st-contextual)", background: "var(--bg-surface)" }}
       >
-        <div className="mb-1.5 flex items-center justify-between">
-          <span className="font-mono-num text-[11px] font-bold" style={{ color: "var(--st-contextual)" }}>
-            data_dictionary
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <span
+            className={`${reader ? "text-[11.5px] font-semibold" : "font-mono-num text-[11px] font-bold"}`}
+            style={{ color: reader ? "var(--ink-primary)" : "var(--st-contextual)" }}
+          >
+            {heading}
           </span>
           {typeof val.source === "string" && (
-            <span className="truncate text-[9.5px]" style={{ color: "var(--ink-muted)" }}>
+            <span className="truncate text-[9.5px]" style={{ color: "var(--ink-muted)" }} title={val.source}>
               {val.source}
             </span>
           )}
@@ -81,14 +98,14 @@ const ExternalContextCard: React.FC<{ item: GlossContextItem }> = ({ item }) => 
                 {v.unit !== undefined && (
                   <span
                     className="font-mono-num rounded px-1.5 py-0 text-[9.5px]"
-                    style={{ background: "var(--st-contextual-soft)", color: "var(--st-contextual)" }}
+                    style={{ background: "var(--bg-subtle)", color: "var(--ink-secondary)" }}
                   >
                     {String(v.unit)}
                   </span>
                 )}
               </div>
               {v.description !== undefined && (
-                <div className="mt-0.5 text-[10px]" style={{ color: "var(--ink-secondary)" }}>
+                <div className="mt-0.5 text-[10.5px] leading-snug" style={{ color: "var(--ink-secondary)" }}>
                   {String(v.description)}
                 </div>
               )}
@@ -105,20 +122,20 @@ const ExternalContextCard: React.FC<{ item: GlossContextItem }> = ({ item }) => 
     return (
       <div
         className="rounded-lg border p-2.5"
-        style={{ borderColor: "var(--st-contextual)", background: "var(--bg-surface)" }}
+        style={{ borderColor: reader ? "var(--border-subtle)" : "var(--st-contextual)", background: "var(--bg-surface)" }}
       >
         <div className="mb-1 flex items-center justify-between">
-          <span className="font-mono-num text-[11px] font-bold" style={{ color: "var(--st-contextual)" }}>
-            dataset_documentation
-          </span>
-          <span className="text-[9.5px]" style={{ color: "var(--ink-muted)" }}>
-            R package help
+          <span
+            className={`${reader ? "text-[11.5px] font-semibold" : "font-mono-num text-[11px] font-bold"}`}
+            style={{ color: reader ? "var(--ink-primary)" : "var(--st-contextual)" }}
+          >
+            {heading}
           </span>
         </div>
         {docs.map((d, i) => (
           <div key={i} className="mt-1 space-y-0.5 text-[10.5px]">
             <div className="font-semibold" style={{ color: "var(--ink-primary)" }}>
-              {String(d.package ?? "")}::{String(d.dataset ?? "")} — {String(d.title ?? "")}
+              {String(d.dataset ?? "")} — {String(d.title ?? "")}
             </div>
             {typeof d.description === "string" && (
               <p className="leading-snug" style={{ color: "var(--ink-secondary)" }}>
@@ -136,54 +153,127 @@ const ExternalContextCard: React.FC<{ item: GlossContextItem }> = ({ item }) => 
     return (
       <div
         className="rounded-lg border p-2.5"
-        style={{ borderColor: "var(--st-focus)", background: "var(--st-focus-soft)" }}
+        style={{ borderColor: "var(--border-subtle)", background: "var(--bg-canvas)" }}
       >
-        <div className="mb-1 font-mono-num text-[11px] font-bold" style={{ color: "var(--st-focus)" }}>
-          user_context
+        <div
+          className={`mb-1 ${reader ? "text-[11.5px] font-semibold" : "font-mono-num text-[11px] font-bold"}`}
+          style={{ color: reader ? "var(--ink-primary)" : "var(--st-focus)" }}
+        >
+          {heading}
         </div>
         {typeof val.question === "string" && (
-          <div className="text-[11px] font-medium" style={{ color: "var(--ink-primary)" }}>
+          <div className="text-[11.5px] leading-snug" style={{ color: "var(--ink-primary)" }}>
             “{val.question}”
           </div>
         )}
         {typeof val.audience === "string" && (
-          <div className="mt-1 text-[10px]" style={{ color: "var(--ink-secondary)" }}>
-            Audience: <strong>{val.audience}</strong>
+          <div className="mt-1 text-[10.5px]" style={{ color: "var(--ink-muted)" }}>
+            Audience: {val.audience}
           </div>
         )}
       </div>
     );
   }
 
-  // Generic external context card (literature, project_notes, ontology, external_metadata)
+  // Render literature references list cleanly (no JSON dump!)
+  if (item.item === "literature" && Array.isArray(val.entries)) {
+    const entries = val.entries as Array<Record<string, unknown>>;
+    return (
+      <div
+        className="rounded-lg border p-2.5"
+        style={{ borderColor: "var(--border-subtle)", background: "var(--bg-surface)" }}
+      >
+        <div className="mb-1.5 text-[11.5px] font-semibold" style={{ color: "var(--ink-primary)" }}>
+          {heading}
+        </div>
+        <ul className="space-y-1.5 text-[11px] leading-snug" style={{ color: "var(--ink-secondary)" }}>
+          {entries.map((e, i) => (
+            <li key={i} className="border-l-2 pl-2" style={{ borderColor: "var(--border-strong)" }}>
+              {String(e.citation ?? JSON.stringify(e))}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  // Render ontology terms cleanly (no JSON dump!)
+  if (item.item === "ontology" && Array.isArray(val.terms)) {
+    const terms = val.terms as Array<Record<string, unknown>>;
+    return (
+      <div
+        className="rounded-lg border p-2.5"
+        style={{ borderColor: "var(--border-subtle)", background: "var(--bg-surface)" }}
+      >
+        <div className="mb-1.5 text-[11.5px] font-semibold" style={{ color: "var(--ink-primary)" }}>
+          {heading}
+        </div>
+        <div className="space-y-1.5">
+          {terms.map((t, i) => (
+            <div
+              key={i}
+              className="rounded border px-2 py-1 text-[10.5px]"
+              style={{ borderColor: "var(--border-subtle)", background: "var(--bg-canvas)" }}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-semibold" style={{ color: "var(--ink-primary)" }}>
+                  {String(t.label ?? "")}
+                </span>
+                {t.id !== undefined && (
+                  <span className="font-mono-num shrink-0 text-[9.5px]" style={{ color: "var(--ink-muted)" }}>
+                    {String(t.id)}
+                  </span>
+                )}
+              </div>
+              {Array.isArray(t.genes) && (
+                <div className="mt-0.5 text-[10px]" style={{ color: "var(--ink-secondary)" }}>
+                  {(t.genes as unknown[]).join(", ")}
+                </div>
+              )}
+              {Array.isArray(t.markers) && (
+                <div className="mt-0.5 text-[10px]" style={{ color: "var(--ink-secondary)" }}>
+                  Markers: {(t.markers as unknown[]).join(", ")}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Clean key-value rendering for study metadata / project notes (no raw JSON dump in Reader mode!)
+  const entries = Object.entries(val).filter(([, v]) => typeof v === "string" || typeof v === "number");
   return (
     <div
       className="rounded-lg border p-2.5"
-      style={{ borderColor: "var(--border-strong)", background: "var(--bg-surface)" }}
+      style={{ borderColor: "var(--border-subtle)", background: "var(--bg-surface)" }}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-mono-num text-[11px] font-bold" style={{ color: "var(--st-contextual)" }}>
-          {item.item}
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <span
+          className={`${reader ? "text-[11.5px] font-semibold" : "font-mono-num text-[11px] font-bold"}`}
+          style={{ color: reader ? "var(--ink-primary)" : "var(--st-contextual)" }}
+        >
+          {heading}
         </span>
-        {typeof val.source === "string" && (
-          <span className="truncate text-[9.5px]" style={{ color: "var(--ink-muted)" }}>
-            {val.source}
-          </span>
-        )}
       </div>
       {typeof val.citation === "string" ? (
-        <p className="mt-1 text-[10.5px] leading-snug" style={{ color: "var(--ink-primary)" }}>
+        <p className="text-[11px] leading-snug" style={{ color: "var(--ink-secondary)" }}>
           {val.citation}
-          {typeof val.doi === "string" && (
-            <span className="ml-1 font-mono-num text-[10px]" style={{ color: "var(--ink-muted)" }}>
-              (DOI: {val.doi})
-            </span>
-          )}
         </p>
-      ) : typeof val.excerpt === "string" ? (
-        <pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap font-mono-num text-[10px]" style={{ color: "var(--ink-secondary)" }}>
-          {val.excerpt}
-        </pre>
+      ) : entries.length > 0 ? (
+        <dl className="space-y-1.5 text-[11px]">
+          {entries.map(([k, v]) => (
+            <div key={k}>
+              <dt className="text-[10px] font-semibold capitalize" style={{ color: "var(--ink-muted)" }}>
+                {k.replace(/_/g, " ")}
+              </dt>
+              <dd className="leading-snug" style={{ color: "var(--ink-primary)" }}>
+                {String(v)}
+              </dd>
+            </div>
+          ))}
+        </dl>
       ) : (
         <pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap break-words font-mono-num text-[10px]" style={{ color: "var(--ink-secondary)" }}>
           {JSON.stringify(val, null, 2)}
@@ -372,7 +462,7 @@ export const LeftPanel: React.FC = () => {
                 {externalFound
                   .filter((c) => viewMode === "inspector" || c.item !== "project_notes" || !String((c.value as Record<string, unknown>)?.source ?? "").endsWith("/README.md"))
                   .map((c) => (
-                    <ExternalContextCard key={c.item} item={c} />
+                    <ExternalContextCard key={c.item} item={c} reader={viewMode === "reader"} />
                   ))}
                 {viewMode === "inspector" && externalMissing.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-0.5">

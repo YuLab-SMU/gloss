@@ -7,7 +7,7 @@ import type {
   GlossRecord,
 } from "./types";
 
-export type OutlineViewMode = "semantic" | "data" | "grob";
+export type OutlineViewMode = "reader" | "semantic" | "data" | "grob";
 
 export type OutlineIconKind =
   | "figure"
@@ -621,6 +621,150 @@ export function buildOutlineTree(bundle: GlossBundle, mode: OutlineViewMode): Ou
   const allBoundIds = bundle.derived.bindingsElements
     .filter((b) => b.status !== "unbound")
     .map((b) => b.element);
+
+  if (mode === "reader") {
+    const sections: OutlineNode[] = [];
+
+    // 1. Groups / Subsets directly visible in the figure (never gloss layer names!)
+    const crossGroups = inferDataGroups(bundle);
+    const cleanGroups = crossGroups.filter(
+      (g) => !/^series\s+#/i.test(g.label) && !/^group\s+\d+$/i.test(g.label)
+    );
+    const isHeatmap = bundle.index.matrixCellByElement.size > 0;
+
+    if (cleanGroups.length > 0) {
+      sections.push({
+        id: "reader:groups",
+        label: "Groups",
+        subtitle: `${cleanGroups.length} categories`,
+        icon: "data",
+        elementIds: allBoundIds,
+        recordCount: 0,
+        defaultExpanded: true,
+        children: cleanGroups.map((g) => {
+          const prettyLabel = g.label.includes(" = ") ? g.label.split(" = ").slice(1).join(" = ") : g.label;
+          return {
+            id: `reader:grp:${g.key}`,
+            label: prettyLabel,
+            subtitle: `${g.elementIds.length}`,
+            icon: "group" as const,
+            swatch: g.swatch,
+            elementIds: g.elementIds,
+            recordCount: countRecordsForElements(bundle, g.elementIds),
+            stageHint: "analytical" as const,
+            children: buildEntityChildren(bundle, g.elementIds, `rgrp-${g.key}`),
+          };
+        }),
+      });
+    } else if (isHeatmap && bundle.substrate.panels.length > 1) {
+      // Group ComplexHeatmap slices cleanly by sample/row blocks inferred from cells
+      const sliceNodes: OutlineNode[] = bundle.substrate.panels.map((p, idx) => {
+        const pEls = allBoundIds.filter((eid) => bundle.index.elementById.get(eid)?.panel === p.id);
+        const cells = pEls
+          .map((eid) => bundle.index.matrixCellByElement.get(eid))
+          .filter((c): c is NonNullable<typeof c> => Boolean(c));
+        const rows = Array.from(new Set(cells.map((c) => c.rowLabel)));
+        const cols = Array.from(new Set(cells.map((c) => c.colLabel)));
+        const colPrefix = cols[0]?.split("_")[0] ?? `Block ${idx + 1}`;
+        const rowPreview = rows.slice(0, 2).join(", ");
+        return {
+          id: `reader:slice:${p.id}`,
+          label: `${colPrefix} · ${rowPreview}${rows.length > 2 ? "…" : ""}`,
+          subtitle: `${rows.length} × ${cols.length}`,
+          icon: "frame" as const,
+          elementIds: pEls,
+          recordCount: countRecordsForElements(bundle, pEls),
+          children: [],
+        };
+      });
+      sections.push({
+        id: "reader:slices",
+        label: "Heatmap Regions",
+        subtitle: `${sliceNodes.length} blocks`,
+        icon: "data",
+        elementIds: allBoundIds,
+        recordCount: 0,
+        defaultExpanded: true,
+        children: sliceNodes,
+      });
+    } else if (bundle.substrate.panels.length > 1) {
+      sections.push({
+        id: "reader:panels",
+        label: "Panels",
+        subtitle: `${bundle.substrate.panels.length}`,
+        icon: "frame",
+        elementIds: allBoundIds,
+        recordCount: 0,
+        defaultExpanded: true,
+        children: bundle.substrate.panels.map((p, i) => {
+          const pEls = allBoundIds.filter((eid) => bundle.index.elementById.get(eid)?.panel === p.id);
+          const cleanKey =
+            p.key && !/^plot\d+_\d+$/i.test(p.key) ? p.key.replace(/=/g, " = ") : `Panel ${i + 1}`;
+          return {
+            id: `reader:panel:${p.id}`,
+            label: cleanKey,
+            subtitle: `${pEls.length}`,
+            icon: "frame" as const,
+            elementIds: pEls,
+            recordCount: countRecordsForElements(bundle, pEls),
+            children: [],
+          };
+        }),
+      });
+    }
+
+    // 2. Flat list of Notable Highlights (domain/entity notes directly — no internal gloss layer folders!)
+    const highlightRecs = bundle.records.filter(
+      (r) => r.layer === "meaning" && r.resolvedTargets.length > 0 && (r.body.label || r.workbenchStage === "contextual")
+    );
+    if (highlightRecs.length > 0) {
+      sections.push({
+        id: "reader:highlights",
+        label: "Highlights",
+        subtitle: `${highlightRecs.length} annotated`,
+        icon: "context",
+        elementIds: Array.from(new Set(highlightRecs.flatMap((r) => r.resolvedTargets))),
+        recordCount: highlightRecs.length,
+        defaultExpanded: true,
+        children: highlightRecs.map((rec) => {
+          const firstEl = bundle.index.elementById.get(rec.resolvedTargets[0]);
+          const mat = firstEl ? bundle.index.matrixCellByElement.get(firstEl.id) : undefined;
+          const raw = firstEl ? bundle.index.inferredRawByElement.get(firstEl.id) : undefined;
+          const label =
+            rec.body.label ??
+            (mat ? `${mat.rowLabel} in ${mat.colLabel}` : raw?.rawKeyLabels[0]) ??
+            "Highlight";
+          return {
+            id: `reader:hl:${rec.id}`,
+            label,
+            subtitle: rec.body.provenance === "speculative" ? "Working hypothesis" : undefined,
+            icon: "point" as const,
+            swatch: firstEl?.fill ?? firstEl?.stroke ?? null,
+            elementIds: rec.resolvedTargets,
+            recordCount: 0,
+            recordId: rec.id,
+            children: [],
+          };
+        }),
+      });
+    }
+
+    // 3. Figure Layout elements (collapsed by default — clean BioRender/Figma visibility controls)
+    const chromeBranch = buildTypographyAndGuidesBranch(bundle);
+    if (chromeBranch && chromeBranch.children.length > 0) {
+      sections.push({
+        ...chromeBranch,
+        id: "reader:layout",
+        label: "Figure Layout",
+        subtitle: undefined,
+        recordCount: 0,
+        defaultExpanded: false,
+        children: chromeBranch.children.map((c) => ({ ...c, recordCount: 0 })),
+      });
+    }
+
+    return sections;
+  }
 
   if (mode === "grob") {
     const panels = bundle.substrate.panels;

@@ -227,7 +227,7 @@ fig <- gl_record(
 fig <- gl_record(
   fig, "claim", gl_anchor(element = e_dot_pdcd1),
   list(
-    text = "Every cluster shows high checkpoint/lineage marker expression above the 2.0 scaled-expression cutoff across all 10 markers.",
+    text = "Seven of eight TME clusters show a strong canonical marker above 2.0 scaled expression on this 10-gene panel; M1 Macrophages lack a dedicated M1-specific marker here and rely on intermediate CD163 expression.",
     check = list(
       kind = "compare",
       table = "plot2_raw",

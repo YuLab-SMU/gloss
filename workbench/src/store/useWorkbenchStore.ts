@@ -51,6 +51,8 @@ interface WorkbenchState {
 
   viewMode: WorkbenchViewMode;
   readerLens: ReaderLens;
+  cleanFigure: boolean;
+  walkthroughOpen: boolean;
   storyStepIdx: number;
   activeStage: SemanticStageId;
   selectedElementIds: string[];
@@ -90,6 +92,8 @@ interface WorkbenchState {
 
   setViewMode: (mode: WorkbenchViewMode) => void;
   setReaderLens: (lens: ReaderLens) => void;
+  setCleanFigure: (clean: boolean) => void;
+  setWalkthroughOpen: (open: boolean) => void;
   setStoryStepIdx: (idx: number) => void;
   setActiveStage: (stage: SemanticStageId) => void;
   stepStage: (delta: -1 | 1) => void;
@@ -192,6 +196,8 @@ function hydrateBundle(
     error: null,
     viewMode,
     readerLens,
+    cleanFigure: preserveSelection && prev ? prev.cleanFigure : false,
+    walkthroughOpen: preserveSelection && prev ? prev.walkthroughOpen : false,
     storyStepIdx: preserveSelection && prev ? prev.storyStepIdx : 0,
     bottomOpen: preserveSelection && prev ? prev.bottomOpen : viewMode === "inspector",
     activeStage,
@@ -221,6 +227,8 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
 
   viewMode: "reader",
   readerLens: "findings",
+  cleanFigure: false,
+  walkthroughOpen: false,
   storyStepIdx: 0,
   activeStage: "behavior",
   selectedElementIds: [],
@@ -270,8 +278,29 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
       findings: "claim",
       story: "narrative",
     };
-    set({ readerLens: lens, activeStage: stageMap[lens] });
+    set({
+      readerLens: lens,
+      cleanFigure: lens === "figure",
+      walkthroughOpen: lens === "story",
+      activeStage: stageMap[lens],
+    });
   },
+
+  setCleanFigure: (clean) =>
+    set((s) => ({
+      cleanFigure: clean,
+      walkthroughOpen: clean ? false : s.walkthroughOpen,
+      readerLens: clean ? "figure" : s.walkthroughOpen ? "story" : "findings",
+      activeStage: clean ? "raw" : "claim",
+    })),
+
+  setWalkthroughOpen: (open) =>
+    set({
+      walkthroughOpen: open,
+      cleanFigure: false,
+      readerLens: open ? "story" : "findings",
+      activeStage: open ? "narrative" : "claim",
+    }),
 
   setStoryStepIdx: (idx) => set({ storyStepIdx: Math.max(0, idx) }),
 
@@ -371,6 +400,8 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
       selectedElementIds: [],
       hoveredElementId: null,
       selectedRecordId: null,
+      cleanFigure: false,
+      walkthroughOpen: false,
       storyStepIdx: 0,
       focusScope: null,
       highlightedGroup: null,

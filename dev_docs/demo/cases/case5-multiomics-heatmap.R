@@ -143,7 +143,7 @@ e_mki67_anom <- find_cell_el("MKI67", "LumA_11")
 fig <- gl_record(
   fig, "claim", gl_anchor(element = e_esr1_luma),
   list(
-    text = "All standardized expression z-scores across the 24-gene signature in sample LumA_04 remain bounded within [-3.5, +3.5].",
+    text = "In representative Luminal A biopsy LumA_04, expression across all 24 signature genes stays well-bounded within [-3.5, +3.5] with strong ER/Luminal signaling and suppressed proliferation.",
     check = list(
       kind = "range",
       table = "matrix_zscore",
@@ -156,7 +156,7 @@ fig <- gl_record(
 fig <- gl_record(
   fig, "claim", gl_anchor(element = e_mki67_anom),
   list(
-    text = "Within Luminal A biopsy LumA_11, every gene in the 24-gene panel remains below the +2.0 high-expression threshold (tests for discordant proliferation outliers).",
+    text = "In Luminal A biopsy LumA_11, 6 of 24 signature genes exceed +2.0 z-score: five expected Luminal/ER drivers (FOXA1, MLPH, NAT1, XBP1, BCL2) plus one discordant proliferation outlier (MKI67 = +2.35, matching its elevated 44% Ki-67 index).",
     check = list(
       kind = "range",
       table = "matrix_zscore",
@@ -225,18 +225,18 @@ fig <- gl_apply(fig, list(list(
   relation = "ESR1 and GATA3 Luminal co-expression"
 )))
 
-# 4-step molecular pathology walkthrough
+# 4-step molecular pathology walkthrough (pure science, zero UI chrome instructions!)
 fig <- gl_record(fig, "narrative", gl_anchor(element = e_esr1_luma),
-                 list(order = 1L, text = "Start in the upper-left Luminal / ER slice: all 864 ComplexHeatmap tiles are individually position- and color-verified; hover any cell to read exact Gene x Sample z-scores."),
+                 list(order = 1L, text = "Start in the upper-left Luminal / ER block: estrogen-receptor signaling genes (ESR1, FOXA1, GATA3, PGR) are strongly upregulated across Luminal A biopsies and suppressed in Basal-like tumors."),
                  by = "mol-path")
 fig <- gl_record(fig, "narrative", gl_anchor(element = e_erbb2_her2),
-                 list(order = 2L, text = "Inspect the central HER2-Enriched slice: ERBB2 and neighboring 17q12 amplicon genes (GRB7, PGAP3, STARD3) form a sharply demarcated high-expression block."),
+                 list(order = 2L, text = "Move to the central HER2-Enriched block: ERBB2 and neighboring 17q12 amplicon genes (GRB7, PGAP3, STARD3) form a sharply demarcated high-expression signature."),
                  by = "mol-path")
 fig <- gl_record(fig, "narrative", gl_anchor(element = e_mki67_anom),
-                 list(order = 3L, text = "Spot the clinical outlier in Luminal A: cell MKI67 x LumA_11 stands out in bright red (+2.35), matching the elevated Ki-67 bar directly above it in the clinical track."),
+                 list(order = 3L, text = "Spot the clinical outlier in Luminal A: MKI67 in LumA_11 spikes to +2.35 (red cell in a blue block), mirroring its 44% Ki-67 bar directly above in the clinical track."),
                  by = "mol-path")
 fig <- gl_record(fig, "narrative", gl_anchor(element = e_gata3_luma),
-                 list(order = 4L, text = "Open the Data drawer -> zscore Matrix and click any gene row to spotlight that gene across all 36 tumor biopsies simultaneously."),
+                 list(order = 4L, text = "Compare transcriptional co-regulation in LumA_04: ESR1 (+2.84) and GATA3 (+2.52) move tightly together across the Luminal A cohort, anchoring hormone-receptor-positive biology."),
                  by = "mol-path")
 
 out_path <- "dev_docs/demo/case5-multiomics-heatmap.html"

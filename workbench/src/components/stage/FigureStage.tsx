@@ -17,6 +17,7 @@ import {
 import {
   buildOutlineTree,
   formatReaderTooltip,
+  humanizePanelLabel,
   humanizeToken,
   SEMANTIC_STAGES,
   svgPointToData,
@@ -65,7 +66,8 @@ export const FigureStage: React.FC = () => {
   const bundle = useWorkbenchStore((s) => s.bundle);
   const spatial = useWorkbenchStore((s) => s.spatial);
   const viewMode = useWorkbenchStore((s) => s.viewMode);
-  const readerLens = useWorkbenchStore((s) => s.readerLens);
+  const cleanFigure = useWorkbenchStore((s) => s.cleanFigure);
+  const walkthroughOpen = useWorkbenchStore((s) => s.walkthroughOpen);
   const storyStepIdx = useWorkbenchStore((s) => s.storyStepIdx);
   const activeStage = useWorkbenchStore((s) => s.activeStage);
   const selectedElementIds = useWorkbenchStore((s) => s.selectedElementIds);
@@ -83,7 +85,7 @@ export const FigureStage: React.FC = () => {
   const setHoveredElement = useWorkbenchStore((s) => s.setHoveredElement);
   const setFocusScope = useWorkbenchStore((s) => s.setFocusScope);
   const requestZoomToFocus = useWorkbenchStore((s) => s.requestZoomToFocus);
-  const setReaderLens = useWorkbenchStore((s) => s.setReaderLens);
+  const setWalkthroughOpen = useWorkbenchStore((s) => s.setWalkthroughOpen);
   const setStoryStepIdx = useWorkbenchStore((s) => s.setStoryStepIdx);
   const setSplitCompare = useWorkbenchStore((s) => s.setSplitCompare);
   const setSplitRatio = useWorkbenchStore((s) => s.setSplitRatio);
@@ -100,7 +102,7 @@ export const FigureStage: React.FC = () => {
 
   const isReader = viewMode === "reader";
   const curStageIdx = stageIndex(activeStage);
-  const isPureFigure = isReader ? readerLens === "figure" : curStageIdx === 0;
+  const isPureFigure = isReader ? cleanFigure : curStageIdx === 0;
 
   // Mount original SVG verbatim whenever bundle changes
   useEffect(() => {
@@ -139,9 +141,9 @@ export const FigureStage: React.FC = () => {
       );
   }, [bundle]);
 
-  // Sync story step selection when user enters Story lens or steps Prev/Next
+  // Sync walkthrough step selection when user opens Walkthrough or steps Prev/Next
   const activeStoryStop =
-    isReader && readerLens === "story" && narrativeStops.length > 0
+    isReader && walkthroughOpen && narrativeStops.length > 0
       ? narrativeStops[Math.min(storyStepIdx, narrativeStops.length - 1)]
       : null;
 
@@ -462,7 +464,7 @@ export const FigureStage: React.FC = () => {
   const visibleRelationArcs = relationArcs.filter((arc) => {
     if (isPureFigure) return false;
     if (!isReader && curStageIdx === 5) return true;
-    if (isReader && readerLens === "story") return false;
+    if (isReader && walkthroughOpen) return false;
     const touchesFocus = activeFocusIds.has(arc.from.id) || activeFocusIds.has(arc.to.id);
     if (!touchesFocus) return false;
     if (isReader) {
@@ -488,11 +490,11 @@ export const FigureStage: React.FC = () => {
     return ov.targets.some((id) => activeFocusIds.has(id));
   });
 
-  // Quiet interactive cue dots: gently guide the user toward points that have rich notes/relations/behaviors
+  // Quiet interactive cue dots: gently guide the user toward annotated highlights
   const showInteractiveCues =
     !isPureFigure &&
-    !(isReader && readerLens === "story") &&
-    (isReader ? readerLens === "explore" || readerLens === "findings" : curStageIdx >= 8);
+    !(isReader && walkthroughOpen) &&
+    (isReader ? true : curStageIdx >= 8);
 
   const selectedElements = selectedElementIds
     .map((id) => bundle.index.elementById.get(id))
@@ -529,11 +531,11 @@ export const FigureStage: React.FC = () => {
           {isReader && !focusScope && (
             <span className="inline-flex items-center gap-1.5 text-[11.5px]" style={{ color: "var(--ink-secondary)" }}>
               <Hand className="h-3.5 w-3.5" style={{ color: "var(--st-focus)" }} />
-              {readerLens === "figure"
-                ? "Original published figure (overlays off)"
-                : readerLens === "story"
-                  ? `Guided reading walkthrough (${narrativeStops.length} steps)`
-                  : "Hover points · Click legend to filter · Click ringed points for notes"}
+              {cleanFigure
+                ? "Clean view (interactive overlays hidden)"
+                : walkthroughOpen
+                  ? `Guided walkthrough (${narrativeStops.length} steps)`
+                  : "Hover to read values · Click legend to filter · Click ringed points for notes"}
             </span>
           )}
 
@@ -936,8 +938,8 @@ export const FigureStage: React.FC = () => {
                 );
               })}
 
-              {/* Story Walkthrough: in Reader Story lens highlight ONE active step cleanly; in Inspector Narrative stage show full numbered path */}
-              {isReader && readerLens === "story" && activeStoryStop && (() => {
+              {/* Walkthrough: in Reader mode highlight ONE active step cleanly; in Inspector Narrative stage show full numbered path */}
+              {isReader && walkthroughOpen && activeStoryStop && (() => {
                 const c = elementCenter(activeStoryStop.element);
                 return (
                   <g>
@@ -1210,18 +1212,10 @@ export const FigureStage: React.FC = () => {
                     <span className="font-bold" style={{ color: "var(--ink-primary)" }}>
                       {hoveredReaderTip.title}
                     </span>
-                    {hoveredReaderTip.verified && (
-                      <span
-                        className="rounded-full px-1.5 py-0.5 text-[9.5px] font-semibold"
-                        style={{ background: "var(--st-verified-soft)", color: "var(--st-verified)" }}
-                      >
-                        Verified
-                      </span>
-                    )}
                   </div>
-                  {hoveredReaderTip.subtitle && (
+                  {hoveredReaderTip.subtitle && humanizePanelLabel(hoveredReaderTip.subtitle) && (
                     <div className="text-[10.5px]" style={{ color: "var(--ink-muted)" }}>
-                      {hoveredReaderTip.subtitle}
+                      {humanizePanelLabel(hoveredReaderTip.subtitle)}
                     </div>
                   )}
                   {hoveredReaderTip.metrics.length > 0 && (
@@ -1236,7 +1230,7 @@ export const FigureStage: React.FC = () => {
                   )}
                   {hoveredEl && interactiveCueIds.includes(hoveredEl.id) && (
                     <div className="mt-1 text-[10px] font-medium" style={{ color: "var(--st-focus)" }}>
-                      Click to open context & findings →
+                      Click for notes →
                     </div>
                   )}
                 </div>
@@ -1292,8 +1286,8 @@ export const FigureStage: React.FC = () => {
           )}
         </div>
 
-        {/* Interactive Guided Story Stepper Bar (in Reader Story lens!) */}
-        {isReader && readerLens === "story" && activeStoryStop && (
+        {/* Interactive Guided Walkthrough Bar (optional, dismissible) */}
+        {isReader && walkthroughOpen && activeStoryStop && (
           <div
             className="absolute bottom-4 left-1/2 z-30 flex w-[min(92%,560px)] -translate-x-1/2 items-center justify-between gap-3 rounded-2xl border px-4 py-2.5 shadow-xl"
             style={{
@@ -1340,6 +1334,16 @@ export const FigureStage: React.FC = () => {
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
+              <button
+                type="button"
+                onClick={() => setWalkthroughOpen(false)}
+                className="ml-0.5 rounded-lg px-2 py-1 text-xs font-semibold hover:bg-[var(--bg-subtle)]"
+                style={{ color: "var(--ink-muted)" }}
+                aria-label="Close walkthrough"
+                title="Close walkthrough"
+              >
+                ×
+              </button>
             </div>
           </div>
         )}
@@ -1382,18 +1386,18 @@ export const FigureStage: React.FC = () => {
               <Eye className="h-3 w-3" /> {hiddenElementIds.length || hiddenLeafIds.length} hidden
             </span>
           )}
-          {isReader && narrativeStops.length > 0 && readerLens !== "story" && (
+          {isReader && narrativeStops.length > 0 && !walkthroughOpen && (
             <button
               type="button"
               onClick={() => {
                 setStoryStepIdx(0);
-                setReaderLens("story");
+                setWalkthroughOpen(true);
               }}
-              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10.5px] font-semibold"
               style={{ background: "var(--st-focus-soft)", color: "var(--st-focus)" }}
             >
               <Sparkles className="h-3 w-3" />
-              Start {narrativeStops.length}-step story
+              Walkthrough ({narrativeStops.length} steps)
             </button>
           )}
           {!isReader && <span>Ctrl/⌘ + Scroll to zoom · Alt + Drag to pan · Click legend to filter</span>}

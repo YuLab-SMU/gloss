@@ -86,5 +86,14 @@ describe("design-tool outline tree & natural-language focus", () => {
     const allText = collectLabels(sem).join(" | ");
     expect(allText).not.toContain("undefined");
     expect(allText).toContain("MKI67 (LumA_11)");
+
+    // Reader outline stays free of internal gloss layer taxonomy
+    const readerTree = buildOutlineTree(bundle, "reader");
+    const readerText = collectLabels(readerTree).join(" | ");
+    expect(readerText).toContain("Heatmap Regions");
+    expect(readerText).toContain("Highlights");
+    expect(readerText).not.toContain("Entity Context");
+    expect(readerText).not.toContain("Statistical Findings");
+    expect(readerText).not.toContain("Natural-Language Semantics");
   });
 });

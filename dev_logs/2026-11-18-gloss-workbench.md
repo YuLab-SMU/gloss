@@ -158,3 +158,28 @@
 - **Row-level `gl_check()` plugins (`range`, `value`, `exists`) return `{ row, value, passed }` with NO `group` column, and `check_compare` returns `{ group, left, right, passed }` with NO `n` column.** The first browser test on Case 5 (`ComplexHeatmap` with `check_range`) immediately threw `TypeError: Cannot read properties of undefined (reading 'includes')`, and Cases 1–4 displayed `(n = undefined)` on `check_compare` exceptions. Fixed universally in `normalizeCheck()`, `humanizeCheckGroupLabel()`, `resolveCheckGroupElements()`, `outline.ts`, `ReaderInspector.tsx`, and `RightInspector.tsx`, and locked down with a Vitest regression test on Case 5.
 - **`gl_check()` `by` argument must be an atomic character vector (`c("arm")`), not a list (`list("arm")`).** Passing `list(...)` caused `semantic_check_groups()` (`table[by]`) to return `refused: invalid subscript type 'list'`. Caught by our R claim audit script before browser testing.
 - **`ComplexHeatmap` body bindings use flat column-major matrix indices `(col - 1) * nrow + row` in `bindings$row`, and continuous heatmap fill gradients exceed discrete group palettes.** Adding dedicated `matrixCellByElement` decoding and guarding `inferDataGroups()` against `> 16` unique hex colors turned `ComplexHeatmap` into a first-class interactive workbench citizen.
+
+---
+
+## Follow-up update (2026-11-20 — Reader view speaks the reader's language, not gloss's)
+
+- **Triggered by:** Owner, looking at Case 5: gloss's own terms (`claim`, `gl_check`, layers) were being shown to readers as UI ("我们的专业术语直接应用到了交互中，这是不对的"). A failed `range` check was titled `Statistical Finding` above the very sentence the data contradicted.
+
+### What changed
+
+- Reader Outline is now figure-first (`Groups` / `Heatmap Regions` / `Panels`, `Highlights`, collapsed `Figure Layout`) via a new `buildOutlineTree(bundle, "reader")`; gloss layer folders (`Statistical Findings`, `Entity Context`, `Comparisons`, `Guided Story`) only appear in Inspector.
+- Claims render as `Key Takeaways` prose with a collapsed one-line data check from `summarizeCheckForReader()` (`Confirmed across all 24 items`, `18 of 24 match · 6 exceptions · Inspect 6`, `Not supported by source data`). Partial/failed checks are never shown as confirmed; the evidence rows stay one click away and still spotlight the figure.
+- Top bar: removed the 4-lens switcher and the `Exception` pill; replaced with `Walkthrough` (optional, dismissible), `Clean view`, `Data`, `Reader | Inspector`. Long titles truncate instead of pushing actions off screen.
+- Right panel: no `Analyst Note`, `Confidence %`, `ZSCORE SLICE 3_1`, `Feature / Row`; speculative notes carry a quiet `Working hypothesis` tag. Background tab renders `Variable Guide`, `References`, `Terminology & Ontology`, `Study Details` as prose instead of snake_case headers and JSON.
+- Showcase claims rewritten to state what the data shows (e.g. Case 5 `LumA_11`: five expected Luminal/ER drivers plus one discordant `MKI67 = +2.35`), and walkthrough text no longer instructs UI clicks.
+
+### Measured
+
+- `tsc --noEmit` 0 errors; Vitest `2 files, 7 passed` (new assertion: Reader outline for Case 5 contains `Heatmap Regions` / `Highlights` and none of `Entity Context`, `Statistical Findings`, `Natural-Language Semantics`).
+- Shell `full` `2,438.42 kB` (`700.03 kB` gzip); `lite` `2,042.40 kB` (`598.12 kB` gzip). All 6 showcase HTMLs regenerated, `gl_read()` round-trip `TRUE`.
+- Targeted R tests: `test-workbench.R` 15 pass, `test-workbench-live.R` 19 pass (no `R/` or `tests/` change in this unit).
+- Chromium 1440×900: Cases 1 and 5 have 0 console/page errors and 0 occurrences of the forbidden jargon list on the landing screen; `Inspect 6` expands/collapses; Case 1 long-title header overflow found and fixed.
+
+### Surprises
+
+- Removing the lens switcher exposed that the long Case 1 title had been held in check only by the switcher's fixed width; the header needed `overflow-hidden` + `flex-1 truncate` on the title. → `workbench/src/App.tsx`.

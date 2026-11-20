@@ -212,7 +212,7 @@ e_p_wnt   <- find_path_el("WNT / beta-Catenin Exclusion")
 fig <- gl_record(
   fig, "claim", gl_anchor(element = e_p_ifng),
   list(
-    text = "All significantly enriched Hallmark/GO pathways are positively enriched (NES > 0) in Anti-PD-1 responders.",
+    text = "Responder tumors enrich 6 immune-activation pathways (led by Hallmark IFN-gamma Response, NES = +2.74), whereas 4 opposing resistance programs (WNT/beta-catenin, Angiogenesis, TGF-beta, Oxidative Phosphorylation) enrich in non-responders.",
     check = list(
       kind = "compare",
       table = "plot2_raw",

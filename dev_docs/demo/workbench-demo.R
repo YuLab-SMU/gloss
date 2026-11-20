@@ -157,7 +157,7 @@ overall_claim_id <- gl_records(fig, layer = "claim")$id[1L]
 fig <- gl_record(
   fig, "claim", gl_anchor(element = e_hornet),
   list(
-    text = "Within every transmission-by-cylinder subgroup, weight negatively predicts mpg (partial: 5 of 6 groups pass; automatic 4-cylinder cars, n = 3, show a positive slope).",
+    text = "Heavier vehicles show lower fuel economy in 5 of 6 transmission-by-cylinder groups; only the small automatic 4-cylinder subset (n = 3) exhibits a positive slope.",
     check = list(
       kind = "trend",
       table = "built_layer1",

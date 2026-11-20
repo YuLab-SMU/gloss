@@ -127,8 +127,8 @@ export const OutlineTree: React.FC = () => {
 
   const rawTree = useMemo(() => {
     if (!bundle) return [];
-    return buildOutlineTree(bundle, outlineMode);
-  }, [bundle, outlineMode]);
+    return buildOutlineTree(bundle, viewMode === "reader" ? "reader" : outlineMode);
+  }, [bundle, viewMode, outlineMode]);
 
   const visibleTree = useMemo(() => filterTree(rawTree, query.trim()), [rawTree, query]);
 
@@ -137,18 +137,17 @@ export const OutlineTree: React.FC = () => {
     return resolveNaturalFocus(bundle, query.trim());
   }, [bundle, query]);
 
-  // Dynamic quick-focus chips (Data Layer, Data Groups, Exceptions, Legend)
+  // Dynamic quick-focus chips: in Reader mode show ONLY real figure groups (no internal Exception/Data Layer jargon!)
   const quickChips = useMemo(() => {
     if (!bundle) return [] as FocusScope[];
     const chips: FocusScope[] = [];
     const dataTree = buildOutlineTree(bundle, "data");
-    const semTree = buildOutlineTree(bundle, "semantic");
-
     const allData = dataTree[0];
-    if (allData && allData.elementIds.length > 0) {
+
+    if (viewMode !== "reader" && allData && allData.elementIds.length > 0) {
       chips.push({
         id: allData.id,
-        label: viewMode === "reader" ? "All Data" : "Data Layer",
+        label: "Data Layer",
         kind: "data",
         elementIds: allData.elementIds,
       });
@@ -158,8 +157,8 @@ export const OutlineTree: React.FC = () => {
       const cleanGroups = byGroup.children.filter(
         (g) => !/^series\s+#/i.test(g.label) && !/^group\s+\d+$/i.test(g.label)
       );
-      const chosen = cleanGroups.length > 0 ? cleanGroups : byGroup.children;
-      for (const g of chosen.slice(0, 3)) {
+      const chosen = viewMode === "reader" ? cleanGroups : (cleanGroups.length > 0 ? cleanGroups : byGroup.children);
+      for (const g of chosen.slice(0, 4)) {
         chips.push({
           id: g.id,
           label: g.label.includes(" = ") ? g.label.split(" = ").slice(1).join(" = ") : g.label,
@@ -169,21 +168,24 @@ export const OutlineTree: React.FC = () => {
         });
       }
     }
-    const findExceptions = (nodes: OutlineNode[]): OutlineNode[] =>
-      nodes.flatMap((n) => [
-        ...(n.icon === "exception" && n.id.startsWith("sem:exc:") ? [n] : []),
-        ...findExceptions(n.children),
-      ]);
-    const excs = findExceptions(semTree);
-    if (excs.length > 0) {
-      chips.push({
-        id: excs[0].id,
-        label: "Exception",
-        kind: "exception",
-        elementIds: excs[0].elementIds,
-        recordId: excs[0].recordId,
-        isException: true,
-      });
+    if (viewMode !== "reader") {
+      const semTree = buildOutlineTree(bundle, "semantic");
+      const findExceptions = (nodes: OutlineNode[]): OutlineNode[] =>
+        nodes.flatMap((n) => [
+          ...(n.icon === "exception" && n.id.startsWith("sem:exc:") ? [n] : []),
+          ...findExceptions(n.children),
+        ]);
+      const excs = findExceptions(semTree);
+      if (excs.length > 0) {
+        chips.push({
+          id: excs[0].id,
+          label: "Exception",
+          kind: "exception",
+          elementIds: excs[0].elementIds,
+          recordId: excs[0].recordId,
+          isException: true,
+        });
+      }
     }
     return chips;
   }, [bundle, viewMode]);
@@ -270,7 +272,7 @@ export const OutlineTree: React.FC = () => {
       !isHidden && node.elementIds.some((id) => hiddenSet.has(id));
 
     const display =
-      viewMode === "reader"
+      viewMode === "reader" && !node.id.startsWith("reader:")
         ? humanizeOutlineLabel(node.id, node.label, node.subtitle, bundle)
         : { label: node.label, subtitle: node.subtitle };
     const indentPx = viewMode === "reader" ? 10 : 14;
@@ -432,33 +434,35 @@ export const OutlineTree: React.FC = () => {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* Mode Switcher (Outline / Data / Grob) + Natural-Language Focus Search */}
+      {/* Search + Quick Group Filters (Mode tabs only in Technical Inspector!) */}
       <div className="space-y-2 border-b p-2" style={{ borderColor: "var(--border-subtle)" }}>
-        <div
-          className={`grid ${viewMode === "reader" ? "grid-cols-2" : "grid-cols-3"} rounded-lg p-0.5 text-[10.5px] font-semibold`}
-          style={{ background: "var(--bg-canvas)", border: "1px solid var(--border-subtle)" }}
-        >
-          {modeOptions.map(([m, lbl]) => {
-            const active = outlineMode === m;
-            return (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setOutlineMode(m)}
-                className="rounded-md py-1 transition-colors"
-                style={{
-                  background: active ? "var(--bg-surface)" : "transparent",
-                  color: active ? "var(--st-focus)" : "var(--ink-secondary)",
-                  boxShadow: active ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
-                }}
-              >
-                {lbl}
-              </button>
-            );
-          })}
-        </div>
+        {viewMode !== "reader" && (
+          <div
+            className="grid grid-cols-3 rounded-lg p-0.5 text-[10.5px] font-semibold"
+            style={{ background: "var(--bg-canvas)", border: "1px solid var(--border-subtle)" }}
+          >
+            {modeOptions.map(([m, lbl]) => {
+              const active = outlineMode === m;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setOutlineMode(m)}
+                  className="rounded-md py-1 transition-colors"
+                  style={{
+                    background: active ? "var(--bg-surface)" : "transparent",
+                    color: active ? "var(--st-focus)" : "var(--ink-secondary)",
+                    boxShadow: active ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
+                  }}
+                >
+                  {lbl}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
-        {/* Natural-Language Focus Input */}
+        {/* Search Input */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -474,7 +478,7 @@ export const OutlineTree: React.FC = () => {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={
               viewMode === "reader"
-                ? "Find group, sample, or finding..."
+                ? "Search figure..."
                 : "Focus: cyl 6, exception, Mazda, legend..."
             }
             className="w-full bg-transparent text-[11.5px] focus:outline-none"

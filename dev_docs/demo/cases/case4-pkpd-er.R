@@ -205,7 +205,7 @@ fig <- gl_record(
 fig <- gl_record(
   fig, "claim", gl_anchor(element = e_cyp_pm),
   list(
-    text = "Maximum observed plasma concentration (Cmax) stays below the 450 ng/mL hepatic safety ceiling across every dose cohort.",
+    text = "Cohorts up to 100 mg QD remain below the 450 ng/mL hepatic safety ceiling at the cohort level, while 200 mg QD breaches the safety ceiling without delivering meaningful additional tumor shrinkage.",
     check = list(
       kind = "compare",
       table = "plot2_raw",
