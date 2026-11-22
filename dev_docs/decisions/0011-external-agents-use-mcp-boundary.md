@@ -26,6 +26,12 @@ for an external agent to call those capabilities.
   modern and legacy discovery, `tools/list` and `tools/call`.
 - `gl_mcp_serve()` started on a free localhost port and stopped cleanly in an
   offline smoke test. No external model or client was used.
+- A local interoperability smoke test used `aisdk.mcp` 0.1.3.1's
+  `McpHttpClient` with an injected transport connected to gloss's dispatch
+  function. The client completed the handshake, listed the stage tools,
+  assembled a focused packet and submitted a checked proposal that committed
+  one record. This exercises the JSON-RPC tool contract without claiming a
+  live network transport result.
 
 ## Decision
 
@@ -54,6 +60,9 @@ optional compatibility runner for `gl_annotate()`.
 - **Add a second model-specific SDK adapter.** Rejected because every new SDK
   would duplicate the checked tool boundary and increase the core's domain
   coupling.
+- **Make `aisdk.mcp` a gloss dependency.** Rejected because its server and
+  tool-combination helpers are intentionally tied to `aisdk`, while gloss only
+  needs the MCP boundary and must remain usable by a user's own agent.
 - **Expose only a free-form HTTP endpoint.** Rejected because the agent needs
   discoverable JSON Schemas and the existing tool permissions, while the
   transport should remain replaceable.
@@ -75,6 +84,9 @@ optional compatibility runner for `gl_annotate()`.
   client combinations remain unmeasured.
 - External-client interoperability, model accuracy and context-value metrics
   remain unmeasured and are task 5 of the context assembly plan.
+- The injected-transport smoke test covers the shared JSON-RPC shape only.
+  It does not cover a real Streamable HTTP exchange, legacy SSE, stdio, or
+  server-initiated requests.
 - A live server is local and unauthenticated by default. Deployment policy
   stays with the host application.
 

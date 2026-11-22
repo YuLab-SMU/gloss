@@ -102,3 +102,20 @@ using any held-out figures.
   changed.
 - The held-out benchmark and external-client interoperability experiment were
   not run. They remain task 5 of the plan.
+
+## Follow-up on 2026-11-22 — aisdk.mcp interoperability
+
+- Inspected `YuLab-SMU/aisdk.mcp` at the current main revision. Its useful
+  boundary is a shared client API over stdio, Streamable HTTP and legacy SSE,
+  with `list_tools()`, `call_tool()`, `call_tool_data()` and injected
+  transports for offline tests. Its server and tool-combination helpers remain
+  coupled to `aisdk`.
+- A local smoke test installed `aisdk.mcp` 0.1.3.1 beside the development
+  package and used its `McpHttpClient` with an injected transport backed by
+  `gloss:::mcp_dispatch`. The client listed the stage tools, assembled a
+  focused packet with two selected rows at disclosure `rows`, and submitted a
+  proposal that committed one checked record.
+- This is evidence for the current model-independent MCP boundary and for
+  borrowing the transport-neutral client and test patterns. It does not claim
+  live Streamable HTTP, legacy SSE or stdio interoperability. Task 5 remains
+  open for those measurements and for the context-value comparison.

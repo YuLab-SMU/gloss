@@ -83,3 +83,7 @@ selection or a conversation loop. Do not infer domain meaning from geometry.
   the local endpoint, and the packet planner records stage-readable semantic
   layers. The deterministic implementation slice remains complete. External
   client interoperability and model comparisons remain task 5.
+- **2026-11-22:** A local `aisdk.mcp` 0.1.3.1 client completed handshake, tool
+  discovery, context assembly and a checked proposal through an injected gloss
+  dispatch transport. This confirms the shared JSON-RPC shape, but does not
+  close task 5 because it does not exercise a live HTTP or stdio transport.
