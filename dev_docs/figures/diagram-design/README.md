@@ -1,6 +1,6 @@
 # gloss diagram-design assets
 
-这组图按 [Diagram Design](https://github.com/cathrynlavery/diagram-design) 的 Architecture 和 Steps 规范生成，主题沿用项目现有的纸张、深蓝、橙色和状态色。
+这组图按 [Diagram Design](https://github.com/cathrynlavery/diagram-design) 的 Architecture 和 Steps 规范生成。图形使用该技能的 editorial 视觉约束，同时保留 gloss 现有的状态语义。
 
 ## 文件
 
