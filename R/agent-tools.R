@@ -1,6 +1,6 @@
 # Stage-scoped tools for an agent over one figure. The plain-R factory is
-# useful in tests and in other runtimes. gl_tools() adds aisdk Tool objects but
-# gloss still owns no model loop.
+# useful in tests, MCP adapters and other runtimes. gl_tools() adds optional
+# aisdk Tool objects but gloss still owns no model loop.
 
 tool_row_limit <- 20L
 
@@ -243,6 +243,31 @@ tool_specs <- function(fig, hide = NULL, stage = NULL, disclose = NULL, state = 
       description = "Captured context such as code, data, engine, document and environment.",
       params = list("item?" = list(type = "string")),
       run = function(a) tool_context_view(fig, a$item %||% NULL, disclose)),
+    assemble_context = list(
+      description = "Assemble a bounded, task-specific context packet for a question and focus.",
+      params = list("question?" = list(type = "string"),
+                    "focus?" = list(type = "any"),
+                    "intent?" = list(type = "string"),
+                    "disclose?" = list(type = "string"),
+                    "sources?" = list(type = "array", items = "string")),
+      run = function(a) {
+        level <- a$disclose %||% disclose
+        if (!level %in% agent_disclosure_levels) {
+          stop_tool("disclose must be one of %s", paste(agent_disclosure_levels, collapse = ", "))
+        }
+        if (!tool_requires(disclose, level)) {
+          stop_tool("requested disclosure '%s' exceeds this stage's '%s' limit", level, disclose)
+        }
+        gl_context_assemble(
+          fig,
+          question = a$question %||% NULL,
+          focus = a$focus %||% NULL,
+          intent = a$intent %||% NULL,
+          disclose = level,
+          sources = a$sources %||% NULL,
+          layers = allowed_layers
+        )
+      }),
     records = list(
       description = "Records from layers the stage is allowed to read.",
       params = list("layer?" = list(type = "string"), "status?" = list(type = "string")),

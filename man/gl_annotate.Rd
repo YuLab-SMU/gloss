@@ -20,7 +20,8 @@ gl_annotate(
 
 \item{stages}{Stage names. Dependencies are inserted automatically.}
 
-\item{model}{An aisdk model identifier or model object.}
+\item{model}{An aisdk model identifier or model object. External agents can
+use \code{\link[=gl_mcp_session]{gl_mcp_session()}} and \code{\link[=gl_mcp_serve]{gl_mcp_serve()}} instead.}
 
 \item{context}{Optional JSON-like task context.}
 

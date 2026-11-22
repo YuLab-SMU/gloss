@@ -1,5 +1,21 @@
 # gloss 0.0.0.9000
 
+## Task-scoped context assembly and external-agent MCP surface (2026-11-21)
+
+- Added `gl_context_plan()` and `gl_context_assemble()` for deterministic,
+  bounded packets that combine figure facts, selected data rows, checked
+  bindings, anchored records, sniffed code and document context, omissions and
+  named continuation actions.
+- Added `gl_mcp_session()`, `gl_mcp_tools()`, `gl_mcp_call()` and
+  `gl_mcp_serve()` plus the live `/mcp` JSON-RPC surface. External agents can
+  discover and call the same read-only tools and checked write path without
+  installing `aisdk`. Modern MCP request metadata, mirrored HTTP headers and
+  localhost Origin validation are checked at the HTTP boundary, with a legacy
+  `initialize` path retained for older clients.
+- Added the live `/api/context/assemble` endpoint and a Workbench question
+  composer that sends a natural-language turn together with the current focus.
+  `aisdk` remains an optional compatibility runner for `gl_annotate()`.
+
 ## Browser Workbench, design-tool Outline, external context and live mode (2026-11-18)
 
 - Added `gl_workbench()` and the `"workbench"` projection plugin, writing a

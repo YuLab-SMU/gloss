@@ -31,3 +31,4 @@ See [`_template.md`](_template.md).
 | [0008](0008-held-out-role-labels-by-one-labeller-and-an-independent-sample.md) | Held-out role labels: annotator A labels every figure, people label a seeded sample independently (0007 is kept for the M1 plan's Task 6) | Superseded by ADR-0010 for the current role layer | 2026-11-11 |
 | [0009](0009-package-behaviour-enters-as-a-checked-proposal.md) | Code binds what the drawing system's contract gives; a package's own behaviour enters as a checked proposal | Accepted | 2026-11-12 |
 | [0010](0010-targeted-human-audits-and-evidence-bearing-correspondence.md) | Targeted human audits for semantic layers; correspondence stays evidence-bearing | Accepted | 2026-11-15 |
+| [0011](0011-external-agents-use-mcp-boundary.md) | External agents use a model-independent MCP boundary | Accepted | 2026-11-21 |

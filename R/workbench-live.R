@@ -94,6 +94,10 @@ workbench_live_handler <- function(state) {
       return(live_json_response(workbench_live_bundle_payload(state$fig, embed = state$embed)))
     }
 
+    if (identical(method, "POST") && identical(path, "/mcp")) {
+      return(mcp_http_handler(state)(req))
+    }
+
     if (identical(method, "POST") && identical(path, "/api/propose")) {
       raw_body <- read_req_body(req)
       payload <- tryCatch(jsonlite::fromJSON(raw_body, simplifyVector = FALSE), error = function(e) NULL)
@@ -160,6 +164,30 @@ workbench_live_handler <- function(state) {
         )
         state$fig <- updated
         list(ok = TRUE, bundle = workbench_live_bundle_payload(updated, embed = state$embed))
+      }, error = function(e) {
+        list(ok = FALSE, error = cli::ansi_strip(conditionMessage(e)))
+      })
+      return(live_json_response(res, if (isTRUE(res$ok)) 200L else 422L))
+    }
+
+    if (identical(method, "POST") && identical(path, "/api/context/assemble")) {
+      raw_body <- read_req_body(req)
+      payload <- tryCatch(jsonlite::fromJSON(raw_body, simplifyVector = FALSE), error = function(e) NULL)
+      if (is.null(payload) || !is.list(payload)) {
+        return(live_json_response(list(ok = FALSE, error = "Invalid JSON request body."), 400L))
+      }
+      res <- tryCatch({
+        packet <- gl_context_assemble(
+          state$fig,
+          question = payload$question %||% NULL,
+          focus = payload$focus %||% NULL,
+          intent = payload$intent %||% NULL,
+          disclose = payload$disclose %||% "summary",
+          max_rows = payload$max_rows %||% 20L,
+          max_chars = payload$max_chars %||% 4000L,
+          sources = payload$sources %||% NULL
+        )
+        list(ok = TRUE, packet = packet)
       }, error = function(e) {
         list(ok = FALSE, error = cli::ansi_strip(conditionMessage(e)))
       })

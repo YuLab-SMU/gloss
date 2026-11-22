@@ -23,6 +23,7 @@ import {
   type GlossRecord,
 } from "../../codec";
 import { useWorkbenchStore } from "../../store/useWorkbenchStore";
+import { ContextComposer } from "./ContextComposer";
 
 /**
  * Collapsible, plain-language data check drawer tucked beneath a takeaway.
@@ -489,6 +490,7 @@ export const ReaderInspector: React.FC = () => {
 
     return (
       <div className="flex h-full w-full flex-col overflow-hidden" style={{ background: "var(--bg-surface)" }}>
+        <ContextComposer />
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
           <div
             className="rounded-2xl border p-3.5"
@@ -601,6 +603,7 @@ export const ReaderInspector: React.FC = () => {
 
     return (
       <div className="flex h-full w-full flex-col overflow-hidden" style={{ background: "var(--bg-surface)" }}>
+        <ContextComposer />
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
           {/* Calm Entity Hero — zero internal slice IDs or loud badges */}
           <div
@@ -771,6 +774,7 @@ export const ReaderInspector: React.FC = () => {
   // Case C: Calm Figure Overview (default landing state)
   return (
     <div className="flex h-full w-full flex-col overflow-hidden" style={{ background: "var(--bg-surface)" }}>
+      <ContextComposer />
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
         {/* Clean Figure Overview Header */}
         <div

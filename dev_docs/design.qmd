@@ -37,7 +37,7 @@ gloss 要同时做到两点：有真值，也能处理没写过规则的输入�
 “gloss”一词指中世纪手抄本上的批注。批注挂在正文具体的词句上，一代代读者不断往上添，正文本身一笔不改（@fig-hero，@sec-analogy）。
 
 ::: {.callout-note}
-**文档所处阶段。** 这是一份设计文档，其中一部分已经实现。M0（底座）2026-11-09 实现，进度和验证记在 `plan/done/2026-11-09-m0-substrate.md`；捕获路线 2026-11-11 改为捕获图自己画出的页面（[ADR-0006](decisions/0006-capture-the-page-the-figure-draws.md)，`plan/done/2026-11-11-page-capture.md`）。M1 的第一段计划 2026-11-11 开始（`plan/2026-11-11-m1-roles-and-binding.md`），其中绑定已有代码：各引擎给出配对，核心逐条核验，结果在捕获时算出、存在图里，用 `gl_bindings()` 读（[ADR-0007](decisions/0007-derived-tables-of-the-substrate.md)）；角色规则还没有。agent 一侧 2026-11-12 有了第一段代码（`plan/done/2026-11-12-agent-path.md`）：`gl_propose()` 核验一条提议，内容是某个元素画的是某张表的某一行；`gl_tools()` 把只读查询和 `propose` 作为工具交给 aisdk。主比较在开发集上试跑过一次，10 张图、30 个绑定问题、三个自部署模型，结果和它的限度写在 @sec-pilot；报告用的评测还没有做，要证明什么、怎样证明，写在 @sec-research-card 和 @sec-eval。M2 的记录、锚点和更新闭环已在 2026-11-15/16 落地，并由 `tests/testthat/test-records.R` 和 `bench/runs/2026-11-15-m2-rebase/` 验证。M3 的检查、操作、浏览器运行时和三类投影已在 2026-11-16 落地，并由 `bench/runs/2026-11-16-m3*`、21 个测试文件和 `R CMD check` 验证。插件机制已随 M0 实现。标“实测”的数字来自 `dev_docs/research/` 下的探针脚本（2026-11-07 首次运行，2026-11-08 重跑，结果一致）和 `bench/runs/` 里存档的运行，每个数字对应哪个脚本或哪次运行，文中都已注明。
+**文档所处阶段。** 这是一份设计文档，其中一部分已经实现。M0（底座）2026-11-09 实现，进度和验证记在 `plan/done/2026-11-09-m0-substrate.md`；捕获路线 2026-11-11 改为捕获图自己画出的页面（[ADR-0006](decisions/0006-capture-the-page-the-figure-draws.md)，`plan/done/2026-11-11-page-capture.md`）。M1 的第一段计划 2026-11-11 开始（`plan/2026-11-11-m1-roles-and-binding.md`），其中绑定已有代码：各引擎给出配对，核心逐条核验，结果在捕获时算出、存在图里，用 `gl_bindings()` 读（[ADR-0007](decisions/0007-derived-tables-of-the-substrate.md)）；角色规则还没有。agent 一侧 2026-11-12 有了第一段代码（`plan/done/2026-11-12-agent-path.md`）：`gl_propose()` 核验一条提议，内容是某个元素画的是某张表的某一行；`gl_tools()` 把只读查询和 `propose` 暴露给任意客户端，`aisdk` 只是可选的 R 端兼容运行器。主比较在开发集上试跑过一次，10 张图、30 个绑定问题、三个自部署模型，结果和它的限度写在 @sec-pilot；报告用的评测还没有做，要证明什么、怎样证明，写在 @sec-research-card 和 @sec-eval。M2 的记录、锚点和更新闭环已在 2026-11-15/16 落地，并由 `tests/testthat/test-records.R` 和 `bench/runs/2026-11-15-m2-rebase/` 验证。M3 的检查、操作、浏览器运行时和三类投影已在 2026-11-16 落地，并由 `bench/runs/2026-11-16-m3*`、21 个测试文件和 `R CMD check` 验证。插件机制已随 M0 实现。标“实测”的数字来自 `dev_docs/research/` 下的探针脚本（2026-11-07 首次运行，2026-11-08 重跑，结果一致）和 `bench/runs/` 里存档的运行，每个数字对应哪个脚本或哪次运行，文中都已注明。
 
 本文是当前的最佳解释和后续路线，不是规格书。gloss 实际做到了什么，由代码、测试和实测数字说明；本文和它们对不上时，以实测为准：改本文，注明日期，并在 @sec-changes 记一笔。
 :::
@@ -870,6 +870,27 @@ fig <- gl_read("fig.gloss")   # 目录形式同样可以读取
 
 上下文有三个用途：给 agent 阶段提供依据（`get_context` 工具）；决定启用哪些操作（@sec-operate）；在恢复和更新时找回代码和数据（@sec-rebase）。
 
+## 从自动嗅探到任务化装配 {#sec-context-assembly}
+
+嗅探结果是图包的上下文目录。它回答“手里有什么”，不直接回答“这一轮应该给谁看什么”。任务化装配把自然语言请求、树状界面里的焦点和披露预算变成一个可重放的读取计划，再把计划物化成上下文包。计划和包都不调用模型，也不写入图。
+
+`gl_context_plan()` 接受 `question`、`focus` 和可选的 `intent`。意图目前有 `explain`、`inspect`、`verify`、`propose`、`compare` 和 `plan`。没有明确意图时，只根据请求中的动词作确定性分类；无法分类时使用 `explain`。焦点可以是元素、叶子、面板、数据表和行，也可以是树节点或自然语言查询。查询只匹配图包已经保存的标签、元素文本、数据键和记录内容。没有唯一结果时，把原因放进 `unresolved`，不把猜测写成语义。
+
+`gl_context_assemble()` 返回一个带摘要、证据、上下文和后续动作的包。它的结构固定为以下几部分。
+
+- `figure` 保存引擎、面板、元素数量和底座标识等图形事实。
+- `focus` 保存查询原文、匹配方式、选中的元素、表和行，以及未解决的部分。
+- `data` 保存表的键、列摘要和选中行。只有通过 `gl_bindings()` 得到的元素到构建行对应才进入 `evidence`。
+- `semantics` 保存与焦点相交的记录、锚点状态、检查结果和来源。
+- `context` 从嗅探到的代码、数据、引擎、文档、项目和用户背景中按意图选取切片。没有找到的来源保留 `found = false` 及原因。
+- `omitted` 和 `actions` 说明哪些读取被预算或意图推迟，以及如何用 `get_rows`、`attach_context`、`check`、`propose` 或新的焦点继续。
+
+披露级别沿用 agent 的 `none`、`schema`、`summary` 和 `rows`，行数和字符数单独设上限。计划还可以声明允许读取的语义层，阶段工具会把阶段的 `reads` 作为这个范围，并拒绝超过宿主披露上限的请求。包带有摘要哈希，可以在会话日志、浏览器请求和后续提议之间重放。Live Workbench 通过 `/api/context/assemble` 接收自然语言问题、结构化焦点和可选的上下文来源，侧栏的提问入口只展示装配结果和后续动作。模型循环仍由外部客户端负责，写入仍通过检查过的 `propose` 路径完成。
+
+外部 agent 通过 MCP 使用同一套能力。`gl_mcp_session()` 建立一个带阶段、披露级别和审计来源的工具会话；`gl_mcp_tools()` 返回 MCP 工具定义与 JSON Schema；`gl_mcp_call()` 把读取、上下文装配和检查过的提议映射到统一结果；`gl_mcp_serve()` 可以在没有浏览器的 R 会话里单独启动服务。Live Workbench 在 `/mcp` 提供 `initialize`、`server/discover`、`tools/list` 和 `tools/call`，同时保留 `/api/context/assemble` 供轻量客户端使用。现代 MCP 请求带有逐请求版本元数据、`MCP-Protocol-Version`、`Mcp-Method` 和工具调用的 `Mcp-Name`，服务端校验这些字段和 Origin。单个 JSON 响应满足当前 Streamable HTTP 的请求形态，旧版 `initialize` 握手仍可用。会话里的 `propose`、`resolve` 和 `repair` 只有在检查通过后才提交，并把新的图值返回给下一轮调用。这里不引入 MCP SDK，也不要求用户安装 `aisdk`。`aisdk` 只作为现有 R 端阶段循环的可选兼容入口，外部 agent 可以自行负责模型、记忆、路由、权限和重试。
+
+这个中间层对应前沿工作里对模型知识边界和长会话上下文退化的担忧。模型是否覆盖某个数据、任务和条件，应由机器可读的边界与证据状态表达；长会话中的每一轮也要能追溯它实际读过的材料。gloss 在图包层面记录来源、披露、焦点和省略项，为这两类约束提供可重放的输入，但不会把它们提升为领域结论。
+
 ## 恢复时先看手里有什么
 
 `gl_read()` 先嗅探输入里有什么，能恢复多少就恢复多少（@fig-restore）：
@@ -1008,6 +1029,20 @@ gloss 以后要写成论文，所以在继续加功能之前，先用五句话�
 : 研究卡片里的论断，拆成能分别验证的分句 {#tbl-claims}
 
 最后一行是候选：它是系统产出、读者本身就关心的结果，@sec-claim-example 里“heavier = thirstier”只在 6 组中的 5 组成立，就是一个单例。要不要做，等 M5 的主比较有了结果再定。
+
+## 任务化上下文装配的研究卡片 {#sec-context-eval}
+
+这条能力要回答的不是“模型能不能读到更多文本”，而是“在同一张图、同一个问题和同一预算下，任务化装配能不能让 agent 更快找到可核验的依据，并在证据不足时停下来”。研究卡片先固定为以下五点。
+
+1. **共同瓶颈。** 原始代码、数据、SVG、记录和用户问题同时存在时，agent 需要自己决定先读哪一块，长会话里还要保持焦点、来源和未解决问题。只把材料拼成长提示词不能表达已经读过什么，也不能表达哪些结论缺少证据。
+2. **主要论断。** 同一个外部 agent 通过 MCP 读取 gloss 的任务包，比拿到同样原始材料的直接基线更少读取无关内容，更常找到与问题相关的绑定、记录和检查，并且在缺少证据时更少给出无依据的断言。
+3. **最强的反解释。** 任务包的提升可能只来自摘要文本更短，或者模型本身已经能从原始材料找到答案；也可能因为包的焦点解析错了而把 agent 引向错误行；还可能是披露级别限制了模型的答案范围，表面上降低了错误率。
+4. **决定性比较。** 条件 A 给外部 agent 代码、原始数据、构建表、SVG、记录和用户问题，并允许相同预算的只读计算。条件 B 给同一个 agent 一个 MCP 工具面和 `gl_context_assemble()` 产生的包，允许它用 `get_rows`、`get_context` 和 `check` 继续读取。条件 C 使用固定摘要包，去掉焦点解析、证据状态和后续动作。三种条件冻结模型、问题、最大轮数、超时、披露级别和工具调用上限，记录实际 token、调用次数、时长和重试。
+5. **边界和遗产。** 主要指标不显著，或者提升伴随证据召回下降、错误焦点增加、拒答率升高，就把论断收窄为“可审计的读取接口”。无论结果如何，留下焦点解析的失败分类、上下文缺失的原因、逐轮读取轨迹、数据和代码的边界声明，以及能被其他 agent 客户端复用的 MCP 工具协议。
+
+每个问题至少记录五类结果。证据召回率衡量参考答案所需的绑定、数据行、记录和检查是否进入包或后续读取；证据精确率衡量包里与任务无关的材料比例；无依据断言率由独立检查和人工审计共同判定；焦点错误率单独统计元素、数据组和自然语言查询的误匹配；上下文成本记录包大小、token、调用次数和时间。跨轮实验增加上下文退化曲线，比较每轮后仍能正确引用来源、焦点和证据状态的比例。
+
+开发集只用于固定意图词、焦点匹配规则、预算和提示。留出集在运行前提交预测，只报告未调过的图和问题。负对照包括未找到的实体、重复键、被剥离的数据、过期的上下文摘要、交换两行后的错误证据和反事实声明。任何由 `gloss` 返回的事实都必须能回到设备几何、数据表、检查结果或有来源的记录；模型的自然语言解释不作为真值来源。
 
 ## 评测设计：从决定性比较倒推 {#sec-eval}
 
@@ -1184,7 +1219,7 @@ A 和 B 的比较回答主论断；A + 核验和 B − 核验把结构和核验�
 | **M1 识别 + 分类 + 分层** | ggplot、patchwork、ComplexHeatmap 的引擎插件；规则集、三类线索、纠正接口、一致性检查；结构树、数据树及其映射。后半段加入 base 和一般 grid | 基准图上没有悄无声息的错分；base 图例要么被正确处理（借助代码线索），要么列入残余 |
 | **M2 记录与锚点** | 记录 schema、层插件、JSONL 日志、锚点解析、稳定 id、状态传播、冲突与裁决记录、`gl_rebase` | 手写记录走通全链路；受控更新结果和失效传播已记录，基准覆盖率留给 M5 |
 | **M3 语义化 + 操作 + 投影** | 检查原语、声明核验；R 端全部操作与叠加绘制；运行时内核加 v0 浏览器端插件；按上下文启用操作；ARIA、文字描述、Web Annotation 单向导出 | 注入的错误全部被拦截；交互在浏览器里可用 |
-| **M4 agent 阶段** | 工具、提示词、各阶段插件、编排、缓存、审稿阶段的冲突裁决、脚本化模型测试 | 离线测试通过；真实模型在小样本上产出能通过核验的记录 |
+| **M4 agent 阶段** | 工具、提示词、各阶段插件、aisdk 兼容编排、外部 agent 的 MCP 工具面、缓存、审稿阶段的冲突裁决、脚本化模型测试 | 离线工具与 MCP 调用通过；真实模型在小样本上产出能通过核验的记录 |
 | **M5 评测** | 按 @sec-eval 执行：留出集、扰动集和反事实子集上的条件 A、B 与 2×2 消融，条件 C、D，工程基线；两人标注；遮蔽评测对照人工标注；更新实验与锚点消融；运行前提交预测 | @tbl-claims 的每个分句都报告为成立、收窄或不成立，并对照 @sec-research-card 的证伪条件；所有数字能从 `bench/` 的存档重新算出 |
 | **M6 评测闭环** | 修复固定设备环境；验证材料迁移、遮蔽审计契约、锚点消融、SVG-only 与 prepared visual；以成本闸门决定模型扩展 | 固定容器材料与泄漏契约通过；更新和条件 sizing 有存档；未完成的人审、重复和留出条款以 scope change 明确保留 |
 | **M7 agent-first 绑定原型** | 冻结 legacy 规则；在完整开发集比较 contract、有限 DSL enumeration 和 sandbox agent；保存公开材料、隐藏 oracle、proposal trace 与 mutation 结果 | 84 张开发图有内容 hash 和 outcome row；legacy 逐行一致；所有 accepted 结果唯一且通过 mutation；host 与 pinned-container suite 零失败；路线决策按覆盖、错误接受和成本记录 |
@@ -1283,6 +1318,8 @@ M0–M3 不依赖大模型（@fig-milestones）。到 M3 为止交付的已经�
 - **“与普通 svglite 逐元素相同”被当成了成果。** 它只是一条回归测试，说明包一层组没有把图改坏，算不上能力；直接导出 SVG 本来就不会画错。
 
 这一版的定位是：图是一个长期存在的对象，底座提供识别、分类、分层、语义化、操作、更新这六项能力，以及稳定的图形接口和数据接口。语义以记录的形式一层层叠在底座上，所有修改只追加、不覆盖；导出的 SVG/HTML 只是某一时刻的投影。agent 不再是流水线里的一个阶段，而是底座 API 的客户端之一，和人处于同等地位。
+
+**2026-11-21 上下文装配和外部 agent 接口。** 之前的上下文设计只有捕获时的嗅探和按项读取，不能把自然语言请求、树状焦点、证据边界和后续动作编成一个可重放的会话输入。现在新增 `gl_context_plan()`、`gl_context_assemble()` 和 `/api/context/assemble`，并将 `gl_mcp_session()`、`gl_mcp_tools()`、`gl_mcp_call()` 及 `/mcp` 作为外部 agent 的工具面。这个改动把 `aisdk` 收窄为可选的兼容运行器，核心上下文、检查和写入接口不依赖它。边界决策见 [ADR-0011](decisions/0011-external-agents-use-mcp-boundary.md)。实验问题、反解释、留出集规程和边界指标见 @sec-context-eval；本次实现的离线证据是上下文包、MCP 调用和 live endpoint 的测试，尚未形成模型准确率结论。
 
 包名在 2026-11-08 由暂定名 semsvg 改为 gloss，项目也从 ggai 迁出，成为独立仓库。上一版评审结论分别落到了哪里，见附录 @sec-review。
 
@@ -1446,6 +1483,21 @@ gl_register(kind, name, version, schema, ...)
 gl_test_plugin(...)
 ```
 
+**任务化上下文与外部 agent。** 上下文装配不启动模型循环；MCP 只暴露同一套工具和提交即校验的写入口。
+
+```r
+gl_context_plan(fig, question = , focus = , intent = , disclose = ,
+                sources = , layers = )
+gl_context_assemble(fig, plan = , question = , focus = , disclose = ,
+                     sources = , layers = )
+gl_mcp_session(fig, stage = , disclose = , metadata = )
+gl_mcp_tools(session)
+gl_mcp_call(session, name, arguments = )
+gl_mcp_serve(fig, host = , port = , stage = , disclose = )
+```
+
+`gl_mcp_session()`、`gl_mcp_tools()` 和 `gl_mcp_call()` 适合嵌入已有 agent，`gl_mcp_serve()` 适合把当前 R 会话提供给支持 MCP 的外部 agent。`aisdk` 只覆盖现有 R 端阶段编排，未参与这些核心接口。
+
 # 附录 B：确定性分类的覆盖率 {.appendix}
 
 @fig-classify 的数字明细。只用了命名惯例规则，脚本为 `dev_docs/research/capture-groups/classify.R`。
@@ -1462,10 +1514,9 @@ gl_test_plugin(...)
 
 ```
 gloss/
-├── DESCRIPTION          # R (>= 4.2.0)；Imports: aisdk (>= 1.5.0), grid, svglite (>= 2.2.0),
+├── DESCRIPTION          # R (>= 4.2.0)；Imports: grid, svglite (>= 2.2.0),
 │                        #   xml2, jsonlite, rlang, cli, digest
-│                        #   （2026-11-12：aisdk 实际在 Suggests，没有写版本下限；CRAN 上是 1.4.12，
-│                        #    开发机上是 1.5.0，还没有在 1.4.12 上跑过）
+│                        #   Suggests: aisdk（可选兼容运行器）、httpuv（可选 MCP HTTP 服务）以及测试和绘图扩展
 │                        # Suggests: ggplot2, patchwork, ComplexHeatmap, ggExtra,
 │                        #   testthat (>= 3.0.0), withr, callr
 ├── R/

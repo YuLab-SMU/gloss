@@ -1,5 +1,5 @@
-# Agent orchestration around aisdk. gloss supplies the stage capabilities and
-# validates every candidate. The model loop itself remains aisdk's.
+# Optional aisdk orchestration. gloss supplies stage capabilities and validates
+# every candidate. External agents can use the MCP interface without aisdk.
 
 agent_stage_task <- function(stage, context = NULL) {
   prompt <- stage_plugin_info(stage)$prompt
@@ -42,7 +42,8 @@ agent_replay_candidate <- function(fig, state, candidate) {
 #'
 #' @param fig A `gloss_figure`.
 #' @param stages Stage names. Dependencies are inserted automatically.
-#' @param model An aisdk model identifier or model object.
+#' @param model An aisdk model identifier or model object. External agents can
+#'   use [gl_mcp_session()] and [gl_mcp_serve()] instead.
 #' @param context Optional JSON-like task context.
 #' @param disclose Optional disclosure level or named levels by stage.
 #' @param max_steps Maximum aisdk tool steps per stage.

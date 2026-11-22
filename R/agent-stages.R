@@ -17,7 +17,7 @@ agent_tool_catalog <- c(
   "overview", "tree", "list_elements", "find_elements", "get_element",
   "get_binding", "describe_table", "get_rows", "find_rows", "to_data",
   "get_code", "get_context", "records", "resolve", "check", "test_binding",
-  "propose", "repair"
+  "assemble_context", "propose", "repair"
 )
 
 agent_stage_specs <- function() {
@@ -37,7 +37,7 @@ agent_stage_specs <- function() {
                    depends = "bind", disclose = "summary",
                    tools = c("overview", "tree", "list_elements", "get_element",
                              "get_binding", "describe_table", "get_rows", "get_context",
-                             "records", "resolve", "propose")),
+                             "assemble_context", "records", "resolve", "propose")),
     relation = list(reads = c("structure", "binding"), writes = "relation",
                     depends = c("classify", "bind"), disclose = "summary",
                     tools = c("overview", "tree", "list_elements", "get_element",
@@ -45,26 +45,26 @@ agent_stage_specs <- function() {
     claim = list(reads = c("binding", "meaning", "relation"), writes = "claim",
                  depends = c("meaning", "relation"), disclose = "summary",
                  tools = c("overview", "list_elements", "get_element", "describe_table",
-                           "get_context", "records", "check", "propose")),
+                           "get_context", "assemble_context", "records", "check", "propose")),
     narrative = list(reads = c("claim", "relation"), writes = "narrative",
                      depends = "claim", disclose = "summary",
                      tools = c("overview", "tree", "list_elements", "get_element",
-                               "records", "propose")),
+                               "assemble_context", "records", "propose")),
     accessibility = list(reads = all_layers, writes = "narrative",
                          depends = "claim", disclose = "summary",
                          tools = c("overview", "tree", "list_elements", "get_element",
-                                   "records", "propose")),
+                                   "assemble_context", "records", "propose")),
     behavior = list(reads = c("structure", "relation", "claim"),
                     writes = c("behavior", "overlay"),
                     depends = c("relation", "claim"), disclose = "summary",
                     tools = c("overview", "tree", "list_elements", "get_element",
-                              "records", "check", "propose")),
+                              "assemble_context", "records", "check", "propose")),
     review = list(reads = all_layers, writes = all_layers,
                   depends = c("claim", "behavior"), disclose = "summary",
-                  tools = c("overview", "records", "resolve", "propose")),
+                  tools = c("overview", "assemble_context", "records", "resolve", "propose")),
     repair = list(reads = all_layers, writes = all_layers,
                   depends = "review", disclose = "summary",
-                  tools = c("overview", "records", "resolve", "repair", "propose"))
+                  tools = c("overview", "assemble_context", "records", "resolve", "repair", "propose"))
   )
 }
 
