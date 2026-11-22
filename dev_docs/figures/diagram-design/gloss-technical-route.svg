@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="gloss-route-title gloss-route-desc" id="gloss-technical-route-root">
+        <title id="gloss-route-title">gloss 技术路线</title>
+        <desc id="gloss-route-desc">七个阶段从图形设备捕获开始，经过只读底座、追加记录、提交即核验、agent 工具和评测，最后进入外部互操作与插件扩展。</desc>
+  <defs>
+      <style>#gloss-technical-route-root { --paper: #f5f5f5;
+      --ink: #2d3142;
+      --muted: #4f5d75;
+      --accent: #bf4520;
+      --link: #2e5aa8;
+      --verified: #3b8c5a;
+      --open: #a86b16;
+      --font-sans: 'Geist', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+      --font-serif: 'Instrument Serif', 'Noto Serif SC', 'Songti SC', serif;
+      --font-mono: 'Geist Mono', ui-monospace, monospace; }
+      #gloss-technical-route-root { font-family: var(--font-sans); color: var(--ink); }
+      #gloss-technical-route-root .diagram-container { width: 100%; overflow-x: auto; }
+      @media print {
+#gloss-technical-route-root .diagram-container { overflow-x: visible; }
+}</style>
+  </defs>
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <g aria-hidden="true">
+          <rect x="80" y="240" width="160" height="48" fill="#2d3142" data-role="rail" data-step="capture" data-index="1" fill-opacity="0.05"/>
+          <rect x="240" y="240" width="160" height="48" fill="#2d3142" data-role="rail" data-step="substrate" data-index="2" fill-opacity="0.09"/>
+          <rect x="400" y="240" width="160" height="48" fill="#2d3142" data-role="rail" data-step="records" data-index="3" fill-opacity="0.05"/>
+          <rect x="560" y="240" width="160" height="48" fill="#bf4520" data-role="rail" data-step="verify" data-index="4" data-focal="true" fill-opacity="0.08"/>
+          <line x1="560" y1="240" x2="720" y2="240" stroke="#bf4520" stroke-width="1"/>
+          <line x1="560" y1="288" x2="720" y2="288" stroke="#bf4520" stroke-width="1"/>
+          <rect x="720" y="240" width="160" height="48" fill="#2d3142" data-role="rail" data-step="agent" data-index="5" fill-opacity="0.09"/>
+          <rect x="880" y="240" width="160" height="48" fill="#2d3142" data-role="rail" data-step="evaluation" data-index="6" fill-opacity="0.05"/>
+          <rect x="1040" y="240" width="160" height="48" fill="#2d3142" data-role="rail" data-step="next" data-index="7" fill-opacity="0.09"/>
+        </g>
+
+        <g font-family="'Geist Mono', ui-monospace, monospace" font-size="8" font-weight="600" letter-spacing="0.10em" text-anchor="middle">
+          <text x="160" y="164" fill="#4f5d75" data-role="number" data-step="capture">01</text>
+          <line x1="160" y1="184" x2="160" y2="220" stroke="#bfc0c0"/>
+          <text x="320" y="164" fill="#4f5d75" data-role="number" data-step="substrate">02</text>
+          <line x1="320" y1="184" x2="320" y2="220" stroke="#bfc0c0"/>
+          <text x="480" y="164" fill="#4f5d75" data-role="number" data-step="records">03</text>
+          <line x1="480" y1="184" x2="480" y2="220" stroke="#bfc0c0"/>
+          <text x="640" y="164" fill="#bf4520" data-role="number" data-step="verify">04</text>
+          <line x1="640" y1="184" x2="640" y2="220" stroke="#bf4520"/>
+          <text x="800" y="164" fill="#4f5d75" data-role="number" data-step="agent">05</text>
+          <line x1="800" y1="184" x2="800" y2="220" stroke="#bfc0c0"/>
+          <text x="960" y="164" fill="#4f5d75" data-role="number" data-step="evaluation">06</text>
+          <line x1="960" y1="184" x2="960" y2="220" stroke="#bfc0c0"/>
+          <text x="1120" y="164" fill="#4f5d75" data-role="number" data-step="next">07</text>
+          <line x1="1120" y1="184" x2="1120" y2="220" stroke="#bfc0c0"/>
+        </g>
+
+        <g aria-hidden="true" fill="#f5f5f5" stroke-width="1">
+          <circle cx="160" cy="264" r="36" stroke="#2d3142" data-role="medallion" data-step="capture"/>
+          <circle cx="320" cy="264" r="36" stroke="#2d3142" data-role="medallion" data-step="substrate"/>
+          <circle cx="480" cy="264" r="36" stroke="#2d3142" data-role="medallion" data-step="records"/>
+          <circle cx="640" cy="264" r="36" fill="#bf4520" stroke="#bf4520" data-role="medallion" data-step="verify" data-focal="true" fill-opacity="0.08"/>
+          <circle cx="800" cy="264" r="36" stroke="#2d3142" data-role="medallion" data-step="agent"/>
+          <circle cx="960" cy="264" r="36" stroke="#2d3142" data-role="medallion" data-step="evaluation"/>
+          <circle cx="1120" cy="264" r="36" stroke="#2d3142" data-role="medallion" data-step="next"/>
+        </g>
+
+        <g aria-hidden="true" fill="none" stroke="#14284b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <g transform="translate(148 252)">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>
+          </g>
+          <g transform="translate(308 252)">
+            <path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/>
+          </g>
+          <g transform="translate(468 252)">
+            <path d="M6 3h9l4 4v14H6z"/>
+            <path d="M15 3v5h4M9 12h7M9 16h7"/>
+          </g>
+          <g transform="translate(628 252)" stroke="#c96f08">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="m7 12 3 3 7-7"/>
+          </g>
+          <g transform="translate(788 252)">
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="6" r="3"/>
+            <circle cx="18" cy="18" r="3"/>
+            <path d="M9 11l6-4M9 13l6 4"/>
+          </g>
+          <g transform="translate(948 252)">
+            <path d="M4 20V10M10 20V4M16 20v-7M22 20V7"/>
+            <path d="M3 20h20"/>
+          </g>
+          <g transform="translate(1108 252)">
+            <path d="M4 7h13M13 3l4 4-4 4M20 17H7M11 13l-4 4 4 4"/>
+          </g>
+        </g>
+
+        <g font-family="'Geist', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">
+          <text x="160" y="360" fill="#2d3142" font-size="12" font-weight="600">M0 · 页面捕获</text>
+          <text x="160" y="388" fill="#5c6b83" font-size="12">沿原图设备捕获</text>
+          <text x="160" y="408" fill="#5c6b83" font-size="12">几何不被重画</text>
+          <text x="160" y="444" fill="#3b8c5a" font-size="10">已实现</text>
+
+          <text x="320" y="360" fill="#2d3142" font-size="12" font-weight="600">M1 · 底座与绑定</text>
+          <text x="320" y="388" fill="#5c6b83" font-size="12">元素连接到面板与行</text>
+          <text x="320" y="408" fill="#5c6b83" font-size="12">未能绑定就说明原因</text>
+          <text x="320" y="444" fill="#3b8c5a" font-size="10">已实现</text>
+
+          <text x="480" y="360" fill="#2d3142" font-size="12" font-weight="600">M2 · 记录与锚点</text>
+          <text x="480" y="388" fill="#5c6b83" font-size="12">记录通过锚点追加</text>
+          <text x="480" y="408" fill="#5c6b83" font-size="12">修改保留历史</text>
+          <text x="480" y="444" fill="#3b8c5a" font-size="10">已实现</text>
+
+          <text x="640" y="360" fill="#bf4520" font-size="12" font-weight="600">M3 · 检查与投影</text>
+          <text x="640" y="388" fill="#5c6b83" font-size="12">schema · 锚点 · 检查</text>
+          <text x="640" y="408" fill="#5c6b83" font-size="12">失败声明不进投影</text>
+          <text x="640" y="444" fill="#bf4520" font-size="10">关键约束</text>
+
+          <text x="800" y="360" fill="#2d3142" font-size="12" font-weight="600">M4 · Agent 阶段</text>
+          <text x="800" y="388" fill="#5c6b83" font-size="12">分阶段工具与权限</text>
+          <text x="800" y="408" fill="#5c6b83" font-size="12">aisdk 可选，MCP 可用</text>
+          <text x="800" y="444" fill="#3b8c5a" font-size="10">已实现</text>
+
+          <text x="960" y="360" fill="#2d3142" font-size="12" font-weight="600">M5/M6 · 评测闭环</text>
+          <text x="960" y="388" fill="#5c6b83" font-size="12">固定模型与预算比较</text>
+          <text x="960" y="408" fill="#5c6b83" font-size="12">留出集结果仍待补齐</text>
+          <text x="960" y="444" fill="#a86b16" font-size="10">待评测</text>
+
+          <text x="1120" y="360" fill="#2d3142" font-size="12" font-weight="600">NEXT · 外部互操作</text>
+          <text x="1120" y="388" fill="#5c6b83" font-size="12">测量上下文价值</text>
+          <text x="1120" y="408" fill="#5c6b83" font-size="12">扩展插件与客户端</text>
+          <text x="1120" y="444" fill="#a86b16" font-size="10">下一片</text>
+        </g>
+
+        <line x1="40" y1="600" x2="1240" y2="600" stroke="#14284b" stroke-width="0.8" stroke-opacity="0.14"/>
+        <text x="40" y="620" fill="#5c6b83" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">STATUS</text>
+        <circle cx="52" cy="642" r="6" fill="#f5f5f5" stroke="#3b8c5a" stroke-width="1.2"/>
+        <path d="m49 642 2 2 4-5" fill="none" stroke="#3b8c5a" stroke-width="1.2"/>
+        <text x="68" y="646" fill="#5c6b83" font-size="11" font-family="'Geist', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif">已实现</text>
+        <circle cx="166" cy="642" r="6" fill="#bf4520" stroke="#bf4520" stroke-width="1.2" fill-opacity="0.08"/>
+        <text x="182" y="646" fill="#5c6b83" font-size="11" font-family="'Geist', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif">关键约束</text>
+        <circle cx="284" cy="642" r="6" fill="#f5f5f5" stroke="#a86b16" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <text x="300" y="646" fill="#5c6b83" font-size="11" font-family="'Geist', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif">待评测或下一片</text>
+        <text x="536" y="646" fill="#5c6b83" font-size="11" font-style="italic" font-family="'Instrument Serif', 'Noto Serif SC', 'Songti SC', serif">顺序表示依赖关系，状态表示当前证据边界。</text>
+      </svg>
