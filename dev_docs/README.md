@@ -6,6 +6,7 @@ Long-lived engineering documentation. Unlike `dev_logs/` (append-only history) o
 
 - [`design.qmd`](design.qmd): the design (Chinese). It opens with the five decisions and the evidence for each, marking every number as measured or design-only. It then gives one section per decision, followed by risks and open questions, milestones, settled decisions, and appendices with the full planned interface, package layout and glossary.
 - [`technical-route-and-architecture.md`](technical-route-and-architecture.md): the current technical route and architecture summary, with Diagram Design HTML, SVG and PNG assets under [`figures/diagram-design/`](figures/diagram-design/).
+- [`figures/diagram-design/gloss-material-workflow.html`](figures/diagram-design/gloss-material-workflow.html): the source-material, context-assembly and projection workflow.
 - [`research-report.qmd`](research-report.qmd): prior art and measured evidence (Chinese). Written on 2026-11-07 while the work was incubated in ggai; only file paths were updated after the move.
 - [`research/`](research/README.md): archive of the scripts, captures and raw reports behind the report. `research/capture-groups/` holds the spikes behind ADR-0001 and the classification and hierarchy measurements that the design doc cites.
 - [`figures/`](figures/): figures used by the research report, with the design doc's figures in `figures/design/`. Each design figure has its source in `figures/design/src/` (R scripts for data figures, SVG for schematics); the AI-generated hero image has a `.prompt.md` sidecar.

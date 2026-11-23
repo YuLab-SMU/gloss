@@ -25,6 +25,23 @@
 - 底座变化后，锚点、记录依赖和检查结果全部重跑，失效项单独进入修复。
 - 评测结果只改变计划、阈值和证据边界，不回写成领域事实，也不通过放宽测试来追赶预期数字。
 
+## 原始材料处理工作流
+
+![gloss 原始材料处理工作流](figures/diagram-design/gloss-material-workflow.png)
+
+可直接打开的版本见 [HTML 图](figures/diagram-design/gloss-material-workflow.html)，矢量版本见 [SVG 图](figures/diagram-design/gloss-material-workflow.svg)。这张图采用 Data flow 版式和“非结构化输入 → 结构化产物”语义模式。它把文件、数据、代码、文档、外部信息和任务请求放到同一条可追溯链上，最终产物是带来源、遗漏项和后续读取动作的任务上下文。
+
+| 工作单元 | 处理内容 | gloss 入口或实现 | 输出状态 |
+| --- | --- | --- | --- |
+| 原始材料与清单 | 收集文件、数据、代码、文档和外部信息，记录类型、来源和可读性 | `R/context-code.R`、`context-data.R`、`context-doc.R`、`context-external.R`、`context-git.R` | `found`、类型、来源和 hash 等元数据，缺失项保留 `found=false` 与 `reason` |
+| 上下文嗅探 | 读取绘图代码、数据对象、引擎与扩展、运行环境、文档和项目状态 | `R/context-*.R` 中的 `sniff_*()` 与 `gl_register()` | 带名称的 context items，供任务计划按意图选择 |
+| 归一化视图 | 把 substrate、表、行键、绑定和上下文条目压缩成受预算约束的读取视图 | [`gloss()`](../R/core-substrate.R)、[`gl_context_plan()`](../R/context-assembly.R) | 确定性的 focus、sources、layers、disclosure 和 budgets |
+| 证据索引 | 把来源映射到字段、行、元素和语义记录，保留锚点与记录 id | [`gl_record()`](../R/core-record.R)、[`gl_context_assemble()`](../R/context-assembly.R) | `sections.evidence`、`sections.semantics` 和可审计的 provenance |
+| 任务上下文 | 按问题、焦点和 intent 装配一个只读 packet | [`gl_context_assemble()`](../R/context-assembly.R) | `figure`、`focus`、`data`、`evidence`、`semantics`、`context`、`omitted`、`actions` |
+| 核验与输出 | 对声明执行检查，必要时重基，再写入图包并投影给外部调用方 | [`gl_check()`](../R/semantic-checks.R)、[`gl_rebase()`](../R/core-update.R)、[`gl_write()` / `gl_read()`](../R/core-bundle.R)、[`gl_mcp_serve()`](../R/mcp-interface.R) | 失败检查停在硬约束边界，成功快照进入 bundle、HTML、文本、ARIA 或 MCP |
+
+图中的“可读性清单”是处理边界和状态语义，不对应一个包内的万能导入函数。当前实现由各类 context sniffer 和上下文装配函数分别处理来源。没有来源、来源不可读或读取预算不足时，结果进入 `omitted` 或后续读取动作，不能被默认为事实。任务请求从调用方进入计划层，因此 `question`、`focus`、`intent` 和 `disclose` 都能在重新装配时改变，而已写入的记录和证据保持可追溯。
+
 ## 架构设计
 
 ![gloss 架构设计](figures/diagram-design/gloss-architecture.png)
