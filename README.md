@@ -1,80 +1,21 @@
 # gloss
 
-gloss reads an R figure that has already been drawn and traces every shape back to the grob, panel and data row behind it. People and AI agents can then attach notes to those shapes, and any note that makes a claim is checked against the data. The figure itself is never redrawn.
+**Source Map and Asset Preparation Core for R Figures**
 
-> **Status, 2026-11-18: capture, checked bindings, semantic records and anchors, operations and projections, and the staged agent path are implemented.** `gloss()` captures the page a figure draws and checks it against that page. Elements can be classified and paired with data rows, while `gl_propose()` and staged `gl_annotate()` accept only schema-checked proposals, with checkable claims validated by code. People and agents can append records to registered layers through structured anchors; failed checks, conflicts and broken anchors remain visible, and `gl_rebase()` carries the log across controlled figure edits. `gl_apply()` materialises operation overlays, `gl_write()` and `gl_read()` round-trip bundles, and `gl_export()` produces ARIA, text and Web Annotation projections. The agent loop remains owned by the optional `aisdk` dependency. Live model-gateway coverage and held-out model evaluation remain open, and some figure types are explicitly refused or left unbound. Numbers come from a benchmark of sampled figures with runnable code ([`bench/`](https://github.com/YuLab-SMU/gloss/tree/main/bench)); numbers marked as spikes come from scripts in [`dev_docs/research/`](https://github.com/YuLab-SMU/gloss/tree/main/dev_docs/research).
+`gloss` (v2) is a lightweight R kernel that captures what happens inside an R plotting session before it evaporates into a flat image:
 
-![Schematic. Left: an unchanged scatter plot. Middle: the substrate, a read-only table linking each drawn element to its leaf grob, panel and data row. Right: three layers of records anchored to those elements by dotted lines. Bottom: four projections: an interactive HTML page, an ARIA tree, a text description and a Web Annotation export.](man/figures/README-overview.png)
+- **Device Capture & Instrumentation**: preserves both the untouched `original.svg` and an addressable `scene.svg` with deterministic `<g>` leaf groups and draw-time viewport coordinates.
+- **Engine Intermediate Representation (IR)**: snapshots `raw` and `built` tables, scale & palette dictionaries (`domain <-> hex/shape/size`), layer specifications (`geom`, `stat`, `position`, `aes`), facet layouts, and draw-time permutations (e.g., `ComplexHeatmap` clustering orders).
+- **Structural Lineage**: records neutral correspondences (`element <-> leaf <-> viewport <-> panel <-> layer/table`) and cardinalities (`1:1`, `N:1`, `1:M`) without rigid pixel-verification gates or table withholding.
+- **Open Asset Packaging**: emits standard, zero-proprietary-codec outputs — a compact JSON **`Asset Map`** (`asset-map.json`) and a self-contained **`Asset Bundle`** (`SVG` + `CSV`/`Parquet` + `JSON`).
 
-## Why
+Task planning, SVG layout refinement, interactive browsing (Workbench), and higher-level semantic or statistical verification live outside the R core as consumers of `Asset Map` and `Asset Bundle`.
 
-Export the usual faceted mtcars scatter plot with svglite and you get 134 drawn primitives, none of which carries an id. Three of the 35 circles are legend keys, and in the SVG they look exactly like data points. Point at one and ask "which car is that?", and the file has no answer.
+## Architecture
 
-![Schematic, AI-generated. Two panels show the same scatter plot with a downward trend. Left, "plain SVG export": a cursor points at one dot under a speech bubble asking "Which car is this?", and the footer reads "134 shapes, 0 ids: no answer". Right, "with gloss": the same dot is ringed in blue and labelled "Mazda RX4 · mtcars row 1 · panel am = 1".](man/figures/README-question-v3.png)
+See [`dev_docs/architecture-v2.md`](dev_docs/architecture-v2.md) for the complete v2 design, data formats, public R API, File-First / live-MCP boundary, and roadmap.
 
-*The same question, put to a plain SVG export and to gloss. This AI-generated schematic uses one simplified panel. The current package provides an HTML runtime plus ARIA, text and Web Annotation exports. The 134 shapes are the svglite export of the faceted mtcars plot described above; Mazda RX4 is row 1 of `mtcars`, with `am = 1`. Prompt, rounds and the one pixel fix: [`README-question-v3.prompt.md`](https://github.com/YuLab-SMU/gloss/blob/main/dev_docs/figures/design/README-question-v3.prompt.md).*
-
-Existing tools each solve half of the problem. ggiraph, gridSVG and maidr tag elements while they are drawn, so the geometry stays exact, but they bind data only for geoms someone has written a handler for. A model reading the SVG can take any figure but has no ground truth: on the same R figures, GPT-4o and DeepSeek-V3 identify element roles with F1 of 0.692 and 0.959, and neither can tell when it is wrong.
-
-## What has been measured
-
-- **Every drawn element can be traced to where it came from.** gloss lets the figure draw its own page and captures that page: on a grid page each leaf grob is delimited by a graphics group plus a probe that draws nothing, and a base page is replayed one display-list entry at a time. On the benchmark's 54 held-out figures (one run, predictions committed first), 50 captures equal the page drawn primitive for primitive, 2 figures differ on every drawing and are reported so, 2 are refused, and none is captured as another figure.
-- **Elements bind to data rows without a handler per geom.** Which comparison applies is chosen by the element's tag and the counts, never by the geom's name. On 24 held-out ggplot tree figures (one run, binder frozen, predictions first) 92.6% of layer elements are checked against their row and none fails; every layer element is checked in 18 of the 24. A checked element is either verified or ambiguous (another row of its layer lies within 0.5 pt, as overplotted points do); what cannot be checked is left unbound with its reason. Across the three sets run so far, 17 geom classes from extension packages were paired: 8 are checked whole (two of them partly through rules read from their packages, a kind of rule gloss no longer adds), 5 in part, 4 not at all.
-- **Code settles most of the semantics (spike).** Naming-convention rules alone classify 481 of the 486 elements in three test figures. The five that remain are annotation text and a base-graphics legend. Those are the cases an agent handles, and the ones where a classification has to be correctable.
-- **Claims are checked, not trusted (spike).** The plot carries the note "heavier = thirstier". The slope of mpg on weight is negative in only 5 of the 6 groups that `geom_smooth()` draws. The exception is automatic 4-cylinder cars, of which there are just 3. gloss shows the note together with its exception instead of presenting it as fact.
-
-## What works now
-
-```r
-library(ggplot2)
-p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) + geom_point() + facet_wrap(~am)
-
-fig <- gloss(p)                      # also patchwork, Heatmap, recordedplot, any grob
-gl_elements(fig, list(tag = "circle"))  # every drawn element: leaf, box, style, panel
-gl_hit(fig, 2.62, 21, space = "data", panel = "panel2")  # what is drawn at this data point
-gl_tables(fig)                       # raw and built tables; mtcars is keyed by its row names
-gl_bindings(fig)                     # which row of which table each element draws, checked against the page
-gl_context(fig)                      # code, data, engine, environment, document, git
-
-b <- gl_bindings(fig)[1, ]           # a pairing given as data is checked before it counts:
-gl_propose(fig, list(kind = "binding", element = b$element, table = b$table, row = b$row))
-                                     # accepted, rejected with the reason, or refused
-tools <- gl_tools(fig)               # the same queries and `propose`, as tools for an aisdk agent
-
-fig <- gl_record(fig, "meaning", gl_anchor(element = b$element),
-                 list(text = "a checked note"), by = "person")
-gl_records(fig)                       # append-only records across semantic layers
-
-gl_write(fig, "fig.html")            # the figure, with the whole bundle embedded
-fig <- gl_read("fig.html")           # restored; what a bundle cannot store of a table is left out and named
-```
-
-A binding names a row of the layer's built data; the link from there to the rows of your own data frame is not built yet. The record core, checked semantic proposals, browser runtime and ARIA, text and Web Annotation projections are available for hand-written, programmatic and agent-driven workflows. `gl_annotate()` runs registered stages when `aisdk` and a model are supplied, and replays validated caches without a live model. Benchmark-wide update and live-model evaluation remain open research work.
-
-## Six capabilities
-
-| Capability | What it does | Evidence so far |
-|---|---|---|
-| Identify | Traces each drawn element to its leaf grob, viewport and panel | Implemented; 50 of 54 held-out figures equal to the page drawn, none captured as another figure |
-| Classify | Labels each element as a data mark, guide, reference line, decoration or annotation, using rules first and an agent for the rest | 481 of 486 elements by naming rules alone |
-| Organize | Builds the structure tree, the data tree and semantic groups, and maps each onto the others | Structure tree rebuilt for ggplot |
-| Attach semantics | Binds elements to data rows; records meaning, relations, checkable claims and narrative as anchored, layered records | Implemented; eight registered layers, JSONL logs, structured anchors, checked statuses and provenance are available. Deterministic evaluation archives cover claims, updates and anchor selectors. Open-world human audit and repeated or held-out model evaluation remain open |
-| Operate | Provides one set of operations (select, style, show/hide, tooltip, overlay, ...) shared by R, the browser and agents | Implemented; `gl_apply()` materialises selection, styling, visibility, focus, ordering, links, overlays and tooltips, and HTML projections embed the browser runtime |
-| Update | Re-captures after the code or data changes, re-anchors records, and sends only the broken ones for repair | `gl_rebase()`, `gl_status()`, `gl_diff()` and `gl_repair()` are implemented; controlled fixture and container update/anchor results are archived in `bench/runs/2026-11-15-m2-rebase/` and `bench/runs/m6-deterministic/` |
-
-## The name
-
-A gloss is a note in a medieval manuscript, anchored to a particular word and written by one of many readers over the years, while the text itself stays untouched. gloss does the same for a figure: records are anchored to elements, appended in layers by agents and people, and the geometry is never changed.
-
-## Read more
-
-- [Design](https://github.com/YuLab-SMU/gloss/blob/main/dev_docs/design.qmd) (Chinese): the decisions, the evidence behind each one, risks and milestones.
-- [Prior art and measured evidence](https://github.com/YuLab-SMU/gloss/blob/main/dev_docs/research-report.qmd) (Chinese): what ggiraph, gridSVG, maidr, Shiny, plotly, canvasXpress and the literature do, and where each stops.
-- [Decisions](https://github.com/YuLab-SMU/gloss/tree/main/dev_docs/decisions): architecture decision records.
-
-## Origin
-
-gloss started on 2026-11-07 as an idea inside [ggai](https://github.com/YuLab-SMU/ggai) under the working name `semsvg`. It became a standalone package on 2026-11-08 ([ggai ADR-0004](https://github.com/YuLab-SMU/ggai/blob/main/dev_docs/decisions/0004-semantic-figure-substrate-as-standalone-package.md)). The two packages do not depend on each other.
+> The v1 full-stack prototype (monolithic `gloss_figure`, append-only records, embedded Workbench, and pixel back-substitution binder) is archived on the [`v1-archive`](https://github.com/YuLab-SMU/gloss/tree/v1-archive) branch.
 
 ## License
 

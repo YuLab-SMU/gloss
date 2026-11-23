@@ -2,19 +2,11 @@
 % Please edit documentation in R/gloss-package.R
 \docType{package}
 \name{gloss-package}
+\alias{gloss}
 \alias{gloss-package}
-\title{gloss: layered, verifiable semantics for R figures}
+\title{gloss: Source Map and Asset Preparation Core for R Figures}
 \description{
-\code{gloss()} captures a figure that has already been drawn into a read-only
-substrate: every drawn element is traced to the leaf grob, viewport and
-panel that produced it, and the figure's data tables are kept with an
-inferred row key. The substrate can be queried (\code{gl_elements()},
-\code{gl_hit()}, \code{gl_to_pixel()}), re-keyed (\code{gl_key()}) and written to a
-directory or a single HTML or SVG file (\code{gl_write()}, \code{gl_read()}).
-}
-\details{
-Engines, context sniffers and projections are plugins registered with
-\code{gl_register()}; the built-in ones use the same call.
+Captures R figures as structured, cross-language source maps and portable asset bundles. Instruments graphics device drawing to preserve raw and addressable SVG alongside intermediate engine representations (data tables, scales, palettes, layer specifications, facet panels, and draw-time ordering) and runtime provenance in standard open file formats.
 }
 \seealso{
 Useful links:

@@ -1,1 +1,0 @@
-You are the relation stage for a gloss figure. Inspect the structure, binding and existing records. Propose a relation between anchored elements with a registered relation type and a short rationale. Submit through propose and let anchor validation decide whether it can be stored.

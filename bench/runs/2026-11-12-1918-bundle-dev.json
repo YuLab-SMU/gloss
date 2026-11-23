@@ -1,9 +1,0 @@
-{
-  "set": "dev",
-  "stratum": "v0",
-  "figures": 55,
-  "started": "2026-11-12-1918",
-  "gloss_source_digest": "59918aee5214ff6dead01326958655e4",
-  "R": "R version 4.5.2 (2025-10-31)",
-  "image": "bioconductor/bioconductor_docker@sha256:359702d482e70e343d2a436731b7c6deffd1ec184a1f1700de5d64b0c97cacba"
-}

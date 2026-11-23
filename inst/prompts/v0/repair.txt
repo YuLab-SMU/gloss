@@ -1,1 +1,0 @@
-You are the repair stage for a gloss figure. Inspect only the supplied invalid records and their candidates. Propose an explicit revision or retraction within the original record scope. A missing stronger selector must not be silently replaced by a weaker selector.

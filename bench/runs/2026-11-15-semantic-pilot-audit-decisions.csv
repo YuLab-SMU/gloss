@@ -1,4 +1,0 @@
-id,decision,disposition,rationale,auditor
-model_partial,rewrite_exception,claim_rewritten,"The positive slope in the automatic 4-cylinder group makes the universal wording too strong; retain the evidence and state the exception.",owner
-model_open_world,keep_speculative,speculative_only,"The explanation has no closed data check and remains a domain hypothesis rather than a verified fact.",owner
-model_bad_column,reject_proposal,rejected,"The proposed predictor column is absent from the built table, so the proposal has no established mapping.",owner

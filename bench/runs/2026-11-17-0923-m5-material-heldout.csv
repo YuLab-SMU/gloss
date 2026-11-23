@@ -1,7 +1,0 @@
-"id","set","stratum","engine","status","message","elements","leaves","panels","tables","files","bytes","contains_binding_answers","source_scene_sha256","prepared_view_sha256"
-"gallery-016","heldout","gallery","ggplot","written","",86,37,1,2,8,101406,FALSE,"50f7d4ec3a9e2c75338fdfab915ed3ae0ae758a7c3107d43069765002adcdf33","09273d356dc53c7d6c8e4eb03ca40085217478343cc88786c367136cc84b25c1"
-"gallery-033","heldout","gallery","ggplot","written","",194,13,1,2,8,109578,FALSE,"37e7f2a0d650e19767d2dea53f280ce7d1d1319e48937fe65c3d3c2d52a38231","d3ec75622fa53238b4f0ba3f7c89a7d296849182c8f485e61fbe8ce8229a6089"
-"gallery-060","heldout","gallery","patchwork","written","",136,35,2,4,10,105936,FALSE,"6946b656a037fe89c65009f2477abec197bb459452dbf948fdf17f8d3d79d6a7","9cf087f3926e4a8310f1b96fce39f301a41685ef54b06134013f36276bac8215"
-"patchwork-014","heldout","patchwork","patchwork","written","",240,70,5,6,12,178151,FALSE,"3d9ea18ae3995f2ec8065c938b99d3a86887b502cfeea6a6dad65153a4eb7255","9df4d83ba6cb134506a976e857907ca770bdb43080bdc6369f7750ceceba79cc"
-"tree-001","heldout","tree","ggplot","written","",56,10,2,5,11,54405,FALSE,"46169991b67bddd42e541633b79d0c34eea124bbae5516d2e02d8229e7fb00d4","ac34c9c11ccae4311b4b7e1b2b9dbe6ed32fffc1f6f75bcfd14e5a93ac873e66"
-"gallery-064","heldout","gallery","ggplot","written","",77,13,1,2,8,61449,FALSE,"f8d953e0bc6f3517ec45427c841c144cc1c2cab49e8d503a0f07b5030014f3b0","764ced6f4aea4cf98930c062971fd4418bdf1e94fe8c4ee3a7fc12c0b235f2c6"

@@ -1,5 +1,0 @@
-Figure
-
-Panels: 1.
-Semantic records:
-weight and fuel economy trend down together [verified]

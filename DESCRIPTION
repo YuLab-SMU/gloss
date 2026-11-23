@@ -1,15 +1,13 @@
 Package: gloss
-Title: Layered, Verifiable Semantics for R Figures
-Version: 0.0.0.9000
+Title: Source Map and Asset Preparation Core for R Figures
+Version: 0.1.0.9000
 Authors@R:
     person("Yonghe", "Xia", email = "xiayh17@gmail.com", role = c("aut", "cre"))
-Description: Builds a semantic substrate for an R figure that has already
-    been drawn with 'ggplot2', 'patchwork', 'ComplexHeatmap', base graphics
-    or 'grid'. Every drawn element is traced to the grob, viewport, panel and
-    data row it came from. Agents and people then add layered, append-only
-    records anchored to those elements, each checked against the data where
-    it makes a claim, and project them to interactive, accessible SVG or
-    HTML. The figure's geometry is never redrawn.
+Description: Captures R figures as structured, cross-language source maps and
+    portable asset bundles. Instruments graphics device drawing to preserve
+    raw and addressable SVG alongside intermediate engine representations
+    (data tables, scales, palettes, layer specifications, facet panels, and
+    draw-time ordering) and runtime provenance in standard open file formats.
 License: MIT + file LICENSE
 URL: https://github.com/YuLab-SMU/gloss
 BugReports: https://github.com/YuLab-SMU/gloss/issues
@@ -30,19 +28,10 @@ Imports:
     utils,
     xml2
 Suggests:
-    aisdk,
     ComplexHeatmap,
-    ggExtra,
     ggplot2,
-    ggrepel,
-    httpuv,
     knitr,
     patchwork,
-    R6,
-    ragg,
-    shiny,
-    showtext,
-    systemfonts,
     testthat (>= 3.0.0),
     withr
 Config/testthat/edition: 3

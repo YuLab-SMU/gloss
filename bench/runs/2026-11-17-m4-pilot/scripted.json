@@ -1,8 +1,0 @@
-{
-  "fixture": "mtcars",
-  "stage": "claim",
-  "committed": 1,
-  "status": "verified",
-  "factual": true,
-  "substrate_unchanged": true
-}

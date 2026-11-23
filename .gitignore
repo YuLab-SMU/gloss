@@ -12,67 +12,21 @@ Thumbs.db
 .RData
 .Ruserdata
 
-# Local environment and secrets
+# Local environment and agent configs
 .env
 .env.*
 !.env.example
 .Renviron
 .Renviron.*
 .Rprofile
-*.pem
-*.key
-credentials
-credentials.*
-secrets.*
-token
-token.*
-
-# Local agent configs that may contain credentials
 .claude/
 .cursor/
+.rho/
+.workbuddy/
 .mcp.json
 
 # Build and check artifacts
-gloss.Rcheck/
+*.Rcheck/
 *.tar.gz
 Rplots.pdf
 tests/testthat/Rplots.pdf
-
-# Quarto rendered products (keep .qmd source only)
-.quarto/
-dev_docs/*.html
-dev_docs/*.pdf
-dev_docs/*_files/
-
-# Local data
-*.rds
-*.rda
-*.sqlite
-
-# Bench: data vendored into frozen figures stays out of git (owner, 2026-11-10;
-# several sources state no license). Checksums: bench/MANIFEST.md5; URLs: meta.json.
-bench/figures/*/data/
-
-# Label sheets: the page images and outlined SVGs are rebuilt by
-# bench/R/label-sheet.R (38 MB for the development set); the leaf and element
-# tables labels resolve against are kept. The pilot's sheets are kept whole
-# in bench/labels/pilot/sheets/.
-bench/labels/sheets/*.png
-bench/labels/sheets/*.svg
-
-# Label workbench: its session state (the finished labels are the CSV files)
-bench/labels/**/.workbench/
-
-# Local state of other tools (Rho, WorkBuddy)
-.rho/
-.workbuddy/
-
-# The demo tour's outputs are rebuilt by dev_docs/demo/gloss-tour.R and dev_docs/demo/cases/*.R
-dev_docs/demo/mtcars-*
-dev_docs/demo/case*.html
-
-# Workbench frontend dependencies and build outputs
-workbench/node_modules/
-workbench/dist/
-workbench/dist-singlefile/
-workbench/dist-lite/

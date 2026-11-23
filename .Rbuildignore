@@ -2,16 +2,10 @@
 ^CLAUDE\.md$
 ^LICENSE\.md$
 ^dev_docs$
-^dev_logs$
-^plan$
-^idea$
-^bench$
 ^\.github$
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^\.quarto$
 ^\.claude$
 ^\.rho$
 ^\.workbuddy$
-^workbench$
 (^|/)Rplots.*\.pdf$
