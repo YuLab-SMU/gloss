@@ -2,6 +2,7 @@
 
 register_builtin_engines <- function() {
   register_engine_grid()
+  register_engine_ggplot()
   invisible(NULL)
 }
 
