@@ -1,0 +1,364 @@
+{
+  "format": "gloss-project-map-status",
+  "generated_at": "2026-11-23T14:40:35Z",
+  "package_version": "0.1.0.9000",
+  "git": {
+    "sha": "a0aa521",
+    "branch": "main",
+    "subject": "feat(core): implement gloss v2 capture contract, grid engine, sources, packaging, and queries"
+  },
+  "summary": {
+    "exports_implemented": 8,
+    "exports_total": 8,
+    "modules_implemented": 6,
+    "modules_total": 7,
+    "engines_implemented": 1,
+    "engines_total": 5,
+    "guardrails_passed": 5,
+    "guardrails_total": 5,
+    "all_guardrails_passed": true,
+    "r_files": 9,
+    "r_loc": 2958,
+    "test_files": 7,
+    "tests": {
+      "ran": true,
+      "passed": 272,
+      "failed": 0,
+      "warnings": 0,
+      "skipped": 0,
+      "by_file": {
+        "test-capture-contract.R": {
+          "passed": 40,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "test-capture.R": {
+          "passed": 65,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "test-engine-registry.R": {
+          "passed": 25,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "test-package-assets.R": {
+          "passed": 101,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "test-package.R": {
+          "passed": 1,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "test-query.R": {
+          "passed": 21,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "test-sources.R": {
+          "passed": 19,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    }
+  },
+  "guardrails": [
+    {
+      "id": "principles.g_exports",
+      "name": "Export Surface Alignment (8 APIs)",
+      "pass": true,
+      "detail": "8/8 canonical exports aligned in NAMESPACE"
+    },
+    {
+      "id": "principles.g_suggests",
+      "name": "Engine Dependencies in Suggests",
+      "pass": true,
+      "detail": "ggplot2, patchwork, ComplexHeatmap isolated in Suggests"
+    },
+    {
+      "id": "principles.g_cran_hygiene",
+      "name": "CRAN & R Hygiene",
+      "pass": true,
+      "detail": "0 <<- super-assignments, 0 .GlobalEnv writes, 0 stray Rplots*.pdf"
+    },
+    {
+      "id": "principles.g_core_boundary",
+      "name": "Strict In-Core Boundary",
+      "pass": true,
+      "detail": "9 lean R files in R/ (2958 LOC); zero agent/MCP/UI/codec bloat"
+    },
+    {
+      "id": "principles.g_tests",
+      "name": "Unit Test & Build Health",
+      "pass": true,
+      "detail": "272 PASS / 0 FAIL / 0 WARN / 0 SKIP across 7 test files"
+    }
+  ],
+  "apis": [
+    {
+      "id": "gloss_core.public_api.fn_gloss",
+      "name": "gloss",
+      "phase": "Phase 2",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gloss.Rd",
+      "source_file": "R/capture.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_asset_map",
+      "name": "gl_asset_map",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_asset_map.Rd",
+      "source_file": "R/package-assets.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_asset_bundle",
+      "name": "gl_asset_bundle",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_asset_bundle.Rd",
+      "source_file": "R/package-assets.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_scene",
+      "name": "gl_scene",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_scene.Rd",
+      "source_file": "R/query.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_tables",
+      "name": "gl_tables",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_tables.Rd",
+      "source_file": "R/query.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_sources",
+      "name": "gl_sources",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_sources.Rd",
+      "source_file": "R/query.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_query",
+      "name": "gl_query",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_query.Rd",
+      "source_file": "R/query.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_register_engine",
+      "name": "gl_register_engine",
+      "phase": "Phase 1",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_register_engine.Rd",
+      "source_file": "R/engine-registry.R",
+      "source_exists": true
+    }
+  ],
+  "modules": [
+    {
+      "id": "gloss_core.modules.mod_utils",
+      "name": "Contract & Open Serialization",
+      "phase": "Phase 1",
+      "status": "implemented",
+      "files": ["R/utils.R", "R/gloss-package.R"],
+      "tests": "tests/testthat/test-capture-contract.R",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 491,
+      "test_blocks": 3,
+      "live_passed": 40,
+      "live_failed": 0
+    },
+    {
+      "id": "gloss_core.modules.mod_registry",
+      "name": "Engine Registry & Load Hook",
+      "phase": "Phase 1",
+      "status": "implemented",
+      "files": ["R/engine-registry.R", "R/zzz.R"],
+      "tests": "tests/testthat/test-engine-registry.R",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 245,
+      "test_blocks": 4,
+      "live_passed": 25,
+      "live_failed": 0
+    },
+    {
+      "id": "gloss_core.modules.mod_capture",
+      "name": "Device Capture & SVG Instrumentation",
+      "phase": "Phase 2",
+      "status": "implemented",
+      "files": "R/capture.R",
+      "tests": "tests/testthat/test-capture.R",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 921,
+      "test_blocks": 6,
+      "live_passed": 65,
+      "live_failed": 0
+    },
+    {
+      "id": "gloss_core.modules.mod_sources",
+      "name": "Source Context Inventory",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "files": "R/sources.R",
+      "tests": "tests/testthat/test-sources.R",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 383,
+      "test_blocks": 2,
+      "live_passed": 19,
+      "live_failed": 0
+    },
+    {
+      "id": "gloss_core.modules.mod_package_assets",
+      "name": "Asset Map & Bundle Packager",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "files": "R/package-assets.R",
+      "tests": "tests/testthat/test-package-assets.R",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 543,
+      "test_blocks": 3,
+      "live_passed": 101,
+      "live_failed": 0
+    },
+    {
+      "id": "gloss_core.modules.mod_query",
+      "name": "In-Memory Query & Slicing",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "files": "R/query.R",
+      "tests": "tests/testthat/test-query.R",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 321,
+      "test_blocks": 1,
+      "live_passed": 21,
+      "live_failed": 0
+    },
+    {
+      "id": "gloss_core.modules.mod_ir_lineage",
+      "name": "Engine IR & Structural Lineage",
+      "phase": "Phase 4",
+      "status": "planned",
+      "files": "R/ir-lineage.R",
+      "tests": "tests/testthat/test-ir-lineage.R",
+      "source_exists": false,
+      "test_exists": false,
+      "loc": 0,
+      "test_blocks": 0,
+      "live_passed": null,
+      "live_failed": null
+    }
+  ],
+  "engines": [
+    {
+      "id": "gloss_core.engines.eng_grid",
+      "name": "grid",
+      "pkg": "grid",
+      "phase": "Phase 2",
+      "status": "implemented",
+      "files": "R/engine-grid.R",
+      "tests": "tests/testthat/test-capture.R",
+      "source_exists": true,
+      "test_exists": true,
+      "dependency_bucket": "Imports",
+      "loc": 54
+    },
+    {
+      "id": "gloss_core.engines.eng_ggplot",
+      "name": "ggplot2",
+      "pkg": "ggplot2",
+      "phase": "Phase 4",
+      "status": "planned",
+      "files": "R/engine-ggplot.R",
+      "tests": "tests/testthat/test-engine-ggplot.R",
+      "source_exists": false,
+      "test_exists": false,
+      "dependency_bucket": "Suggests",
+      "loc": 0
+    },
+    {
+      "id": "gloss_core.engines.eng_patchwork",
+      "name": "patchwork",
+      "pkg": "patchwork",
+      "phase": "Phase 5",
+      "status": "planned",
+      "files": "R/engine-patchwork.R",
+      "tests": "tests/testthat/test-engine-patchwork.R",
+      "source_exists": false,
+      "test_exists": false,
+      "dependency_bucket": "Suggests",
+      "loc": 0
+    },
+    {
+      "id": "gloss_core.engines.eng_heatmap",
+      "name": "ComplexHeatmap",
+      "pkg": "ComplexHeatmap",
+      "phase": "Phase 5",
+      "status": "planned",
+      "files": "R/engine-heatmap.R",
+      "tests": "tests/testthat/test-engine-heatmap.R",
+      "source_exists": false,
+      "test_exists": false,
+      "dependency_bucket": "Suggests",
+      "loc": 0
+    },
+    {
+      "id": "gloss_core.engines.eng_base",
+      "name": "base",
+      "pkg": "grDevices",
+      "phase": "Phase 5",
+      "status": "planned",
+      "files": "R/engine-base.R",
+      "tests": "tests/testthat/test-engine-base.R",
+      "source_exists": false,
+      "test_exists": false,
+      "dependency_bucket": "Imports",
+      "loc": 0
+    }
+  ]
+}
