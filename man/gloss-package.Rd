@@ -2,7 +2,6 @@
 % Please edit documentation in R/gloss-package.R
 \docType{package}
 \name{gloss-package}
-\alias{gloss}
 \alias{gloss-package}
 \title{gloss: Source Map and Asset Preparation Core for R Figures}
 \description{
