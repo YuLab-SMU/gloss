@@ -2,20 +2,18 @@
 
 **Source Map and Asset Preparation Core for R Figures**
 
-`gloss` (v2) is a lightweight R kernel that captures what happens inside an R plotting session before it evaporates into a flat image:
+`gloss` captures what happens inside an R plotting session before it evaporates into a flat image, turning R figures into open, cross-language assets for external AI skills, interactive frontends, and analysis scripts:
 
 - **Device Capture & Instrumentation**: preserves both the untouched `original.svg` and an addressable `scene.svg` with deterministic `<g>` leaf groups and draw-time viewport coordinates.
-- **Engine Intermediate Representation (IR)**: snapshots `raw` and `built` tables, scale & palette dictionaries (`domain <-> hex/shape/size`), layer specifications (`geom`, `stat`, `position`, `aes`), facet layouts, and draw-time permutations (e.g., `ComplexHeatmap` clustering orders).
-- **Structural Lineage**: records neutral correspondences (`element <-> leaf <-> viewport <-> panel <-> layer/table`) and cardinalities (`1:1`, `N:1`, `1:M`) without rigid pixel-verification gates or table withholding.
-- **Open Asset Packaging**: emits standard, zero-proprietary-codec outputs — a compact JSON **`Asset Map`** (`asset-map.json`) and a self-contained **`Asset Bundle`** (`SVG` + `CSV`/`Parquet` + `JSON`).
+- **Engine Intermediate Representation (IR)**: snapshots `raw` and `built` tables, scale & palette dictionaries (`domain <-> hex/shape/size`), layer specifications (`geom`, `stat`, `position`, `aes`), facet layouts, and draw-time permutations (such as `ComplexHeatmap` clustering orders).
+- **Structural Lineage**: records correspondences (`element <-> leaf <-> viewport <-> panel <-> layer/table`) and cardinalities (`1:1`, `N:1`, `1:M`, `stat_aggregated`) as neutral facts.
+- **Open Asset Packaging**: emits standard, zero-proprietary-codec outputs — a compact JSON **`Asset Map`** (`asset-map.json`) and a self-contained **`Asset Bundle`** (`.gloss/` directory or `.zip` with `SVG` + `CSV`/`Parquet` + `JSON`).
 
-Task planning, SVG layout refinement, interactive browsing (Workbench), and higher-level semantic or statistical verification live outside the R core as consumers of `Asset Map` and `Asset Bundle`.
+Task context planning, publication SVG refinement (`gloss-svg-refine`), semantic/statistical auditing (`gloss-audit`), live session bridging (`gloss-mcp`), and interactive browsing (`Workbench`) collaborate around `Asset Map` and `Asset Bundle` outside the R core.
 
 ## Architecture
 
-See [`dev_docs/architecture-v2.md`](dev_docs/architecture-v2.md) for the complete v2 design, data formats, public R API, File-First / live-MCP boundary, and roadmap.
-
-> The v1 full-stack prototype (monolithic `gloss_figure`, append-only records, embedded Workbench, and pixel back-substitution binder) is archived on the [`v1-archive`](https://github.com/YuLab-SMU/gloss/tree/v1-archive) branch.
+See [`dev_docs/architecture.md`](dev_docs/architecture.md) for the complete design, asset schemas, public R API, surrounding ecosystem, and end-to-end workflows.
 
 ## License
 
