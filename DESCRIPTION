@@ -17,6 +17,7 @@ Depends:
 Imports:
     cli,
     digest,
+    graphics,
     grDevices,
     grid,
     jsonlite,
