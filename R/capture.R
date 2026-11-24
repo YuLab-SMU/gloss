@@ -1653,6 +1653,22 @@ draw_grid_dl <- function(dl) {
   invisible(NULL)
 }
 
+open_png_device <- function(filename, width, height, dpi = 144, bg = "white") {
+  png_args <- list(
+    filename = filename,
+    width = width,
+    height = height,
+    units = "in",
+    res = dpi,
+    bg = bg
+  )
+  # Windows GDI png() does not support R 4.2+ groupGrob compositing; prefer Cairo when available
+  if (identical(.Platform$OS.type, "windows") && isTRUE(capabilities("cairo"))) {
+    png_args$type <- "cairo"
+  }
+  do.call(grDevices::png, png_args)
+}
+
 render_leaf_png <- function(draw_fn, width, height, dpi = 144) {
   tmp <- tempfile(fileext = ".png")
   on.exit(unlink(tmp), add = TRUE)
@@ -1664,10 +1680,10 @@ render_leaf_png <- function(draw_fn, width, height, dpi = 144) {
     }
   }, add = TRUE)
 
-  grDevices::png(tmp, width = width, height = height, units = "in", res = dpi, bg = "transparent")
+  open_png_device(tmp, width = width, height = height, dpi = dpi, bg = "transparent")
   dev_id <- grDevices::dev.cur()
   tryCatch(
-    draw_fn(),
+    suppressWarnings(draw_fn()),
     finally = {
       if (dev_id %in% grDevices::dev.list()) {
         grDevices::dev.off(dev_id)
@@ -1709,10 +1725,10 @@ render_preview_png <- function(draw_fn, width, height, dpi = 144L) {
     }
   }, add = TRUE)
 
-  grDevices::png(tmp, width = width, height = height, units = "in", res = dpi, bg = "white")
+  open_png_device(tmp, width = width, height = height, dpi = dpi, bg = "white")
   dev_id <- grDevices::dev.cur()
   tryCatch(
-    draw_fn(),
+    suppressWarnings(draw_fn()),
     finally = {
       if (dev_id %in% grDevices::dev.list()) {
         grDevices::dev.off(dev_id)

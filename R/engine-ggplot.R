@@ -1739,14 +1739,19 @@ ggplot_extract_guides <- function(leaves, elements, scales_ir, collected = FALSE
       e_ids <- g_els$element_id[g_els$leaf_id == lid]
       if (length(e_ids) == 0L) next
 
-      km <- regmatches(vp, regexec("::key-([0-9]+)-([0-9]+)-([0-9]+|bg)\\.", vp))[[1L]]
-      if (length(km) == 4L && !identical(km[[4L]], "bg")) {
-        cell_key <- paste0(km[[2L]], "-", km[[3L]])
-        key_cells[[cell_key]] <- list(
-          row = as.integer(km[[2L]]),
-          col = as.integer(km[[3L]]),
-          elements = c(if (!is.null(key_cells[[cell_key]])) key_cells[[cell_key]]$elements else character(), e_ids)
-        )
+      km <- regmatches(vp, regexec("::key-([0-9]+)-([0-9]+)(?:-([0-9]+|bg))?\\.", vp, perl = TRUE))[[1L]]
+      if (length(km) >= 3L) {
+        gname_k <- leaves$grob_name[[r_idx]] %||% ""
+        gpath_k <- leaves$grob_path[[r_idx]] %||% ""
+        is_key_bg <- grepl("^legend\\.key(\\.|$)", gname_k) || grepl("/legend\\.key(\\.|$)", gpath_k)
+        if (!is_key_bg) {
+          cell_key <- paste0(km[[2L]], "-", km[[3L]])
+          key_cells[[cell_key]] <- list(
+            row = as.integer(km[[2L]]),
+            col = as.integer(km[[3L]]),
+            elements = c(if (!is.null(key_cells[[cell_key]])) key_cells[[cell_key]]$elements else character(), e_ids)
+          )
+        }
         next
       }
       lm <- regmatches(vp, regexec("::label-([0-9]+)-([0-9]+)\\.", vp))[[1L]]
