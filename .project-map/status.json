@@ -1,11 +1,11 @@
 {
   "format": "gloss-project-map-status",
-  "generated_at": "2026-11-24T02:03:17Z",
-  "package_version": "0.1.0.9000",
+  "generated_at": "2026-11-24T02:25:47Z",
+  "package_version": "0.1.0",
   "git": {
-    "sha": "a1c9a7b",
+    "sha": "206e530",
     "branch": "main",
-    "subject": "feat(engines): implement patchwork, ComplexHeatmap, and base engines with R-graph-gallery tests"
+    "subject": "fix(engines): harden patchwork spacers, heatmap naming, and base SVG group ids"
   },
   "summary": {
     "exports_implemented": 8,
@@ -18,11 +18,11 @@
     "guardrails_total": 5,
     "all_guardrails_passed": true,
     "r_files": 14,
-    "r_loc": 5239,
+    "r_loc": 5273,
     "test_files": 13,
     "tests": {
       "ran": true,
-      "passed": 608,
+      "passed": 625,
       "failed": 0,
       "warnings": 0,
       "skipped": 0,
@@ -40,7 +40,7 @@
           "skipped": 0
         },
         "test-engine-base.R": {
-          "passed": 26,
+          "passed": 33,
           "failed": 0,
           "warnings": 0,
           "skipped": 0
@@ -52,13 +52,13 @@
           "skipped": 0
         },
         "test-engine-heatmap.R": {
-          "passed": 26,
+          "passed": 32,
           "failed": 0,
           "warnings": 0,
           "skipped": 0
         },
         "test-engine-patchwork.R": {
-          "passed": 18,
+          "passed": 22,
           "failed": 0,
           "warnings": 0,
           "skipped": 0
@@ -131,13 +131,13 @@
       "id": "principles.g_core_boundary",
       "name": "Strict In-Core Boundary",
       "pass": true,
-      "detail": "14 lean R files in R/ (5239 LOC); zero agent/MCP/UI/codec bloat"
+      "detail": "14 lean R files in R/ (5273 LOC); zero agent/MCP/UI/codec bloat"
     },
     {
       "id": "principles.g_tests",
       "name": "Unit Test & Build Health",
       "pass": true,
-      "detail": "608 PASS / 0 FAIL / 0 WARN / 0 SKIP across 13 test files"
+      "detail": "625 PASS / 0 FAIL / 0 WARN / 0 SKIP across 13 test files"
     }
   ],
   "apis": [
@@ -368,7 +368,7 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Suggests",
-      "loc": 226
+      "loc": 233
     },
     {
       "id": "gloss_core.engines.eng_heatmap",
@@ -381,7 +381,7 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Suggests",
-      "loc": 329
+      "loc": 342
     },
     {
       "id": "gloss_core.engines.eng_base",
@@ -394,7 +394,7 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Imports",
-      "loc": 551
+      "loc": 565
     }
   ]
 }

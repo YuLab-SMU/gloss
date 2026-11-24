@@ -1,0 +1,102 @@
+---
+title: "Getting Started with gloss"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with gloss}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+`gloss` captures an R figure at draw time—while the graphics engine and R
+session are still alive—and packages its dual SVG representation, Engine IR
+(data tables, scale/palette dictionaries, layer recipes, facet panels, and
+draw-time ordering), structural lineage, and runtime provenance into open,
+cross-language files.
+
+## 1. Capturing a Figure Once
+
+```{r capture-grid}
+library(gloss)
+
+g <- grid::grobTree(
+  grid::rectGrob(width = 0.6, height = 0.4, name = "panel_box",
+                 gp = grid::gpar(fill = "#eef6fa", col = "#0072B2")),
+  grid::textGrob("Hello gloss", name = "panel_title")
+)
+
+cap_grid <- gloss(g, width = 5, height = 3.5)
+cap_grid
+```
+
+When `ggplot2` is installed, `gloss()` runs a single
+`ggplot_build()` -> `ggplot_gtable()` -> `grid.draw()` pass so even stochastic
+layers (such as `geom_jitter()`) stay aligned across `original.svg`,
+`scene.svg`, and `built_layer*` tables:
+
+```{r capture-ggplot, eval = requireNamespace("ggplot2", quietly = TRUE)}
+library(ggplot2)
+
+p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+  geom_point(size = 2.5) +
+  facet_wrap(~ am) +
+  scale_colour_manual(
+    values = c("4" = "#0072B2", "6" = "#E69F00", "8" = "#D55E00"),
+    labels = c("4 cyl", "6 cyl", "8 cyl")
+  ) +
+  labs(title = "Fuel Economy by Transmission", x = "Weight (1000 lbs)", y = "MPG")
+
+cap <- gloss(p)
+cap
+```
+
+## 2. Inspecting the Asset Map and Slicing in Memory
+
+`gl_asset_map()` builds a lightweight JSON-ready catalog without redrawing the
+plot, and `gl_query()` slices leaves, elements, lineage, and panel-filtered
+tables directly in memory:
+
+```{r inspect-query, eval = requireNamespace("ggplot2", quietly = TRUE)}
+map <- gl_asset_map(cap)
+str(map$ir$panels, max.level = 2)
+
+# Slice strictly to panel P2 (am == 1) and high-MPG cars
+q <- gl_query(cap, panel = "P2", rows = function(df) df$y > 25)
+q
+head(q$tables$built_layer1[, c("_row_id", "PANEL", "x", "y", "colour")])
+```
+
+## 3. Exporting a Portable Open Asset Bundle
+
+`gl_asset_bundle()` writes a self-contained `.gloss/` directory (or `.zip`
+archive) with SHA-256 verification in `manifest.json`, explicit column schemas
+in `tables/schema.json`, and 1-based `_row_id` keys on every CSV table:
+
+```{r bundle, eval = requireNamespace("ggplot2", quietly = TRUE)}
+bundle_path <- gl_asset_bundle(
+  cap,
+  path = file.path(tempdir(), "mtcars.gloss"),
+  overwrite = TRUE
+)
+sort(list.files(bundle_path, recursive = TRUE))
+```
+
+## 4. Capturing Base R Figures
+
+Base graphics functions and `recordedplot` objects are captured automatically
+via step-by-step display-list replay:
+
+```{r base-capture}
+cap_base <- gloss(function() {
+  graphics::par(mfrow = c(1, 2))
+  graphics::plot(datasets::mtcars$wt, datasets::mtcars$mpg, pch = 16, main = "Scatter")
+  graphics::hist(datasets::mtcars$mpg, col = "grey80", main = "Histogram")
+})
+cap_base
+```

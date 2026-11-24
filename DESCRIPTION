@@ -1,6 +1,6 @@
 Package: gloss
 Title: Source Map and Asset Preparation Core for R Figures
-Version: 0.1.0.9000
+Version: 0.1.0
 Authors@R:
     person("Yonghe", "Xia", email = "xiayh17@gmail.com", role = c("aut", "cre"))
 Description: Captures R figures as structured, cross-language source maps and
@@ -33,8 +33,10 @@ Suggests:
     ggplot2,
     knitr,
     patchwork,
+    rmarkdown,
     testthat (>= 3.0.0),
     withr
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 8.0.0
