@@ -20,25 +20,48 @@ Use this skill when refining an R figure exported as a `.gloss/` Asset Bundle (f
 
 ### Step 1 — Inspect the Bundle Index & Scene Schema
 
-Read these files first (do **not** load full `scene.svg` into context before checking the map):
+Read these compact files first (do **not** load full `scene.svg` or multi-MB `elements.json` into context before checking the map):
 
-1. `<bundle>/asset-map.json` — inspect `page` (`width_pt`, `height_pt`), `ir.panels` (`bbox_pt`, `x_domain`, `y_domain`), `ir.layers` (`geom`, `aes`), `ir.scales` (`map` domain-to-hex dictionary), `ir.guides` (unified legend `bbox_pt` & `leaf_ids`), and `lineage`.
-2. `<bundle>/scene/leaves.json` — inspect each leaf's `layout_slot` (`panel`, `guide-box*`, `axis-b`, `axis-l`, `strip-t`, `title`, `subtitle`, `caption`) and active clip box (`clip_id`, `clip_x0..clip_y1`).
-3. `<bundle>/scene/elements.json` — inspect text bounding boxes (`bbox_x0..bbox_y1`), `font_size`, `font_family`, `text_anchor`, `rotation`, `stroke_width`, and `opacity` to detect text collisions or inconsistent type hierarchy mathematically.
+1. `<bundle>/asset-map.json` — inspect `scene.coord`, `ir.panels`, `ir.layers`, `ir.scales` (discrete `map` & continuous `stops`), `ir.guides.entries` (item-level `swatch_elements`/`label_elements`), `scene.label_links`, and `lineage` (`semantic_role`, `edit_policy`, `lineage_tier`).
+2. `<bundle>/scene/texts.json` (`< 10 KB`) — inspect all text strings, `bbox_pt`, `font_size`, `font_family`, `rotation`, `semantic_role`, and `edit_policy` to detect overlaps and type hierarchy issues directly.
+3. `<bundle>/assets/preview.png` (optional visual glance) — evaluate overall layout balance and whitespace visually, while relying exclusively on JSON metadata for coordinates.
 
-### Step 2 — Classify Leaves Before Editing
+### Step 2 — Respect `semantic_role` & `edit_policy` Locks
 
-Partition `<g data-gloss-leaf="L...">` groups in `scene/scene.svg` into three buckets:
+Schema v1.1 bundles explicitly label every leaf in `lineage` and `scene/leaves.json`:
 
-| Bucket | Identification Rule | Allowed Edits | Forbidden Edits |
+| `edit_policy` | Typical `semantic_role` | Allowed Edits | Forbidden Edits |
 | :--- | :--- | :--- | :--- |
-| **Locked Data Marks** | `lineage.layer_id != null` and `geom` not in `GeomText*` / `GeomLabel*` | `fill`, `stroke`, `stroke-width`, `opacity` (synced with `ir.scales` & legend) | Moving `cx`/`cy`/`x`/`y`/`d`/`points`, `r`/`width`/`height`, group `transform`, or primitive count |
-| **Data & Axis Text** | `geom` in `GeomText`, `GeomLabel`, `GeomTextRepel`, `GeomLabelRepel`, or `layout_slot` starting with `axis` | `font-family`, `font-size`, `fill`; nudging `x`/`y` of overlapping data labels (`--allow-label-move`) + updating leader lines | Changing or deleting text characters / numeric tick labels |
-| **Layout Chrome & Guides** | `layout_slot` in `guide-box*`, `title`, `subtitle`, `caption`, `strip*`, `background` | Repositioning `guide-box*` group, restyling backgrounds/gridlines, normalizing title hierarchy | Altering legend category text so it contradicts `ir.scales` |
+| **`geometry_locked`** | `data_mark`, `reference_mark`, `axis_tick` | `fill`, `stroke`, `stroke-width`, `opacity` (synced with `ir.scales` & `ir.guides`) | Moving coordinates/dimensions, adding/removing primitives, altering tick text |
+| **`movable`** | `data_label`, `leader_line`, `annotation`, `plot_title`, `axis_title`, `guide_label`, `strip_label` | Translating overlapping labels (with automatic leader-line update via `label_links`), font styling, moving legend box | Altering text characters so labels contradict `tables/` or `ir.scales` |
+| **`style_only`** | `panel_grid`, `panel_frame`, `axis_line`, `guide_key`, `guide_frame`, `background` | Stroke width, color, opacity, palette synchronization | Geometry distortion of panel frames |
 
-### Step 3 — Generate Derived SVG & Manifest
+### Step 3 — Emit a Declarative Visual Patch & Compile Deterministically
 
-Write a reproducible Python/XSLT/DOM script starting from `<bundle>/scene/scene.svg`, save the refined SVG to `<out_dir>/<name>-pub.svg`, and emit `<out_dir>/derived-manifest.json` + run geometric verification via the bundled stdlib script:
+Prefer emitting a concise JSON **Visual Patch Spec** (`gloss-visual-patch`) and running the bundled deterministic applier instead of asking an LLM to rewrite raw SVG XML:
+
+```json
+{
+  "format": "gloss-visual-patch",
+  "schema_version": "1.1.0",
+  "operations": [
+    { "kind": "set_typography", "font_family": "Helvetica", "roles": ["plot_title", "axis_title", "axis_tick", "guide_label"] },
+    { "kind": "remap_scale_palette", "aesthetic": "colour", "mapping": { "Cohort A": "#0072B2", "Cohort B": "#D55E00" } },
+    { "kind": "translate_label", "element_id": "E0042", "dx": 8.0, "dy": -6.0 },
+    { "kind": "add_callout", "panel_id": "P1", "raw_row_id": 12, "text": "Outlier S12", "offset_pt": [20, -18] }
+  ]
+}
+```
+
+```bash
+python3 skills/gloss-svg-refine/scripts/apply_visual_patch.py \
+  --bundle path/to/figure.gloss \
+  --patch path/to/figure.gloss.work/patches/pub-v1.json \
+  --out path/to/figure.gloss.work/derived/figure-pub.svg \
+  --manifest path/to/figure.gloss.work/derived/derived-manifest.json
+```
+
+`apply_visual_patch.py` enforces `edit_policy` locks, checks `clip_bbox_pt` overflow, auto-drags paired `ggrepel` leader endpoints via `scene.label_links`, syncs item-level `ir.guides` swatches, writes `derived-manifest.json`, and invokes `verify_svg_fidelity.py` automatically. For custom script derivations, invoke `verify_svg_fidelity.py` directly:
 
 ```bash
 python3 skills/gloss-svg-refine/scripts/verify_svg_fidelity.py \

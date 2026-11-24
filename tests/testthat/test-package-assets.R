@@ -119,7 +119,7 @@ test_that("gl_asset_map produces schema-compliant JSON without redrawing", {
   # Parse JSON with simplifyVector = FALSE to verify arrays stay JSON arrays even for length 1
   raw_json <- jsonlite::fromJSON(map_path, simplifyVector = FALSE)
   expect_identical(raw_json$format, "gloss-asset-map")
-  expect_identical(raw_json$schema_version, "1.0.0")
+  expect_identical(raw_json$schema_version, "1.1.0")
   expect_identical(raw_json$capture_id, cap$capture_id)
   expect_identical(raw_json$page$engine, "mock_km")
   expect_identical(raw_json$scene$n_panels, 1L)

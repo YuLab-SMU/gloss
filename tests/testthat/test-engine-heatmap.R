@@ -49,8 +49,12 @@ test_that("heatmap engine captures ComplexHeatmap matrix, clustering orders, ann
   scale_fields <- vapply(cap$ir$scales, `[[`, character(1L), "field")
   expect_true(all(c("expr", "group", "score") %in% scale_fields))
 
-  # 4 slice panels (2 x 2) linked 1:1 to matrix cells summing to 24 cells
-  expect_equal(length(cap$ir$panels), 4L)
+  # 4 body slice panels (2 x 2) + 4 annotation slice panels sharing col_axis_group (ISS-ASSET-05)
+  body_panels <- Filter(function(p) identical(p$panel_role, "heatmap_body"), cap$ir$panels)
+  anno_panels <- Filter(function(p) identical(p$panel_role, "annotation"), cap$ir$panels)
+  expect_equal(length(body_panels), 4L)
+  expect_equal(length(anno_panels), 4L)
+  expect_true(all(vapply(anno_panels, `[[`, character(1L), "col_axis_group") == body_panels[[1L]]$col_axis_group))
   body_linked <- cap$lineage[!is.na(cap$lineage$table_id) & cap$lineage$table_id == "matrix_expr", ]
   expect_equal(nrow(body_linked), 4L)
   expect_true(all(body_linked$cardinality == "1:1"))
@@ -135,7 +139,8 @@ test_that("heatmap engine handles unnamed rasterized matrices, vertical %v%, and
   anno_v <- cap_v$lineage[!is.na(cap_v$lineage$table_id) & cap_v$lineage$table_id == "anno_top_A_1", ]
   expect_equal(nrow(anno_v), 2L)
   expect_true(all(anno_v$cardinality == "1:1"))
-  expect_equal(length(cap_v$ir$panels), 2L)
+  body_v <- Filter(function(p) identical(p$panel_role, "heatmap_body"), cap_v$ir$panels)
+  expect_equal(length(body_v), 2L)
 
   # Standalone rowAnnotation concatenated via +
   hl_row <- ComplexHeatmap::Heatmap(m1, name = "expr_r") +

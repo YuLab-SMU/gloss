@@ -446,7 +446,13 @@ def verify_fidelity(
 
         if layer_id is not None:
             geom = str(layers_by_id.get(int(layer_id), {}).get("geom", ""))
-            is_label_layer = geom in LABEL_GEOMS
+            sem_role = str(lin.get("semantic_role") or leaves_meta.get(lid, {}).get("semantic_role") or "")
+            edit_pol = str(lin.get("edit_policy") or leaves_meta.get(lid, {}).get("edit_policy") or "")
+            is_label_layer = (
+                sem_role in ("data_label", "leader_line")
+                or edit_pol == "movable"
+                or (not sem_role and geom in LABEL_GEOMS)
+            )
 
             if lid not in der_leaves:
                 violations.append({"kind": "missing_data_leaf", "leaf_id": lid, "geom": geom})

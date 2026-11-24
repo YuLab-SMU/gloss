@@ -40,10 +40,8 @@ engine_base_capture <- function(x, ctx) {
   if (n_orig_pages == 0L) {
     cli::cli_abort("The base graphics input did not draw any page.")
   }
-  if (n_orig_pages > 1L) {
-    cli::cli_warn("The input drew {n_orig_pages} pages; gloss captured the last page.")
-  }
-  original_svg <- all_orig_pages[[n_orig_pages]]
+  sel_idx <- resolve_selected_page(ctx$page, n_orig_pages)
+  original_svg <- all_orig_pages[[sel_idx]]
 
   replay <- replay_base_display_list(
     rp = rp,
@@ -52,6 +50,18 @@ engine_base_capture <- function(x, ctx) {
     dense = ctx$dense
   )
 
+  # Optional preview PNG rendered from the already-recorded snapshot (zero re-execution)
+  preview_png <- NULL
+  if (isTRUE(ctx$preview)) {
+    preview_png <- tryCatch(
+      render_preview_png(
+        function() grDevices::replayPlot(rlang::duplicate(rp, shallow = FALSE)),
+        width = ctx$width, height = ctx$height, dpi = ctx$preview_dpi
+      ),
+      error = function(e) NULL
+    )
+  }
+
   scene_payload <- list(
     original_svg = original_svg,
     scene_svg = replay$scene_svg,
@@ -59,8 +69,10 @@ engine_base_capture <- function(x, ctx) {
     elements = replay$elements,
     dense_leaves = replay$dense_leaves,
     rasters = replay$rasters,
+    preview_png = preview_png,
     draw_method = draw_method %||% "base_replay",
-    pages = as.integer(n_orig_pages)
+    pages = as.integer(n_orig_pages),
+    selected_page = as.integer(sel_idx)
   )
 
   list(
@@ -81,8 +93,24 @@ raw_to_utf8 <- function(bytes) {
 }
 
 base_prim_line_mask <- function(lines) {
-  pat <- "^<(circle|rect|line|polyline|polygon|path|text|image)[ />]"
-  grepl(pat, lines, perl = TRUE) & !startsWith(lines, "<rect width='100%' height='100%'")
+  pat <- "^\\s*<(circle|rect|line|polyline|polygon|path|text|image)[ />]"
+  n <- length(lines)
+  if (n == 0L) return(logical())
+  in_defs <- FALSE
+  in_clip <- FALSE
+  out <- logical(n)
+  for (i in seq_len(n)) {
+    ln <- lines[[i]]
+    if (grepl("<defs[ >]", ln, perl = TRUE)) in_defs <- TRUE
+    if (grepl("<clipPath[ >]", ln, perl = TRUE)) in_clip <- TRUE
+    if (!in_defs && !in_clip) {
+      out[[i]] <- grepl(pat, ln, perl = TRUE) &&
+        !grepl("^\\s*<rect\\s+width=['\"]100%['\"]\\s+height=['\"]100%['\"]", ln, perl = TRUE)
+    }
+    if (grepl("</clipPath>", ln, fixed = TRUE)) in_clip <- FALSE
+    if (grepl("</defs>", ln, fixed = TRUE)) in_defs <- FALSE
+  }
+  out
 }
 
 wrap_base_entry_chunk <- function(chunk, leaf_id, grob_name) {
@@ -156,17 +184,18 @@ make_base_clip_tracker <- function(head_text) {
   st$pending <- NULL
 
   feed <- function(lines) {
-    interesting <- lines[grep("<clipPath id=|^\\s+<rect x=|^<g clip-path=|^</g>$", lines)]
+    interesting <- lines[grep("<clipPath\\s+id=|^\\s*<rect\\s+x=|^\\s*<g\\s+clip-path=|^\\s*</g>\\s*$", lines, perl = TRUE)]
     for (ln in interesting) {
-      if (grepl("<clipPath id=", ln, fixed = TRUE)) {
-        st$pending <- sub("^.*<clipPath id='([^']+)'.*$", "\\1", ln)
-      } else if (startsWith(ln, "<g clip-path=")) {
-        cid <- sub("^<g clip-path='url\\(#([^)]+)\\)'>.*$", "\\1", ln)
+      tr <- trimws(ln)
+      if (grepl("<clipPath\\s+id=", tr, perl = TRUE)) {
+        st$pending <- sub("^.*<clipPath\\s+id=['\"]([^'\"]+)['\"].*$", "\\1", tr, perl = TRUE)
+      } else if (grepl("^<g\\s+clip-path=", tr, perl = TRUE)) {
+        cid <- sub("^<g\\s+clip-path=['\"]url\\(#([^)]+)\\)['\"].*$", "\\1", tr, perl = TRUE)
         st$current <- st$geom[[cid]]
-      } else if (identical(ln, "</g>")) {
+      } else if (identical(tr, "</g>")) {
         st$current <- NULL
       } else if (!is.null(st$pending)) {
-        nums <- as.numeric(regmatches(ln, gregexpr("-?[0-9.]+", ln))[[1L]])
+        nums <- as.numeric(regmatches(tr, gregexpr("-?[0-9.]+", tr))[[1L]])
         if (length(nums) >= 4L) {
           st$geom[[st$pending]] <- c(nums[[1L]], nums[[2L]], nums[[1L]] + nums[[3L]], nums[[2L]] + nums[[4L]])
         }
@@ -345,6 +374,9 @@ replay_base_display_list <- function(rp, width, height, dense = 10000) {
       clip_y0 = rep(NA_real_, length(leaf_rows)),
       clip_x1 = rep(NA_real_, length(leaf_rows)),
       clip_y1 = rep(NA_real_, length(leaf_rows)),
+      z_index = seq_len(length(leaf_rows)),
+      semantic_role = rep(NA_character_, length(leaf_rows)),
+      edit_policy = rep(NA_character_, length(leaf_rows)),
       stringsAsFactors = FALSE
     )
   }
@@ -407,13 +439,13 @@ replay_base_display_list <- function(rp, width, height, dense = 10000) {
     }
   }
 
-  # Build panels, extracted data tables, layers, and neutral lineage
-  ir_res <- base_extract_ir_and_lineage(dl, leaf_rows, leaves_df)
+  # Build panels, extracted data tables, layers, element bridges, and neutral lineage
+  ir_res <- base_extract_ir_and_lineage(dl, leaf_rows, leaves_df, elements_df)
 
   list(
     scene_svg = as.character(scene_doc),
     leaves = leaves_df,
-    elements = elements_df,
+    elements = ir_res$elements,
     dense_leaves = dense_ids,
     rasters = rasters,
     ir = ir_res$ir,
@@ -440,7 +472,8 @@ base_extract_call_table <- function(entry, op_name) {
       )
       return(list(
         data = data.frame(x = as.numeric(xy$x), y = as.numeric(xy$y), stringsAsFactors = FALSE),
-        geom = geom_name
+        geom = geom_name,
+        part_role = if (geom_name == "BaseLine") "line" else "point"
       ))
     }
   }
@@ -456,7 +489,8 @@ base_extract_call_table <- function(entry, op_name) {
             ytop = rep_len(as.numeric(a[[5L]]), n),
             stringsAsFactors = FALSE
           ),
-          geom = "BaseRect"
+          geom = "BaseRect",
+          part_role = "rect"
         ))
       }
     }
@@ -465,20 +499,131 @@ base_extract_call_table <- function(entry, op_name) {
     if (is.numeric(a[[2L]]) && is.numeric(a[[3L]]) && length(a[[2L]]) == length(a[[3L]]) && length(a[[2L]]) > 0L) {
       return(list(
         data = data.frame(x = as.numeric(a[[2L]]), y = as.numeric(a[[3L]]), stringsAsFactors = FALSE),
-        geom = "BasePolygon"
+        geom = "BasePolygon",
+        part_role = "polygon"
+      ))
+    }
+  }
+  # ISS-BASE-01: Extended primitive call-table extractors (segments, arrows, symbols, abline, xspline, text)
+  if (op_name %in% c("segments", "arrows") && length(a) >= 5L) {
+    if (is.numeric(a[[2L]]) && is.numeric(a[[3L]]) && is.numeric(a[[4L]]) && is.numeric(a[[5L]])) {
+      n <- max(lengths(a[2:5]))
+      if (n > 0L) {
+        return(list(
+          data = data.frame(
+            x0 = rep_len(as.numeric(a[[2L]]), n),
+            y0 = rep_len(as.numeric(a[[3L]]), n),
+            x1 = rep_len(as.numeric(a[[4L]]), n),
+            y1 = rep_len(as.numeric(a[[5L]]), n),
+            stringsAsFactors = FALSE
+          ),
+          geom = if (identical(op_name, "arrows")) "BaseArrows" else "BaseSegments",
+          part_role = "segment"
+        ))
+      }
+    }
+  }
+  if (identical(op_name, "abline") && length(a) >= 5L) {
+    # C_abline(a, b, h, v, untf, ...)
+    a_val <- a[[2L]]
+    b_val <- a[[3L]]
+    h_val <- a[[4L]]
+    v_val <- a[[5L]]
+    rows <- list()
+    if (is.numeric(a_val) && is.numeric(b_val) && length(a_val) > 0L && length(b_val) > 0L) {
+      n <- max(length(a_val), length(b_val))
+      rows[[length(rows) + 1L]] <- data.frame(
+        kind = rep("slope_intercept", n),
+        intercept = rep_len(as.numeric(a_val), n),
+        slope = rep_len(as.numeric(b_val), n),
+        h = rep(NA_real_, n),
+        v = rep(NA_real_, n),
+        stringsAsFactors = FALSE
+      )
+    }
+    if (is.numeric(h_val) && length(h_val) > 0L) {
+      n <- length(h_val)
+      rows[[length(rows) + 1L]] <- data.frame(
+        kind = rep("horizontal", n),
+        intercept = rep(NA_real_, n),
+        slope = rep(NA_real_, n),
+        h = as.numeric(h_val),
+        v = rep(NA_real_, n),
+        stringsAsFactors = FALSE
+      )
+    }
+    if (is.numeric(v_val) && length(v_val) > 0L) {
+      n <- length(v_val)
+      rows[[length(rows) + 1L]] <- data.frame(
+        kind = rep("vertical", n),
+        intercept = rep(NA_real_, n),
+        slope = rep(NA_real_, n),
+        h = rep(NA_real_, n),
+        v = as.numeric(v_val),
+        stringsAsFactors = FALSE
+      )
+    }
+    if (length(rows) > 0L) {
+      return(list(
+        data = do.call(rbind, rows),
+        geom = "BaseAbline",
+        part_role = "reference"
+      ))
+    }
+  }
+  if (identical(op_name, "symbols") && length(a) >= 4L) {
+    if (is.numeric(a[[2L]]) && is.numeric(a[[3L]]) && length(a[[2L]]) == length(a[[3L]]) && length(a[[2L]]) > 0L) {
+      sz <- if (is.numeric(a[[5L]])) as.numeric(a[[5L]]) else rep(NA_real_, length(a[[2L]]))
+      return(list(
+        data = data.frame(
+          x = as.numeric(a[[2L]]),
+          y = as.numeric(a[[3L]]),
+          size = rep_len(sz, length(a[[2L]])),
+          stringsAsFactors = FALSE
+        ),
+        geom = "BaseSymbols",
+        part_role = "symbol"
+      ))
+    }
+  }
+  if (identical(op_name, "xspline") && length(a) >= 3L) {
+    if (is.numeric(a[[2L]]) && is.numeric(a[[3L]]) && length(a[[2L]]) == length(a[[3L]]) && length(a[[2L]]) > 0L) {
+      return(list(
+        data = data.frame(x = as.numeric(a[[2L]]), y = as.numeric(a[[3L]]), stringsAsFactors = FALSE),
+        geom = "BaseXspline",
+        part_role = "line"
+      ))
+    }
+  }
+  if (identical(op_name, "text") && length(a) >= 3L) {
+    xy <- a[[2L]]
+    lbls <- a[[3L]]
+    if (is.list(xy) && is.numeric(xy$x) && is.numeric(xy$y) && length(xy$x) > 0L && !is.null(lbls)) {
+      n <- max(length(xy$x), length(xy$y), length(lbls))
+      return(list(
+        data = data.frame(
+          x = rep_len(as.numeric(xy$x), n),
+          y = rep_len(as.numeric(xy$y), n),
+          label = rep_len(as.character(lbls), n),
+          stringsAsFactors = FALSE
+        ),
+        geom = "BaseText",
+        part_role = "label"
       ))
     }
   }
   NULL
 }
 
-base_extract_ir_and_lineage <- function(dl, leaf_rows, leaves_df) {
+base_extract_ir_and_lineage <- function(dl, leaf_rows, leaves_df, elements_df = empty_elements_df()) {
+  elements_df <- ensure_df_columns(elements_df, empty_elements_df())
   n <- nrow(leaves_df)
   if (n == 0L) {
     return(list(
       ir = list(panels = list(), layers = list(), scales = list(), orders = stats::setNames(list(), character())),
       tables = stats::setNames(list(), character()),
-      lineage = empty_lineage_df()
+      lineage = empty_lineage_df(),
+      elements = elements_df
     ))
   }
 
@@ -500,18 +645,21 @@ base_extract_ir_and_lineage <- function(dl, leaf_rows, leaves_df) {
       if (!(fkey %in% names(fig_to_panel))) {
         pid <- sprintf("P%d", length(panels) + 1L)
         fig_to_panel[[fkey]] <- pid
-        x_dom <- if (isTRUE(lr$xlog)) 10^lr$usr[1:2] else lr$usr[1:2]
-        y_dom <- if (isTRUE(lr$ylog)) 10^lr$usr[3:4] else lr$usr[3:4]
+        # ISS-ASSET-02: Unify x_domain/y_domain with ggplot as linear post-transform
+        # rendering coordinates (par("usr")), while x_data_domain/y_data_domain store
+        # raw inverse-transformed units (10^usr when xlog/ylog is TRUE).
         panels[[length(panels) + 1L]] <- make_panel_ir(
           panel_id = pid,
           facet_vars = list(figure = as.integer(lr$fig)),
           bbox_pt = lr$bbox,
-          x_domain = x_dom,
-          y_domain = y_dom,
+          x_domain = lr$usr[1:2],
+          y_domain = lr$usr[3:4],
           coord = "BaseGraphics",
           flipped = FALSE,
           x_trans = if (isTRUE(lr$xlog)) "log-10" else "identity",
-          y_trans = if (isTRUE(lr$ylog)) "log-10" else "identity"
+          y_trans = if (isTRUE(lr$ylog)) "log-10" else "identity",
+          domain_space = "transformed",
+          expansion_included = TRUE
         )
       }
       panel_ids[[r]] <- fig_to_panel[[fkey]]
@@ -541,11 +689,19 @@ base_extract_ir_and_lineage <- function(dl, leaf_rows, leaves_df) {
         nr <- as.integer(nrow(extracted$data))
         n_rows_vec[[r]] <- nr
         cardinalities[[r]] <- infer_lineage_cardinality(
-          geom = if (identical(extracted$geom, "BaseLine") || identical(extracted$geom, "BasePolygon")) "GeomLine" else "GeomPoint",
+          geom = if (extracted$geom %in% c("BaseLine", "BasePolygon", "BaseXspline")) "GeomLine" else "GeomPoint",
           stat = "StatIdentity",
           n_rows = nr,
           n_elements = leaves_df$n_elements[[r]]
         )
+
+        el_idx <- which(!is.na(elements_df$leaf_id) & elements_df$leaf_id == leaves_df$leaf_id[[r]])
+        if (length(el_idx) > 0L) {
+          elements_df$part_role[el_idx] <- extracted$part_role %||% "mark"
+          if (identical(cardinalities[[r]], "1:1") && length(el_idx) == nr) {
+            elements_df$built_row_id[el_idx] <- seq_len(nr)
+          }
+        }
       }
     }
   }
@@ -567,6 +723,7 @@ base_extract_ir_and_lineage <- function(dl, leaf_rows, leaves_df) {
       orders = stats::setNames(list(), character())
     ),
     tables = tables,
-    lineage = lineage
+    lineage = lineage,
+    elements = elements_df
   )
 }

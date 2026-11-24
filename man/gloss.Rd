@@ -11,6 +11,10 @@ gloss(
   height = NULL,
   dense = 10000,
   engine = NULL,
+  preview = TRUE,
+  preview_dpi = 144,
+  page = NULL,
+  parent = NULL,
   ...
 )
 }
@@ -35,6 +39,21 @@ as vector primitives. Defaults to \code{10000}.}
 
 \item{engine}{Optional character name of a registered engine to force instead
 of class-based dispatch.}
+
+\item{preview}{Logical; when \code{TRUE} (default), renders a pixel-aligned PNG
+overview (\code{assets/preview.png}) from the already-frozen graphics display
+list during capture without re-executing user code or RNG. Set to \code{FALSE}
+to skip preview rasterization.}
+
+\item{preview_dpi}{Positive numeric resolution in DPI used when
+\code{preview = TRUE}. Defaults to \code{144}.}
+
+\item{page}{Optional 1-based integer page index to select when \code{x} draws
+multiple pages. Defaults to \code{NULL} (selects the last drawn page).}
+
+\item{parent}{Optional parent reference linking a recomputed capture to an
+earlier capture (\code{gloss_capture}, \code{capture_id} string, or path to an
+existing \verb{.gloss/} bundle directory). Recorded as \code{parent_capture_id}.}
 
 \item{...}{Additional arguments forwarded to the engine's \code{capture_fn}.}
 }

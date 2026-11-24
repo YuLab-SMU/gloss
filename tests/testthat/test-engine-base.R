@@ -26,26 +26,28 @@ test_that("base engine captures single and multi-panel base plots with plot regi
   expect_identical(xml2::xml_name(orig_doc), "svg")
   expect_gt(length(xml2::xml_find_all(scene_doc, "//d1:g[@data-gloss-leaf]", ns)), 0L)
 
-  # Extracted plotXY and histogram rect tables linked 1:1
-  expect_true(all(c("built_layer1", "built_layer2") %in% names(cap$tables)))
+  # Extracted plotXY, abline, and histogram rect tables linked 1:1
+  expect_true(all(c("built_layer1", "built_layer2", "built_layer3") %in% names(cap$tables)))
   expect_equal(nrow(gl_tables(cap, "built_layer1")), nrow(datasets::mtcars))
 
   linked <- cap$lineage[!is.na(cap$lineage$layer_id), ]
-  expect_equal(nrow(linked), 2L)
-  expect_identical(linked$cardinality, c("1:1", "1:1"))
+  expect_equal(nrow(linked), 3L)
+  expect_identical(linked$cardinality, c("1:1", "1:1", "1:1"))
   expect_identical(linked$n_rows[1L], 32L)
   expect_identical(linked$n_elements[1L], 32L)
 })
 
 test_that("base engine handles log scales, recordedplot, dense rasterization, and grid disambiguation", {
-  # Log-scale base plot
+  # Log-scale base plot: unified transformed x_domain + raw x_data_domain (ISS-ASSET-02)
   cap_log <- gloss(function() {
     graphics::plot(c(1, 10, 100), c(2, 20, 200), log = "xy", pch = 16)
   })
   expect_identical(cap_log$page$engine, "base")
   expect_identical(cap_log$ir$panels[[1L]]$x_trans, "log-10")
   expect_identical(cap_log$ir$panels[[1L]]$y_trans, "log-10")
-  expect_gt(unlist(cap_log$ir$panels[[1L]]$x_domain)[2L], 50)
+  expect_identical(cap_log$ir$panels[[1L]]$domain_space, "transformed")
+  expect_lt(unlist(cap_log$ir$panels[[1L]]$x_domain)[2L], 5)
+  expect_gt(unlist(cap_log$ir$panels[[1L]]$x_data_domain)[2L], 50)
 
   # Recorded base plot
   tmp_pdf <- withr::local_tempfile(fileext = ".pdf")

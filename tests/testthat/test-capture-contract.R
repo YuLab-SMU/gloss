@@ -16,7 +16,7 @@ test_that("new_gloss_capture constructs and validates canonical capture objects"
   )
 
   expect_true(is_gloss_capture(cap))
-  expect_identical(cap$schema_version, "1.0.0")
+  expect_identical(cap$schema_version, "1.1.0")
   expect_true(grepl("^sha256:[0-9a-f]{64}$", cap$capture_id))
   expect_equal(cap$page$width_pt, 504.0)
   expect_equal(cap$page$height_pt, 360.0)

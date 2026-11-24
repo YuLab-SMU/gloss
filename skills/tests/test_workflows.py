@@ -33,7 +33,10 @@ import xml.etree.ElementTree as ET
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFY_SCRIPT = REPO_ROOT / "skills" / "gloss-svg-refine" / "scripts" / "verify_svg_fidelity.py"
+PATCH_SCRIPT = REPO_ROOT / "skills" / "gloss-svg-refine" / "scripts" / "apply_visual_patch.py"
 AUDIT_SCRIPT = REPO_ROOT / "skills" / "gloss-audit" / "scripts" / "audit_bundle.py"
+FOCUS_SCRIPT = REPO_ROOT / "skills" / "gloss" / "scripts" / "focus_bridge.py"
+WORKSPACE_SCRIPT = REPO_ROOT / "skills" / "gloss" / "scripts" / "workspace_state.py"
 
 
 class TestGlossDownstreamWorkflows(unittest.TestCase):
@@ -296,6 +299,136 @@ class TestGlossDownstreamWorkflows(unittest.TestCase):
         c4 = next(c for c in rep_bad["claim_results"] if c["id"] == "C4_WRONG")
         self.assertEqual(c4["status"], "FAIL")
         self.assertAlmostEqual(c4["observed"], 26.663636, places=4)
+
+        # Verify Schema v1.1 layer params (mean_se) are surfaced in audit report
+        lyr3 = next(l for l in rep_ok["layers"] if l["layer_id"] == 3)
+        self.assertEqual(lyr3["params"].get("fun.data"), "mean_se")
+
+    def test_v11_declarative_visual_patch_focus_bridge_and_shared_workspace(self) -> None:
+        # 1. Verify Schema v1.1 perception split (texts.json + preview.png)
+        self.assertTrue((self.bundle_dir / "scene" / "texts.json").exists())
+        self.assertTrue((self.bundle_dir / "assets" / "preview.png").exists())
+        texts = json.loads((self.bundle_dir / "scene" / "texts.json").read_text(encoding="utf-8"))
+        self.assertTrue(any(t["text"] == "Fuel Economy by Cylinder Group" for t in texts))
+
+        # 2. Initialize companion .gloss.work/ shared workspace without mutating source bundle
+        work_dir = self.workdir / "mtcars.gloss.work"
+        rc_w, w_meta = self.run_cli(WORKSPACE_SCRIPT, "init", "--bundle", str(self.bundle_dir), "--work-dir", str(work_dir))
+        self.assertEqual(rc_w, 0)
+        self.assertTrue((work_dir / "workspace.json").exists())
+
+        # 3. Bidirectional Focus/Overlay bridge (rows-to-overlay -> box-to-rows roundtrip)
+        focus_out = work_dir / "focus.json"
+        ov_svg = work_dir / "derived" / "highlight-overlay.svg"
+        rc_r2o, r2o = self.run_cli(
+            FOCUS_SCRIPT,
+            "rows-to-overlay",
+            "--bundle",
+            str(self.bundle_dir),
+            "--table",
+            "raw",
+            "--rows",
+            "1,20",
+            "--note",
+            "Highlighted cars",
+            "--focus-out",
+            str(focus_out),
+            "--svg-out",
+            str(ov_svg),
+        )
+        self.assertEqual(rc_r2o, 0, msg=json.dumps(r2o, indent=2))
+        self.assertEqual(r2o["format"], "gloss-focus")
+        self.assertTrue(len(r2o["targets"]) >= 1)
+        self.assertTrue(ov_svg.exists())
+        self.assertIn("gloss-agent-overlay", ov_svg.read_text(encoding="utf-8"))
+
+        # Brush around the first matched point target box -> box-to-rows recovers raw rows
+        pt_target = next(t for t in r2o["targets"] if t["built_table"] == "built_layer2" and t.get("bbox_pt"))
+        bb = pt_target["bbox_pt"]
+        qbox = f"{bb[0]-2},{bb[1]-2},{bb[2]+2},{bb[3]+2}"
+        rc_b2r, b2r = self.run_cli(FOCUS_SCRIPT, "box-to-rows", "--bundle", str(self.bundle_dir), "--box", qbox)
+        self.assertEqual(rc_b2r, 0)
+        pt_b2r = next(t for t in b2r["targets"] if t["built_table"] == "built_layer2")
+        self.assertTrue({1, 20}.issubset(set(pt_b2r["row_ids"])))
+
+        # 4. Declarative Visual Patch applier (palette remap + typography + movable label + callout)
+        lbl_text = next(t for t in texts if t["semantic_role"] == "data_label")
+        patch_doc = {
+            "format": "gloss-visual-patch",
+            "schema_version": "1.1.0",
+            "operations": [
+                {"kind": "set_typography", "font_family": "Helvetica", "roles": ["plot_title", "axis_title"]},
+                {"kind": "remap_scale_palette", "aesthetic": "colour", "mapping": {"4": "#0072B2", "8": "#D55E00"}},
+                {"kind": "translate_label", "element_id": lbl_text["element_id"], "dx": 5.0, "dy": -4.0},
+                {"kind": "add_callout", "panel_id": "P1", "raw_row_id": 20, "text": "Toyota Corolla", "offset_pt": [18, -14]},
+            ],
+        }
+        patch_path = work_dir / "patches" / "pub-v1.json"
+        patch_path.write_text(json.dumps(patch_doc, indent=2), encoding="utf-8")
+        out_svg = work_dir / "derived" / "mtcars-patched.svg"
+        out_mf = work_dir / "derived" / "mtcars-patched-manifest.json"
+        rc_p, rep_p = self.run_cli(
+            PATCH_SCRIPT,
+            "--bundle",
+            str(self.bundle_dir),
+            "--patch",
+            str(patch_path),
+            "--out",
+            str(out_svg),
+            "--manifest",
+            str(out_mf),
+        )
+        self.assertEqual(rc_p, 0, msg=json.dumps(rep_p, indent=2))
+        self.assertEqual(rep_p["status"], "PASS")
+        self.assertIn("Toyota Corolla", out_svg.read_text(encoding="utf-8"))
+
+        # Patch applier MUST refuse translating a geometry_locked data mark element
+        elements = json.loads((self.bundle_dir / "scene" / "elements.json").read_text(encoding="utf-8"))
+        locked_pt = next(e for e in elements if e.get("part_role") == "point")
+        bad_patch = work_dir / "patches" / "illegal.json"
+        bad_patch.write_text(
+            json.dumps({"operations": [{"kind": "translate_label", "element_id": locked_pt["element_id"], "dx": 10, "dy": 0}]}),
+            encoding="utf-8",
+        )
+        bad_proc = subprocess.run(
+            [sys.executable, str(PATCH_SCRIPT), "--bundle", str(self.bundle_dir), "--patch", str(bad_patch), "--out", str(work_dir / "derived" / "nope.svg")],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertNotEqual(bad_proc.returncode, 0)
+        self.assertIn("geometry_locked", bad_proc.stderr)
+
+        # 5. Audit silent drops + emit threads + human resolution in .gloss.work/threads.json
+        drop_bundle = self.workdir / "drops.gloss"
+        r_drop = f"""
+        pkgload::load_all({json.dumps(str(REPO_ROOT))}, quiet = TRUE)
+        df <- data.frame(x = c(1, 2, NA, 50, 999), y = c(2, 4, 6, 8, 10))
+        p <- ggplot2::ggplot(df, ggplot2::aes(x, y)) + ggplot2::geom_point() + ggplot2::scale_x_continuous(limits = c(0, 100))
+        cap <- suppressWarnings(gloss(p))
+        gl_asset_bundle(cap, path = {json.dumps(str(drop_bundle))})
+        """
+        self.assertEqual(subprocess.run(["Rscript", "-e", r_drop], cwd=REPO_ROOT, check=False).returncode, 0)
+        threads_file = work_dir / "threads.json"
+        rc_au, rep_au = self.run_cli(AUDIT_SCRIPT, "--bundle", str(drop_bundle), "--emit-threads", str(threads_file))
+        self.assertEqual(rc_au, 0)
+        self.assertEqual(len(rep_au["silent_drop_warnings"]), 1)
+        self.assertEqual(rep_au["silent_drop_warnings"][0]["dropped_raw_row_ids"], [3, 5])
+
+        rc_res, resolved = self.run_cli(
+            WORKSPACE_SCRIPT,
+            "resolve-thread",
+            "--work-dir",
+            str(work_dir),
+            "--thread-id",
+            "T001",
+            "--status",
+            "accepted",
+            "--resolution",
+            "Document 2 dropped rows in caption",
+        )
+        self.assertEqual(rc_res, 0)
+        self.assertEqual(resolved["status"], "accepted")
 
 
 if __name__ == "__main__":

@@ -23,22 +23,7 @@ engine_grid_capture <- function(x, ctx) {
   sc <- ctx$capture_grid(draw_method = draw_method)
 
   leaves <- sc$leaves
-  lineage <- if (nrow(leaves) == 0L) {
-    empty_lineage_df()
-  } else {
-    data.frame(
-      leaf_id = leaves$leaf_id,
-      grob_name = leaves$grob_name,
-      layout_slot = leaves$layout_slot,
-      panel_id = rep(NA_character_, nrow(leaves)),
-      layer_id = rep(NA_integer_, nrow(leaves)),
-      table_id = rep(NA_character_, nrow(leaves)),
-      cardinality = rep("unlinked", nrow(leaves)),
-      n_rows = rep(NA_integer_, nrow(leaves)),
-      n_elements = leaves$n_elements,
-      stringsAsFactors = FALSE
-    )
-  }
+  lineage <- make_lineage_df(leaves)
 
   list(
     scene = sc,

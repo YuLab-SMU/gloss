@@ -370,7 +370,7 @@ collect_git_metadata <- function(start_dir = getwd(), ttl_sec = 5.0) {
   res
 }
 
-collect_session_info <- function(input_obj = NULL, extra_packages = character()) {
+collect_session_info <- function(input_obj = NULL, extra_packages = character(), call_expr = NULL) {
   loaded_ns <- sort(loadedNamespaces())
   pkg_versions <- stats::setNames(
     lapply(loaded_ns, function(pkg) {
@@ -379,7 +379,7 @@ collect_session_info <- function(input_obj = NULL, extra_packages = character())
     loaded_ns
   )
 
-  list(
+  out <- list(
     r_version = R.version.string,
     platform = R.version$platform,
     gloss_version = as.character(utils::packageVersion("gloss")),
@@ -389,6 +389,10 @@ collect_session_info <- function(input_obj = NULL, extra_packages = character())
     git = collect_git_metadata(),
     loaded_packages = pkg_versions
   )
+  if (!is.null(call_expr) && is.character(call_expr) && length(call_expr) == 1L && nzchar(call_expr)) {
+    out$call_expr <- call_expr
+  }
+  out
 }
 
 collect_sources_inventory <- function(sources = NULL, session = NULL) {

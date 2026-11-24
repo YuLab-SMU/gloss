@@ -31,3 +31,5 @@ Thumbs.db
 Rplots.pdf
 tests/testthat/Rplots.pdf
 .project-map/dist/
+__pycache__/
+*.pyc

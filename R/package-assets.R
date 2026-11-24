@@ -64,36 +64,66 @@ gl_asset_map <- function(cap, path = NULL) {
     ir_entry$guides <- cap$ir$guides
   }
 
-  map <- structure(
-    list(
-      format = "gloss-asset-map",
-      schema_version = cap$schema_version,
-      capture_id = cap$capture_id,
-      created_at = cap$created_at,
-      page = cap$page,
-      scene = list(
-        original_svg = list(
-          path = "assets/original.svg",
-          bytes = as.integer(cap$svg$original$bytes),
-          sha256 = cap$svg$original$sha256
-        ),
-        scene_svg = list(
-          path = "scene/scene.svg",
-          bytes = as.integer(cap$svg$scene$bytes),
-          sha256 = cap$svg$scene$sha256
-        ),
-        n_panels = as.integer(length(cap$ir$panels)),
-        n_leaves = as.integer(nrow(cap$scene$leaves)),
-        n_elements = as.integer(nrow(cap$scene$elements)),
-        dense_leaves = json_array(cap$scene$dense_leaves)
-      ),
-      ir = ir_entry,
-      tables = json_array(table_entries),
-      lineage = json_array(df_to_records(cap$lineage)),
-      sources = json_array(source_entries)
+  n_texts <- if (is.data.frame(cap$scene$elements) && nrow(cap$scene$elements) > 0L) {
+    as.integer(sum(cap$scene$elements$tag == "text", na.rm = TRUE))
+  } else {
+    0L
+  }
+
+  scene_entry <- list(
+    coord = cap$scene$coord %||% make_scene_coord(cap$page$width_pt, cap$page$height_pt),
+    original_svg = list(
+      path = "assets/original.svg",
+      bytes = as.integer(cap$svg$original$bytes),
+      sha256 = cap$svg$original$sha256
     ),
-    class = "gloss_asset_map"
+    scene_svg = list(
+      path = "scene/scene.svg",
+      bytes = as.integer(cap$svg$scene$bytes),
+      sha256 = cap$svg$scene$sha256
+    ),
+    texts = list(
+      path = "scene/texts.json",
+      n_texts = n_texts
+    ),
+    n_panels = as.integer(length(cap$ir$panels)),
+    n_leaves = as.integer(nrow(cap$scene$leaves)),
+    n_elements = as.integer(nrow(cap$scene$elements)),
+    dense_leaves = json_array(cap$scene$dense_leaves)
   )
+  if (!is.null(cap$scene$preview_png) && is.raw(cap$scene$preview_png) && length(cap$scene$preview_png) > 0L) {
+    dpi <- as.integer(cap$page$preview_dpi %||% 144L)
+    scene_entry$preview_png <- list(
+      path = "assets/preview.png",
+      dpi = dpi,
+      width_px = as.integer(round(cap$page$width_in * dpi)),
+      height_px = as.integer(round(cap$page$height_in * dpi)),
+      scale_from_pt = round(dpi / PT_PER_IN, 6L),
+      bytes = as.integer(length(cap$scene$preview_png)),
+      sha256 = sha256_raw(cap$scene$preview_png)
+    )
+  }
+  if (!is.null(cap$scene$label_links) && length(cap$scene$label_links) > 0L) {
+    scene_entry$label_links <- json_array(cap$scene$label_links)
+  }
+
+  map_list <- list(
+    format = "gloss-asset-map",
+    schema_version = cap$schema_version,
+    capture_id = cap$capture_id,
+    created_at = cap$created_at,
+    page = cap$page,
+    scene = scene_entry,
+    ir = ir_entry,
+    tables = json_array(table_entries),
+    lineage = json_array(df_to_records(cap$lineage)),
+    sources = json_array(source_entries)
+  )
+  if (!is.null(cap$parent_capture_id)) {
+    map_list$parent_capture_id <- cap$parent_capture_id
+  }
+
+  map <- structure(map_list, class = "gloss_asset_map")
 
   if (!is.null(path)) {
     if (!is.character(path) || length(path) != 1L || is.na(path) || !nzchar(path)) {
@@ -211,15 +241,51 @@ gl_asset_bundle <- function(
 
   sel <- parse_bundle_select(select, cap)
 
-  # 1. Dual SVG assets
+  # 1. Dual SVG assets & optional preview.png
   write_utf8_file(cap$svg$original$text, file.path(stage_dir, "assets", "original.svg"))
   write_utf8_file(cap$svg$scene$text, file.path(stage_dir, "scene", "scene.svg"))
 
-  # 2. Scene metadata & optional rasters
+  preview_written <- FALSE
+  if (!is.null(cap$scene$preview_png) && is.raw(cap$scene$preview_png) && length(cap$scene$preview_png) > 0L) {
+    if (isTRUE(sel$preview)) {
+      write_raw_file(cap$scene$preview_png, file.path(stage_dir, "assets", "preview.png"))
+      preview_written <- TRUE
+    } else {
+      omitted <- add_omitted(
+        kind = "asset",
+        id = "preview_png",
+        reason = "excluded_by_select",
+        bytes = as.integer(length(cap$scene$preview_png))
+      )
+    }
+  }
+
+  # Record omitted pages when input drew multiple pages
+  if (!is.null(cap$page$pages) && cap$page$pages > 1L) {
+    sel_pg <- as.integer(cap$page$selected_page %||% cap$page$pages)
+    skipped_pgs <- setdiff(seq_len(cap$page$pages), sel_pg)
+    if (length(skipped_pgs) > 0L) {
+      omitted <- add_omitted(
+        kind = "pages",
+        id = "multi_page_input",
+        reason = "single_page_selected",
+        total_pages = as.integer(cap$page$pages),
+        selected_page = sel_pg,
+        omitted_pages = json_array(skipped_pgs)
+      )
+    }
+  }
+
+  # 2. Scene metadata, lightweight texts.json, & optional rasters
+  leaves_recs <- build_leaves_json_records(cap$scene$leaves)
   write_gloss_json(
-    json_array(df_to_records(cap$scene$leaves)),
+    json_array(leaves_recs),
     file.path(stage_dir, "scene", "leaves.json")
   )
+
+  texts_recs <- build_texts_json_records(cap$scene$elements, cap$scene$leaves, cap$lineage)
+  texts_path <- file.path(stage_dir, "scene", "texts.json")
+  write_gloss_json(json_array(texts_recs), texts_path)
 
   if (isTRUE(sel$elements)) {
     write_gloss_json(
@@ -240,6 +306,17 @@ gl_asset_bundle <- function(
     dir.create(raster_dir, recursive = TRUE, showWarnings = FALSE)
     for (lid in names(cap$scene$rasters)) {
       write_raw_file(cap$scene$rasters[[lid]], file.path(raster_dir, paste0(lid, ".png")))
+    }
+  }
+
+  # Group-to-raw-row index files for stat_aggregated / N:1 layers
+  if (!is.null(cap$ir$group_indices) && length(cap$ir$group_indices) > 0L) {
+    for (gid in names(cap$ir$group_indices)) {
+      if (!is.null(sel$tables) && !(gid %in% names(sel$tables))) next
+      write_gloss_json(
+        cap$ir$group_indices[[gid]],
+        file.path(stage_dir, "tables", paste0("groups_", gid, ".json"))
+      )
     }
   }
 
@@ -404,6 +481,11 @@ gl_asset_bundle <- function(
   # 5. Asset Map (annotated with exact bundle inclusion state) & omitted.json
   map <- gl_asset_map(cap)
   map$scene$elements_included <- isTRUE(sel$elements)
+  map$scene$texts$bytes <- as.integer(file.info(texts_path)$size)
+  map$scene$texts$sha256 <- sha256_file(texts_path)
+  if (!is.null(map$scene$preview_png)) {
+    map$scene$preview_png$included <- isTRUE(preview_written)
+  }
   if (length(map$tables) > 0L) {
     tbl_ext <- if (identical(table_format, "parquet")) ".parquet" else ".csv"
     map$tables <- lapply(map$tables, function(tb) {
@@ -444,15 +526,18 @@ gl_asset_bundle <- function(
     )
   })
 
+  manifest_payload <- list(
+    format = "gloss-asset-bundle",
+    schema_version = cap$schema_version,
+    capture_id = cap$capture_id,
+    created_at = cap$created_at,
+    parent_manifest_sha256 = NULL,
+    parent_capture_id = cap$parent_capture_id,
+    files = json_array(manifest_files)
+  )
+
   write_gloss_json(
-    list(
-      format = "gloss-asset-bundle",
-      schema_version = cap$schema_version,
-      capture_id = cap$capture_id,
-      created_at = cap$created_at,
-      parent_manifest_sha256 = NULL,
-      files = json_array(manifest_files)
-    ),
+    manifest_payload,
     file.path(stage_dir, "manifest.json")
   )
 
@@ -509,8 +594,66 @@ zip_stage_dir <- function(stage_dir, zip_path) {
   invisible(zip_path)
 }
 
+build_leaves_json_records <- function(leaves_df) {
+  recs <- df_to_records(leaves_df)
+  if (length(recs) == 0L) return(recs)
+  lapply(recs, function(r) {
+    cx <- c(r$clip_x0, r$clip_y0, r$clip_x1, r$clip_y1)
+    r$clip_bbox_pt <- if (length(cx) == 4L && all(vapply(cx, function(v) is.numeric(v) && is.finite(v), logical(1L)))) {
+      json_array(as.numeric(cx))
+    } else {
+      NULL
+    }
+    r
+  })
+}
+
+build_texts_json_records <- function(elements_df, leaves_df, lineage_df) {
+  if (!is.data.frame(elements_df) || nrow(elements_df) == 0L) {
+    return(list())
+  }
+  idx <- which(elements_df$tag == "text")
+  if (length(idx) == 0L) return(list())
+
+  l_map <- if (is.data.frame(leaves_df) && nrow(leaves_df) > 0L) {
+    stats::setNames(seq_len(nrow(leaves_df)), leaves_df$leaf_id)
+  } else {
+    integer()
+  }
+  lin_map <- if (is.data.frame(lineage_df) && nrow(lineage_df) > 0L) {
+    stats::setNames(seq_len(nrow(lineage_df)), lineage_df$leaf_id)
+  } else {
+    integer()
+  }
+
+  lapply(idx, function(i) {
+    lid <- elements_df$leaf_id[[i]]
+    li <- if (!is.na(lid) && lid %in% names(l_map)) l_map[[lid]] else NA_integer_
+    lni <- if (!is.na(lid) && lid %in% names(lin_map)) lin_map[[lid]] else NA_integer_
+
+    bb <- c(elements_df$bbox_x0[[i]], elements_df$bbox_y0[[i]], elements_df$bbox_x1[[i]], elements_df$bbox_y1[[i]])
+    list(
+      element_id = elements_df$element_id[[i]],
+      leaf_id = if (is.na(lid)) NULL else lid,
+      panel_id = if (!is.na(lni) && !is.na(lineage_df$panel_id[[lni]])) lineage_df$panel_id[[lni]] else NULL,
+      layer_id = if (!is.na(lni) && !is.na(lineage_df$layer_id[[lni]])) as.integer(lineage_df$layer_id[[lni]]) else NULL,
+      layout_slot = if (!is.na(li) && !is.na(leaves_df$layout_slot[[li]])) leaves_df$layout_slot[[li]] else NULL,
+      semantic_role = if (!is.na(li) && !is.na(leaves_df$semantic_role[[li]])) leaves_df$semantic_role[[li]] else "annotation",
+      edit_policy = if (!is.na(li) && !is.na(leaves_df$edit_policy[[li]])) leaves_df$edit_policy[[li]] else "movable",
+      text = if (is.na(elements_df$text[[i]])) "" else elements_df$text[[i]],
+      bbox_pt = if (all(is.finite(bb))) json_array(round_pt(bb)) else NULL,
+      font_size = if (is.finite(elements_df$font_size[[i]])) elements_df$font_size[[i]] else NULL,
+      font_family = if (!is.na(elements_df$font_family[[i]])) elements_df$font_family[[i]] else NULL,
+      text_anchor = if (!is.na(elements_df$text_anchor[[i]])) elements_df$text_anchor[[i]] else NULL,
+      rotation = if (is.finite(elements_df$rotation[[i]])) elements_df$rotation[[i]] else 0.0,
+      fill = if (!is.na(elements_df$fill[[i]])) elements_df$fill[[i]] else NULL,
+      built_row_id = if ("built_row_id" %in% names(elements_df) && !is.na(elements_df$built_row_id[[i]])) as.integer(elements_df$built_row_id[[i]]) else NULL
+    )
+  })
+}
+
 parse_bundle_select <- function(select, cap) {
-  out <- list(tables = NULL, sources = NULL, elements = TRUE)
+  out <- list(tables = NULL, sources = NULL, elements = TRUE, preview = TRUE)
   if (is.null(select)) {
     return(out)
   }
@@ -524,6 +667,7 @@ parse_bundle_select <- function(select, cap) {
     out$tables <- stats::setNames(vector("list", length(tbl_hits)), tbl_hits)
     out$sources <- src_hits
     out$elements <- "elements" %in% select
+    out$preview <- !("no_preview" %in% select)
     return(out)
   }
 
@@ -533,6 +677,9 @@ parse_bundle_select <- function(select, cap) {
 
   if ("elements" %in% names(select)) {
     out$elements <- isTRUE(select$elements)
+  }
+  if ("preview" %in% names(select)) {
+    out$preview <- isTRUE(select$preview)
   }
 
   if ("tables" %in% names(select)) {

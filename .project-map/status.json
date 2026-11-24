@@ -1,11 +1,11 @@
 {
   "format": "gloss-project-map-status",
-  "generated_at": "2026-11-24T05:01:32Z",
+  "generated_at": "2026-11-24T09:26:45Z",
   "package_version": "0.1.0",
   "git": {
-    "sha": "a6d6dfd",
+    "sha": "4497d8c",
     "branch": "main",
-    "subject": "chore(release): freeze gloss v0.1.0 core with CI, vignette, and docs"
+    "subject": "feat: complete Schema v1.0, deep engine lineage, Parquet, extension tests, and downstream skills"
   },
   "summary": {
     "exports_implemented": 8,
@@ -18,100 +18,15 @@
     "guardrails_total": 5,
     "all_guardrails_passed": true,
     "r_files": 14,
-    "r_loc": 5903,
-    "test_files": 14,
+    "r_loc": 8903,
+    "test_files": 15,
     "tests": {
-      "ran": true,
-      "passed": 708,
-      "failed": 0,
-      "warnings": 0,
-      "skipped": 0,
-      "by_file": {
-        "test-capture-contract.R": {
-          "passed": 40,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-capture.R": {
-          "passed": 98,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-engine-base.R": {
-          "passed": 33,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-engine-ggplot.R": {
-          "passed": 83,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-engine-heatmap.R": {
-          "passed": 38,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-engine-patchwork.R": {
-          "passed": 34,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-engine-registry.R": {
-          "passed": 25,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-extensions.R": {
-          "passed": 31,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-gallery-cases.R": {
-          "passed": 137,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-ir-lineage.R": {
-          "passed": 18,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-package-assets.R": {
-          "passed": 124,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-package.R": {
-          "passed": 1,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-query.R": {
-          "passed": 21,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        },
-        "test-sources.R": {
-          "passed": 25,
-          "failed": 0,
-          "warnings": 0,
-          "skipped": 0
-        }
-      }
+      "ran": false,
+      "passed": null,
+      "failed": null,
+      "warnings": null,
+      "skipped": null,
+      "by_file": []
     }
   },
   "guardrails": [
@@ -137,13 +52,13 @@
       "id": "principles.g_core_boundary",
       "name": "Strict In-Core Boundary",
       "pass": true,
-      "detail": "14 lean R files in R/ (5903 LOC); zero agent/MCP/UI/codec bloat"
+      "detail": "14 lean R files in R/ (8903 LOC); zero agent/MCP/UI/codec bloat"
     },
     {
       "id": "principles.g_tests",
       "name": "Unit Test & Build Health",
       "pass": true,
-      "detail": "708 PASS / 0 FAIL / 0 WARN / 0 SKIP across 14 test files"
+      "detail": "15 test files (56 test_that blocks); pass --run-tests for live execution"
     }
   ],
   "apis": [
@@ -246,10 +161,10 @@
       "tests": "tests/testthat/test-capture-contract.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 639,
+      "loc": 727,
       "test_blocks": 3,
-      "live_passed": 40,
-      "live_failed": 0
+      "live_passed": null,
+      "live_failed": null
     },
     {
       "id": "gloss_core.modules.mod_registry",
@@ -262,8 +177,8 @@
       "test_exists": true,
       "loc": 249,
       "test_blocks": 4,
-      "live_passed": 25,
-      "live_failed": 0
+      "live_passed": null,
+      "live_failed": null
     },
     {
       "id": "gloss_core.modules.mod_capture",
@@ -274,10 +189,10 @@
       "tests": "tests/testthat/test-capture.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 1284,
+      "loc": 1865,
       "test_blocks": 8,
-      "live_passed": 98,
-      "live_failed": 0
+      "live_passed": null,
+      "live_failed": null
     },
     {
       "id": "gloss_core.modules.mod_sources",
@@ -288,10 +203,10 @@
       "tests": "tests/testthat/test-sources.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 419,
+      "loc": 423,
       "test_blocks": 3,
-      "live_passed": 25,
-      "live_failed": 0
+      "live_passed": null,
+      "live_failed": null
     },
     {
       "id": "gloss_core.modules.mod_package_assets",
@@ -302,10 +217,10 @@
       "tests": "tests/testthat/test-package-assets.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 589,
+      "loc": 736,
       "test_blocks": 5,
-      "live_passed": 124,
-      "live_failed": 0
+      "live_passed": null,
+      "live_failed": null
     },
     {
       "id": "gloss_core.modules.mod_query",
@@ -316,10 +231,10 @@
       "tests": "tests/testthat/test-query.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 338,
+      "loc": 560,
       "test_blocks": 1,
-      "live_passed": 21,
-      "live_failed": 0
+      "live_passed": null,
+      "live_failed": null
     },
     {
       "id": "gloss_core.modules.mod_ir_lineage",
@@ -330,10 +245,10 @@
       "tests": "tests/testthat/test-ir-lineage.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 194,
+      "loc": 651,
       "test_blocks": 2,
-      "live_passed": 18,
-      "live_failed": 0
+      "live_passed": null,
+      "live_failed": null
     }
   ],
   "engines": [
@@ -348,7 +263,7 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Imports",
-      "loc": 54
+      "loc": 39
     },
     {
       "id": "gloss_core.engines.eng_ggplot",
@@ -361,7 +276,7 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Suggests",
-      "loc": 727
+      "loc": 1877
     },
     {
       "id": "gloss_core.engines.eng_patchwork",
@@ -374,7 +289,7 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Suggests",
-      "loc": 353
+      "loc": 327
     },
     {
       "id": "gloss_core.engines.eng_heatmap",
@@ -387,7 +302,7 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Suggests",
-      "loc": 485
+      "loc": 720
     },
     {
       "id": "gloss_core.engines.eng_base",
@@ -400,7 +315,7 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Imports",
-      "loc": 572
+      "loc": 729
     }
   ],
   "ecosystem": [
@@ -408,12 +323,12 @@
       "id": "ecosystem.skill_gloss",
       "name": "Base Protocol Skill: gloss",
       "phase": "Phase 6",
-      "status": "planned",
+      "status": "implemented",
       "files": "skills/gloss/SKILL.md",
       "tests": [],
-      "source_exists": false,
+      "source_exists": true,
       "test_exists": false,
-      "loc": 0
+      "loc": 70
     },
     {
       "id": "ecosystem.skill_refine",
@@ -424,7 +339,7 @@
       "tests": "skills/tests/test_workflows.py",
       "source_exists": true,
       "test_exists": true,
-      "loc": 717
+      "loc": 746
     },
     {
       "id": "ecosystem.skill_audit",
@@ -435,7 +350,7 @@
       "tests": "skills/tests/test_workflows.py",
       "source_exists": true,
       "test_exists": true,
-      "loc": 439
+      "loc": 549
     },
     {
       "id": "ecosystem.skill_report",
@@ -457,7 +372,7 @@
       "tests": "skills/tests/test_workflows.py",
       "source_exists": true,
       "test_exists": true,
-      "loc": 1011
+      "loc": 1126
     }
   ]
 }

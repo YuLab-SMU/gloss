@@ -1,6 +1,6 @@
 # Internal utilities, serialization helpers, and the gloss_capture S3 contract.
 
-GLOSS_SCHEMA_VERSION <- "1.0.0"
+GLOSS_SCHEMA_VERSION <- "1.1.0"
 
 # --- Hashing & timestamps ----------------------------------------------------
 
@@ -321,6 +321,10 @@ table_schema_spec <- function(df, add_row_id = TRUE, table_role = "raw") {
     spec <- list(name = nm, type = ctype)
     if (identical(nm, "_row_id")) {
       spec$role <- "row_id"
+    } else if (identical(nm, "_raw_row_id")) {
+      spec$role <- "raw_row_id"
+    } else if (identical(nm, "_group_key")) {
+      spec$role <- "group_key"
     }
     if (is_built && nm %in% names(STAT_COLUMN_ROLES)) {
       spec$stat_role <- unname(STAT_COLUMN_ROLES[[nm]])
@@ -377,6 +381,9 @@ empty_leaves_df <- function() {
     clip_y0 = double(),
     clip_x1 = double(),
     clip_y1 = double(),
+    z_index = integer(),
+    semantic_role = character(),
+    edit_policy = character(),
     stringsAsFactors = FALSE
   )
 }
@@ -405,6 +412,9 @@ empty_elements_df <- function() {
     clip_y0 = double(),
     clip_x1 = double(),
     clip_y1 = double(),
+    built_row_id = integer(),
+    group_id = character(),
+    part_role = character(),
     stringsAsFactors = FALSE
   )
 }
@@ -420,8 +430,46 @@ empty_lineage_df <- function() {
     cardinality = character(),
     n_rows = integer(),
     n_elements = integer(),
+    semantic_role = character(),
+    edit_policy = character(),
+    lineage_tier = character(),
+    degradation_reason = character(),
     stringsAsFactors = FALSE
   )
+}
+
+make_scene_coord <- function(width_pt, height_pt, viewbox = NULL) {
+  vb <- if (!is.null(viewbox) && length(viewbox) == 4L && all(is.finite(viewbox))) {
+    round_pt(viewbox)
+  } else {
+    c(0.0, 0.0, round_pt(width_pt), round_pt(height_pt))
+  }
+  list(
+    unit = "pt",
+    origin = "top-left",
+    y_direction = "down",
+    viewBox = json_array(vb)
+  )
+}
+
+ensure_df_columns <- function(df, template_df) {
+  if (!is.data.frame(df)) return(df)
+  n <- nrow(df)
+  for (col in names(template_df)) {
+    if (!(col %in% names(df))) {
+      proto <- template_df[[col]]
+      if (is.integer(proto)) {
+        df[[col]] <- rep(NA_integer_, n)
+      } else if (is.double(proto)) {
+        df[[col]] <- rep(NA_real_, n)
+      } else if (is.logical(proto)) {
+        df[[col]] <- rep(NA, n)
+      } else {
+        df[[col]] <- rep(NA_character_, n)
+      }
+    }
+  }
+  df
 }
 
 normalize_svg_slot <- function(svg_text) {
@@ -504,12 +552,20 @@ new_gloss_capture <- function(
     lineage = empty_lineage_df(),
     sources = list(),
     session = list(),
+    preview_png = NULL,
+    label_links = list(),
+    parent_capture_id = NULL,
     capture_id = NULL,
     created_at = utc_timestamp(),
     schema_version = GLOSS_SCHEMA_VERSION) {
 
   orig <- normalize_svg_slot(svg_original)
   scn <- normalize_svg_slot(svg_scene)
+
+  w_pt <- as.double(page$width_pt %||% ((page$width_in %||% 7.0) * 72.0))[[1L]]
+  h_pt <- as.double(page$height_pt %||% ((page$height_in %||% 5.0) * 72.0))[[1L]]
+  n_pages <- as.integer(page$pages %||% 1L)[[1L]]
+  sel_page <- as.integer(page$selected_page %||% n_pages)[[1L]]
 
   norm_page <- list(
     engine = as.character(page$engine %||% "unknown")[[1L]],
@@ -518,10 +574,17 @@ new_gloss_capture <- function(
     device = as.character(page$device %||% "svglite")[[1L]],
     width_in = as.double(page$width_in %||% 7.0)[[1L]],
     height_in = as.double(page$height_in %||% 5.0)[[1L]],
-    width_pt = as.double(page$width_pt %||% ((page$width_in %||% 7.0) * 72.0))[[1L]],
-    height_pt = as.double(page$height_pt %||% ((page$height_in %||% 5.0) * 72.0))[[1L]],
-    pages = as.integer(page$pages %||% 1L)[[1L]]
+    width_pt = w_pt,
+    height_pt = h_pt,
+    pages = n_pages,
+    selected_page = sel_page
   )
+  if (!is.null(page$preview_dpi) && is.finite(page$preview_dpi)) {
+    norm_page$preview_dpi <- as.integer(page$preview_dpi)[[1L]]
+  }
+  if (!is.null(page$degraded) && nzchar(as.character(page$degraded)[[1L]])) {
+    norm_page$degraded <- as.character(page$degraded)[[1L]]
+  }
 
   norm_ir <- list(
     panels = ir$panels %||% list(),
@@ -531,6 +594,22 @@ new_gloss_capture <- function(
   )
   if (!is.null(ir$guides)) {
     norm_ir$guides <- ir$guides
+  }
+  if (!is.null(ir$group_indices) && length(ir$group_indices) > 0L) {
+    norm_ir$group_indices <- ir$group_indices
+  }
+
+  if (is.data.frame(leaves)) {
+    leaves <- ensure_df_columns(leaves, empty_leaves_df())
+    if (nrow(leaves) > 0L && all(is.na(leaves$z_index))) {
+      leaves$z_index <- seq_len(nrow(leaves))
+    }
+  }
+  if (is.data.frame(elements)) {
+    elements <- ensure_df_columns(elements, empty_elements_df())
+  }
+  if (is.data.frame(lineage)) {
+    lineage <- ensure_df_columns(lineage, empty_lineage_df())
   }
 
   norm_tables <- stats::setNames(list(), character())
@@ -545,11 +624,17 @@ new_gloss_capture <- function(
   }
 
   cap_id <- capture_id %||% compute_capture_id(norm_page, orig, scn, rasters = rasters)
+  norm_parent <- if (is.null(parent_capture_id) || is.na(parent_capture_id) || !nzchar(parent_capture_id)) {
+    NULL
+  } else {
+    as.character(parent_capture_id)[[1L]]
+  }
 
   cap <- structure(
     list(
       schema_version = as.character(schema_version)[[1L]],
       capture_id = as.character(cap_id)[[1L]],
+      parent_capture_id = norm_parent,
       created_at = as.character(created_at)[[1L]],
       page = norm_page,
       svg = list(
@@ -557,10 +642,13 @@ new_gloss_capture <- function(
         scene = scn
       ),
       scene = list(
+        coord = make_scene_coord(w_pt, h_pt),
         leaves = leaves,
         elements = elements,
         dense_leaves = as.character(dense_leaves),
-        rasters = rasters
+        rasters = rasters,
+        preview_png = preview_png,
+        label_links = label_links %||% list()
       ),
       ir = norm_ir,
       tables = norm_tables,

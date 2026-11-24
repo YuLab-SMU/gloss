@@ -294,7 +294,11 @@ def evaluate_claims(
     return results
 
 
-def audit_bundle(bundle_dir: Path, claims_path: Path | None = None) -> dict:
+def audit_bundle(
+    bundle_dir: Path,
+    claims_path: Path | None = None,
+    emit_threads_path: Path | None = None,
+) -> dict:
     integrity = verify_manifest(bundle_dir)
     asset_map = json.loads((bundle_dir / "asset-map.json").read_text(encoding="utf-8"))
     omitted_doc = (
@@ -323,6 +327,39 @@ def audit_bundle(bundle_dir: Path, claims_path: Path | None = None) -> dict:
                 "note": "Non-CSV table format; query via DuckDB/pyarrow/nanoparquet.",
             }
 
+    # Surface layer statistical params & silent row drops (ISS-ASSET-06)
+    layer_summaries: list[dict] = []
+    silent_drop_warnings: list[dict] = []
+    for lyr in asset_map.get("ir", {}).get("layers", []):
+        r_acc = lyr.get("row_accounting") or {}
+        layer_summaries.append(
+            {
+                "layer_id": lyr.get("layer_id"),
+                "geom": lyr.get("geom"),
+                "stat": lyr.get("stat"),
+                "raw_table": lyr.get("raw_table"),
+                "built_table": lyr.get("built_table"),
+                "params": lyr.get("params") or {},
+                "stat_columns": lyr.get("stat_columns") or {},
+                "row_accounting": r_acc,
+            }
+        )
+        n_na = int(r_acc.get("n_dropped_na") or 0)
+        n_oob = int(r_acc.get("n_dropped_oob") or 0)
+        if n_na > 0 or n_oob > 0:
+            silent_drop_warnings.append(
+                {
+                    "layer_id": lyr.get("layer_id"),
+                    "geom": lyr.get("geom"),
+                    "raw_table": lyr.get("raw_table"),
+                    "n_raw": r_acc.get("n_raw"),
+                    "n_built": r_acc.get("n_built"),
+                    "n_dropped_na": n_na,
+                    "n_dropped_oob": n_oob,
+                    "dropped_raw_row_ids": r_acc.get("dropped_raw_row_ids") or [],
+                }
+            )
+
     scales_summary = [
         {
             "aesthetic": s.get("aesthetic"),
@@ -330,7 +367,10 @@ def audit_bundle(bundle_dir: Path, claims_path: Path | None = None) -> dict:
             "scale_type": s.get("scale_type"),
             "trans": s.get("trans"),
             "domain": s.get("domain"),
+            "limits": s.get("limits"),
+            "oob": s.get("oob"),
             "n_mapped_levels": len(s.get("map", [])),
+            "n_stops": len(s.get("stops", [])),
         }
         for s in asset_map.get("ir", {}).get("scales", [])
     ]
@@ -340,6 +380,67 @@ def audit_bundle(bundle_dir: Path, claims_path: Path | None = None) -> dict:
         claims_data = json.loads(claims_path.read_text(encoding="utf-8"))
         claim_results = evaluate_claims(claims_data, bundle_dir, omitted_doc.get("omitted", []))
 
+    # Optionally emit open audit findings directly into companion .gloss.work/threads.json (ISS-AGENT-04)
+    if emit_threads_path is not None:
+        from datetime import datetime, timezone
+
+        now_ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        if emit_threads_path.exists():
+            tdoc = json.loads(emit_threads_path.read_text(encoding="utf-8"))
+        else:
+            tdoc = {
+                "format": "gloss-threads",
+                "schema_version": "1.1.0",
+                "capture_id": asset_map.get("capture_id"),
+                "threads": [],
+            }
+        threads = tdoc.get("threads", [])
+        for w in silent_drop_warnings:
+            threads.append(
+                {
+                    "thread_id": f"T{len(threads) + 1:03d}",
+                    "kind": "silent_row_drop",
+                    "status": "open",
+                    "author": "agent",
+                    "created_at": now_ts,
+                    "anchor": {
+                        "layer_id": w["layer_id"],
+                        "table_id": w["raw_table"],
+                        "row_ids": w["dropped_raw_row_ids"],
+                    },
+                    "summary": (
+                        f"Layer {w['layer_id']} ({w['geom']}) silently dropped "
+                        f"{w['n_dropped_na']} NA and {w['n_dropped_oob']} OOB rows "
+                        f"(n_raw={w['n_raw']} -> n_built={w['n_built']})."
+                    ),
+                    "history": [],
+                }
+            )
+        for cr in claim_results:
+            if cr.get("status") in ("FAIL", "ROUNDING_DRIFT"):
+                threads.append(
+                    {
+                        "thread_id": f"T{len(threads) + 1:03d}",
+                        "kind": "claim_audit",
+                        "status": "open",
+                        "author": "agent",
+                        "created_at": now_ts,
+                        "anchor": {
+                            "claim_id": cr.get("id"),
+                            "table_id": cr.get("table"),
+                            "row_ids": cr.get("matched_row_ids") or [],
+                        },
+                        "summary": (
+                            f"Claim {cr.get('id')} {cr.get('status')}: expected {cr.get('expected')}, "
+                            f"observed {cr.get('observed')} ({cr.get('statement')})."
+                        ),
+                        "history": [],
+                    }
+                )
+        tdoc["threads"] = threads
+        emit_threads_path.parent.mkdir(parents=True, exist_ok=True)
+        emit_threads_path.write_text(json.dumps(tdoc, indent=2) + "\n", encoding="utf-8")
+
     has_fail = (not integrity["valid"]) or any(c["status"] == "FAIL" for c in claim_results)
     return {
         "status": "FAIL" if has_fail else "PASS",
@@ -347,6 +448,8 @@ def audit_bundle(bundle_dir: Path, claims_path: Path | None = None) -> dict:
         "engine": asset_map.get("page", {}).get("engine"),
         "manifest_integrity": integrity,
         "omissions": omitted_doc.get("omitted", []),
+        "layers": layer_summaries,
+        "silent_drop_warnings": silent_drop_warnings,
         "panels": asset_map.get("ir", {}).get("panels", []),
         "scales": scales_summary,
         "tables": table_profiles,
@@ -358,9 +461,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Profile a .gloss bundle and audit quantitative claims.")
     parser.add_argument("--bundle", required=True, type=Path, help="Path to .gloss bundle directory")
     parser.add_argument("--claims", type=Path, default=None, help="Optional JSON file of quantitative claims")
+    parser.add_argument(
+        "--emit-threads",
+        type=Path,
+        default=None,
+        help="Optional path to companion .gloss.work/threads.json to append open findings",
+    )
     args = parser.parse_args(argv)
 
-    report = audit_bundle(args.bundle, args.claims)
+    report = audit_bundle(args.bundle, args.claims, emit_threads_path=args.emit_threads)
     print(json.dumps(report, indent=2))
     return 0 if report["status"] == "PASS" else 1
 

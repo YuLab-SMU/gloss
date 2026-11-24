@@ -28,6 +28,17 @@
 #'   as vector primitives. Defaults to `10000`.
 #' @param engine Optional character name of a registered engine to force instead
 #'   of class-based dispatch.
+#' @param preview Logical; when `TRUE` (default), renders a pixel-aligned PNG
+#'   overview (`assets/preview.png`) from the already-frozen graphics display
+#'   list during capture without re-executing user code or RNG. Set to `FALSE`
+#'   to skip preview rasterization.
+#' @param preview_dpi Positive numeric resolution in DPI used when
+#'   `preview = TRUE`. Defaults to `144`.
+#' @param page Optional 1-based integer page index to select when `x` draws
+#'   multiple pages. Defaults to `NULL` (selects the last drawn page).
+#' @param parent Optional parent reference linking a recomputed capture to an
+#'   earlier capture (`gloss_capture`, `capture_id` string, or path to an
+#'   existing `.gloss/` bundle directory). Recorded as `parent_capture_id`.
 #' @param ... Additional arguments forwarded to the engine's `capture_fn`.
 #'
 #' @return A `gloss_capture` S3 object.
@@ -46,14 +57,34 @@ gloss <- function(
     height = NULL,
     dense = 10000,
     engine = NULL,
+    preview = TRUE,
+    preview_dpi = 144,
+    page = NULL,
+    parent = NULL,
     ...) {
+
+  call_expr <- tryCatch({
+    txt <- trimws(paste(deparse(substitute(x)), collapse = " "))
+    if (nzchar(txt)) substr(txt, 1L, 500L) else NULL
+  }, error = function(e) NULL)
 
   size <- resolve_figure_size(width, height)
   if (!is.numeric(dense) || length(dense) != 1L || is.na(dense) || dense <= 0) {
     cli::cli_abort("{.arg dense} must be a single positive number (or {.code Inf}).")
   }
+  if (!is.logical(preview) || length(preview) != 1L || is.na(preview)) {
+    cli::cli_abort("{.arg preview} must be TRUE or FALSE.")
+  }
+  if (!is.numeric(preview_dpi) || length(preview_dpi) != 1L || !is.finite(preview_dpi) || preview_dpi <= 0) {
+    cli::cli_abort("{.arg preview_dpi} must be a single positive finite number.")
+  }
+  if (!is.null(page) && (!is.numeric(page) || length(page) != 1L || !is.finite(page) || page < 1)) {
+    cli::cli_abort("{.arg page} must be NULL or a positive integer page index.")
+  }
+  page_idx <- if (is.null(page)) NULL else as.integer(page)
+  parent_capture_id <- resolve_parent_capture_id(parent)
 
-  candidates <- resolve_engine_candidates(x, engine = engine, error = TRUE)
+  candidates <- resolve_engine_candidates(x, engine = engine, error = !is.null(engine))
 
   prev_dev <- grDevices::dev.cur()
   on.exit({
@@ -65,12 +96,36 @@ gloss <- function(
   dev <- open_capture_device(size$width, size$height)
   on.exit(close_capture_device(dev), add = TRUE)
 
-  cand_kinds <- unique(vapply(candidates, function(s) s$page_kind, character(1L)))
+  cand_kinds <- if (length(candidates) > 0L) {
+    unique(vapply(candidates, function(s) s$page_kind, character(1L)))
+  } else {
+    character()
+  }
   already_drawn <- FALSE
   draw_method <- NULL
   page_info <- NULL
 
-  if (length(candidates) == 1L || length(cand_kinds) == 1L) {
+  if (length(candidates) == 0L) {
+    # Generic printable-object fallback (e.g. ggsurvplot, pheatmap, trellis, ggExtraPlot)
+    draw_method <- tryCatch(
+      draw_generic_printable(x),
+      error = function(e) NULL
+    )
+    ensure_device_active(dev)
+    page_info <- detect_page_kind()
+    if (identical(page_info$kind, "empty")) {
+      cli::cli_abort(c(
+        "No registered gloss engine handles object of class {.cls {class(x)}}.",
+        i = "Attempted generic printing fallback, which produced no graphics output."
+      ))
+    }
+    selected <- if (identical(page_info$kind, "mixed")) {
+      make_mixed_fallback_engine()
+    } else {
+      get_engine(page_info$kind) %||% make_mixed_fallback_engine()
+    }
+    already_drawn <- TRUE
+  } else if (length(candidates) == 1L || length(cand_kinds) == 1L) {
     selected <- candidates[[1L]]
   } else {
     # Generic input (e.g. function or recordedplot) with multiple candidate
@@ -83,13 +138,8 @@ gloss <- function(
       cli::cli_abort("The input did not draw anything onto the graphics device.")
     }
     if (identical(page_info$kind, "mixed")) {
-      selected <- resolve_engine(x, engine = engine, page_kind = "mixed", error = FALSE)
-      if (is.null(selected)) {
-        cli::cli_abort(c(
-          "The input mixed base graphics and grid graphics on the same page.",
-          i = "Capture base and grid plots separately, or register a custom engine with {.code page_kind = \"any\"}."
-        ))
-      }
+      selected <- resolve_engine(x, engine = engine, page_kind = "mixed", error = FALSE) %||%
+        make_mixed_fallback_engine()
     } else {
       selected <- resolve_engine(x, engine = engine, page_kind = page_info$kind, error = TRUE)
     }
@@ -105,7 +155,12 @@ gloss <- function(
     engine = selected,
     already_drawn = already_drawn,
     draw_method = draw_method,
-    page_info = page_info
+    page_info = page_info,
+    preview = isTRUE(preview),
+    preview_dpi = as.integer(round(preview_dpi)),
+    page = page_idx,
+    parent_capture_id = parent_capture_id,
+    call_expr = call_expr
   )
 
   result <- selected$capture_fn(x, ctx, ...)
@@ -115,6 +170,122 @@ gloss <- function(
   }
 
   assemble_capture_result(result, ctx = ctx, sources = sources, input_obj = x)
+}
+
+resolve_parent_capture_id <- function(parent) {
+  if (is.null(parent)) return(NULL)
+  if (is_gloss_capture(parent)) return(parent$capture_id)
+  if (is.character(parent) && length(parent) == 1L && !is.na(parent) && nzchar(parent)) {
+    if (dir.exists(parent)) {
+      am <- file.path(parent, "asset-map.json")
+      mf <- file.path(parent, "manifest.json")
+      cand <- if (file.exists(am)) am else if (file.exists(mf)) mf else NULL
+      if (!is.null(cand)) {
+        doc <- tryCatch(jsonlite::read_json(cand, simplifyVector = TRUE), error = function(e) NULL)
+        if (!is.null(doc$capture_id) && nzchar(doc$capture_id)) {
+          return(as.character(doc$capture_id)[[1L]])
+        }
+      }
+    }
+    return(parent)
+  }
+  cli::cli_abort("{.arg parent} must be NULL, a {.cls gloss_capture}, a capture_id string, or a bundle directory path.")
+}
+
+draw_generic_printable <- function(x) {
+  if (is.list(x) && inherits(x$gtable, "gtable")) {
+    grid::grid.newpage()
+    grid::grid.draw(x$gtable)
+    return("gtable_slot")
+  }
+  if (methods::is(x, "S4") || isS4(x)) {
+    utils::capture.output(methods::show(x))
+    return("show")
+  }
+  utils::capture.output(print(x))
+  "print"
+}
+
+make_mixed_fallback_engine <- function() {
+  structure(
+    list(
+      name = "mixed",
+      classes = character(),
+      capture_fn = engine_mixed_capture,
+      packages = character(),
+      version = as.character(utils::packageVersion("gloss")),
+      description = "Fallback engine for pages mixing base and grid graphics",
+      priority = -100L,
+      page_kind = "any",
+      seq = 0L
+    ),
+    class = "gloss_engine"
+  )
+}
+
+engine_mixed_capture <- function(x, ctx) {
+  rp <- ctx$page_info$rp %||% tryCatch(grDevices::recordPlot(), error = function(e) NULL)
+  close_capture_device(ctx$dev)
+  all_orig_pages <- as.character(ctx$dev$read())
+  n_orig_pages <- length(all_orig_pages)
+  if (n_orig_pages == 0L) {
+    cli::cli_abort("The input did not draw any page on the graphics device.")
+  }
+  sel_idx <- resolve_selected_page(ctx$page, n_orig_pages)
+  original_svg <- all_orig_pages[[sel_idx]]
+
+  doc <- read_svg_doc(original_svg)
+  elements_df <- parse_svg_elements(doc)
+
+  preview_png <- NULL
+  if (isTRUE(ctx$preview) && !is.null(rp)) {
+    preview_png <- tryCatch(
+      render_preview_png(
+        function() grDevices::replayPlot(rlang::duplicate(rp, shallow = FALSE)),
+        width = ctx$width, height = ctx$height, dpi = ctx$preview_dpi
+      ),
+      error = function(e) NULL
+    )
+  }
+
+  list(
+    page = list(degraded = "mixed_graphics_systems"),
+    scene = list(
+      original_svg = original_svg,
+      scene_svg = original_svg,
+      leaves = empty_leaves_df(),
+      elements = elements_df,
+      dense_leaves = character(),
+      rasters = list(),
+      preview_png = preview_png,
+      draw_method = ctx$draw_method %||% "mixed_fallback",
+      pages = as.integer(n_orig_pages),
+      selected_page = as.integer(sel_idx)
+    ),
+    ir = list(
+      panels = list(),
+      layers = list(),
+      scales = list(),
+      orders = stats::setNames(list(), character())
+    ),
+    tables = stats::setNames(list(), character()),
+    lineage = empty_lineage_df()
+  )
+}
+
+resolve_selected_page <- function(page, n_pages) {
+  if (is.null(page)) {
+    if (n_pages > 1L) {
+      cli::cli_warn("The input drew {n_pages} pages; gloss captured page {n_pages} (last page).")
+    }
+    return(as.integer(n_pages))
+  }
+  p <- as.integer(page)
+  if (p > n_pages) {
+    cli::cli_warn("Requested page {p} exceeds {n_pages} drawn page{?s}; capturing page {n_pages}.")
+    return(as.integer(n_pages))
+  }
+  p
 }
 
 # --- Figure sizing & device lifecycle ----------------------------------------
@@ -240,7 +411,12 @@ make_capture_context <- function(
     engine,
     already_drawn = FALSE,
     draw_method = NULL,
-    page_info = NULL) {
+    page_info = NULL,
+    preview = TRUE,
+    preview_dpi = 144L,
+    page = NULL,
+    parent_capture_id = NULL,
+    call_expr = NULL) {
 
   ctx <- new.env(parent = emptyenv())
   ctx$dev <- dev
@@ -252,6 +428,11 @@ make_capture_context <- function(
   ctx$already_drawn <- already_drawn
   ctx$draw_method <- draw_method
   ctx$page_info <- page_info
+  ctx$preview <- isTRUE(preview)
+  ctx$preview_dpi <- as.integer(preview_dpi)
+  ctx$page <- page
+  ctx$parent_capture_id <- parent_capture_id
+  ctx$call_expr <- call_expr
 
   ctx$ensure_device <- function() ensure_device_active(dev)
   ctx$detect_page <- function() detect_page_kind()
@@ -262,7 +443,10 @@ make_capture_context <- function(
       width = width,
       height = height,
       dense = dense,
-      draw_method = draw_method %||% ctx$draw_method %||% "grid.draw"
+      draw_method = draw_method %||% ctx$draw_method %||% "grid.draw",
+      preview = ctx$preview,
+      preview_dpi = ctx$preview_dpi,
+      page = ctx$page
     )
   }
 
@@ -278,6 +462,8 @@ assemble_capture_result <- function(result, ctx, sources = NULL, input_obj = NUL
 
   sc <- result$scene
   device_str <- paste0("svglite ", as.character(utils::packageVersion("svglite")))
+  n_pages <- result$page$pages %||% sc$pages %||% 1L
+  sel_page <- result$page$selected_page %||% sc$selected_page %||% n_pages
 
   page <- list(
     engine = result$page$engine %||% ctx$engine$name,
@@ -288,25 +474,52 @@ assemble_capture_result <- function(result, ctx, sources = NULL, input_obj = NUL
     height_in = result$page$height_in %||% ctx$height,
     width_pt = result$page$width_pt %||% round_pt(ctx$width * PT_PER_IN),
     height_pt = result$page$height_pt %||% round_pt(ctx$height * PT_PER_IN),
-    pages = result$page$pages %||% sc$pages %||% 1L
+    pages = as.integer(n_pages),
+    selected_page = as.integer(sel_page)
   )
+  if (!is.null(sc$preview_png)) {
+    page$preview_dpi <- as.integer(ctx$preview_dpi %||% 144L)
+  }
+  if (!is.null(result$page$degraded)) {
+    page$degraded <- result$page$degraded
+  }
 
-  sess_info <- result$session %||% collect_session_info(input_obj = input_obj)
+  ir <- result$ir %||% list()
+  leaves <- sc$leaves %||% empty_leaves_df()
+  elements <- sc$elements %||% empty_elements_df()
+  lineage <- result$lineage %||% empty_lineage_df()
+
+  sem_done <- finalize_scene_semantics(
+    leaves = leaves,
+    elements = elements,
+    lineage = lineage,
+    layers = ir$layers %||% list(),
+    draw_method = page$draw_method
+  )
+  leaves <- sem_done$leaves
+  lineage <- sem_done$lineage
+
+  label_links <- result$label_links %||% sc$label_links %||% extract_repel_label_links(leaves, elements, lineage)
+
+  sess_info <- result$session %||% collect_session_info(input_obj = input_obj, call_expr = ctx$call_expr)
   src_list <- result$sources %||% collect_sources_inventory(sources = sources, session = sess_info)
 
   new_gloss_capture(
     page = page,
     svg_original = sc$original_svg,
     svg_scene = sc$scene_svg,
-    leaves = sc$leaves %||% empty_leaves_df(),
-    elements = sc$elements %||% empty_elements_df(),
+    leaves = leaves,
+    elements = elements,
     dense_leaves = sc$dense_leaves %||% character(),
     rasters = sc$rasters %||% list(),
-    ir = result$ir %||% list(),
+    ir = ir,
     tables = result$tables %||% list(),
-    lineage = result$lineage %||% empty_lineage_df(),
+    lineage = lineage,
     sources = src_list,
-    session = sess_info
+    session = sess_info,
+    preview_png = sc$preview_png,
+    label_links = label_links,
+    parent_capture_id = ctx$parent_capture_id
   )
 }
 
@@ -409,16 +622,22 @@ wrap_grid_leaves <- function(g, parent_path, acc) {
 
 # --- Grid page capture (dual SVG from single draw) ---------------------------
 
-capture_current_grid_page <- function(dev, width, height, dense = 10000, draw_method = "grid.draw") {
+capture_current_grid_page <- function(
+    dev,
+    width,
+    height,
+    dense = 10000,
+    draw_method = "grid.draw",
+    preview = TRUE,
+    preview_dpi = 144L,
+    page = NULL) {
   ensure_device_active(dev)
   pages_before <- as.character(dev$read())
   n_orig_pages <- length(pages_before)
   if (n_orig_pages == 0L) {
     cli::cli_abort("The input did not draw any page on the graphics device.")
   }
-  if (n_orig_pages > 1L) {
-    cli::cli_warn("The input drew {n_orig_pages} pages; gloss captured the last page.")
-  }
+  sel_idx <- resolve_selected_page(page, n_orig_pages)
 
   rec <- new.env(parent = emptyenv())
   rec$n <- 0L
@@ -452,24 +671,48 @@ capture_current_grid_page <- function(dev, width, height, dense = 10000, draw_me
 
   all_pages <- as.character(dev$read())
   # Original page is finalized once grid.refresh() opens the wrapped page
-  original_svg <- all_pages[[n_orig_pages]]
+  original_svg <- all_pages[[sel_idx]]
   wrapped_svg <- all_pages[[length(all_pages)]]
 
-  scene_doc <- inline_svg_groups(
-    wrapped_svg,
-    order = rec$order,
-    leaves_meta = acc$leaves,
-    fallback_svg = original_svg
-  )
+  scene_doc <- if (sel_idx < n_orig_pages) {
+    # grid.DLapply only holds the last drawn page's display list
+    read_svg_doc(original_svg)
+  } else {
+    inline_svg_groups(
+      wrapped_svg,
+      order = rec$order,
+      leaves_meta = acc$leaves,
+      fallback_svg = original_svg
+    )
+  }
   svg_h_pt <- extract_svg_height_pt(wrapped_svg, fallback = height * PT_PER_IN)
 
-  leaves_df <- build_leaves_df(acc$leaves, rec$probes, svg_height_pt = svg_h_pt)
+  leaves_df <- if (sel_idx < n_orig_pages) {
+    empty_leaves_df()
+  } else {
+    build_leaves_df(acc$leaves, rec$probes, svg_height_pt = svg_h_pt)
+  }
   leaves_df <- attach_leaf_clips(leaves_df, scene_doc)
   elements_df <- parse_svg_elements(scene_doc)
 
   if (nrow(leaves_df) > 0L) {
     counts <- table(factor(elements_df$leaf_id, levels = leaves_df$leaf_id))
     leaves_df$n_elements <- as.integer(counts[leaves_df$leaf_id])
+  }
+
+  # Optional preview PNG rendered from the already-frozen display list (zero re-execution)
+  preview_png <- NULL
+  if (isTRUE(preview) && sel_idx == n_orig_pages && length(acc$dl) > 0L) {
+    unwrapped_dl <- lapply(acc$dl, function(elt) {
+      if (inherits(elt, "grob")) unwrap_gloss_wraps(elt, acc$grobs) else elt
+    })
+    preview_png <- tryCatch(
+      render_preview_png(
+        function() draw_grid_dl(unwrapped_dl),
+        width = width, height = height, dpi = preview_dpi
+      ),
+      error = function(e) NULL
+    )
   }
 
   # Optional dense-leaf rasterization (non-text leaves exceeding `dense`)
@@ -520,8 +763,10 @@ capture_current_grid_page <- function(dev, width, height, dense = 10000, draw_me
     elements = elements_df,
     dense_leaves = dense_ids,
     rasters = rasters,
+    preview_png = preview_png,
     draw_method = draw_method,
-    pages = as.integer(n_orig_pages)
+    pages = as.integer(n_orig_pages),
+    selected_page = as.integer(sel_idx)
   )
 }
 
@@ -592,6 +837,8 @@ inline_svg_groups <- function(wrapped_svg, order, leaves_meta, fallback_svg = NU
 
   # Top-level wrapper groups defined directly under svglite's root <g> (not nested
   # inside another <defs>) correspond 1-to-1 in draw order with our leaf probes.
+  # Filter to groups actually referenced by a top-level <use> so an unreferenced
+  # orphan <defs> never breaks whole-page alignment.
   top_groups <- xml2::xml_find_all(
     doc,
     "//d1:defs[not(ancestor::d1:defs)]/d1:g[starts-with(@id, 'group-')]",
@@ -600,19 +847,23 @@ inline_svg_groups <- function(wrapped_svg, order, leaves_meta, fallback_svg = NU
   top_gids <- xml2::xml_attr(top_groups, "id")
   top_uses <- xml2::xml_find_all(doc, "//d1:use[not(ancestor::d1:defs)]", ns)
   top_hrefs <- extract_use_hrefs(top_uses)
-  use_of <- match(top_gids, top_hrefs)
 
-  if (length(top_gids) != n_probe || anyNA(use_of)) {
+  # Match in draw (<use>) order
+  grp_idx_for_use <- match(top_hrefs, top_gids)
+  valid_use <- which(!is.na(grp_idx_for_use))
+
+  if (length(valid_use) != n_probe) {
     cli::cli_warn(
-      "Could not align {n_probe} draw-time probe{?s} with {length(top_gids)} top-level SVG group{?s}; falling back to untouched SVG without leaf misattribution."
+      "Could not align {n_probe} draw-time probe{?s} with {length(valid_use)} top-level SVG group{?s}; falling back to untouched SVG without leaf misattribution."
     )
     return(if (!is.null(fallback_svg)) read_svg_doc(fallback_svg) else doc)
   }
 
   for (k in seq_len(n_probe)) {
     lid <- order[[k]]
-    gnode <- top_groups[[k]]
-    xml2::xml_replace(top_uses[[use_of[[k]]]], gnode, .copy = FALSE)
+    ui <- valid_use[[k]]
+    gnode <- top_groups[[grp_idx_for_use[[ui]]]]
+    xml2::xml_replace(top_uses[[ui]], gnode, .copy = FALSE)
     xml2::xml_set_attr(gnode, "id", lid)
     xml2::xml_set_attr(gnode, "data-gloss-leaf", lid)
     meta <- leaves_meta[[lid]]
@@ -708,6 +959,9 @@ build_leaves_df <- function(leaves_meta, probes, svg_height_pt) {
     clip_y0 = rep(NA_real_, n_ids),
     clip_x1 = rep(NA_real_, n_ids),
     clip_y1 = rep(NA_real_, n_ids),
+    z_index = seq_len(n_ids),
+    semantic_role = rep(NA_character_, n_ids),
+    edit_policy = rep(NA_character_, n_ids),
     stringsAsFactors = FALSE,
     row.names = NULL
   )
@@ -774,7 +1028,75 @@ pair_coord_range <- function(s) {
   }, numeric(4L)))
 }
 
-# Command-aware SVG path `d` bounding-box parser handling M/m, L/l, H/h, V/v,
+# Compute exact extrema points along an SVG elliptical arc (SVG 1.1 F.6.5)
+svg_arc_extrema <- function(x1, y1, rx, ry, phi_deg, large_arc, sweep, x2, y2) {
+  rx <- abs(rx)
+  ry <- abs(ry)
+  if (!is.finite(rx) || !is.finite(ry) || rx == 0 || ry == 0 || (x1 == x2 && y1 == y2)) {
+    return(list(x = c(x1, x2), y = c(y1, y2)))
+  }
+  phi <- phi_deg * pi / 180
+  cphi <- cos(phi)
+  sphi <- sin(phi)
+
+  dx2 <- (x1 - x2) / 2
+  dy2 <- (y1 - y2) / 2
+  x1p <- cphi * dx2 + sphi * dy2
+  y1p <- -sphi * dx2 + cphi * dy2
+
+  # Scale radii up if endpoints are too far apart
+  lam <- (x1p^2) / (rx^2) + (y1p^2) / (ry^2)
+  if (lam > 1) {
+    s <- sqrt(lam)
+    rx <- rx * s
+    ry <- ry * s
+  }
+
+  num <- max(0, rx^2 * ry^2 - rx^2 * y1p^2 - ry^2 * x1p^2)
+  den <- rx^2 * y1p^2 + ry^2 * x1p^2
+  coef <- if (den > 0) sqrt(num / den) else 0
+  if (identical(as.integer(large_arc != 0), as.integer(sweep != 0))) {
+    coef <- -coef
+  }
+
+  cxp <- coef * (rx * y1p / ry)
+  cyp <- coef * (-ry * x1p / rx)
+  cx <- cphi * cxp - sphi * cyp + (x1 + x2) / 2
+  cy <- sphi * cxp + cphi * cyp + (y1 + y2) / 2
+
+  vec_angle <- function(ux, uy, vx, vy) {
+    dot <- ux * vx + uy * vy
+    mag <- sqrt((ux^2 + uy^2) * (vx^2 + vy^2))
+    if (mag == 0) return(0)
+    ang <- acos(max(-1, min(1, dot / mag)))
+    if (ux * vy - uy * vx < 0) -ang else ang
+  }
+
+  t1 <- vec_angle(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry)
+  dt <- vec_angle((x1p - cxp) / rx, (y1p - cyp) / ry, (-x1p - cxp) / rx, (-y1p - cyp) / ry)
+  if (sweep == 0 && dt > 0) dt <- dt - 2 * pi
+  if (sweep != 0 && dt < 0) dt <- dt + 2 * pi
+
+  # Sample extrema candidates analytically + 8-point arc guard for rotated ellipses
+  t_cand <- c(t1, t1 + dt)
+  tx <- atan2(-ry * sphi, rx * cphi)
+  ty <- atan2(ry * cphi, rx * sphi)
+  crit <- c(tx, tx + pi, ty, ty + pi)
+  t_lo <- min(t1, t1 + dt)
+  t_hi <- max(t1, t1 + dt)
+  for (tc in crit) {
+    for (k in -2:2) {
+      ang <- tc + k * 2 * pi
+      if (ang >= t_lo && ang <= t_hi) {
+        t_cand <- c(t_cand, ang)
+      }
+    }
+  }
+
+  xs <- cx + rx * cos(t_cand) * cphi - ry * sin(t_cand) * sphi
+  ys <- cy + rx * cos(t_cand) * sphi + ry * sin(t_cand) * cphi
+  list(x = c(x1, x2, xs), y = c(y1, y2, ys))
+}
 # C/c, S/s, Q/q, T/t, A/a, and Z/z without confusing single-axis or arc args.
 parse_single_path_bbox <- function(d) {
   if (is.na(d) || !nzchar(d)) return(rep(NA_real_, 4L))
@@ -870,10 +1192,13 @@ parse_single_path_bbox <- function(d) {
       v <- take_nums(7L)
       if (is.null(v)) break
       i <- i + 7L
-      cx <- if (rel) cx + v[[6L]] else v[[6L]]
-      cy <- if (rel) cy + v[[7L]] else v[[7L]]
-      xs <- c(xs, cx)
-      ys <- c(ys, cy)
+      nx <- if (rel) cx + v[[6L]] else v[[6L]]
+      ny <- if (rel) cy + v[[7L]] else v[[7L]]
+      ext <- svg_arc_extrema(cx, cy, v[[1L]], v[[2L]], v[[3L]], v[[4L]], v[[5L]], nx, ny)
+      cx <- nx
+      cy <- ny
+      xs <- c(xs, ext$x)
+      ys <- c(ys, ext$y)
     } else {
       i <- i + 1L
     }
@@ -888,12 +1213,26 @@ path_coord_range <- function(d_vec) {
   t(vapply(d_vec, parse_single_path_bbox, numeric(4L)))
 }
 
+estimate_text_width_units <- function(txt_vec) {
+  vapply(txt_vec, function(s) {
+    if (is.na(s) || !nzchar(s)) return(0.0)
+    cps <- utf8ToInt(enc2utf8(s))
+    if (length(cps) == 0L) return(0.0)
+    # CJK / Hangul / Kana / fullwidth glyphs (~1.0 em) vs Latin/ASCII (~0.6 em)
+    is_wide <- cps >= 0x1100L
+    sum(ifelse(is_wide, 1.0, 0.6))
+  }, numeric(1L))
+}
+
 estimate_text_boxes <- function(nodes, style) {
   fs <- suppressWarnings(as.numeric(sub("px$", "", svg_attr_or_style(nodes, style, "font-size"))))
   fs[is.na(fs)] <- 12.0
   w <- num_svg_attr(nodes, "textLength")
   txt <- xml2::xml_text(nodes)
-  w[is.na(w)] <- 0.6 * fs[is.na(w)] * nchar(txt[is.na(w)])
+  miss_w <- is.na(w)
+  if (any(miss_w)) {
+    w[miss_w] <- fs[miss_w] * estimate_text_width_units(txt[miss_w])
+  }
   anchor <- xml2::xml_attr(nodes, "text-anchor")
   anchor[is.na(anchor)] <- "start"
   lx0 <- ifelse(anchor == "middle", -w / 2, ifelse(anchor == "end", -w, 0))
@@ -923,6 +1262,81 @@ estimate_text_boxes <- function(nodes, style) {
   rx <- cos(th) * cx - sin(th) * cy + tx
   ry <- sin(th) * cx + cos(th) * cy + ty
   cbind(apply(rx, 1L, min), apply(rx, 1L, max), apply(ry, 1L, min), apply(ry, 1L, max))
+}
+
+compose_affine2d <- function(m1, m2) {
+  c(
+    m1[[1L]] * m2[[1L]] + m1[[3L]] * m2[[2L]],
+    m1[[2L]] * m2[[1L]] + m1[[4L]] * m2[[2L]],
+    m1[[1L]] * m2[[3L]] + m1[[3L]] * m2[[4L]],
+    m1[[2L]] * m2[[3L]] + m1[[4L]] * m2[[4L]],
+    m1[[1L]] * m2[[5L]] + m1[[3L]] * m2[[6L]] + m1[[5L]],
+    m1[[2L]] * m2[[5L]] + m1[[4L]] * m2[[6L]] + m1[[6L]]
+  )
+}
+
+parse_svg_transform_matrix <- function(tr_str) {
+  cur <- c(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+  if (is.na(tr_str) || !nzchar(tr_str)) return(cur)
+  ops <- regmatches(tr_str, gregexpr("(matrix|translate|scale|rotate)\\s*\\([^)]*\\)", tr_str, perl = TRUE))[[1L]]
+  for (op in ops) {
+    kind <- sub("^([a-z]+).*$", "\\1", op)
+    nums <- suppressWarnings(as.numeric(
+      regmatches(op, gregexpr("[-+]?(?:[0-9]*\\.[0-9]+|[0-9]+\\.?)(?:[eE][-+]?[0-9]+)?", op, perl = TRUE))[[1L]]
+    ))
+    if (identical(kind, "matrix") && length(nums) == 6L) {
+      cur <- compose_affine2d(cur, nums)
+    } else if (identical(kind, "translate") && length(nums) >= 1L) {
+      ty <- if (length(nums) >= 2L) nums[[2L]] else 0.0
+      cur <- compose_affine2d(cur, c(1, 0, 0, 1, nums[[1L]], ty))
+    } else if (identical(kind, "scale") && length(nums) >= 1L) {
+      sy <- if (length(nums) >= 2L) nums[[2L]] else nums[[1L]]
+      cur <- compose_affine2d(cur, c(nums[[1L]], 0, 0, sy, 0, 0))
+    } else if (identical(kind, "rotate") && length(nums) >= 1L) {
+      rad <- nums[[1L]] * pi / 180
+      cs <- cos(rad)
+      sn <- sin(rad)
+      if (length(nums) >= 3L) {
+        cur <- compose_affine2d(cur, c(1, 0, 0, 1, nums[[2L]], nums[[3L]]))
+        cur <- compose_affine2d(cur, c(cs, sn, -sn, cs, 0, 0))
+        cur <- compose_affine2d(cur, c(1, 0, 0, 1, -nums[[2L]], -nums[[3L]]))
+      } else {
+        cur <- compose_affine2d(cur, c(cs, sn, -sn, cs, 0, 0))
+      }
+    }
+  }
+  cur
+}
+
+apply_ancestor_group_transforms <- function(nodes, tag, box, ns = svg_ns()) {
+  if (length(nodes) == 0L) return(box)
+  root <- xml2::xml_root(nodes[[1L]])
+  if (length(xml2::xml_find_all(root, "//d1:g[@transform]", ns)) == 0L) {
+    return(box)
+  }
+  # Cascade ancestor <g transform="..."> matrices (and self transform for non-text shapes)
+  for (idx in seq_along(nodes)) {
+    if (any(!is.finite(box[idx, ]))) next
+    ancs <- xml2::xml_find_all(nodes[[idx]], "ancestor::d1:g[@transform]", ns)
+    trs <- if (length(ancs) > 0L) xml2::xml_attr(ancs, "transform") else character()
+    if (!identical(tag[[idx]], "text")) {
+      self_tr <- xml2::xml_attr(nodes[[idx]], "transform")
+      if (!is.na(self_tr) && nzchar(self_tr)) {
+        trs <- c(trs, self_tr)
+      }
+    }
+    if (length(trs) == 0L) next
+    mat <- c(1, 0, 0, 1, 0, 0)
+    for (tstr in trs) {
+      mat <- compose_affine2d(mat, parse_svg_transform_matrix(tstr))
+    }
+    xs <- c(box[idx, 1L], box[idx, 2L], box[idx, 2L], box[idx, 1L])
+    ys <- c(box[idx, 3L], box[idx, 3L], box[idx, 4L], box[idx, 4L])
+    tx <- mat[[1L]] * xs + mat[[3L]] * ys + mat[[5L]]
+    ty <- mat[[2L]] * xs + mat[[4L]] * ys + mat[[6L]]
+    box[idx, ] <- c(min(tx), max(tx), min(ty), max(ty))
+  }
+  box
 }
 
 compute_element_boxes <- function(nodes, tag, style) {
@@ -981,6 +1395,7 @@ compute_element_boxes <- function(nodes, tag, style) {
     box[i, ] <- cbind(b[, 1L], b[, 2L], b[, 3L], b[, 4L])
   }
 
+  box <- apply_ancestor_group_transforms(nodes, tag, box)
   list(x0 = box[, 1L], x1 = box[, 2L], y0 = box[, 3L], y1 = box[, 4L])
 }
 
@@ -1198,6 +1613,9 @@ parse_svg_elements <- function(doc) {
     clip_y0 = clips$clip_y0,
     clip_x1 = clips$clip_x1,
     clip_y1 = clips$clip_y1,
+    built_row_id = rep(NA_integer_, n),
+    group_id = rep(NA_character_, n),
+    part_role = rep(NA_character_, n),
     stringsAsFactors = FALSE
   )
 }
@@ -1261,6 +1679,169 @@ render_leaf_png <- function(draw_fn, width, height, dpi = 144) {
     return(NULL)
   }
   readBin(tmp, what = "raw", n = file.info(tmp)$size)
+}
+
+unwrap_gloss_wraps <- function(g, grobs) {
+  if (inherits(g, "gloss_wrap")) {
+    orig <- grobs[[g$id]]
+    if (is.null(orig)) return(grid::nullGrob(name = g$name))
+    orig$vp <- g$vp
+    return(orig)
+  }
+  if (inherits(g, "gTree") && length(g$children) > 0L) {
+    nms <- names(g$children)
+    kids <- lapply(nms, function(nm) unwrap_gloss_wraps(g$children[[nm]], grobs))
+    new_kids <- do.call(grid::gList, kids)
+    names(new_kids) <- nms
+    g$children <- new_kids
+  }
+  g
+}
+
+render_preview_png <- function(draw_fn, width, height, dpi = 144L) {
+  tmp <- tempfile(fileext = ".png")
+  on.exit(unlink(tmp), add = TRUE)
+
+  prev <- grDevices::dev.cur()
+  on.exit({
+    if (prev > 1L && prev %in% grDevices::dev.list()) {
+      grDevices::dev.set(prev)
+    }
+  }, add = TRUE)
+
+  grDevices::png(tmp, width = width, height = height, units = "in", res = dpi, bg = "white")
+  dev_id <- grDevices::dev.cur()
+  tryCatch(
+    draw_fn(),
+    finally = {
+      if (dev_id %in% grDevices::dev.list()) {
+        grDevices::dev.off(dev_id)
+      }
+    }
+  )
+
+  if (!file.exists(tmp) || file.info(tmp)$size <= 0) {
+    return(NULL)
+  }
+  readBin(tmp, what = "raw", n = file.info(tmp)$size)
+}
+
+# Pair ggrepel / leader-line labels with their matching box & leader segment
+extract_repel_label_links <- function(leaves, elements, lineage) {
+  if (!is.data.frame(leaves) || nrow(leaves) == 0L ||
+      !is.data.frame(elements) || nrow(elements) == 0L ||
+      !is.data.frame(lineage) || nrow(lineage) == 0L) {
+    return(list())
+  }
+
+  repel_lids <- leaves$leaf_id[
+    grepl("repel", paste(leaves$grob_name, leaves$grob_path), ignore.case = TRUE)
+  ]
+  if (length(repel_lids) == 0L) {
+    return(list())
+  }
+
+  lin_by_lid <- stats::setNames(seq_len(nrow(lineage)), lineage$leaf_id)
+  # Group repel leaves by (panel_id, layer_id)
+  keys <- vapply(repel_lids, function(lid) {
+    li <- lin_by_lid[[lid]]
+    if (is.na(li)) return("NA::NA")
+    paste0(lineage$panel_id[[li]] %||% "NA", "::", lineage$layer_id[[li]] %||% "NA")
+  }, character(1L))
+
+  links <- list()
+  for (gk in unique(keys)) {
+    grp_lids <- repel_lids[keys == gk]
+    sub_els <- elements[!is.na(elements$leaf_id) & elements$leaf_id %in% grp_lids, , drop = FALSE]
+    if (nrow(sub_els) == 0L) next
+
+    txts <- sub_els[sub_els$tag == "text", , drop = FALSE]
+    segs <- sub_els[sub_els$tag %in% c("line", "polyline", "path"), , drop = FALSE]
+    boxes <- sub_els[sub_els$tag %in% c("rect", "polygon"), , drop = FALSE]
+    if (nrow(txts) == 0L || nrow(segs) == 0L) next
+
+    used_seg <- logical(nrow(segs))
+    used_box <- logical(nrow(boxes))
+
+    point_to_box_dist <- function(px, py, b) {
+      dx <- max(b$bbox_x0 - px, 0, px - b$bbox_x1)
+      dy <- max(b$bbox_y0 - py, 0, py - b$bbox_y1)
+      sqrt(dx^2 + dy^2)
+    }
+
+    for (ti in seq_len(nrow(txts))) {
+      tr <- txts[ti, , drop = FALSE]
+      t_cx <- 0.5 * (tr$bbox_x0 + tr$bbox_x1)
+      t_cy <- 0.5 * (tr$bbox_y0 + tr$bbox_y1)
+
+      # Optional enclosing label box (geom_label_repel)
+      box_id <- NULL
+      if (nrow(boxes) > 0L) {
+        avail_b <- which(!used_box)
+        if (length(avail_b) > 0L) {
+          b_d <- vapply(avail_b, function(bi) {
+            point_to_box_dist(t_cx, t_cy, boxes[bi, , drop = FALSE])
+          }, numeric(1L))
+          best_bi <- avail_b[[which.min(b_d)]]
+          if (b_d[[which.min(b_d)]] <= 2.0) {
+            box_id <- boxes$element_id[[best_bi]]
+            used_box[[best_bi]] <- TRUE
+          }
+        }
+      }
+
+      # Match nearest leader line segment whose one endpoint touches the text/label box
+      avail_s <- which(!used_seg)
+      if (length(avail_s) == 0L) next
+      ref_box <- if (!is.null(box_id)) boxes[boxes$element_id == box_id, , drop = FALSE] else tr
+
+      best_dist <- Inf
+      best_si <- NA_integer_
+      best_anchor <- NULL
+      for (si in avail_s) {
+        sr <- segs[si, , drop = FALSE]
+        # Candidate endpoints are opposite corners of the segment bbox
+        ep1 <- c(sr$bbox_x0, sr$bbox_y0)
+        ep2 <- c(sr$bbox_x1, sr$bbox_y1)
+        ep3 <- c(sr$bbox_x0, sr$bbox_y1)
+        ep4 <- c(sr$bbox_x1, sr$bbox_y0)
+        d1 <- point_to_box_dist(ep1[[1L]], ep1[[2L]], ref_box)
+        d2 <- point_to_box_dist(ep2[[1L]], ep2[[2L]], ref_box)
+        d3 <- point_to_box_dist(ep3[[1L]], ep3[[2L]], ref_box)
+        d4 <- point_to_box_dist(ep4[[1L]], ep4[[2L]], ref_box)
+        d_pair1 <- min(d1, d2)
+        d_pair2 <- min(d3, d4)
+        dmin <- min(d_pair1, d_pair2)
+        if (dmin < best_dist) {
+          best_dist <- dmin
+          best_si <- si
+          if (d_pair1 <= d_pair2) {
+            best_anchor <- if (d1 <= d2) ep2 else ep1
+          } else {
+            best_anchor <- if (d3 <= d4) ep4 else ep3
+          }
+        }
+      }
+
+      if (!is.na(best_si) && best_dist <= 12.0) {
+        used_seg[[best_si]] <- TRUE
+        entry <- list(
+          label_element_id = tr$element_id[[1L]],
+          leader_element_id = segs$element_id[[best_si]],
+          anchor_pt = json_array(round_pt(best_anchor))
+        )
+        if (!is.null(box_id)) {
+          entry$box_element_id <- box_id
+        }
+        if (!is.na(tr$built_row_id[[1L]])) {
+          entry$built_row_id <- as.integer(tr$built_row_id[[1L]])
+        }
+        links[[length(links) + 1L]] <- entry
+      }
+    }
+  }
+
+  links
 }
 
 rasterize_dense_grid_leaves <- function(dl, grobs, leaf_ids, width, height, dpi = 144) {

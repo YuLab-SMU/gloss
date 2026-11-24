@@ -246,20 +246,23 @@ test_that("gloss aligns nested user groupGrob, parses SVG path commands accurate
   expect_identical(el_l1$tag, "circle")
   expect_identical(el_l2$tag, "rect")
 
-  # SVG path bbox parser handles V/H, relative m/h/v, cubic C, and arc A cleanly
+  # SVG path bbox parser handles V/H, relative m/h/v, cubic C, and exact arc A extrema
   expect_equal(parse_single_path_bbox("M 10 20 V 80 H 50 L 30 40 Z"), c(10, 50, 20, 80))
   expect_equal(parse_single_path_bbox("m 10 20 v 60 h 40 z"), c(10, 50, 20, 80))
-  expect_equal(parse_single_path_bbox("M 0 0 A 25 25 0 0 1 50 30"), c(0, 50, 0, 30))
+  arc_bb <- parse_single_path_bbox("M 0 0 A 25 25 0 0 1 50 30")
+  expect_true(arc_bb[1L] <= 0 && arc_bb[2L] > 50 && arc_bb[3L] < 0 && arc_bb[4L] >= 30)
+  expect_equal(parse_single_path_bbox("M 0 0 A 10 10 0 0 1 20 0"), c(0, 20, -10, 0), tolerance = 1e-6)
   expect_equal(parse_single_path_bbox("M 0 0 c 10 5 20 15 30 40"), c(0, 30, 0, 40))
 
-  # Mixed base + grid page emits a clear diagnostic error
-  expect_error(
-    gloss(function() {
-      graphics::plot(1:5, 1:5)
-      grid::grid.text("overlay")
-    }),
-    "mixed base graphics and grid graphics"
-  )
+  # Mixed base + grid page degrades gracefully without crashing (ISS-MIX-01)
+  cap_mix <- gloss(function() {
+    graphics::plot(1:5, 1:5)
+    grid::grid.text("overlay")
+  })
+  expect_true(is_gloss_capture(cap_mix))
+  expect_identical(cap_mix$page$engine, "mixed")
+  expect_identical(cap_mix$page$degraded, "mixed_graphics_systems")
+  expect_true("overlay" %in% cap_mix$scene$elements$text)
 })
 
 test_that("Schema v1.0 captures typography, opacity, clip-paths, guide-box slots, and stat roles", {
