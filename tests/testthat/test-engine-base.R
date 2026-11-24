@@ -75,3 +75,31 @@ test_that("base engine handles log scales, recordedplot, dense rasterization, an
   })
   expect_identical(cap_grid_fn$page$engine, "grid")
 })
+
+test_that("base engine handles par(new=TRUE), layout(), plotmath UTF-8, and unique XML ids", {
+  cap_dual <- gloss(function() {
+    graphics::plot(1:5, (1:5)^2, pch = 16, main = expression(alpha + beta == gamma))
+    graphics::par(new = TRUE)
+    graphics::plot(1:5, seq(100, 500, by = 100), type = "l", col = "red", axes = FALSE, xlab = "", ylab = "")
+    graphics::axis(4)
+  })
+  expect_identical(cap_dual$page$engine, "base")
+  expect_equal(length(cap_dual$ir$panels), 2L)
+  expect_identical(cap_dual$ir$layers[[1L]]$geom, "BasePoints")
+  expect_identical(cap_dual$ir$layers[[2L]]$geom, "BaseLine")
+
+  # Multi-run chunk wrapping never emits duplicate SVG id attributes
+  chunk <- "<circle cx='1' cy='1' r='1'/>\n</g>\n<g clip-path='url(#c2)'>\n<circle cx='2' cy='2' r='1'/>\n"
+  w <- wrap_base_entry_chunk(chunk, "L001", "plotXY")
+  expect_equal(length(regmatches(w$text, gregexpr("id='L001'", w$text, fixed = TRUE))[[1L]]), 1L)
+  expect_equal(length(regmatches(w$text, gregexpr("data-gloss-leaf='L001'", w$text, fixed = TRUE))[[1L]]), 2L)
+
+  # Irregular layout()
+  cap_lay <- gloss(function() {
+    graphics::layout(matrix(c(1, 1, 2, 3), 2, 2, byrow = TRUE))
+    graphics::plot(1:6, 1:6)
+    graphics::hist(datasets::mtcars$mpg)
+    graphics::boxplot(datasets::mtcars$wt)
+  })
+  expect_equal(length(cap_lay$ir$panels), 3L)
+})

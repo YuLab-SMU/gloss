@@ -77,3 +77,33 @@ test_that("heatmap engine supports HeatmapList (ht1 + ht2) and open asset bundli
   parsed <- jsonlite::fromJSON(file.path(tmp, "hm-map.json"), simplifyVector = FALSE)
   expect_true(all(c("h1", "h2") %in% names(parsed$ir$orders)))
 })
+
+test_that("heatmap engine handles unnamed rasterized matrices, vertical %v%, and colliding names", {
+  skip_if_not_installed("ComplexHeatmap")
+
+  set.seed(11)
+  m_raw <- matrix(stats::rnorm(20), 5, 4)
+  cap_r <- gloss(ComplexHeatmap::Heatmap(m_raw, use_raster = TRUE))
+  # Avoid double "matrix_matrix_1" prefix
+  expect_true("matrix_1" %in% names(cap_r$tables))
+  linked_r <- cap_r$lineage[!is.na(cap_r$lineage$layer_id), ]
+  expect_identical(linked_r$cardinality, "N:1")
+  expect_identical(linked_r$n_rows, 20L)
+  expect_identical(linked_r$n_elements, 1L)
+
+  # Vertical concatenation with complex anno_barplot and colliding sanitized names
+  m1 <- matrix(stats::rnorm(12), 3, 4, dimnames = list(paste0("G", 1:3), paste0("S", 1:4)))
+  m2 <- matrix(stats::rnorm(8), 2, 4, dimnames = list(paste0("H", 1:2), paste0("S", 1:4)))
+  ha <- ComplexHeatmap::HeatmapAnnotation(
+    grp = c("A", "A", "B", "B"),
+    bars = ComplexHeatmap::anno_barplot(1:4)
+  )
+  ht_v <- ComplexHeatmap::add_heatmap(
+    ComplexHeatmap::Heatmap(m1, name = "A-1", top_annotation = ha),
+    ComplexHeatmap::Heatmap(m2, name = "A_1"),
+    direction = "vertical"
+  )
+  cap_v <- gloss(ht_v)
+  expect_true(all(c("matrix_A_1", "matrix_A_1_2", "anno_top_A_1") %in% names(cap_v$tables)))
+  expect_equal(length(cap_v$ir$panels), 2L)
+})

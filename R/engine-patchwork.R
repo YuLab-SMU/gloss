@@ -42,18 +42,25 @@ engine_patchwork_capture <- function(x, ctx) {
   merged_n_rows <- rep(NA_integer_, n_leaves)
 
   next_layer_id <- 0L
+  sp_idx <- 0L
 
   for (i in seq_along(subplots)) {
     sp <- subplots[[i]]
     plt <- sp$plot
+    # Skip non-data patchwork placeholders (plot_spacer(), wrap_elements())
+    if (inherits(plt, c("spacer", "wrapped_patch"))) next
+
     path_key <- paste(sp$path, collapse = "/")
+    pgrobs <- panel_grobs_by_path[[path_key]] %||% list()
+    if (length(plt$layers %||% list()) == 0L && length(pgrobs) == 0L) next
+
+    sp_idx <- sp_idx + 1L
 
     built_i <- tryCatch({
       b <- ggplot2::ggplot_build(plt)
       if (inherits(b, c("ggplot2::ggplot_built", "ggplot_built"))) b else NULL
     }, error = function(e) NULL)
 
-    pgrobs <- panel_grobs_by_path[[path_key]] %||% list()
     pgrob_names <- vapply(pgrobs, function(g) g$name %||% "", character(1L))
     pgrob_names <- pgrob_names[nzchar(pgrob_names)]
 
@@ -79,7 +86,7 @@ engine_patchwork_capture <- function(x, ctx) {
       NULL
     }
 
-    pfx <- sprintf("p%d", i)
+    pfx <- sprintf("p%d", sp_idx)
     ext <- extract_ggplot_ir(
       plot = plt,
       built = built_i,
@@ -92,14 +99,14 @@ engine_patchwork_capture <- function(x, ctx) {
 
     # Merge panels (annotate with subplot index)
     for (pan in ext$ir$panels) {
-      pan$subplot <- as.integer(i)
+      pan$subplot <- as.integer(sp_idx)
       all_panels[[length(all_panels) + 1L]] <- pan
     }
 
     # Remap subplot-local layer_ids to globally unique layer_ids
     layer_offset <- next_layer_id
     for (lyr in ext$ir$layers) {
-      lyr$subplot <- as.integer(i)
+      lyr$subplot <- as.integer(sp_idx)
       lyr$subplot_layer_id <- lyr$layer_id
       lyr$layer_id <- as.integer(layer_offset + lyr$layer_id)
       all_layers[[length(all_layers) + 1L]] <- lyr
@@ -108,7 +115,7 @@ engine_patchwork_capture <- function(x, ctx) {
 
     # Merge scales (annotate with subplot index)
     for (scl in ext$ir$scales) {
-      scl$subplot <- as.integer(i)
+      scl$subplot <- as.integer(sp_idx)
       all_scales[[length(all_scales) + 1L]] <- scl
     }
 

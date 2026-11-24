@@ -67,3 +67,24 @@ test_that("patchwork engine works with wrap_plots and packages into a valid bund
   expect_true(file.exists(file.path(bdir, "tables/p1_built_layer1.csv")))
   expect_true(file.exists(file.path(bdir, "tables/p2_built_layer1.csv")))
 })
+
+test_that("patchwork engine skips plot_spacer() and wrap_elements() without phantom panels", {
+  skip_if_not_installed("patchwork")
+  skip_if_not_installed("ggplot2")
+
+  p1 <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$wt, .data$mpg, colour = factor(.data$cyl))) +
+    ggplot2::geom_point()
+  p2 <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(factor(.data$cyl), fill = factor(.data$cyl))) +
+    ggplot2::geom_bar()
+
+  pw_sp <- p1 + patchwork::plot_spacer() + p2 + patchwork::plot_layout(guides = "collect")
+  cap_sp <- gloss(pw_sp)
+  expect_identical(vapply(cap_sp$ir$panels, `[[`, character(1L), "panel_id"), c("p1_P1", "p2_P1"))
+  linked_sp <- cap_sp$lineage[!is.na(cap_sp$lineage$layer_id), ]
+  expect_identical(linked_sp$panel_id, c("p1_P1", "p2_P1"))
+
+  pw_we <- patchwork::wrap_elements(grid::rectGrob(gp = grid::gpar(fill = "grey90"))) + p1
+  cap_we <- gloss(pw_we)
+  expect_identical(vapply(cap_we$ir$panels, `[[`, character(1L), "panel_id"), "p1_P1")
+  expect_equal(nrow(cap_we$lineage[!is.na(cap_we$lineage$layer_id), ]), 1L)
+})

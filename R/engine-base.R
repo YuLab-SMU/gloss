@@ -95,13 +95,18 @@ wrap_base_entry_chunk <- function(chunk, leaf_id, grob_name) {
 
   out <- character()
   in_group <- FALSE
-  open_tag <- sprintf(
-    "<g id='%s' data-gloss-leaf='%s' data-grob-name='%s'>",
-    leaf_id, leaf_id, gsub("'", "", grob_name, fixed = TRUE)
-  )
+  run_idx <- 0L
+  safe_grob <- gsub("['\"<>]", "", grob_name)
   for (i in seq_along(lines)) {
     if (prim[[i]]) {
       if (!in_group) {
+        run_idx <- run_idx + 1L
+        # Emit XML id only on the first run so multi-clip entries never create duplicate SVG ids
+        open_tag <- if (run_idx == 1L) {
+          sprintf("<g id='%s' data-gloss-leaf='%s' data-grob-name='%s'>", leaf_id, leaf_id, safe_grob)
+        } else {
+          sprintf("<g data-gloss-leaf='%s' data-grob-name='%s'>", leaf_id, safe_grob)
+        }
         out <- c(out, open_tag)
         in_group <- TRUE
       }
@@ -417,9 +422,18 @@ base_extract_call_table <- function(entry, op_name) {
   if (identical(op_name, "plotXY")) {
     xy <- a[[2L]]
     if (is.list(xy) && is.numeric(xy$x) && is.numeric(xy$y) && length(xy$x) == length(xy$y) && length(xy$x) > 0L) {
+      plot_type <- as.character(a[[3L]] %||% "p")[[1L]]
+      geom_name <- switch(
+        plot_type,
+        l = , s = , S = "BaseLine",
+        b = , o = "BasePointLine",
+        h = "BaseHistogram",
+        p = "BasePoints",
+        "BasePlotXY"
+      )
       return(list(
         data = data.frame(x = as.numeric(xy$x), y = as.numeric(xy$y), stringsAsFactors = FALSE),
-        geom = if (identical(a[[3L]], "l")) "BaseLine" else "BasePlotXY"
+        geom = geom_name
       ))
     }
   }

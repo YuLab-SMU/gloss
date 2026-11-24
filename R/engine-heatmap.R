@@ -34,6 +34,7 @@ engine_heatmap_capture <- function(x, ctx) {
   ht_layer_map <- stats::setNames(integer(), character())
   ht_table_map <- stats::setNames(character(), character())
   ht_orders_raw <- list()
+  used_safe_ids <- character()
   layer_counter <- 0L
 
   for (nm in ht_names) {
@@ -41,8 +42,10 @@ engine_heatmap_capture <- function(x, ctx) {
     if (!methods::is(h, "Heatmap")) next
 
     layer_counter <- layer_counter + 1L
-    safe_nm <- sanitize_heatmap_id(nm, fallback = paste0("ht", layer_counter))
-    tbl_id <- paste0("matrix_", safe_nm)
+    base_safe <- sanitize_heatmap_id(nm, fallback = paste0("ht", layer_counter))
+    safe_nm <- make_unique_heatmap_id(base_safe, used_safe_ids)
+    used_safe_ids <- c(used_safe_ids, safe_nm)
+    tbl_id <- if (startsWith(safe_nm, "matrix_")) safe_nm else paste0("matrix_", safe_nm)
 
     ht_layer_map[[nm]] <- layer_counter
     ht_table_map[[nm]] <- tbl_id
@@ -210,6 +213,16 @@ sanitize_heatmap_id <- function(name, fallback = "ht") {
   clean <- gsub("[^A-Za-z0-9_]+", "_", as.character(name %||% "")[[1L]])
   clean <- gsub("^_+|_+$", "", clean)
   if (!nzchar(clean)) fallback else clean
+}
+
+make_unique_heatmap_id <- function(base_id, used_ids) {
+  if (!(base_id %in% used_ids)) return(base_id)
+  k <- 2L
+  repeat {
+    cand <- paste0(base_id, "_", k)
+    if (!(cand %in% used_ids)) return(cand)
+    k <- k + 1L
+  }
 }
 
 heatmap_extract_order <- function(drawn, ht_name, dim = c("row", "column")) {
