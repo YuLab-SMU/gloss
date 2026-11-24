@@ -29,11 +29,18 @@ Imports:
     utils,
     xml2
 Suggests:
+    ape,
     ComplexHeatmap,
+    ggbreak,
     ggplot2,
+    ggrepel,
+    ggtree,
     knitr,
+    nanoparquet,
     patchwork,
+    png,
     rmarkdown,
+    sf,
     testthat (>= 3.0.0),
     withr
 VignetteBuilder: knitr

@@ -2,6 +2,7 @@
 ^CLAUDE\.md$
 ^LICENSE\.md$
 ^dev_docs$
+^skills$
 ^\.project-map$
 ^\.github$
 ^.*\.Rproj$

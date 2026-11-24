@@ -45,7 +45,11 @@ jobs:
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: |
+            any::rcmdcheck
+            any::pkgload
+            bioc::ComplexHeatmap
+            bioc::ggtree
           needs: check
 
       - name: Run R CMD check
@@ -53,3 +57,7 @@ jobs:
         with:
           args: 'c("--no-manual")'
           error-on: '"warning"'
+
+      - name: Run cross-language skill workflow tests
+        if: runner.os != 'Windows'
+        run: python3 skills/tests/test_workflows.py

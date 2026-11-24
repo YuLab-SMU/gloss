@@ -97,13 +97,12 @@ write_gloss_json <- function(x, path, pretty = TRUE) {
   invisible(path)
 }
 
-#' Write a data frame as standard UTF-8 CSV with an explicit 1-based `_row_id`
+#' Normalize a data frame for rectangular CSV or Parquet serialization
 #' @noRd
-write_gloss_csv <- function(df, path, add_row_id = TRUE) {
+prepare_tabular_df <- function(df, add_row_id = TRUE) {
   if (!is.data.frame(df)) {
     cli::cli_abort("{.arg df} must be a data.frame.")
   }
-  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
   out <- df
   if (isTRUE(add_row_id) && !("_row_id" %in% names(out))) {
     row_ids <- seq_len(nrow(out))
@@ -112,11 +111,13 @@ write_gloss_csv <- function(df, path, add_row_id = TRUE) {
       out
     )
   }
-  # Coerce list, matrix, and nested data.frame columns cleanly to JSON strings
-  # so CSV stays strictly rectangular and matches schema.json 1-to-1
+  # Coerce geometry (sfc -> WKT), list, matrix, and nested data.frame columns
+  # cleanly to UTF-8 strings so CSV and Parquet stay strictly rectangular.
   for (nm in names(out)) {
     col <- out[[nm]]
-    if (is.matrix(col)) {
+    if (inherits(col, "sfc")) {
+      out[[nm]] <- as.character(format(col))
+    } else if (is.matrix(col)) {
       out[[nm]] <- vapply(
         seq_len(nrow(col)),
         function(i) as.character(to_gloss_json(unname(col[i, , drop = TRUE]), pretty = FALSE)),
@@ -131,11 +132,29 @@ write_gloss_csv <- function(df, path, add_row_id = TRUE) {
     } else if (is.list(col)) {
       out[[nm]] <- vapply(
         col,
-        function(el) as.character(to_gloss_json(el, pretty = FALSE)),
+        function(el) {
+          tryCatch(
+            as.character(to_gloss_json(el, pretty = FALSE)),
+            error = function(e) {
+              tryCatch(
+                as.character(to_gloss_json(unclass(el), pretty = FALSE)),
+                error = function(e2) paste(format(el), collapse = " ")
+              )
+            }
+          )
+        },
         character(1L)
       )
     }
   }
+  out
+}
+
+#' Write a data frame as standard UTF-8 CSV with an explicit 1-based `_row_id`
+#' @noRd
+write_gloss_csv <- function(df, path, add_row_id = TRUE) {
+  out <- prepare_tabular_df(df, add_row_id = add_row_id)
+  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
   utils::write.csv(
     out,
     file = path,
@@ -146,9 +165,26 @@ write_gloss_csv <- function(df, path, add_row_id = TRUE) {
   invisible(path)
 }
 
+#' Write a data frame as standard Apache Parquet with an explicit 1-based `_row_id`
+#' @noRd
+write_gloss_parquet <- function(df, path, add_row_id = TRUE) {
+  if (!has_pkg("nanoparquet")) {
+    cli::cli_abort(
+      "Package {.pkg nanoparquet} is required for {.code table_format = \"parquet\"}. Install it or use {.code table_format = \"csv\"}."
+    )
+  }
+  out <- prepare_tabular_df(df, add_row_id = add_row_id)
+  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
+  nanoparquet::write_parquet(out, file = path)
+  invisible(path)
+}
+
 # --- Column typing & summaries -----------------------------------------------
 
 gloss_column_type <- function(col) {
+  if (inherits(col, "sfc")) {
+    return("geometry_wkt")
+  }
   if (is.factor(col)) {
     return(if (is.ordered(col)) "ordered_factor" else "factor")
   }
@@ -176,14 +212,70 @@ gloss_column_type <- function(col) {
   typeof(col)
 }
 
-table_column_summaries <- function(df) {
+STAT_COLUMN_ROLES <- c(
+  ymin = "interval_low",
+  ymax = "interval_high",
+  xmin = "interval_x_low",
+  xmax = "interval_x_high",
+  lower = "quartile_low",
+  ylower = "quartile_low",
+  xlower = "quartile_low",
+  middle = "median",
+  ymiddle = "median",
+  xmiddle = "median",
+  upper = "quartile_high",
+  yupper = "quartile_high",
+  xupper = "quartile_high",
+  ymin_final = "whisker_low",
+  ymax_final = "whisker_high",
+  xmin_final = "whisker_low",
+  xmax_final = "whisker_high",
+  notchlower = "notch_low",
+  notchupper = "notch_high",
+  outliers = "outliers",
+  se = "std_error",
+  count = "count",
+  ncount = "scaled_count",
+  density = "density",
+  ndensity = "scaled_density",
+  scaled = "scaled_density",
+  violinwidth = "violin_width",
+  level = "contour_level",
+  nlevel = "scaled_contour_level"
+)
+
+infer_stat_columns <- function(df, stat_name = NA_character_, geom_name = NA_character_) {
+  if (!is.data.frame(df) || ncol(df) == 0L) {
+    return(NULL)
+  }
+  interval_geoms <- c(
+    "GeomErrorbar", "GeomErrorbarh", "GeomRibbon", "GeomPointrange",
+    "GeomCrossbar", "GeomLinerange", "GeomBoxplot", "GeomSmooth", "GeomViolin"
+  )
+  has_stat <- !is.na(stat_name) && nzchar(stat_name) && !(stat_name %in% c("StatIdentity", "identity"))
+  has_interval_geom <- !is.na(geom_name) && geom_name %in% interval_geoms
+  if (!has_stat && !has_interval_geom) {
+    return(NULL)
+  }
+  hits <- intersect(names(df), names(STAT_COLUMN_ROLES))
+  if (length(hits) == 0L) {
+    return(NULL)
+  }
+  as.list(STAT_COLUMN_ROLES[hits])
+}
+
+table_column_summaries <- function(df, table_role = "raw") {
   if (!is.data.frame(df) || ncol(df) == 0L) {
     return(list())
   }
+  is_built <- identical(table_role, "built")
   lapply(names(df), function(nm) {
     col <- df[[nm]]
     ctype <- gloss_column_type(col)
     entry <- list(name = nm, type = ctype)
+    if (is_built && nm %in% names(STAT_COLUMN_ROLES)) {
+      entry$stat_role <- unname(STAT_COLUMN_ROLES[[nm]])
+    }
 
     if (ctype %in% c("integer", "double")) {
       finite <- col[is.finite(col)]
@@ -214,10 +306,11 @@ table_column_summaries <- function(df) {
   })
 }
 
-table_schema_spec <- function(df, add_row_id = TRUE) {
+table_schema_spec <- function(df, add_row_id = TRUE, table_role = "raw") {
   if (!is.data.frame(df)) {
     cli::cli_abort("{.arg df} must be a data.frame.")
   }
+  is_built <- identical(table_role, "built")
   cols <- list()
   if (isTRUE(add_row_id) && !("_row_id" %in% names(df))) {
     cols <- c(cols, list(list(name = "_row_id", type = "integer", role = "row_id")))
@@ -228,6 +321,15 @@ table_schema_spec <- function(df, add_row_id = TRUE) {
     spec <- list(name = nm, type = ctype)
     if (identical(nm, "_row_id")) {
       spec$role <- "row_id"
+    }
+    if (is_built && nm %in% names(STAT_COLUMN_ROLES)) {
+      spec$stat_role <- unname(STAT_COLUMN_ROLES[[nm]])
+    }
+    if (inherits(col, "sfc")) {
+      crs_obj <- attr(col, "crs")
+      if (is.list(crs_obj) && !is.null(crs_obj$input) && nzchar(crs_obj$input[[1L]])) {
+        spec$crs <- as.character(crs_obj$input)[[1L]]
+      }
     }
     if (is.factor(col)) {
       spec$levels <- as.list(levels(col))
@@ -270,6 +372,11 @@ empty_leaves_df <- function() {
     yscale1 = double(),
     n_elements = integer(),
     dense = logical(),
+    clip_id = character(),
+    clip_x0 = double(),
+    clip_y0 = double(),
+    clip_x1 = double(),
+    clip_y1 = double(),
     stringsAsFactors = FALSE
   )
 }
@@ -287,6 +394,17 @@ empty_elements_df <- function() {
     bbox_y1 = double(),
     fill = character(),
     stroke = character(),
+    stroke_width = double(),
+    opacity = double(),
+    font_size = double(),
+    font_family = character(),
+    text_anchor = character(),
+    rotation = double(),
+    clip_id = character(),
+    clip_x0 = double(),
+    clip_y0 = double(),
+    clip_x1 = double(),
+    clip_y1 = double(),
     stringsAsFactors = FALSE
   )
 }
@@ -411,6 +529,9 @@ new_gloss_capture <- function(
     scales = ir$scales %||% list(),
     orders = ir$orders %||% stats::setNames(list(), character())
   )
+  if (!is.null(ir$guides)) {
+    norm_ir$guides <- ir$guides
+  }
 
   norm_tables <- stats::setNames(list(), character())
   if (length(tables) > 0L) {

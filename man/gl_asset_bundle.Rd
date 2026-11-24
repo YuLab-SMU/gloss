@@ -10,6 +10,7 @@ gl_asset_bundle(
   select = NULL,
   rows = NULL,
   format = c("dir", "zip"),
+  table_format = c("csv", "parquet"),
   overwrite = TRUE
 )
 }
@@ -34,6 +35,11 @@ data frame and returning a logical or integer index vector. Original
 
 \item{format}{Output format: \code{"dir"} (default) writes a directory bundle;
 \code{"zip"} writes a portable ZIP archive.}
+
+\item{table_format}{Serialization format for data tables under \verb{tables/}:
+\code{"csv"} (default, zero extra dependencies) writes UTF-8 \code{.csv} files;
+\code{"parquet"} writes standard Apache Parquet \code{.parquet} files (requires the
+optional \code{nanoparquet} package in \code{Suggests}).}
 
 \item{overwrite}{Logical; whether to replace an existing directory or archive
 at \code{path}. Defaults to \code{TRUE}.}

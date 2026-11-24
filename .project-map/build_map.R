@@ -258,6 +258,44 @@ builtin_engines <- list(
   )
 )
 
+ecosystem_tools <- list(
+  list(
+    id = "ecosystem.skill_gloss",
+    name = "Base Protocol Skill: gloss",
+    files = c("skills/gloss/SKILL.md"),
+    tests = character(),
+    phase = "Phase 6"
+  ),
+  list(
+    id = "ecosystem.skill_refine",
+    name = "SVG Refinement Skill: gloss-svg-refine",
+    files = c("skills/gloss-svg-refine/SKILL.md", "skills/gloss-svg-refine/scripts/verify_svg_fidelity.py"),
+    tests = c("skills/tests/test_workflows.py"),
+    phase = "Phase 6"
+  ),
+  list(
+    id = "ecosystem.skill_audit",
+    name = "Semantic Audit Skill: gloss-audit",
+    files = c("skills/gloss-audit/SKILL.md", "skills/gloss-audit/scripts/audit_bundle.py"),
+    tests = c("skills/tests/test_workflows.py"),
+    phase = "Phase 6"
+  ),
+  list(
+    id = "ecosystem.skill_report",
+    name = "Report Skill: gloss-report",
+    files = c("skills/gloss-report/SKILL.md"),
+    tests = character(),
+    phase = "Phase 6"
+  ),
+  list(
+    id = "ecosystem.external_scripts",
+    name = "Python / JS / DuckDB Toolchains",
+    files = c("skills/gloss-svg-refine/scripts/verify_svg_fidelity.py", "skills/gloss-audit/scripts/audit_bundle.py"),
+    tests = c("skills/tests/test_workflows.py"),
+    phase = "Phase 6"
+  )
+)
+
 # --- 4. Evaluate Live Status & Guardrails ------------------------------------
 
 canonical_export_names <- vapply(canonical_apis, `[[`, character(1L), "name")
@@ -368,6 +406,31 @@ engine_records <- lapply(builtin_engines, function(e) {
     source_exists = src_exists,
     test_exists = test_exists,
     dependency_bucket = dep_bucket,
+    loc = loc
+  )
+})
+
+ecosystem_records <- lapply(ecosystem_tools, function(ec) {
+  src_exists <- length(ec$files) > 0L && all(file.exists(ec$files))
+  any_src <- length(ec$files) > 0L && any(file.exists(ec$files))
+  test_exists <- length(ec$tests) > 0L && any(file.exists(ec$tests))
+  loc <- count_loc(ec$files)
+  status <- if (src_exists) {
+    "implemented"
+  } else if (any_src) {
+    "drift"
+  } else {
+    "planned"
+  }
+  list(
+    id = ec$id,
+    name = ec$name,
+    phase = ec$phase,
+    status = status,
+    files = ec$files,
+    tests = ec$tests,
+    source_exists = src_exists,
+    test_exists = test_exists,
     loc = loc
   )
 })
@@ -544,7 +607,7 @@ c4_lines <- c(
     ),
     meta = list(
       status = if ("gl_asset_bundle" %in% actual_exports) "implemented" else "planned",
-      formats = "dir (.gloss/), zip (.gloss.zip)"
+      formats = "dir (.gloss/), zip (.gloss.zip); tables: csv, parquet"
     )
   )
 )
@@ -660,6 +723,35 @@ for (g in guardrails) {
   )
 }
 
+# Outer Ecosystem (Out-of-Core Skills & Verifiers)
+for (ec in ecosystem_records) {
+  lks <- list()
+  for (f in ec$files) {
+    if (file.exists(f)) {
+      lks[[length(lks) + 1L]] <- list(url = paste0(blob_base, f), label = paste("Source:", f))
+    }
+  }
+  for (tf in ec$tests) {
+    if (file.exists(tf)) {
+      lks[[length(lks) + 1L]] <- list(url = paste0(blob_base, tf), label = paste("Tests:", basename(tf)))
+    }
+  }
+  c4_lines <- c(
+    c4_lines,
+    append_extend(
+      ec$id,
+      tags = ec$status,
+      links = lks,
+      meta = list(
+        status = ec$status,
+        phase = ec$phase,
+        files = paste(ec$files, collapse = ", "),
+        loc = as.character(ec$loc)
+      )
+    )
+  )
+}
+
 c4_lines <- c(c4_lines, "}")
 
 dir.create(".project-map/model", recursive = TRUE, showWarnings = FALSE)
@@ -694,7 +786,8 @@ status_payload <- list(
   guardrails = guardrails,
   apis = api_records,
   modules = module_records,
-  engines = engine_records
+  engines = engine_records,
+  ecosystem = ecosystem_records
 )
 
 json_txt <- as.character(jsonlite::toJSON(

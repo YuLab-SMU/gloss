@@ -28,14 +28,16 @@ gl_asset_map <- function(cap, path = NULL) {
   table_entries <- lapply(names(cap$tables), function(tid) {
     entry <- cap$tables[[tid]]
     df <- entry$data
+    trole <- entry$role %||% "raw"
     list(
       table_id = tid,
-      role = entry$role %||% "raw",
+      role = trole,
+      format = "csv",
       nrow = as.integer(nrow(df)),
       ncol = as.integer(ncol(df)),
       key = json_array(entry$key),
       path = paste0("tables/", tid, ".csv"),
-      columns = json_array(table_column_summaries(df))
+      columns = json_array(table_column_summaries(df, table_role = trole))
     )
   })
 
@@ -51,6 +53,16 @@ gl_asset_map <- function(cap, path = NULL) {
       sha256 = if (is.null(src$sha256) || is.na(src$sha256)) NULL else as.character(src$sha256)
     )
   })
+
+  ir_entry <- list(
+    panels = json_array(cap$ir$panels),
+    layers = json_array(cap$ir$layers),
+    scales = json_array(cap$ir$scales),
+    orders = cap$ir$orders %||% stats::setNames(list(), character())
+  )
+  if (!is.null(cap$ir$guides)) {
+    ir_entry$guides <- cap$ir$guides
+  }
 
   map <- structure(
     list(
@@ -75,12 +87,7 @@ gl_asset_map <- function(cap, path = NULL) {
         n_elements = as.integer(nrow(cap$scene$elements)),
         dense_leaves = json_array(cap$scene$dense_leaves)
       ),
-      ir = list(
-        panels = json_array(cap$ir$panels),
-        layers = json_array(cap$ir$layers),
-        scales = json_array(cap$ir$scales),
-        orders = cap$ir$orders %||% stats::setNames(list(), character())
-      ),
+      ir = ir_entry,
       tables = json_array(table_entries),
       lineage = json_array(df_to_records(cap$lineage)),
       sources = json_array(source_entries)
@@ -144,6 +151,10 @@ print.gloss_asset_map <- function(x, ...) {
 #'   1-based `_row_id` values are preserved.
 #' @param format Output format: `"dir"` (default) writes a directory bundle;
 #'   `"zip"` writes a portable ZIP archive.
+#' @param table_format Serialization format for data tables under `tables/`:
+#'   `"csv"` (default, zero extra dependencies) writes UTF-8 `.csv` files;
+#'   `"parquet"` writes standard Apache Parquet `.parquet` files (requires the
+#'   optional `nanoparquet` package in `Suggests`).
 #' @param overwrite Logical; whether to replace an existing directory or archive
 #'   at `path`. Defaults to `TRUE`.
 #'
@@ -159,10 +170,17 @@ gl_asset_bundle <- function(
     select = NULL,
     rows = NULL,
     format = c("dir", "zip"),
+    table_format = c("csv", "parquet"),
     overwrite = TRUE) {
 
   validate_gloss_capture(cap)
   format <- match.arg(format)
+  table_format <- match.arg(table_format)
+  if (identical(table_format, "parquet") && !has_pkg("nanoparquet")) {
+    cli::cli_abort(
+      "Package {.pkg nanoparquet} is required for {.code table_format = \"parquet\"}. Install it or use {.code table_format = \"csv\"}."
+    )
+  }
 
   if (is.null(path)) {
     default_name <- if (identical(format, "zip")) "figure.gloss.zip" else "figure.gloss"
@@ -290,15 +308,24 @@ gl_asset_bundle <- function(
       }
     }
 
-    csv_path <- file.path(stage_dir, "tables", paste0(tid, ".csv"))
-    write_gloss_csv(df_with_id, csv_path, add_row_id = FALSE)
+    tbl_ext <- if (identical(table_format, "parquet")) ".parquet" else ".csv"
+    tbl_rel_path <- paste0("tables/", tid, tbl_ext)
+    tbl_disk_path <- file.path(stage_dir, tbl_rel_path)
+    if (identical(table_format, "parquet")) {
+      write_gloss_parquet(df_with_id, tbl_disk_path, add_row_id = FALSE)
+    } else {
+      write_gloss_csv(df_with_id, tbl_disk_path, add_row_id = FALSE)
+    }
 
+    trole <- entry$role %||% "raw"
     table_schemas[[tid]] <- list(
       table_id = tid,
-      role = entry$role %||% "raw",
+      role = trole,
+      format = table_format,
+      path = tbl_rel_path,
       key = json_array(entry$key),
       nrow = as.integer(nrow(df_with_id)),
-      columns = json_array(table_schema_spec(df_with_id, add_row_id = FALSE))
+      columns = json_array(table_schema_spec(df_with_id, add_row_id = FALSE, table_role = trole))
     )
   }
 
@@ -378,8 +405,11 @@ gl_asset_bundle <- function(
   map <- gl_asset_map(cap)
   map$scene$elements_included <- isTRUE(sel$elements)
   if (length(map$tables) > 0L) {
+    tbl_ext <- if (identical(table_format, "parquet")) ".parquet" else ".csv"
     map$tables <- lapply(map$tables, function(tb) {
       inc <- tb$table_id %in% names(table_schemas)
+      tb$format <- table_format
+      tb$path <- paste0("tables/", tb$table_id, tbl_ext)
       tb$included <- isTRUE(inc)
       tb$bundle_nrow <- if (inc) as.integer(table_schemas[[tb$table_id]]$nrow) else 0L
       tb

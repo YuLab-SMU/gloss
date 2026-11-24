@@ -261,3 +261,64 @@ test_that("gloss aligns nested user groupGrob, parses SVG path commands accurate
     "mixed base graphics and grid graphics"
   )
 })
+
+test_that("Schema v1.0 captures typography, opacity, clip-paths, guide-box slots, and stat roles", {
+  skip_if_not_installed("ggplot2")
+
+  p <- ggplot2::ggplot(
+    datasets::mtcars,
+    ggplot2::aes(factor(.data$cyl), .data$mpg, colour = factor(.data$cyl))
+  ) +
+    ggplot2::geom_boxplot(alpha = 0.4) +
+    ggplot2::stat_summary(fun.data = ggplot2::mean_se, geom = "errorbar", width = 0.2) +
+    ggplot2::labs(colour = "Cylinders") +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+
+  cap <- gloss(p)
+  els <- cap$scene$elements
+  lvs <- cap$scene$leaves
+
+  # T1.1: Typography, stroke_width, and opacity
+  txts <- els[els$tag == "text", ]
+  expect_gt(nrow(txts), 0L)
+  expect_true(all(is.finite(txts$font_size) & txts$font_size > 0))
+  expect_true(any(!is.na(txts$font_family) & nzchar(txts$font_family)))
+  expect_true(all(txts$text_anchor %in% c("start", "middle", "end")))
+  rot_x <- txts[txts$text %in% c("4", "6", "8"), ]
+  expect_true(any(abs(rot_x$rotation - (-45)) < 0.01))
+  expect_true(any(abs(els$opacity - 0.4) < 0.02))
+  expect_true(any(is.finite(els$stroke_width) & els$stroke_width > 0))
+
+  # T1.2: Clip-path rects on both leaves and elements (ggplot + base)
+  panel_leaves <- lvs[lvs$layout_slot == "panel", ]
+  expect_gt(nrow(panel_leaves), 0L)
+  expect_true(all(!is.na(panel_leaves$clip_id)))
+  expect_true(all(is.finite(panel_leaves$clip_x0) & panel_leaves$clip_x1 > panel_leaves$clip_x0))
+  expect_true(all(is.finite(panel_leaves$clip_y0) & panel_leaves$clip_y1 > panel_leaves$clip_y0))
+  expect_true(any(!is.na(els$clip_id) & is.finite(els$clip_x1)))
+
+  cap_base <- gloss(function() graphics::plot(1:5, 1:5))
+  expect_true(any(!is.na(cap_base$scene$leaves$clip_id) & is.finite(cap_base$scene$leaves$clip_x1)))
+
+  # T1.3: Legend title ("Cylinders") and inner legend background resolve to guide-box*, not "title"/"background"
+  cyl_lbl <- els[!is.na(els$text) & els$text == "Cylinders", ]
+  expect_gte(nrow(cyl_lbl), 1L)
+  cyl_slot <- lvs$layout_slot[match(cyl_lbl$leaf_id[[1L]], lvs$leaf_id)]
+  expect_match(cyl_slot, "^guide-box")
+  guide_vp_leaves <- lvs[grepl("guide-box", lvs$vp_path, fixed = TRUE), ]
+  expect_gt(nrow(guide_vp_leaves), 0L)
+  expect_true(all(grepl("^guide-box", guide_vp_leaves$layout_slot)))
+
+  # T1.4: Stat column role semantics in ir$layers, asset-map.json, and tables/schema.json
+  expect_identical(cap$ir$layers[[1L]]$stat_columns$middle, "median")
+  expect_identical(cap$ir$layers[[1L]]$stat_columns$lower, "quartile_low")
+  expect_identical(cap$ir$layers[[1L]]$stat_columns$upper, "quartile_high")
+  expect_identical(cap$ir$layers[[2L]]$stat_columns$ymin, "interval_low")
+  expect_identical(cap$ir$layers[[2L]]$stat_columns$ymax, "interval_high")
+
+  bdir <- gl_asset_bundle(cap, path = withr::local_tempdir())
+  schema <- jsonlite::read_json(file.path(bdir, "tables", "schema.json"))
+  b1_cols <- schema$tables$built_layer1$columns
+  mid_col <- Filter(function(c) identical(c$name, "middle"), b1_cols)[[1L]]
+  expect_identical(mid_col$stat_role, "median")
+})

@@ -51,11 +51,18 @@ test_that("heatmap engine captures ComplexHeatmap matrix, clustering orders, ann
 
   # 4 slice panels (2 x 2) linked 1:1 to matrix cells summing to 24 cells
   expect_equal(length(cap$ir$panels), 4L)
-  linked <- cap$lineage[!is.na(cap$lineage$layer_id), ]
-  expect_equal(nrow(linked), 4L)
-  expect_true(all(linked$cardinality == "1:1"))
-  expect_identical(sum(linked$n_rows), 24L)
-  expect_identical(sum(linked$n_elements), 24L)
+  body_linked <- cap$lineage[!is.na(cap$lineage$table_id) & cap$lineage$table_id == "matrix_expr", ]
+  expect_equal(nrow(body_linked), 4L)
+  expect_true(all(body_linked$cardinality == "1:1"))
+  expect_identical(sum(body_linked$n_rows), 24L)
+  expect_identical(sum(body_linked$n_elements), 24L)
+
+  # T2.3: Annotation slices (group & score across 2 column slices = 4 leaves) linked to anno_top_expr
+  anno_linked <- cap$lineage[!is.na(cap$lineage$table_id) & cap$lineage$table_id == "anno_top_expr", ]
+  expect_equal(nrow(anno_linked), 4L)
+  expect_true(all(anno_linked$cardinality == "1:1"))
+  expect_identical(sum(anno_linked$n_rows), 8L)
+  expect_identical(sum(anno_linked$n_elements), 8L)
 })
 
 test_that("heatmap engine supports HeatmapList (ht1 + ht2) and open asset bundling", {
@@ -83,13 +90,32 @@ test_that("heatmap engine handles unnamed rasterized matrices, vertical %v%, and
 
   set.seed(11)
   m_raw <- matrix(stats::rnorm(20), 5, 4)
-  cap_r <- gloss(ComplexHeatmap::Heatmap(m_raw, use_raster = TRUE))
+  cap_unnamed <- gloss(ComplexHeatmap::Heatmap(m_raw, use_raster = FALSE))
   # Avoid double "matrix_matrix_1" prefix
-  expect_true("matrix_1" %in% names(cap_r$tables))
-  linked_r <- cap_r$lineage[!is.na(cap_r$lineage$layer_id), ]
-  expect_identical(linked_r$cardinality, "N:1")
-  expect_identical(linked_r$n_rows, 20L)
-  expect_identical(linked_r$n_elements, 1L)
+  expect_true("matrix_1" %in% names(cap_unnamed$tables))
+
+  r_param <- if (identical(Sys.info()[["sysname"]], "Darwin")) list(type = "quartz") else list()
+  probe_png <- withr::local_tempfile(fileext = ".png")
+  can_raster <- isTRUE(requireNamespace("png", quietly = TRUE)) && tryCatch({
+    do.call(grDevices::png, c(list(filename = probe_png, width = 16, height = 16), r_param))
+    graphics::plot.new()
+    grDevices::dev.off()
+    file.exists(probe_png) && file.info(probe_png)$size > 0
+  }, warning = function(w) FALSE, error = function(e) FALSE)
+
+  if (can_raster) {
+    cap_r <- gloss(ComplexHeatmap::Heatmap(
+      m_raw,
+      use_raster = TRUE,
+      raster_device = "png",
+      raster_device_param = r_param
+    ))
+    expect_true("matrix_1" %in% names(cap_r$tables))
+    linked_r <- cap_r$lineage[!is.na(cap_r$lineage$layer_id), ]
+    expect_identical(linked_r$cardinality, "N:1")
+    expect_identical(linked_r$n_rows, 20L)
+    expect_identical(linked_r$n_elements, 1L)
+  }
 
   # Vertical concatenation with complex anno_barplot and colliding sanitized names
   m1 <- matrix(stats::rnorm(12), 3, 4, dimnames = list(paste0("G", 1:3), paste0("S", 1:4)))
@@ -105,5 +131,17 @@ test_that("heatmap engine handles unnamed rasterized matrices, vertical %v%, and
   )
   cap_v <- gloss(ht_v)
   expect_true(all(c("matrix_A_1", "matrix_A_1_2", "anno_top_A_1") %in% names(cap_v$tables)))
+  expect_true(all(c("grp", "bars") %in% names(gl_tables(cap_v, "anno_top_A_1"))))
+  anno_v <- cap_v$lineage[!is.na(cap_v$lineage$table_id) & cap_v$lineage$table_id == "anno_top_A_1", ]
+  expect_equal(nrow(anno_v), 2L)
+  expect_true(all(anno_v$cardinality == "1:1"))
   expect_equal(length(cap_v$ir$panels), 2L)
+
+  # Standalone rowAnnotation concatenated via +
+  hl_row <- ComplexHeatmap::Heatmap(m1, name = "expr_r") +
+    ComplexHeatmap::rowAnnotation(pathway = c("P1", "P1", "P2"))
+  cap_row <- gloss(hl_row)
+  anno_tbls <- grep("^anno_", names(cap_row$tables), value = TRUE)
+  expect_length(anno_tbls, 1L)
+  expect_true(any(cap_row$lineage$table_id == anno_tbls[[1L]], na.rm = TRUE))
 })

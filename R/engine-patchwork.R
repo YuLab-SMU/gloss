@@ -18,15 +18,20 @@ register_engine_patchwork <- function() {
 }
 
 engine_patchwork_capture <- function(x, ctx) {
+  # Pin unseeded stochastic jitter positions on a shallow-cloned patchwork copy
+  # BEFORE patchworkGrob() builds subplots internally, so subplot built tables
+  # match drawn SVG coordinates 1-to-1 without mutating caller objects.
+  x_seeded <- patchwork_pin_stochastic_seeds(x)
+
   grid::grid.newpage()
-  gt <- patchwork::patchworkGrob(x)
+  gt <- patchwork::patchworkGrob(x_seeded)
   grid::grid.draw(gt)
   ctx$ensure_device()
 
   sc <- ctx$capture_grid(draw_method = "patchworkGrob")
   leaves <- sc$leaves
 
-  subplots <- patchwork_collect_subplots(x)
+  subplots <- patchwork_collect_subplots(x_seeded)
   panel_grobs_by_path <- patchwork_find_panel_grobs(gt)
 
   all_panels <- list()
@@ -151,16 +156,131 @@ engine_patchwork_capture <- function(x, ctx) {
     n_rows = merged_n_rows
   )
 
+  guides_ir <- patchwork_extract_guides_ir(x_seeded, leaves, all_scales)
+  ir_out <- list(
+    panels = all_panels,
+    layers = all_layers,
+    scales = all_scales,
+    orders = stats::setNames(list(), character())
+  )
+  if (!is.null(guides_ir)) {
+    ir_out$guides <- guides_ir
+  }
+
   list(
     scene = sc,
-    ir = list(
-      panels = all_panels,
-      layers = all_layers,
-      scales = all_scales,
-      orders = stats::setNames(list(), character())
-    ),
+    ir = ir_out,
     tables = all_tables,
     lineage = lineage
+  )
+}
+
+patchwork_pin_ggplot_seeds <- function(plt) {
+  if (!inherits(plt, c("ggplot2::ggplot", "ggplot"))) {
+    return(plt)
+  }
+  lyrs <- plt$layers %||% list()
+  if (length(lyrs) == 0L) {
+    return(plt)
+  }
+  changed <- FALSE
+  new_lyrs <- vector("list", length(lyrs))
+  for (k in seq_along(lyrs)) {
+    lyr <- lyrs[[k]]
+    pos <- lyr$position
+    if (inherits(pos, "PositionJitter") && (is.null(pos$seed) || isTRUE(is.na(pos$seed)))) {
+      s <- sample.int(10000000L, 1L)
+      new_pos <- ggplot2::position_jitter(width = pos$width, height = pos$height, seed = s)
+      new_lyrs[[k]] <- ggplot2::ggproto(NULL, lyr, position = new_pos)
+      changed <- TRUE
+    } else if (inherits(pos, "PositionJitterdodge") && (is.null(pos$seed) || isTRUE(is.na(pos$seed)))) {
+      s <- sample.int(10000000L, 1L)
+      new_pos <- ggplot2::position_jitterdodge(
+        jitter.width = pos$jitter.width,
+        jitter.height = pos$jitter.height,
+        dodge.width = pos$dodge.width,
+        seed = s
+      )
+      new_lyrs[[k]] <- ggplot2::ggproto(NULL, lyr, position = new_pos)
+      changed <- TRUE
+    } else {
+      new_lyrs[[k]] <- lyr
+    }
+  }
+  if (changed) {
+    plt$layers <- new_lyrs
+  }
+  plt
+}
+
+patchwork_pin_stochastic_seeds <- function(x) {
+  if (inherits(x, "patchwork")) {
+    plots <- x$patches$plots %||% list()
+    if (length(plots) > 0L) {
+      x$patches$plots <- lapply(plots, patchwork_pin_stochastic_seeds)
+    }
+  }
+  patchwork_pin_ggplot_seeds(x)
+}
+
+patchwork_has_collected_guides <- function(x) {
+  if (!inherits(x, "patchwork")) {
+    return(FALSE)
+  }
+  if (identical(x$patches$layout$guides, "collect")) {
+    return(TRUE)
+  }
+  plots <- x$patches$plots %||% list()
+  for (p in plots) {
+    if (patchwork_has_collected_guides(p)) {
+      return(TRUE)
+    }
+  }
+  FALSE
+}
+
+patchwork_extract_guides_ir <- function(x, leaves, all_scales) {
+  collected <- patchwork_has_collected_guides(x)
+  gb_idx <- if (nrow(leaves) > 0L) which(grepl("^guide-box", leaves$layout_slot)) else integer()
+  if (!collected && length(gb_idx) == 0L) {
+    return(NULL)
+  }
+
+  # When guides = "collect" is active at top level, prefer outer guide-box leaves
+  target_idx <- gb_idx
+  if (collected && length(gb_idx) > 0L) {
+    outer_gb <- gb_idx[grepl("^layout::guide-box", leaves$vp_path[gb_idx])]
+    if (length(outer_gb) > 0L) {
+      target_idx <- outer_gb
+    }
+  }
+
+  bbox_pt <- NULL
+  if (length(target_idx) > 0L) {
+    valid <- target_idx[
+      is.finite(leaves$bbox_x0[target_idx]) & is.finite(leaves$bbox_y0[target_idx]) &
+        is.finite(leaves$bbox_x1[target_idx]) & is.finite(leaves$bbox_y1[target_idx])
+    ]
+    if (length(valid) > 0L) {
+      bbox_pt <- json_array(round_pt(c(
+        min(leaves$bbox_x0[valid]),
+        min(leaves$bbox_y0[valid]),
+        max(leaves$bbox_x1[valid]),
+        max(leaves$bbox_y1[valid])
+      )))
+    }
+  }
+
+  non_pos_aes <- unique(unlist(lapply(all_scales, function(s) {
+    a <- s$aesthetic %||% ""
+    if (nzchar(a) && !(a %in% c("x", "y"))) a else character()
+  })))
+
+  list(
+    collected = isTRUE(collected),
+    bbox_pt = bbox_pt,
+    leaf_ids = json_array(leaves$leaf_id[target_idx]),
+    aesthetics = json_array(non_pos_aes)
   )
 }
 

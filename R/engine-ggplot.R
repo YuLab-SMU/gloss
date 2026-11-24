@@ -268,21 +268,25 @@ ggplot_extract_layers <- function(plot, built, table_prefix = "") {
     } else {
       NULL
     }
-    built_tbl <- if (!is.null(built) && i <= length(built$data) && is.data.frame(built$data[[i]])) {
-      paste0(pfx, "built_layer", i)
+    built_df <- if (!is.null(built) && i <= length(built$data) && is.data.frame(built$data[[i]])) {
+      built$data[[i]]
     } else {
       NULL
     }
+    built_tbl <- if (!is.null(built_df)) paste0(pfx, "built_layer", i) else NULL
+    geom_cls <- class(lyr$geom)[[1L]]
+    stat_cls <- class(lyr$stat)[[1L]]
 
     make_layer_ir(
       layer_id = i,
-      geom = class(lyr$geom)[[1L]],
-      stat = class(lyr$stat)[[1L]],
+      geom = geom_cls,
+      stat = stat_cls,
       position = class(lyr$position)[[1L]],
       aes = eff_aes,
       raw_table = raw_tbl,
       built_table = built_tbl,
-      params = sanitize_layer_params(lyr$aes_params)
+      params = sanitize_layer_params(lyr$aes_params),
+      stat_columns = infer_stat_columns(built_df, stat_name = stat_cls, geom_name = geom_cls)
     )
   })
 }

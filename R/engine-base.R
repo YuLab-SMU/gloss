@@ -340,9 +340,16 @@ replay_base_display_list <- function(rp, width, height, dense = 10000) {
       yscale1 = vapply(leaf_rows, function(r) r$usr[[4L]], numeric(1L)),
       n_elements = integer(length(leaf_rows)),
       dense = rep(FALSE, length(leaf_rows)),
+      clip_id = rep(NA_character_, length(leaf_rows)),
+      clip_x0 = rep(NA_real_, length(leaf_rows)),
+      clip_y0 = rep(NA_real_, length(leaf_rows)),
+      clip_x1 = rep(NA_real_, length(leaf_rows)),
+      clip_y1 = rep(NA_real_, length(leaf_rows)),
       stringsAsFactors = FALSE
     )
   }
+
+  leaves_df <- attach_leaf_clips(leaves_df, scene_doc)
 
   if (nrow(leaves_df) > 0L) {
     counts <- table(factor(elements_df$leaf_id, levels = leaves_df$leaf_id))

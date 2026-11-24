@@ -59,7 +59,7 @@ list.files(bundle_dir, recursive = TRUE)
 | :--- | :--- |
 | `gloss(x, sources, width, height, dense, engine)` | Single-draw capture into an in-memory `gloss_capture` object |
 | `gl_asset_map(cap, path)` | Build or write compact `asset-map.json` index |
-| `gl_asset_bundle(cap, path, select, rows, format, overwrite)` | Package portable `.gloss/` directory or `.zip` bundle |
+| `gl_asset_bundle(cap, path, select, rows, format, table_format, overwrite)` | Package portable `.gloss/` directory or `.zip` bundle (`csv` or `parquet` tables) |
 | `gl_scene(cap)` | Inspect dual SVGs, leaves, elements, rasters, and panels |
 | `gl_tables(cap, name)` | Access captured `raw` and engine-`built` data frames |
 | `gl_sources(cap)` | Inspect `explicit`, `runtime_observed`, and `sniffed_hint` provenance |
@@ -95,9 +95,13 @@ figure.gloss/
 └── sources/                 # Snapshotted code/docs/data files & session.json
 ```
 
-## Architecture & Live Project Map
+## Architecture, Skills & Live Project Map
 
 - Full design specification: [`dev_docs/architecture.md`](dev_docs/architecture.md)
+- Out-of-core downstream skills & stdlib Python verifiers (`skills/`):
+  - [`skills/gloss-svg-refine/`](skills/gloss-svg-refine/SKILL.md) + `scripts/verify_svg_fidelity.py` — publication SVG derivation & geometric/manifest verifier
+  - [`skills/gloss-audit/`](skills/gloss-audit/SKILL.md) + `scripts/audit_bundle.py` — manuscript caption & statistical claim reconciler
+  - [`skills/gloss-report/`](skills/gloss-report/SKILL.md) — traceable multi-panel & study-level report synthesis
 - Interactive architecture & code-alignment map (auto-updated on every commit to `main`): **[gloss Project Map (LikeC4)](https://yulab-smu.github.io/gloss/)**
 
 ## License

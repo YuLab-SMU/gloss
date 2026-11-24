@@ -88,3 +88,47 @@ test_that("patchwork engine skips plot_spacer() and wrap_elements() without phan
   expect_identical(vapply(cap_we$ir$panels, `[[`, character(1L), "panel_id"), "p1_P1")
   expect_equal(nrow(cap_we$lineage[!is.na(cap_we$lineage$layer_id), ]), 1L)
 })
+
+test_that("patchwork engine pins unseeded geom_jitter coordinates 1:1 and maps collected guides", {
+  skip_if_not_installed("patchwork")
+  skip_if_not_installed("ggplot2")
+
+  p1 <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$wt, .data$mpg, colour = factor(.data$cyl))) +
+    ggplot2::geom_jitter(width = 0.25, height = 1.5)
+  p2 <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$disp, .data$hp, colour = factor(.data$cyl))) +
+    ggplot2::geom_jitter(width = 15, height = 10)
+
+  pw <- (p1 | p2) + patchwork::plot_layout(guides = "collect")
+  cap <- gloss(pw, width = 8, height = 4)
+
+  # Caller plot objects are never mutated in place
+  expect_true(is.na(p1$layers[[1L]]$position$seed))
+  expect_true(is.na(p2$layers[[1L]]$position$seed))
+
+  # T2.1: Jittered built tables correlate > 0.9999 with drawn SVG circles
+  b1 <- gl_tables(cap, "p1_built_layer1")
+  lid1 <- cap$lineage$leaf_id[!is.na(cap$lineage$table_id) & cap$lineage$table_id == "p1_built_layer1"]
+  el1 <- cap$scene$elements[!is.na(cap$scene$elements$leaf_id) & cap$scene$elements$leaf_id == lid1, ]
+  cx1 <- (el1$bbox_x0 + el1$bbox_x1) / 2
+  cy1 <- (el1$bbox_y0 + el1$bbox_y1) / 2
+  expect_gt(stats::cor(b1$x, cx1), 0.9999)
+  expect_lt(stats::cor(b1$y, cy1), -0.9999) # SVG y increases downward
+
+  b2 <- gl_tables(cap, "p2_built_layer1")
+  lid2 <- cap$lineage$leaf_id[!is.na(cap$lineage$table_id) & cap$lineage$table_id == "p2_built_layer1"]
+  el2 <- cap$scene$elements[!is.na(cap$scene$elements$leaf_id) & cap$scene$elements$leaf_id == lid2, ]
+  cx2 <- (el2$bbox_x0 + el2$bbox_x1) / 2
+  cy2 <- (el2$bbox_y0 + el2$bbox_y1) / 2
+  expect_gt(stats::cor(b2$x, cx2), 0.9999)
+  expect_lt(stats::cor(b2$y, cy2), -0.9999)
+
+  # T2.2: Unified guides = "collect" box recorded in ir$guides & asset-map
+  expect_true(isTRUE(cap$ir$guides$collected))
+  expect_equal(length(cap$ir$guides$bbox_pt), 4L)
+  expect_gt(length(cap$ir$guides$leaf_ids), 0L)
+  expect_true("colour" %in% unlist(cap$ir$guides$aesthetics))
+
+  map <- gl_asset_map(cap)
+  expect_true(isTRUE(map$ir$guides$collected))
+  expect_equal(length(map$ir$guides$bbox_pt), 4L)
+})

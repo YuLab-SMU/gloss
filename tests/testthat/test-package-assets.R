@@ -298,3 +298,41 @@ test_that("write_gloss_csv handles matrix columns cleanly and capture_id reflect
   )
   expect_false(identical(c_a$capture_id, c_b$capture_id))
 })
+
+test_that("gl_asset_bundle supports table_format = 'parquet' with _row_id, schema, and manifest SHA-256", {
+  skip_if_not_installed("nanoparquet")
+
+  tmp <- withr::local_tempdir()
+  fx <- make_rich_test_capture(tmp)
+  cap <- fx$cap
+
+  pq_dir <- file.path(tmp, "pq.gloss")
+  gl_asset_bundle(
+    cap,
+    path = pq_dir,
+    table_format = "parquet",
+    rows = list(raw = c(2L, 5L, 6L))
+  )
+
+  expect_true(file.exists(file.path(pq_dir, "tables", "raw.parquet")))
+  expect_true(file.exists(file.path(pq_dir, "tables", "built_layer1.parquet")))
+  expect_false(file.exists(file.path(pq_dir, "tables", "raw.csv")))
+
+  raw_pq <- nanoparquet::read_parquet(file.path(pq_dir, "tables", "raw.parquet"))
+  expect_identical(as.integer(raw_pq[["_row_id"]]), c(2L, 5L, 6L))
+  expect_identical(as.character(raw_pq$patient_id), c("P2", "P5", "P6"))
+
+  schema <- jsonlite::read_json(file.path(pq_dir, "tables", "schema.json"))
+  expect_identical(schema$tables$raw$format, "parquet")
+  expect_identical(schema$tables$raw$path, "tables/raw.parquet")
+
+  amap <- jsonlite::read_json(file.path(pq_dir, "asset-map.json"))
+  expect_identical(amap$tables[[1L]]$format, "parquet")
+  expect_identical(amap$tables[[1L]]$path, "tables/raw.parquet")
+
+  manifest <- jsonlite::read_json(file.path(pq_dir, "manifest.json"))
+  m_paths <- vapply(manifest$files, `[[`, character(1L), "path")
+  expect_true("tables/raw.parquet" %in% m_paths)
+  raw_ent <- Filter(function(f) identical(f$path, "tables/raw.parquet"), manifest$files)[[1L]]
+  expect_identical(sha256_file(file.path(pq_dir, "tables", "raw.parquet")), raw_ent$sha256)
+})

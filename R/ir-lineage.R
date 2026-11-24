@@ -46,7 +46,8 @@ make_layer_ir <- function(
     aes = list(),
     raw_table = NULL,
     built_table = NULL,
-    params = NULL) {
+    params = NULL,
+    stat_columns = NULL) {
 
   if (length(aes) == 0L) {
     aes <- stats::setNames(list(), character())
@@ -61,6 +62,10 @@ make_layer_ir <- function(
     raw_table = if (is.null(raw_table) || is.na(raw_table)) NULL else as.character(raw_table)[[1L]],
     built_table = if (is.null(built_table) || is.na(built_table)) NULL else as.character(built_table)[[1L]]
   )
+
+  if (!is.null(stat_columns) && length(stat_columns) > 0L) {
+    out$stat_columns <- stat_columns
+  }
 
   if (!is.null(params) && length(params) > 0L) {
     out$params <- params

@@ -464,6 +464,7 @@ capture_current_grid_page <- function(dev, width, height, dense = 10000, draw_me
   svg_h_pt <- extract_svg_height_pt(wrapped_svg, fallback = height * PT_PER_IN)
 
   leaves_df <- build_leaves_df(acc$leaves, rec$probes, svg_height_pt = svg_h_pt)
+  leaves_df <- attach_leaf_clips(leaves_df, scene_doc)
   elements_df <- parse_svg_elements(scene_doc)
 
   if (nrow(leaves_df) > 0L) {
@@ -638,9 +639,21 @@ extract_layout_slot <- function(vp_path) {
   segs <- strsplit(vp_path, "::", fixed = TRUE)[[1L]]
   layout_idx <- which(segs == "layout")
   if (length(layout_idx) > 0L) {
-    slot_pos <- layout_idx[[length(layout_idx)]] + 1L
-    if (slot_pos <= length(segs)) {
-      return(sub("\\.[0-9]+-[0-9]+-[0-9]+-[0-9]+$", "", segs[[slot_pos]]))
+    slots <- character()
+    for (idx in layout_idx) {
+      slot_pos <- idx + 1L
+      if (slot_pos <= length(segs)) {
+        slots <- c(slots, sub("\\.[0-9]+-[0-9]+-[0-9]+-[0-9]+$", "", segs[[slot_pos]]))
+      }
+    }
+    if (length(slots) > 0L) {
+      # Preserve outer guide-box* container identity so inner legend background/title
+      # grobs are not misclassified as plot-level background or title slots.
+      gb <- grep("^guide-box", slots, value = TRUE)
+      if (length(gb) > 0L) {
+        return(gb[[1L]])
+      }
+      return(slots[[length(slots)]])
     }
   }
   # Fall back to the deepest non-synthetic viewport name
@@ -672,6 +685,7 @@ build_leaves_df <- function(leaves_meta, probes, svg_height_pt) {
     if (is.null(p)) NA_character_ else as.character(p$vp)[[1L]]
   }, character(1L))
 
+  n_ids <- length(ids)
   data.frame(
     leaf_id = ids,
     grob_name = vapply(leaves_meta, function(m) as.character(m$grob_name)[[1L]], character(1L)),
@@ -687,8 +701,13 @@ build_leaves_df <- function(leaves_meta, probes, svg_height_pt) {
     xscale1 = vapply(ids, get_scale, numeric(1L), field = "xscale", idx = 2L),
     yscale0 = vapply(ids, get_scale, numeric(1L), field = "yscale", idx = 1L),
     yscale1 = vapply(ids, get_scale, numeric(1L), field = "yscale", idx = 2L),
-    n_elements = integer(length(ids)),
-    dense = rep(FALSE, length(ids)),
+    n_elements = integer(n_ids),
+    dense = rep(FALSE, n_ids),
+    clip_id = rep(NA_character_, n_ids),
+    clip_x0 = rep(NA_real_, n_ids),
+    clip_y0 = rep(NA_real_, n_ids),
+    clip_x1 = rep(NA_real_, n_ids),
+    clip_y1 = rep(NA_real_, n_ids),
     stringsAsFactors = FALSE,
     row.names = NULL
   )
@@ -965,6 +984,129 @@ compute_element_boxes <- function(nodes, tag, style) {
   list(x0 = box[, 1L], x1 = box[, 2L], y0 = box[, 3L], y1 = box[, 4L])
 }
 
+parse_clip_url_ids <- function(val) {
+  if (length(val) == 0L) return(character())
+  out <- rep(NA_character_, length(val))
+  ok <- !is.na(val) & grepl("url\\(", val)
+  if (any(ok)) {
+    out[ok] <- sub("^.*url\\(['\"]?#([^'\")]+)['\"]?\\).*$", "\\1", val[ok], perl = TRUE)
+  }
+  out
+}
+
+extract_clip_defs <- function(doc, ns = svg_ns()) {
+  cp_nodes <- xml2::xml_find_all(doc, "//d1:clipPath[@id]", ns)
+  clip_map <- list()
+  for (cp in cp_nodes) {
+    cid <- xml2::xml_attr(cp, "id")
+    if (is.na(cid) || !nzchar(cid)) next
+    kids <- xml2::xml_find_all(
+      cp,
+      "*[(self::d1:rect or self::d1:path or self::d1:polygon or self::d1:polyline or self::d1:circle)]",
+      ns
+    )
+    if (length(kids) == 0L) next
+    ktags <- xml2::xml_name(kids)
+    kstyle <- xml2::xml_attr(kids, "style")
+    kstyle[is.na(kstyle)] <- ""
+    kb <- compute_element_boxes(kids, ktags, kstyle)
+    if (any(is.finite(kb$x0)) && any(is.finite(kb$y0))) {
+      clip_map[[cid]] <- c(
+        min(kb$x0, na.rm = TRUE),
+        min(kb$y0, na.rm = TRUE),
+        max(kb$x1, na.rm = TRUE),
+        max(kb$y1, na.rm = TRUE)
+      )
+    }
+  }
+  has_nested <- length(xml2::xml_find_all(doc, "//*[@clip-path and ancestor::*[@clip-path]]", ns)) > 0L
+  list(map = clip_map, has_nested = has_nested)
+}
+
+resolve_node_clips <- function(nodes, clip_info, ns = svg_ns()) {
+  n <- length(nodes)
+  cids <- rep(NA_character_, n)
+  cx0 <- rep(NA_real_, n)
+  cy0 <- rep(NA_real_, n)
+  cx1 <- rep(NA_real_, n)
+  cy1 <- rep(NA_real_, n)
+  if (n == 0L) {
+    return(list(clip_id = cids, clip_x0 = cx0, clip_y0 = cy0, clip_x1 = cx1, clip_y1 = cy1))
+  }
+
+  cmap <- clip_info$map
+  if (!isTRUE(clip_info$has_nested)) {
+    anc <- xml2::xml_find_first(nodes, "ancestor-or-self::*[@clip-path][1]", ns)
+    cids <- parse_clip_url_ids(xml2::xml_attr(anc, "clip-path"))
+    known <- which(!is.na(cids) & cids %in% names(cmap))
+    if (length(known) > 0L) {
+      mat <- do.call(rbind, cmap[cids[known]])
+      cx0[known] <- round_pt(mat[, 1L])
+      cy0[known] <- round_pt(mat[, 2L])
+      cx1[known] <- round_pt(mat[, 3L])
+      cy1[known] <- round_pt(mat[, 4L])
+    }
+  } else {
+    for (i in seq_len(n)) {
+      ancs <- xml2::xml_find_all(nodes[[i]], "ancestor-or-self::*[@clip-path]", ns)
+      if (length(ancs) == 0L) next
+      ids <- parse_clip_url_ids(xml2::xml_attr(ancs, "clip-path"))
+      ids <- ids[!is.na(ids)]
+      if (length(ids) == 0L) next
+      cids[[i]] <- ids[[length(ids)]]
+      boxes <- cmap[intersect(ids, names(cmap))]
+      if (length(boxes) > 0L) {
+        mat <- do.call(rbind, boxes)
+        cx0[[i]] <- round_pt(max(mat[, 1L]))
+        cy0[[i]] <- round_pt(max(mat[, 2L]))
+        cx1[[i]] <- round_pt(min(mat[, 3L]))
+        cy1[[i]] <- round_pt(min(mat[, 4L]))
+      }
+    }
+  }
+
+  list(clip_id = cids, clip_x0 = cx0, clip_y0 = cy0, clip_x1 = cx1, clip_y1 = cy1)
+}
+
+attach_leaf_clips <- function(leaves_df, doc) {
+  if (!is.data.frame(leaves_df) || nrow(leaves_df) == 0L) {
+    return(leaves_df)
+  }
+  ns <- svg_ns()
+  gnodes <- xml2::xml_find_all(doc, "//d1:g[@data-gloss-leaf]", ns)
+  if (length(gnodes) == 0L) {
+    return(leaves_df)
+  }
+  glids <- xml2::xml_attr(gnodes, "data-gloss-leaf")
+  idx <- match(leaves_df$leaf_id, glids)
+  ok <- which(!is.na(idx))
+  if (length(ok) == 0L) {
+    return(leaves_df)
+  }
+  clip_info <- extract_clip_defs(doc, ns)
+  resolved <- resolve_node_clips(gnodes[idx[ok]], clip_info, ns)
+  leaves_df$clip_id[ok] <- resolved$clip_id
+  leaves_df$clip_x0[ok] <- resolved$clip_x0
+  leaves_df$clip_y0[ok] <- resolved$clip_y0
+  leaves_df$clip_x1[ok] <- resolved$clip_x1
+  leaves_df$clip_y1[ok] <- resolved$clip_y1
+  leaves_df
+}
+
+extract_rotation_deg <- function(tr_vec) {
+  out <- rep(NA_real_, length(tr_vec))
+  has_rot <- !is.na(tr_vec) & grepl("rotate\\(", tr_vec)
+  if (any(has_rot)) {
+    m <- regmatches(tr_vec[has_rot], regexec("rotate\\(\\s*([-+0-9.eE]+)", tr_vec[has_rot]))
+    out[has_rot] <- vapply(
+      m,
+      function(v) if (length(v) >= 2L) suppressWarnings(as.numeric(v[[2L]])) else NA_real_,
+      numeric(1L)
+    )
+  }
+  out
+}
+
 parse_svg_elements <- function(doc) {
   ns <- svg_ns()
   nodes <- xml2::xml_find_all(doc, prim_xpath(), ns)
@@ -980,11 +1122,58 @@ parse_svg_elements <- function(doc) {
   style[is.na(style)] <- ""
 
   box <- compute_element_boxes(nodes, tag, style)
+  fill_val <- svg_attr_or_style(nodes, style, "fill")
+  stroke_val <- svg_attr_or_style(nodes, style, "stroke")
+  stroke_width <- round_pt(suppressWarnings(as.numeric(sub("px$", "", svg_attr_or_style(nodes, style, "stroke-width")))))
+
+  op_raw <- suppressWarnings(as.numeric(svg_attr_or_style(nodes, style, "opacity")))
+  fop <- suppressWarnings(as.numeric(svg_attr_or_style(nodes, style, "fill-opacity")))
+  sop <- suppressWarnings(as.numeric(svg_attr_or_style(nodes, style, "stroke-opacity")))
+  sub_op <- rep(1.0, n)
+  use_sop <- !is.na(sop) & (is.na(stroke_val) | stroke_val != "none")
+  sub_op[use_sop] <- sop[use_sop]
+  use_fop <- !is.na(fop) & (is.na(fill_val) | fill_val != "none")
+  sub_op[use_fop] <- fop[use_fop]
+  opacity <- round_pt(ifelse(is.na(op_raw), 1.0, op_raw) * sub_op)
+
   txt <- rep(NA_character_, n)
+  font_size <- rep(NA_real_, n)
+  font_family <- rep(NA_character_, n)
+  text_anchor <- rep(NA_character_, n)
+  rotation <- extract_rotation_deg(xml2::xml_attr(nodes, "transform"))
+
   is_text <- tag == "text"
   if (any(is_text)) {
-    txt[is_text] <- xml2::xml_text(nodes[is_text])
+    tnodes <- nodes[is_text]
+    tstyle <- style[is_text]
+    txt[is_text] <- xml2::xml_text(tnodes)
+
+    fs <- suppressWarnings(as.numeric(sub("px$", "", svg_attr_or_style(tnodes, tstyle, "font-size"))))
+    fs[is.na(fs)] <- 12.0
+    font_size[is_text] <- round_pt(fs)
+
+    ff <- svg_attr_or_style(tnodes, tstyle, "font-family")
+    ff <- ifelse(is.na(ff), NA_character_, trimws(gsub("^['\"]+|['\"]+$", "", ff)))
+    ff[!is.na(ff) & !nzchar(ff)] <- NA_character_
+    font_family[is_text] <- ff
+
+    ta <- svg_attr_or_style(tnodes, tstyle, "text-anchor")
+    ta[is.na(ta) | !nzchar(ta)] <- "start"
+    text_anchor[is_text] <- ta
+
+    trot <- rotation[is_text]
+    miss_rot <- is.na(trot)
+    if (any(miss_rot)) {
+      ptr <- xml2::xml_attr(xml2::xml_find_first(tnodes[miss_rot], "parent::*", ns), "transform")
+      prot <- extract_rotation_deg(ptr)
+      prot[is.na(prot)] <- 0.0
+      trot[miss_rot] <- prot
+    }
+    rotation[is_text] <- round_pt(trot)
   }
+
+  clip_info <- extract_clip_defs(doc, ns)
+  clips <- resolve_node_clips(nodes, clip_info, ns)
 
   data.frame(
     element_id = paste0("E", sprintf("%04d", seq_len(n))),
@@ -996,8 +1185,19 @@ parse_svg_elements <- function(doc) {
     bbox_y0 = round_pt(box$y0),
     bbox_x1 = round_pt(box$x1),
     bbox_y1 = round_pt(box$y1),
-    fill = svg_attr_or_style(nodes, style, "fill"),
-    stroke = svg_attr_or_style(nodes, style, "stroke"),
+    fill = fill_val,
+    stroke = stroke_val,
+    stroke_width = stroke_width,
+    opacity = opacity,
+    font_size = font_size,
+    font_family = font_family,
+    text_anchor = text_anchor,
+    rotation = rotation,
+    clip_id = clips$clip_id,
+    clip_x0 = clips$clip_x0,
+    clip_y0 = clips$clip_y0,
+    clip_x1 = clips$clip_x1,
+    clip_y1 = clips$clip_y1,
     stringsAsFactors = FALSE
   )
 }

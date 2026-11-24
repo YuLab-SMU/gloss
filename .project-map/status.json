@@ -1,11 +1,11 @@
 {
   "format": "gloss-project-map-status",
-  "generated_at": "2026-11-24T02:25:47Z",
+  "generated_at": "2026-11-24T05:01:32Z",
   "package_version": "0.1.0",
   "git": {
-    "sha": "206e530",
+    "sha": "a6d6dfd",
     "branch": "main",
-    "subject": "fix(engines): harden patchwork spacers, heatmap naming, and base SVG group ids"
+    "subject": "chore(release): freeze gloss v0.1.0 core with CI, vignette, and docs"
   },
   "summary": {
     "exports_implemented": 8,
@@ -18,11 +18,11 @@
     "guardrails_total": 5,
     "all_guardrails_passed": true,
     "r_files": 14,
-    "r_loc": 5273,
-    "test_files": 13,
+    "r_loc": 5903,
+    "test_files": 14,
     "tests": {
       "ran": true,
-      "passed": 625,
+      "passed": 708,
       "failed": 0,
       "warnings": 0,
       "skipped": 0,
@@ -34,7 +34,7 @@
           "skipped": 0
         },
         "test-capture.R": {
-          "passed": 75,
+          "passed": 98,
           "failed": 0,
           "warnings": 0,
           "skipped": 0
@@ -52,19 +52,25 @@
           "skipped": 0
         },
         "test-engine-heatmap.R": {
-          "passed": 32,
+          "passed": 38,
           "failed": 0,
           "warnings": 0,
           "skipped": 0
         },
         "test-engine-patchwork.R": {
-          "passed": 22,
+          "passed": 34,
           "failed": 0,
           "warnings": 0,
           "skipped": 0
         },
         "test-engine-registry.R": {
           "passed": 25,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "test-extensions.R": {
+          "passed": 31,
           "failed": 0,
           "warnings": 0,
           "skipped": 0
@@ -82,7 +88,7 @@
           "skipped": 0
         },
         "test-package-assets.R": {
-          "passed": 113,
+          "passed": 124,
           "failed": 0,
           "warnings": 0,
           "skipped": 0
@@ -131,13 +137,13 @@
       "id": "principles.g_core_boundary",
       "name": "Strict In-Core Boundary",
       "pass": true,
-      "detail": "14 lean R files in R/ (5273 LOC); zero agent/MCP/UI/codec bloat"
+      "detail": "14 lean R files in R/ (5903 LOC); zero agent/MCP/UI/codec bloat"
     },
     {
       "id": "principles.g_tests",
       "name": "Unit Test & Build Health",
       "pass": true,
-      "detail": "625 PASS / 0 FAIL / 0 WARN / 0 SKIP across 13 test files"
+      "detail": "708 PASS / 0 FAIL / 0 WARN / 0 SKIP across 14 test files"
     }
   ],
   "apis": [
@@ -240,7 +246,7 @@
       "tests": "tests/testthat/test-capture-contract.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 518,
+      "loc": 639,
       "test_blocks": 3,
       "live_passed": 40,
       "live_failed": 0
@@ -268,9 +274,9 @@
       "tests": "tests/testthat/test-capture.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 1084,
-      "test_blocks": 7,
-      "live_passed": 75,
+      "loc": 1284,
+      "test_blocks": 8,
+      "live_passed": 98,
       "live_failed": 0
     },
     {
@@ -296,9 +302,9 @@
       "tests": "tests/testthat/test-package-assets.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 559,
-      "test_blocks": 4,
-      "live_passed": 113,
+      "loc": 589,
+      "test_blocks": 5,
+      "live_passed": 124,
       "live_failed": 0
     },
     {
@@ -324,7 +330,7 @@
       "tests": "tests/testthat/test-ir-lineage.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 189,
+      "loc": 194,
       "test_blocks": 2,
       "live_passed": 18,
       "live_failed": 0
@@ -355,7 +361,7 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Suggests",
-      "loc": 723
+      "loc": 727
     },
     {
       "id": "gloss_core.engines.eng_patchwork",
@@ -368,7 +374,7 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Suggests",
-      "loc": 233
+      "loc": 353
     },
     {
       "id": "gloss_core.engines.eng_heatmap",
@@ -381,7 +387,7 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Suggests",
-      "loc": 342
+      "loc": 485
     },
     {
       "id": "gloss_core.engines.eng_base",
@@ -394,7 +400,64 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Imports",
-      "loc": 565
+      "loc": 572
+    }
+  ],
+  "ecosystem": [
+    {
+      "id": "ecosystem.skill_gloss",
+      "name": "Base Protocol Skill: gloss",
+      "phase": "Phase 6",
+      "status": "planned",
+      "files": "skills/gloss/SKILL.md",
+      "tests": [],
+      "source_exists": false,
+      "test_exists": false,
+      "loc": 0
+    },
+    {
+      "id": "ecosystem.skill_refine",
+      "name": "SVG Refinement Skill: gloss-svg-refine",
+      "phase": "Phase 6",
+      "status": "implemented",
+      "files": ["skills/gloss-svg-refine/SKILL.md", "skills/gloss-svg-refine/scripts/verify_svg_fidelity.py"],
+      "tests": "skills/tests/test_workflows.py",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 717
+    },
+    {
+      "id": "ecosystem.skill_audit",
+      "name": "Semantic Audit Skill: gloss-audit",
+      "phase": "Phase 6",
+      "status": "implemented",
+      "files": ["skills/gloss-audit/SKILL.md", "skills/gloss-audit/scripts/audit_bundle.py"],
+      "tests": "skills/tests/test_workflows.py",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 439
+    },
+    {
+      "id": "ecosystem.skill_report",
+      "name": "Report Skill: gloss-report",
+      "phase": "Phase 6",
+      "status": "implemented",
+      "files": "skills/gloss-report/SKILL.md",
+      "tests": [],
+      "source_exists": true,
+      "test_exists": false,
+      "loc": 50
+    },
+    {
+      "id": "ecosystem.external_scripts",
+      "name": "Python / JS / DuckDB Toolchains",
+      "phase": "Phase 6",
+      "status": "implemented",
+      "files": ["skills/gloss-svg-refine/scripts/verify_svg_fidelity.py", "skills/gloss-audit/scripts/audit_bundle.py"],
+      "tests": "skills/tests/test_workflows.py",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 1011
     }
   ]
 }
