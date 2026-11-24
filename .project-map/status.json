@@ -1,11 +1,11 @@
 {
   "format": "gloss-project-map-status",
-  "generated_at": "2026-11-23T15:00:51Z",
+  "generated_at": "2026-11-24T02:03:17Z",
   "package_version": "0.1.0.9000",
   "git": {
-    "sha": "1f0ec3f",
+    "sha": "a1c9a7b",
     "branch": "main",
-    "subject": "feat(ggplot): implement Engine IR, structural lineage, and ggplot2 engine"
+    "subject": "feat(engines): implement patchwork, ComplexHeatmap, and base engines with R-graph-gallery tests"
   },
   "summary": {
     "exports_implemented": 8,
@@ -18,11 +18,11 @@
     "guardrails_total": 5,
     "all_guardrails_passed": true,
     "r_files": 14,
-    "r_loc": 4940,
+    "r_loc": 5239,
     "test_files": 13,
     "tests": {
       "ran": true,
-      "passed": 571,
+      "passed": 608,
       "failed": 0,
       "warnings": 0,
       "skipped": 0,
@@ -34,7 +34,7 @@
           "skipped": 0
         },
         "test-capture.R": {
-          "passed": 65,
+          "passed": 75,
           "failed": 0,
           "warnings": 0,
           "skipped": 0
@@ -46,7 +46,7 @@
           "skipped": 0
         },
         "test-engine-ggplot.R": {
-          "passed": 74,
+          "passed": 83,
           "failed": 0,
           "warnings": 0,
           "skipped": 0
@@ -82,7 +82,7 @@
           "skipped": 0
         },
         "test-package-assets.R": {
-          "passed": 101,
+          "passed": 113,
           "failed": 0,
           "warnings": 0,
           "skipped": 0
@@ -100,7 +100,7 @@
           "skipped": 0
         },
         "test-sources.R": {
-          "passed": 19,
+          "passed": 25,
           "failed": 0,
           "warnings": 0,
           "skipped": 0
@@ -131,13 +131,13 @@
       "id": "principles.g_core_boundary",
       "name": "Strict In-Core Boundary",
       "pass": true,
-      "detail": "14 lean R files in R/ (4940 LOC); zero agent/MCP/UI/codec bloat"
+      "detail": "14 lean R files in R/ (5239 LOC); zero agent/MCP/UI/codec bloat"
     },
     {
       "id": "principles.g_tests",
       "name": "Unit Test & Build Health",
       "pass": true,
-      "detail": "571 PASS / 0 FAIL / 0 WARN / 0 SKIP across 13 test files"
+      "detail": "608 PASS / 0 FAIL / 0 WARN / 0 SKIP across 13 test files"
     }
   ],
   "apis": [
@@ -240,7 +240,7 @@
       "tests": "tests/testthat/test-capture-contract.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 491,
+      "loc": 518,
       "test_blocks": 3,
       "live_passed": 40,
       "live_failed": 0
@@ -268,9 +268,9 @@
       "tests": "tests/testthat/test-capture.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 921,
-      "test_blocks": 6,
-      "live_passed": 65,
+      "loc": 1084,
+      "test_blocks": 7,
+      "live_passed": 75,
       "live_failed": 0
     },
     {
@@ -282,9 +282,9 @@
       "tests": "tests/testthat/test-sources.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 383,
-      "test_blocks": 2,
-      "live_passed": 19,
+      "loc": 419,
+      "test_blocks": 3,
+      "live_passed": 25,
       "live_failed": 0
     },
     {
@@ -296,9 +296,9 @@
       "tests": "tests/testthat/test-package-assets.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 543,
-      "test_blocks": 3,
-      "live_passed": 101,
+      "loc": 559,
+      "test_blocks": 4,
+      "live_passed": 113,
       "live_failed": 0
     },
     {
@@ -310,7 +310,7 @@
       "tests": "tests/testthat/test-query.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 321,
+      "loc": 338,
       "test_blocks": 1,
       "live_passed": 21,
       "live_failed": 0
@@ -324,7 +324,7 @@
       "tests": "tests/testthat/test-ir-lineage.R",
       "source_exists": true,
       "test_exists": true,
-      "loc": 184,
+      "loc": 189,
       "test_blocks": 2,
       "live_passed": 18,
       "live_failed": 0
@@ -355,7 +355,7 @@
       "source_exists": true,
       "test_exists": true,
       "dependency_bucket": "Suggests",
-      "loc": 688
+      "loc": 723
     },
     {
       "id": "gloss_core.engines.eng_patchwork",

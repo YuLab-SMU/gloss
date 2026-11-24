@@ -112,11 +112,25 @@ write_gloss_csv <- function(df, path, add_row_id = TRUE) {
       out
     )
   }
-  # Coerce list-columns cleanly to JSON strings so CSV stays strictly rectangular
+  # Coerce list, matrix, and nested data.frame columns cleanly to JSON strings
+  # so CSV stays strictly rectangular and matches schema.json 1-to-1
   for (nm in names(out)) {
-    if (is.list(out[[nm]]) && !is.data.frame(out[[nm]])) {
+    col <- out[[nm]]
+    if (is.matrix(col)) {
       out[[nm]] <- vapply(
-        out[[nm]],
+        seq_len(nrow(col)),
+        function(i) as.character(to_gloss_json(unname(col[i, , drop = TRUE]), pretty = FALSE)),
+        character(1L)
+      )
+    } else if (is.data.frame(col)) {
+      out[[nm]] <- vapply(
+        seq_len(nrow(col)),
+        function(i) as.character(to_gloss_json(as.list(col[i, , drop = FALSE]), pretty = FALSE)),
+        character(1L)
+      )
+    } else if (is.list(col)) {
+      out[[nm]] <- vapply(
+        col,
         function(el) as.character(to_gloss_json(el, pretty = FALSE)),
         character(1L)
       )
@@ -212,6 +226,9 @@ table_schema_spec <- function(df, add_row_id = TRUE) {
     col <- df[[nm]]
     ctype <- gloss_column_type(col)
     spec <- list(name = nm, type = ctype)
+    if (identical(nm, "_row_id")) {
+      spec$role <- "row_id"
+    }
     if (is.factor(col)) {
       spec$levels <- as.list(levels(col))
       spec$ordered <- is.ordered(col)
@@ -328,7 +345,16 @@ normalize_table_entry <- function(entry, table_id) {
   )
 }
 
-compute_capture_id <- function(page, svg_original, svg_scene) {
+compute_capture_id <- function(page, svg_original, svg_scene, rasters = list()) {
+  raster_sig <- if (length(rasters) > 0L) {
+    rnames <- sort(names(rasters))
+    paste(
+      vapply(rnames, function(nm) paste0(nm, ":", sha256_raw(rasters[[nm]])), character(1L)),
+      collapse = ","
+    )
+  } else {
+    ""
+  }
   payload <- paste(
     GLOSS_SCHEMA_VERSION,
     page$engine %||% "",
@@ -336,6 +362,7 @@ compute_capture_id <- function(page, svg_original, svg_scene) {
     page$height_pt %||% "",
     svg_original$sha256 %||% "",
     svg_scene$sha256 %||% "",
+    raster_sig,
     sep = "|"
   )
   prefixed_sha256(sha256_text(payload))
@@ -396,7 +423,7 @@ new_gloss_capture <- function(
     }
   }
 
-  cap_id <- capture_id %||% compute_capture_id(norm_page, orig, scn)
+  cap_id <- capture_id %||% compute_capture_id(norm_page, orig, scn, rasters = rasters)
 
   cap <- structure(
     list(

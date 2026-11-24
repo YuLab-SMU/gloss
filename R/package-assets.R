@@ -315,6 +315,7 @@ gl_asset_bundle <- function(
 
   # 4. Sources & session.json
   wrote_session <- FALSE
+  included_sources <- character()
   for (src in cap$sources) {
     sid <- src$source_id
     is_session <- identical(sid, "session") && identical(src$path, "sources/session.json")
@@ -364,15 +365,32 @@ gl_asset_bundle <- function(
         next
       }
     }
+    included_sources <- c(included_sources, sid)
     if (is_session) wrote_session <- TRUE
   }
 
   if (!wrote_session && (is.null(sel$sources) || "session" %in% sel$sources)) {
     write_gloss_json(cap$session, file.path(stage_dir, "sources", "session.json"))
+    included_sources <- c(included_sources, "session")
   }
 
-  # 5. Asset Map & omitted.json
+  # 5. Asset Map (annotated with exact bundle inclusion state) & omitted.json
   map <- gl_asset_map(cap)
+  map$scene$elements_included <- isTRUE(sel$elements)
+  if (length(map$tables) > 0L) {
+    map$tables <- lapply(map$tables, function(tb) {
+      inc <- tb$table_id %in% names(table_schemas)
+      tb$included <- isTRUE(inc)
+      tb$bundle_nrow <- if (inc) as.integer(table_schemas[[tb$table_id]]$nrow) else 0L
+      tb
+    })
+  }
+  if (length(map$sources) > 0L) {
+    map$sources <- lapply(map$sources, function(sr) {
+      sr$included <- sr$source_id %in% included_sources
+      sr
+    })
+  }
   write_gloss_json(unclass(map), file.path(stage_dir, "asset-map.json"))
 
   write_gloss_json(
@@ -475,9 +493,7 @@ parse_bundle_select <- function(select, cap) {
     src_hits <- intersect(select, source_ids)
     out$tables <- stats::setNames(vector("list", length(tbl_hits)), tbl_hits)
     out$sources <- src_hits
-    if ("elements" %in% select) {
-      out$elements <- TRUE
-    }
+    out$elements <- "elements" %in% select
     return(out)
   }
 

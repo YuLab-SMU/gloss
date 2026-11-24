@@ -61,6 +61,18 @@ make_unique_bundle_path <- function(rel_path, used_paths) {
   }
 }
 
+sanitize_source_filename <- function(name, fallback = "source.txt") {
+  if (!is.character(name) || length(name) != 1L || is.na(name) || !nzchar(name)) {
+    return(fallback)
+  }
+  clean <- basename(gsub("\\\\", "/", name))
+  clean <- gsub("[/\\\\:*?\"<>|]+", "_", clean)
+  if (!nzchar(clean) || clean %in% c(".", "..")) {
+    return(fallback)
+  }
+  clean
+}
+
 build_file_source_entry <- function(
     path,
     source_id,
@@ -73,7 +85,10 @@ build_file_source_entry <- function(
   exists_p <- !is.na(path) && nzchar(path) && file.exists(path) && !dir.exists(path)
   readable_p <- isTRUE(exists_p) && file.access(path, 4L) == 0L
 
-  bname <- if (!is.na(path) && nzchar(path)) basename(path) else paste0(source_id, ".txt")
+  bname <- sanitize_source_filename(
+    if (!is.na(path) && nzchar(path)) path else NULL,
+    fallback = sanitize_source_filename(paste0(source_id, ".txt"), fallback = "source.txt")
+  )
   bundle_rel <- make_unique_bundle_path(
     paste0(source_bundle_subdir(resolved_kind), "/", bname),
     used_paths
@@ -107,7 +122,8 @@ build_inline_source_entry <- function(
   txt <- enc2utf8(paste(as.character(text), collapse = "\n"))
   resolved_kind <- normalize_source_kind(kind)
   ext <- if (identical(resolved_kind, "code")) ".R" else ".txt"
-  bname <- filename %||% paste0(source_id, ext)
+  fallback_name <- sanitize_source_filename(paste0(source_id, ext), fallback = paste0("inline", ext))
+  bname <- sanitize_source_filename(filename, fallback = fallback_name)
   bundle_rel <- make_unique_bundle_path(
     paste0(source_bundle_subdir(resolved_kind), "/", bname),
     used_paths
@@ -158,10 +174,15 @@ collect_explicit_sources <- function(sources, used_paths = character()) {
 
   category_names <- c("code", "script", "scripts", "doc", "docs", "documentation", "data", "dataset", "datasets")
 
+  path_stem_hint <- function(p) {
+    if (is.na(p) || !nzchar(p)) return(NULL)
+    tools::file_path_sans_ext(basename(p))
+  }
+
   if (is.character(sources)) {
     nms <- names(sources)
     for (i in seq_along(sources)) {
-      nm <- if (!is.null(nms) && nzchar(nms[[i]])) nms[[i]] else tools::file_path_sans_ext(basename(sources[[i]]))
+      nm <- if (!is.null(nms) && nzchar(nms[[i]])) nms[[i]] else path_stem_hint(sources[[i]])
       ent <- build_file_source_entry(
         path = sources[[i]],
         source_id = alloc_id(nm),
@@ -190,7 +211,7 @@ collect_explicit_sources <- function(sources, used_paths = character()) {
           } else if (!is_cat && length(item) == 1L && !is.null(key_name)) {
             key_name
           } else {
-            tools::file_path_sans_ext(basename(item[[j]]))
+            path_stem_hint(item[[j]])
           }
           ent <- build_file_source_entry(
             path = item[[j]],
@@ -305,9 +326,18 @@ find_git_root <- function(start_dir = getwd()) {
   }
 }
 
-collect_git_metadata <- function(start_dir = getwd()) {
+.gloss_git_cache <- new.env(parent = emptyenv())
+
+collect_git_metadata <- function(start_dir = getwd(), ttl_sec = 5.0) {
   root <- find_git_root(start_dir)
   if (is.null(root)) return(NULL)
+
+  now_num <- as.numeric(Sys.time())
+  cached <- .gloss_git_cache[[root]]
+  if (!is.null(cached) && (now_num - cached$ts) <= ttl_sec) {
+    return(cached$value)
+  }
+
   git_bin <- Sys.which("git")
   if (!nzchar(git_bin)) return(NULL)
 
@@ -325,13 +355,19 @@ collect_git_metadata <- function(start_dir = getwd()) {
   branch <- run_git(c("rev-parse", "--abbrev-ref", "HEAD"))
   porcelain <- run_git(c("status", "--porcelain"))
 
-  if (length(head_sha) == 0L) return(NULL)
-  list(
-    root = root,
-    head = head_sha[[1L]],
-    branch = if (length(branch) > 0L) branch[[1L]] else NA_character_,
-    dirty = length(porcelain) > 0L
-  )
+  res <- if (length(head_sha) == 0L) {
+    NULL
+  } else {
+    list(
+      root = root,
+      head = head_sha[[1L]],
+      branch = if (length(branch) > 0L) branch[[1L]] else NA_character_,
+      dirty = length(porcelain) > 0L
+    )
+  }
+
+  .gloss_git_cache[[root]] <- list(ts = now_num, value = res)
+  res
 }
 
 collect_session_info <- function(input_obj = NULL, extra_packages = character()) {

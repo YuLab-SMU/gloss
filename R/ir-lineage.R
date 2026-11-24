@@ -78,7 +78,8 @@ make_scale_ir <- function(
     breaks = NULL,
     labels = NULL,
     trans = NULL,
-    name = NULL) {
+    name = NULL,
+    panel_ids = NULL) {
 
   scale_type <- match.arg(scale_type)
 
@@ -87,6 +88,10 @@ make_scale_ir <- function(
     field = if (is.null(field) || is.na(field) || !nzchar(field)) NULL else as.character(field)[[1L]],
     scale_type = scale_type
   )
+
+  if (!is.null(panel_ids) && length(panel_ids) > 0L) {
+    out$panel_ids <- json_array(as.character(panel_ids))
+  }
 
   if (!is.null(name) && !is.na(name) && nzchar(name)) {
     out$name <- as.character(name)[[1L]]

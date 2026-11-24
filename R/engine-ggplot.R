@@ -98,12 +98,22 @@ extract_ggplot_ir <- function(
 
   tables <- ggplot_extract_tables(plot, built, table_prefix = table_prefix)
   layers_ir <- ggplot_extract_layers(plot, built, table_prefix = table_prefix)
-  scales_ir <- if (!is.null(built)) ggplot_extract_scales(plot, built) else list()
 
   panel_match <- if (!is.null(built)) {
     ggplot_match_panels(built, gtable, sub_leaves, panel_prefix = panel_prefix)
   } else {
-    list(panels = list(), leaf_panel = rep(NA_character_, nrow(sub_leaves)), panel_grob_map = list())
+    list(
+      panels = list(),
+      leaf_panel = rep(NA_character_, nrow(sub_leaves)),
+      panel_grob_to_num = stats::setNames(integer(), character()),
+      panel_ids_by_num = stats::setNames(character(), character())
+    )
+  }
+
+  scales_ir <- if (!is.null(built)) {
+    ggplot_extract_scales(plot, built, panel_ids_by_num = panel_match$panel_ids_by_num)
+  } else {
+    list()
   }
 
   lineage <- ggplot_build_lineage(
@@ -310,7 +320,7 @@ ggplot_aesthetic_field <- function(plot, aes_names) {
   NULL
 }
 
-ggplot_serialize_scale <- function(sc, plot, primary_aes = NULL) {
+ggplot_serialize_scale <- function(sc, plot, primary_aes = NULL, panel_ids = NULL) {
   aesthetics <- tryCatch(as.character(sc$aesthetics), error = function(e) character())
   primary <- primary_aes %||% if (length(aesthetics) > 0L) aesthetics[[1L]] else "unknown"
   field <- ggplot_aesthetic_field(plot, unique(c(primary, aesthetics)))
@@ -403,21 +413,45 @@ ggplot_serialize_scale <- function(sc, plot, primary_aes = NULL) {
     breaks = clean_brks,
     labels = clean_lbls,
     trans = trans_name,
-    name = scale_name
+    name = scale_name,
+    panel_ids = panel_ids
   )
 }
 
-ggplot_extract_scales <- function(plot, built) {
+ggplot_extract_scales <- function(plot, built, panel_ids_by_num = NULL) {
   out <- list()
+  lay <- built$layout$layout
 
-  # 1. Trained position scales (x and y) from layout
+  panels_for_scale <- function(scale_col, scale_idx) {
+    if (is.null(lay) || !(scale_col %in% names(lay))) return(NULL)
+    pnums <- as.character(lay$PANEL[as.integer(lay[[scale_col]]) == scale_idx])
+    if (length(pnums) == 0L) return(NULL)
+    if (!is.null(panel_ids_by_num) && length(panel_ids_by_num) > 0L) {
+      pids <- unname(panel_ids_by_num[pnums])
+      pids <- pids[!is.na(pids)]
+      if (length(pids) > 0L) return(pids)
+    }
+    paste0("P", pnums)
+  }
+
+  # 1. Trained position scales (x and y) from layout — preserve all free facet scales
   px <- built$layout$panel_scales_x
-  if (length(px) > 0L && !is.null(px[[1L]])) {
-    out[[length(out) + 1L]] <- ggplot_serialize_scale(px[[1L]], plot, primary_aes = "x")
+  if (length(px) > 0L) {
+    multi_x <- length(px) > 1L
+    for (k in seq_along(px)) {
+      if (is.null(px[[k]])) next
+      pids <- if (multi_x) panels_for_scale("SCALE_X", k) else NULL
+      out[[length(out) + 1L]] <- ggplot_serialize_scale(px[[k]], plot, primary_aes = "x", panel_ids = pids)
+    }
   }
   py <- built$layout$panel_scales_y
-  if (length(py) > 0L && !is.null(py[[1L]])) {
-    out[[length(out) + 1L]] <- ggplot_serialize_scale(py[[1L]], plot, primary_aes = "y")
+  if (length(py) > 0L) {
+    multi_y <- length(py) > 1L
+    for (k in seq_along(py)) {
+      if (is.null(py[[k]])) next
+      pids <- if (multi_y) panels_for_scale("SCALE_Y", k) else NULL
+      out[[length(out) + 1L]] <- ggplot_serialize_scale(py[[k]], plot, primary_aes = "y", panel_ids = pids)
+    }
   }
 
   # 2. Non-position aesthetic scales (colour, fill, shape, size, linetype, alpha, etc.)
@@ -573,7 +607,8 @@ ggplot_match_panels <- function(built, gtable, leaves, panel_prefix = "") {
     panels = panels,
     leaf_panel = leaf_panel,
     leaf_panel_num = leaf_panel_num,
-    panel_grob_to_num = panel_grob_to_num
+    panel_grob_to_num = panel_grob_to_num,
+    panel_ids_by_num = panel_ids_by_num
   )
 }
 

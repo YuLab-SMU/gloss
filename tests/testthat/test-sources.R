@@ -69,3 +69,27 @@ test_that("explicit character vector sources infer kind from file extension", {
   expect_identical(srcs$kind[srcs$source_id == "script"], "code")
   expect_identical(srcs$kind[srcs$source_id == "input_csv"], "data")
 })
+
+test_that("inline source filenames are sanitized against path traversal and NA paths are safe", {
+  cap <- gloss(
+    grid::rectGrob(),
+    sources = list(
+      evil = list(kind = "doc", text = "safe content", filename = "../../escape.md"),
+      missing_na = NA_character_
+    )
+  )
+
+  srcs <- gl_sources(cap)
+  ev <- srcs[srcs$source_id == "evil", ]
+  expect_identical(ev$path, "sources/docs/escape.md")
+  expect_false(grepl("\\.\\.", ev$path))
+
+  na_row <- srcs[srcs$source_id == "missing_na", ]
+  expect_false(na_row$found)
+  expect_false(na_row$readable)
+
+  tmp <- withr::local_tempdir()
+  bdir <- gl_asset_bundle(cap, path = file.path(tmp, "safe.gloss"))
+  expect_true(file.exists(file.path(bdir, "sources/docs/escape.md")))
+  expect_false(file.exists(file.path(tmp, "escape.md")))
+})

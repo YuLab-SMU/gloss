@@ -199,6 +199,8 @@ test_that("gl_asset_bundle writes complete .gloss directory with verified manife
   expect_identical(raw_csv$patient_id, paste0("P", 1:6))
 
   schema <- jsonlite::fromJSON(file.path(bundle_dir, "tables/schema.json"), simplifyVector = FALSE)
+  expect_identical(schema$tables$raw$columns[[1L]]$name, "_row_id")
+  expect_identical(schema$tables$raw$columns[[1L]]$role, "row_id")
   cohort_col <- schema$tables$raw$columns[[3L]]
   expect_identical(cohort_col$name, "cohort")
   expect_identical(cohort_col$type, "factor")
@@ -252,4 +254,47 @@ test_that("gl_asset_bundle supports select, column projection, row filtering, an
   expect_true(file.exists(file.path(unzip_dir, "asset-map.json")))
   expect_true(file.exists(file.path(unzip_dir, "assets/original.svg")))
   expect_true(file.exists(file.path(unzip_dir, "scene/rasters/L001.png")))
+
+  # Bundle asset-map.json reflects exact table/source inclusion & bundle_nrow
+  fmap <- jsonlite::fromJSON(file.path(filtered_dir, "asset-map.json"), simplifyVector = FALSE)
+  expect_false(fmap$scene$elements_included)
+  tbl_by_id <- stats::setNames(fmap$tables, vapply(fmap$tables, `[[`, character(1L), "table_id"))
+  expect_true(tbl_by_id$raw$included)
+  expect_identical(tbl_by_id$raw$bundle_nrow, 3L)
+  expect_false(tbl_by_id$built_layer1$included)
+  expect_identical(tbl_by_id$built_layer1$bundle_nrow, 0L)
+
+  # Character shorthand select respects elements inclusion explicitly
+  char_dir <- file.path(tmp, "char_sel.gloss")
+  gl_asset_bundle(cap, path = char_dir, select = c("raw"))
+  expect_false(file.exists(file.path(char_dir, "scene/elements.json")))
+  expect_true(file.exists(file.path(char_dir, "tables/raw.csv")))
+
+  char_with_el <- file.path(tmp, "char_sel_el.gloss")
+  gl_asset_bundle(cap, path = char_with_el, select = c("raw", "elements"))
+  expect_true(file.exists(file.path(char_with_el, "scene/elements.json")))
+})
+
+test_that("write_gloss_csv handles matrix columns cleanly and capture_id reflects raster digests", {
+  tmp <- withr::local_tempdir()
+  df_mat <- data.frame(id = c("A", "B"), stringsAsFactors = FALSE)
+  df_mat$coords <- matrix(c(1, 2, 3, 4), nrow = 2L)
+  csv_p <- file.path(tmp, "mat.csv")
+  write_gloss_csv(df_mat, csv_p)
+  rt <- utils::read.csv(csv_p, check.names = FALSE, stringsAsFactors = FALSE)
+  expect_identical(names(rt), c("_row_id", "id", "coords"))
+
+  c_a <- new_gloss_capture(
+    page = list(engine = "grid"),
+    svg_original = "<svg/>",
+    svg_scene = "<svg/>",
+    rasters = list(L001 = as.raw(c(1, 2, 3)))
+  )
+  c_b <- new_gloss_capture(
+    page = list(engine = "grid"),
+    svg_original = "<svg/>",
+    svg_scene = "<svg/>",
+    rasters = list(L001 = as.raw(c(1, 2, 4)))
+  )
+  expect_false(identical(c_a$capture_id, c_b$capture_id))
 })

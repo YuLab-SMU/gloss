@@ -271,6 +271,23 @@ gl_query <- function(
         df
       )
     }
+
+    # When querying by panel, slice built tables carrying a PANEL column to the
+    # matched panel number(s) while preserving original 1-based _row_id values.
+    if (!is.null(panel) && "PANEL" %in% names(df)) {
+      linked_pids <- unique(lineage$panel_id[
+        !is.na(lineage$panel_id) & !is.na(lineage$table_id) & lineage$table_id == tid
+      ])
+      pids_to_match <- if (length(linked_pids) > 0L) linked_pids else panel
+      pnums <- suppressWarnings(as.integer(sub("^.*P([0-9]+)$", "\\1", pids_to_match)))
+      pnums <- unique(pnums[!is.na(pnums)])
+      if (length(pnums) > 0L) {
+        df_panel <- suppressWarnings(as.integer(as.character(df$PANEL)))
+        df <- df[!is.na(df_panel) & df_panel %in% pnums, , drop = FALSE]
+        rownames(df) <- NULL
+      }
+    }
+
     row_spec <- if (is.list(rows) && !is.data.frame(rows)) {
       if (tid %in% names(rows)) rows[[tid]] else NULL
     } else {

@@ -82,7 +82,17 @@ gloss <- function(
     if (identical(page_info$kind, "empty")) {
       cli::cli_abort("The input did not draw anything onto the graphics device.")
     }
-    selected <- resolve_engine(x, engine = engine, page_kind = page_info$kind, error = TRUE)
+    if (identical(page_info$kind, "mixed")) {
+      selected <- resolve_engine(x, engine = engine, page_kind = "mixed", error = FALSE)
+      if (is.null(selected)) {
+        cli::cli_abort(c(
+          "The input mixed base graphics and grid graphics on the same page.",
+          i = "Capture base and grid plots separately, or register a custom engine with {.code page_kind = \"any\"}."
+        ))
+      }
+    } else {
+      selected <- resolve_engine(x, engine = engine, page_kind = page_info$kind, error = TRUE)
+    }
     already_drawn <- TRUE
   }
 
@@ -353,7 +363,9 @@ normalize_grob_names <- function(g) {
 
 wrap_grid_leaves <- function(g, parent_path, acc) {
   cur_path <- c(parent_path, g$name)
-  if (inherits(g, "gTree")) {
+  # GridGroup (from grid::groupGrob) inherits gTree but holds its payload in `src`
+  # rather than `children`; treat it as an atomic leaf so probes stay aligned.
+  if (inherits(g, "gTree") && !inherits(g, "GridGroup")) {
     kids <- g$children
     if (length(kids) > 0L) {
       nms <- names(kids)
@@ -443,7 +455,12 @@ capture_current_grid_page <- function(dev, width, height, dense = 10000, draw_me
   original_svg <- all_pages[[n_orig_pages]]
   wrapped_svg <- all_pages[[length(all_pages)]]
 
-  scene_doc <- inline_svg_groups(wrapped_svg, order = rec$order, leaves_meta = acc$leaves)
+  scene_doc <- inline_svg_groups(
+    wrapped_svg,
+    order = rec$order,
+    leaves_meta = acc$leaves,
+    fallback_svg = original_svg
+  )
   svg_h_pt <- extract_svg_height_pt(wrapped_svg, fallback = height * PT_PER_IN)
 
   leaves_df <- build_leaves_df(acc$leaves, rec$probes, svg_height_pt = svg_h_pt)
@@ -530,7 +547,41 @@ extract_svg_height_pt <- function(svg_text, fallback = 360.0) {
   as.double(fallback)
 }
 
-inline_svg_groups <- function(wrapped_svg, order, leaves_meta) {
+extract_use_hrefs <- function(uses) {
+  if (length(uses) == 0L) return(character())
+  hrefs <- xml2::xml_attr(uses, "href")
+  if (anyNA(hrefs)) {
+    xlink_hrefs <- xml2::xml_attr(uses, "xlink:href")
+    hrefs[is.na(hrefs)] <- xlink_hrefs[is.na(hrefs)]
+  }
+  sub("^#", "", hrefs)
+}
+
+inline_nested_svg_groups <- function(doc, ns) {
+  # Inline any user-authored nested <defs><g id="group-..."> + <use> pairs so
+  # primitives drawn inside a user groupGrob remain directly addressable.
+  repeat {
+    nested_groups <- xml2::xml_find_all(doc, "//d1:defs/d1:g[starts-with(@id, 'group-')]", ns)
+    if (length(nested_groups) == 0L) break
+    gids <- xml2::xml_attr(nested_groups, "id")
+    uses <- xml2::xml_find_all(doc, "//d1:use", ns)
+    hrefs <- extract_use_hrefs(uses)
+
+    replaced_any <- FALSE
+    for (i in seq_along(nested_groups)) {
+      ui <- match(gids[[i]], hrefs)
+      if (is.na(ui)) next
+      gnode <- nested_groups[[i]]
+      xml2::xml_replace(uses[[ui]], gnode, .copy = FALSE)
+      xml2::xml_set_attr(gnode, "id", NULL)
+      replaced_any <- TRUE
+    }
+    if (!replaced_any) break
+  }
+  invisible(doc)
+}
+
+inline_svg_groups <- function(wrapped_svg, order, leaves_meta, fallback_svg = NULL) {
   doc <- read_svg_doc(wrapped_svg)
   ns <- svg_ns()
   n_probe <- length(order)
@@ -538,34 +589,29 @@ inline_svg_groups <- function(wrapped_svg, order, leaves_meta) {
     return(doc)
   }
 
-  groups <- xml2::xml_find_all(doc, "//d1:defs/d1:g[starts-with(@id, 'group-')]", ns)
-  gids <- xml2::xml_attr(groups, "id")
-  uses <- xml2::xml_find_all(doc, "//d1:use", ns)
-  hrefs <- xml2::xml_attr(uses, "href")
-  if (anyNA(hrefs)) {
-    xlink_hrefs <- xml2::xml_attr(uses, "xlink:href")
-    hrefs[is.na(hrefs)] <- xlink_hrefs[is.na(hrefs)]
-  }
-  hrefs <- sub("^#", "", hrefs)
+  # Top-level wrapper groups defined directly under svglite's root <g> (not nested
+  # inside another <defs>) correspond 1-to-1 in draw order with our leaf probes.
+  top_groups <- xml2::xml_find_all(
+    doc,
+    "//d1:defs[not(ancestor::d1:defs)]/d1:g[starts-with(@id, 'group-')]",
+    ns
+  )
+  top_gids <- xml2::xml_attr(top_groups, "id")
+  top_uses <- xml2::xml_find_all(doc, "//d1:use[not(ancestor::d1:defs)]", ns)
+  top_hrefs <- extract_use_hrefs(top_uses)
+  use_of <- match(top_gids, top_hrefs)
 
-  expected_gids <- paste0("group-", seq_len(n_probe) - 1L)
-  group_of <- match(expected_gids, gids)
-  use_of <- match(expected_gids, hrefs)
-
-  if (length(gids) != n_probe || anyNA(group_of) || anyNA(use_of)) {
+  if (length(top_gids) != n_probe || anyNA(use_of)) {
     cli::cli_warn(
-      "Could not align all {n_probe} draw-time probes with {length(gids)} SVG graphics groups; inlining matched groups only."
+      "Could not align {n_probe} draw-time probe{?s} with {length(top_gids)} top-level SVG group{?s}; falling back to untouched SVG without leaf misattribution."
     )
+    return(if (!is.null(fallback_svg)) read_svg_doc(fallback_svg) else doc)
   }
 
   for (k in seq_len(n_probe)) {
-    gi <- group_of[[k]]
-    ui <- use_of[[k]]
-    if (is.na(gi) || is.na(ui)) next
-
     lid <- order[[k]]
-    gnode <- groups[[gi]]
-    xml2::xml_replace(uses[[ui]], gnode, .copy = FALSE)
+    gnode <- top_groups[[k]]
+    xml2::xml_replace(top_uses[[use_of[[k]]]], gnode, .copy = FALSE)
     xml2::xml_set_attr(gnode, "id", lid)
     xml2::xml_set_attr(gnode, "data-gloss-leaf", lid)
     meta <- leaves_meta[[lid]]
@@ -573,6 +619,9 @@ inline_svg_groups <- function(wrapped_svg, order, leaves_meta) {
       xml2::xml_set_attr(gnode, "data-grob-name", meta$grob_name)
     }
   }
+
+  # Inline any inner nested user groupGrobs now sitting inside <g id="L...">
+  inline_nested_svg_groups(doc, ns)
 
   empty_defs <- xml2::xml_find_all(doc, "//d1:defs[not(*)]", ns)
   if (length(empty_defs) > 0L) {
@@ -706,6 +755,120 @@ pair_coord_range <- function(s) {
   }, numeric(4L)))
 }
 
+# Command-aware SVG path `d` bounding-box parser handling M/m, L/l, H/h, V/v,
+# C/c, S/s, Q/q, T/t, A/a, and Z/z without confusing single-axis or arc args.
+parse_single_path_bbox <- function(d) {
+  if (is.na(d) || !nzchar(d)) return(rep(NA_real_, 4L))
+  toks <- regmatches(
+    d,
+    gregexpr("[A-Za-z]|[-+]?(?:[0-9]*\\.[0-9]+|[0-9]+\\.?)(?:[eE][-+]?[0-9]+)?", d, perl = TRUE)
+  )[[1L]]
+  n_tok <- length(toks)
+  if (n_tok == 0L) return(rep(NA_real_, 4L))
+
+  is_cmd <- grepl("^[A-Za-z]$", toks)
+  cx <- 0
+  cy <- 0
+  sx <- 0
+  sy <- 0
+  xs <- numeric()
+  ys <- numeric()
+  cmd <- ""
+  i <- 1L
+
+  take_nums <- function(k) {
+    if (i + k - 1L > n_tok || any(is_cmd[i:(i + k - 1L)])) return(NULL)
+    vals <- as.numeric(toks[i:(i + k - 1L)])
+    vals
+  }
+
+  while (i <= n_tok) {
+    if (is_cmd[[i]]) {
+      cmd <- toks[[i]]
+      i <- i + 1L
+      if (cmd %in% c("Z", "z")) {
+        cx <- sx
+        cy <- sy
+        next
+      }
+    }
+    if (!nzchar(cmd) || i > n_tok || is_cmd[[i]]) next
+
+    up <- toupper(cmd)
+    rel <- !identical(cmd, up)
+
+    if (up %in% c("M", "L", "T")) {
+      v <- take_nums(2L)
+      if (is.null(v)) break
+      i <- i + 2L
+      nx <- if (rel) cx + v[[1L]] else v[[1L]]
+      ny <- if (rel) cy + v[[2L]] else v[[2L]]
+      cx <- nx
+      cy <- ny
+      xs <- c(xs, cx)
+      ys <- c(ys, cy)
+      if (up == "M") {
+        sx <- cx
+        sy <- cy
+        # Subsequent coordinate pairs after M/m are implicit L/l commands
+        cmd <- if (rel) "l" else "L"
+      }
+    } else if (up == "H") {
+      v <- take_nums(1L)
+      if (is.null(v)) break
+      i <- i + 1L
+      cx <- if (rel) cx + v[[1L]] else v[[1L]]
+      xs <- c(xs, cx)
+      ys <- c(ys, cy)
+    } else if (up == "V") {
+      v <- take_nums(1L)
+      if (is.null(v)) break
+      i <- i + 1L
+      cy <- if (rel) cy + v[[1L]] else v[[1L]]
+      xs <- c(xs, cx)
+      ys <- c(ys, cy)
+    } else if (up == "C") {
+      v <- take_nums(6L)
+      if (is.null(v)) break
+      i <- i + 6L
+      pts_x <- if (rel) cx + v[c(1L, 3L, 5L)] else v[c(1L, 3L, 5L)]
+      pts_y <- if (rel) cy + v[c(2L, 4L, 6L)] else v[c(2L, 4L, 6L)]
+      xs <- c(xs, pts_x)
+      ys <- c(ys, pts_y)
+      cx <- pts_x[[3L]]
+      cy <- pts_y[[3L]]
+    } else if (up %in% c("S", "Q")) {
+      v <- take_nums(4L)
+      if (is.null(v)) break
+      i <- i + 4L
+      pts_x <- if (rel) cx + v[c(1L, 3L)] else v[c(1L, 3L)]
+      pts_y <- if (rel) cy + v[c(2L, 4L)] else v[c(2L, 4L)]
+      xs <- c(xs, pts_x)
+      ys <- c(ys, pts_y)
+      cx <- pts_x[[2L]]
+      cy <- pts_y[[2L]]
+    } else if (up == "A") {
+      v <- take_nums(7L)
+      if (is.null(v)) break
+      i <- i + 7L
+      cx <- if (rel) cx + v[[6L]] else v[[6L]]
+      cy <- if (rel) cy + v[[7L]] else v[[7L]]
+      xs <- c(xs, cx)
+      ys <- c(ys, cy)
+    } else {
+      i <- i + 1L
+    }
+  }
+
+  if (length(xs) == 0L || length(ys) == 0L) return(rep(NA_real_, 4L))
+  c(min(xs), max(xs), min(ys), max(ys))
+}
+
+path_coord_range <- function(d_vec) {
+  if (length(d_vec) == 0L) return(matrix(numeric(), 0L, 4L))
+  t(vapply(d_vec, parse_single_path_bbox, numeric(4L)))
+}
+
 estimate_text_boxes <- function(nodes, style) {
   fs <- suppressWarnings(as.numeric(sub("px$", "", svg_attr_or_style(nodes, style, "font-size"))))
   fs[is.na(fs)] <- 12.0
@@ -789,7 +952,7 @@ compute_element_boxes <- function(nodes, tag, style) {
 
   i <- which(tag == "path")
   if (length(i) > 0L) {
-    b <- pair_coord_range(xml2::xml_attr(nodes[i], "d"))
+    b <- path_coord_range(xml2::xml_attr(nodes[i], "d"))
     box[i, ] <- cbind(b[, 1L], b[, 2L], b[, 3L], b[, 4L])
   }
 

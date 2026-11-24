@@ -217,3 +217,32 @@ test_that("ggplot engine handles layer-specific data, custom print.* fallback, a
   expect_true("raw" %in% names(cap_cust$tables))
   expect_gt(nrow(cap_cust$scene$leaves), 0L)
 })
+
+test_that("ggplot engine preserves all free facet scales and gl_query slices PANEL rows accurately", {
+  skip_if_not_installed("ggplot2")
+
+  p_free <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(.data$wt, .data$mpg)) +
+    ggplot2::geom_point() +
+    ggplot2::facet_wrap(~ cyl, scales = "free")
+
+  cap <- gloss(p_free)
+  expect_equal(length(cap$ir$panels), 3L)
+
+  x_scales <- Filter(function(s) identical(s$aesthetic, "x"), cap$ir$scales)
+  y_scales <- Filter(function(s) identical(s$aesthetic, "y"), cap$ir$scales)
+  expect_equal(length(x_scales), 3L)
+  expect_equal(length(y_scales), 3L)
+  expect_identical(vapply(x_scales, function(s) unlist(s$panel_ids)[[1L]], character(1L)), c("P1", "P2", "P3"))
+  expect_identical(vapply(y_scales, function(s) unlist(s$panel_ids)[[1L]], character(1L)), c("P1", "P2", "P3"))
+  # Distinct panel domains preserved
+  expect_false(identical(x_scales[[1L]]$domain, x_scales[[3L]]$domain))
+
+  # gl_query(cap, panel = "P2") slices built_layer1 strictly to PANEL == 2 (cyl == 6 -> 7 rows)
+  q2 <- gl_query(cap, panel = "P2")
+  b1_p2 <- q2$tables$built_layer1
+  expect_equal(nrow(b1_p2), sum(datasets::mtcars$cyl == 6))
+  expect_true(all(as.integer(as.character(b1_p2$PANEL)) == 2L))
+  # Preserves original 1-based _row_id from full built_layer1
+  full_b1 <- gl_tables(cap, "built_layer1")
+  expect_identical(b1_p2[["_row_id"]], which(as.integer(as.character(full_b1$PANEL)) == 2L))
+})

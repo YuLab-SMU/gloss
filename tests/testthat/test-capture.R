@@ -231,3 +231,33 @@ test_that("gloss validates arguments and allows custom engine capture_fn", {
   expect_identical(names(cap$tables), "raw")
   expect_identical(cap$scene$leaves$grob_name, "custom_rect")
 })
+
+test_that("gloss aligns nested user groupGrob, parses SVG path commands accurately, and explains mixed pages", {
+  # Nested user groupGrob (GridGroup) must not shift subsequent leaf attributions
+  g_grp <- grid::grobTree(
+    grid::groupGrob(grid::circleGrob(r = 0.2), name = "user_grp"),
+    grid::rectGrob(width = 0.3, height = 0.3, name = "after_grp")
+  )
+  cap_grp <- expect_no_warning(gloss(g_grp))
+  expect_identical(cap_grp$scene$leaves$grob_name, c("user_grp", "after_grp"))
+  expect_identical(cap_grp$scene$leaves$n_elements, c(1L, 1L))
+  el_l1 <- cap_grp$scene$elements[!is.na(cap_grp$scene$elements$leaf_id) & cap_grp$scene$elements$leaf_id == "L001", ]
+  el_l2 <- cap_grp$scene$elements[!is.na(cap_grp$scene$elements$leaf_id) & cap_grp$scene$elements$leaf_id == "L002", ]
+  expect_identical(el_l1$tag, "circle")
+  expect_identical(el_l2$tag, "rect")
+
+  # SVG path bbox parser handles V/H, relative m/h/v, cubic C, and arc A cleanly
+  expect_equal(parse_single_path_bbox("M 10 20 V 80 H 50 L 30 40 Z"), c(10, 50, 20, 80))
+  expect_equal(parse_single_path_bbox("m 10 20 v 60 h 40 z"), c(10, 50, 20, 80))
+  expect_equal(parse_single_path_bbox("M 0 0 A 25 25 0 0 1 50 30"), c(0, 50, 0, 30))
+  expect_equal(parse_single_path_bbox("M 0 0 c 10 5 20 15 30 40"), c(0, 30, 0, 40))
+
+  # Mixed base + grid page emits a clear diagnostic error
+  expect_error(
+    gloss(function() {
+      graphics::plot(1:5, 1:5)
+      grid::grid.text("overlay")
+    }),
+    "mixed base graphics and grid graphics"
+  )
+})
