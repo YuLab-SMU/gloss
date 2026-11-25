@@ -1,4 +1,4 @@
-name: Project Map (LikeC4 -> gh-pages)
+name: GitHub Pages (Portal + 3D Space + LikeC4 Map)
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: "project-map-${{ github.ref }}"
+  group: "gloss-pages-${{ github.ref }}"
   cancel-in-progress: false
 
 jobs:
@@ -41,17 +41,33 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "npm"
+          cache-dependency-path: site/package-lock.json
 
-      - name: Build LikeC4 static Project Map
+      - name: Build Portal Home & 3D Architecture Space
+        working-directory: site
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
         run: |
+          npm ci
+          npm run lint
+          npm test
+          npm run build
+
+      - name: Assemble GitHub Pages bundle (+ LikeC4 Project Map)
+        run: |
+          rm -rf .pages-dist
+          mkdir -p .pages-dist
+          cp -R site/dist/* .pages-dist/
           npx --yes likec4@latest build \
-            --base "/${{ github.event.repository.name }}/" \
+            --base "/${{ github.event.repository.name }}/map/" \
             --use-hash-history \
             --title "gloss Project Map" \
-            --output .project-map/dist \
+            --output .pages-dist/map \
             .project-map/model
-          cp .project-map/status.json .project-map/dist/status.json
-          touch .project-map/dist/.nojekyll
+          cp .project-map/status.json .pages-dist/status.json
+          cp .project-map/status.json .pages-dist/map/status.json
+          touch .pages-dist/.nojekyll
 
       - name: Deploy to gh-pages branch
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
@@ -59,6 +75,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: .project-map/dist
+          publish_dir: .pages-dist
           force_orphan: true
-          commit_message: "chore(project-map): update LikeC4 site from ${{ github.sha }}"
+          commit_message: "chore(pages): update portal, 3D space, and LikeC4 map from ${{ github.sha }}"

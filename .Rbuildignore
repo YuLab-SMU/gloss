@@ -3,6 +3,8 @@
 ^LICENSE\.md$
 ^dev_docs$
 ^skills$
+^site$
+^\.pages-dist$
 ^\.project-map$
 ^\.github$
 ^.*\.Rproj$
