@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-BZi9cxqW.js";var t=e(),n={};function r({node:e,...r}){let i=n[e.icon??``];return i?(0,t.jsx)(i,r):null}export{r as IconRenderer};
