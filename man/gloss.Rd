@@ -15,6 +15,8 @@ gloss(
   preview_dpi = 144,
   page = NULL,
   parent = NULL,
+  entities = NULL,
+  upstream = NULL,
   ...
 )
 }
@@ -54,6 +56,17 @@ multiple pages. Defaults to \code{NULL} (selects the last drawn page).}
 \item{parent}{Optional parent reference linking a recomputed capture to an
 earlier capture (\code{gloss_capture}, \code{capture_id} string, or path to an
 existing \verb{.gloss/} bundle directory). Recorded as \code{parent_capture_id}.}
+
+\item{entities}{Optional explicit entity-role declarations mapping semantic
+roles (e.g. \code{"subject"}, \code{"sample"}, \code{"feature"}, \code{"batch"}, \code{"timepoint"})
+to column names as a named character vector or named list (e.g.
+\code{c(subject = "pat_id", batch = "seq_run")}). Explicit declarations take
+precedence over heuristic cross-table entity detection.}
+
+\item{upstream}{Optional pre-plot upstream parent table (\code{data.frame} or
+\code{list(data = df_all, note = "...", entity_column = "...", include_table = FALSE)})
+used to compute compact pre-plot exclusion accounting in \code{ir$data_funnel}
+without duplicating large parent tables into \verb{tables/} by default.}
 
 \item{...}{Additional arguments forwarded to the engine's \code{capture_fn}.}
 }

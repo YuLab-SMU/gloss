@@ -1,6 +1,10 @@
 # Internal utilities, serialization helpers, and the gloss_capture S3 contract.
 
-GLOSS_SCHEMA_VERSION <- "1.1.0"
+GLOSS_SCHEMA_VERSION <- "1.2.0"
+
+gloss_package_version <- function() {
+  tryCatch(as.character(utils::packageVersion("gloss")), error = function(e) "0.2.0")
+}
 
 # --- Hashing & timestamps ----------------------------------------------------
 
@@ -67,7 +71,7 @@ df_to_records <- function(df) {
     rec <- lapply(cols, function(nm) {
       val <- df[[nm]][[i]]
       if (is.factor(val)) val <- as.character(val)
-      if (length(val) == 1L && is.na(val)) NULL else val
+      if (is.null(val) || (is.atomic(val) && length(val) == 1L && is.na(val))) NULL else val
     })
     stats::setNames(rec, cols)
   })
@@ -264,7 +268,7 @@ infer_stat_columns <- function(df, stat_name = NA_character_, geom_name = NA_cha
   as.list(STAT_COLUMN_ROLES[hits])
 }
 
-table_column_summaries <- function(df, table_role = "raw") {
+table_column_summaries <- function(df, table_role = "raw", entity_roles = NULL) {
   if (!is.data.frame(df) || ncol(df) == 0L) {
     return(list())
   }
@@ -275,6 +279,9 @@ table_column_summaries <- function(df, table_role = "raw") {
     entry <- list(name = nm, type = ctype)
     if (is_built && nm %in% names(STAT_COLUMN_ROLES)) {
       entry$stat_role <- unname(STAT_COLUMN_ROLES[[nm]])
+    }
+    if (!is.null(entity_roles) && nm %in% names(entity_roles)) {
+      entry$entity_role <- unname(entity_roles[[nm]])
     }
 
     if (ctype %in% c("integer", "double")) {
@@ -306,7 +313,7 @@ table_column_summaries <- function(df, table_role = "raw") {
   })
 }
 
-table_schema_spec <- function(df, add_row_id = TRUE, table_role = "raw") {
+table_schema_spec <- function(df, add_row_id = TRUE, table_role = "raw", entity_roles = NULL) {
   if (!is.data.frame(df)) {
     cli::cli_abort("{.arg df} must be a data.frame.")
   }
@@ -328,6 +335,9 @@ table_schema_spec <- function(df, add_row_id = TRUE, table_role = "raw") {
     }
     if (is_built && nm %in% names(STAT_COLUMN_ROLES)) {
       spec$stat_role <- unname(STAT_COLUMN_ROLES[[nm]])
+    }
+    if (!is.null(entity_roles) && nm %in% names(entity_roles)) {
+      spec$entity_role <- unname(entity_roles[[nm]])
     }
     if (inherits(col, "sfc")) {
       crs_obj <- attr(col, "crs")
@@ -359,7 +369,7 @@ round_pt <- function(x) {
 }
 
 empty_leaves_df <- function() {
-  data.frame(
+  df <- data.frame(
     leaf_id = character(),
     grob_name = character(),
     grob_path = character(),
@@ -384,8 +394,11 @@ empty_leaves_df <- function() {
     z_index = integer(),
     semantic_role = character(),
     edit_policy = character(),
+    subplot = integer(),
     stringsAsFactors = FALSE
   )
+  df$attached_to <- I(list())
+  df
 }
 
 empty_elements_df <- function() {
@@ -407,6 +420,11 @@ empty_elements_df <- function() {
     font_family = character(),
     text_anchor = character(),
     rotation = double(),
+    anchor_x = double(),
+    anchor_y = double(),
+    measured_width_pt = double(),
+    target_anchor_x = double(),
+    target_anchor_y = double(),
     clip_id = character(),
     clip_x0 = double(),
     clip_y0 = double(),
@@ -415,12 +433,14 @@ empty_elements_df <- function() {
     built_row_id = integer(),
     group_id = character(),
     part_role = character(),
+    color_token = character(),
+    fill_token = character(),
     stringsAsFactors = FALSE
   )
 }
 
 empty_lineage_df <- function() {
-  data.frame(
+  df <- data.frame(
     leaf_id = character(),
     grob_name = character(),
     layout_slot = character(),
@@ -434,8 +454,11 @@ empty_lineage_df <- function() {
     edit_policy = character(),
     lineage_tier = character(),
     degradation_reason = character(),
+    subplot = integer(),
     stringsAsFactors = FALSE
   )
+  df$attached_to <- I(list())
+  df
 }
 
 make_scene_coord <- function(width_pt, height_pt, viewbox = NULL) {
@@ -458,7 +481,9 @@ ensure_df_columns <- function(df, template_df) {
   for (col in names(template_df)) {
     if (!(col %in% names(df))) {
       proto <- template_df[[col]]
-      if (is.integer(proto)) {
+      if (is.list(proto)) {
+        df[[col]] <- I(vector("list", n))
+      } else if (is.integer(proto)) {
         df[[col]] <- rep(NA_integer_, n)
       } else if (is.double(proto)) {
         df[[col]] <- rep(NA_real_, n)
@@ -502,13 +527,26 @@ normalize_table_entry <- function(entry, table_id) {
       "Table entry {.val {table_id}} must be a data.frame or a list with a {.field data} data.frame."
     )
   }
-  list(
+  out <- list(
     table_id = entry$table_id %||% table_id,
     role = entry$role %||% "raw",
     key = as.character(entry$key %||% character()),
     layer_id = entry$layer_id %||% NULL,
     data = entry$data
   )
+  if (!is.null(entry$matrix_colnames)) {
+    out$matrix_colnames <- as.character(entry$matrix_colnames)
+  }
+  if (!is.null(entry$matrix_rownames)) {
+    out$matrix_rownames <- as.character(entry$matrix_rownames)
+  }
+  if (!is.null(entry$anno_dim)) {
+    out$anno_dim <- as.character(entry$anno_dim)[[1L]]
+  }
+  if (!is.null(entry$anno_names)) {
+    out$anno_names <- as.character(entry$anno_names)
+  }
+  out
 }
 
 compute_capture_id <- function(page, svg_original, svg_scene, rasters = list()) {
@@ -554,10 +592,13 @@ new_gloss_capture <- function(
     session = list(),
     preview_png = NULL,
     label_links = list(),
+    entities = list(),
+    layout_tracks = NULL,
     parent_capture_id = NULL,
     capture_id = NULL,
     created_at = utc_timestamp(),
-    schema_version = GLOSS_SCHEMA_VERSION) {
+    schema_version = GLOSS_SCHEMA_VERSION,
+    package_version = gloss_package_version()) {
 
   orig <- normalize_svg_slot(svg_original)
   scn <- normalize_svg_slot(svg_scene)
@@ -598,6 +639,9 @@ new_gloss_capture <- function(
   if (!is.null(ir$group_indices) && length(ir$group_indices) > 0L) {
     norm_ir$group_indices <- ir$group_indices
   }
+  if (!is.null(ir$data_funnel) && length(ir$data_funnel) > 0L) {
+    norm_ir$data_funnel <- ir$data_funnel
+  }
 
   if (is.data.frame(leaves)) {
     leaves <- ensure_df_columns(leaves, empty_leaves_df())
@@ -630,8 +674,22 @@ new_gloss_capture <- function(
     as.character(parent_capture_id)[[1L]]
   }
 
+  scene_obj <- list(
+    coord = make_scene_coord(w_pt, h_pt),
+    leaves = leaves,
+    elements = elements,
+    dense_leaves = as.character(dense_leaves),
+    rasters = rasters,
+    preview_png = preview_png,
+    label_links = label_links %||% list()
+  )
+  if (!is.null(layout_tracks) && length(layout_tracks) > 0L) {
+    scene_obj$layout_tracks <- layout_tracks
+  }
+
   cap <- structure(
     list(
+      package_version = as.character(package_version)[[1L]],
       schema_version = as.character(schema_version)[[1L]],
       capture_id = as.character(cap_id)[[1L]],
       parent_capture_id = norm_parent,
@@ -641,16 +699,9 @@ new_gloss_capture <- function(
         original = orig,
         scene = scn
       ),
-      scene = list(
-        coord = make_scene_coord(w_pt, h_pt),
-        leaves = leaves,
-        elements = elements,
-        dense_leaves = as.character(dense_leaves),
-        rasters = rasters,
-        preview_png = preview_png,
-        label_links = label_links %||% list()
-      ),
+      scene = scene_obj,
       ir = norm_ir,
+      entities = entities %||% list(),
       tables = norm_tables,
       lineage = lineage,
       sources = sources,

@@ -29,6 +29,7 @@ gl_asset_map <- function(cap, path = NULL) {
     entry <- cap$tables[[tid]]
     df <- entry$data
     trole <- entry$role %||% "raw"
+    eroles <- entity_column_roles_for_table(cap$entities %||% list(), tid)
     list(
       table_id = tid,
       role = trole,
@@ -37,7 +38,7 @@ gl_asset_map <- function(cap, path = NULL) {
       ncol = as.integer(ncol(df)),
       key = json_array(entry$key),
       path = paste0("tables/", tid, ".csv"),
-      columns = json_array(table_column_summaries(df, table_role = trole))
+      columns = json_array(table_column_summaries(df, table_role = trole, entity_roles = eroles))
     )
   })
 
@@ -62,6 +63,9 @@ gl_asset_map <- function(cap, path = NULL) {
   )
   if (!is.null(cap$ir$guides)) {
     ir_entry$guides <- cap$ir$guides
+  }
+  if (!is.null(cap$ir$data_funnel) && length(cap$ir$data_funnel) > 0L) {
+    ir_entry$data_funnel <- cap$ir$data_funnel
   }
 
   n_texts <- if (is.data.frame(cap$scene$elements) && nrow(cap$scene$elements) > 0L) {
@@ -89,7 +93,8 @@ gl_asset_map <- function(cap, path = NULL) {
     n_panels = as.integer(length(cap$ir$panels)),
     n_leaves = as.integer(nrow(cap$scene$leaves)),
     n_elements = as.integer(nrow(cap$scene$elements)),
-    dense_leaves = json_array(cap$scene$dense_leaves)
+    dense_leaves = json_array(cap$scene$dense_leaves),
+    role_contracts = default_role_contracts()
   )
   if (!is.null(cap$scene$preview_png) && is.raw(cap$scene$preview_png) && length(cap$scene$preview_png) > 0L) {
     dpi <- as.integer(cap$page$preview_dpi %||% 144L)
@@ -106,15 +111,20 @@ gl_asset_map <- function(cap, path = NULL) {
   if (!is.null(cap$scene$label_links) && length(cap$scene$label_links) > 0L) {
     scene_entry$label_links <- json_array(cap$scene$label_links)
   }
+  if (!is.null(cap$scene$layout_tracks) && length(cap$scene$layout_tracks) > 0L) {
+    scene_entry$layout_tracks <- cap$scene$layout_tracks
+  }
 
   map_list <- list(
     format = "gloss-asset-map",
+    package_version = cap$package_version %||% gloss_package_version(),
     schema_version = cap$schema_version,
     capture_id = cap$capture_id,
     created_at = cap$created_at,
     page = cap$page,
     scene = scene_entry,
     ir = ir_entry,
+    entities = json_array(cap$entities %||% list()),
     tables = json_array(table_entries),
     lineage = json_array(df_to_records(cap$lineage)),
     sources = json_array(source_entries)
@@ -395,6 +405,7 @@ gl_asset_bundle <- function(
     }
 
     trole <- entry$role %||% "raw"
+    eroles <- entity_column_roles_for_table(cap$entities %||% list(), tid)
     table_schemas[[tid]] <- list(
       table_id = tid,
       role = trole,
@@ -402,7 +413,7 @@ gl_asset_bundle <- function(
       path = tbl_rel_path,
       key = json_array(entry$key),
       nrow = as.integer(nrow(df_with_id)),
-      columns = json_array(table_schema_spec(df_with_id, add_row_id = FALSE, table_role = trole))
+      columns = json_array(table_schema_spec(df_with_id, add_row_id = FALSE, table_role = trole, entity_roles = eroles))
     )
   }
 
@@ -528,6 +539,7 @@ gl_asset_bundle <- function(
 
   manifest_payload <- list(
     format = "gloss-asset-bundle",
+    package_version = cap$package_version %||% gloss_package_version(),
     schema_version = cap$schema_version,
     capture_id = cap$capture_id,
     created_at = cap$created_at,
@@ -626,28 +638,125 @@ build_texts_json_records <- function(elements_df, leaves_df, lineage_df) {
     integer()
   }
 
-  lapply(idx, function(i) {
+  n_txt <- length(idx)
+  has_anc <- all(c("anchor_x", "anchor_y") %in% names(elements_df))
+  has_mw <- "measured_width_pt" %in% names(elements_df)
+  has_tanc <- all(c("target_anchor_x", "target_anchor_y") %in% names(elements_df))
+  has_brid <- "built_row_id" %in% names(elements_df)
+
+  # K5: Group consecutive multi-line <text> fragments within a leaf into logical text blocks
+  block_ids <- character(n_txt)
+  line_indices <- integer(n_txt)
+  block_num <- 0L
+
+  role_of <- vapply(seq_len(n_txt), function(k) {
+    lid <- elements_df$leaf_id[[idx[[k]]]]
+    li <- if (!is.na(lid) && lid %in% names(l_map)) l_map[[lid]] else NA_integer_
+    if (!is.na(li) && !is.na(leaves_df$semantic_role[[li]])) leaves_df$semantic_role[[li]] else "annotation"
+  }, character(1L))
+
+  can_merge_with_prev <- function(k_prev, k_cur) {
+    i1 <- idx[[k_prev]]
+    i2 <- idx[[k_cur]]
+    l1 <- elements_df$leaf_id[[i1]]
+    l2 <- elements_df$leaf_id[[i2]]
+    if (is.na(l1) || is.na(l2) || !identical(l1, l2)) return(FALSE)
+
+    # Same bridged built_row_id on a data_label always merges multi-line fragments
+    if (has_brid && !is.na(elements_df$built_row_id[[i1]]) && !is.na(elements_df$built_row_id[[i2]])) {
+      if (identical(elements_df$built_row_id[[i1]], elements_df$built_row_id[[i2]])) return(TRUE)
+      return(FALSE)
+    }
+
+    rot1 <- if (is.finite(elements_df$rotation[[i1]])) elements_df$rotation[[i1]] else 0.0
+    rot2 <- if (is.finite(elements_df$rotation[[i2]])) elements_df$rotation[[i2]] else 0.0
+    if (abs(rot1 - rot2) > 1.0) return(FALSE)
+
+    fs <- if (is.finite(elements_df$font_size[[i1]])) elements_df$font_size[[i1]] else 12.0
+    ax1 <- if (has_anc && is.finite(elements_df$anchor_x[[i1]])) elements_df$anchor_x[[i1]] else elements_df$bbox_x0[[i1]]
+    ay1 <- if (has_anc && is.finite(elements_df$anchor_y[[i1]])) elements_df$anchor_y[[i1]] else elements_df$bbox_y1[[i1]]
+    ax2 <- if (has_anc && is.finite(elements_df$anchor_x[[i2]])) elements_df$anchor_x[[i2]] else elements_df$bbox_x0[[i2]]
+    ay2 <- if (has_anc && is.finite(elements_df$anchor_y[[i2]])) elements_df$anchor_y[[i2]] else elements_df$bbox_y1[[i2]]
+    if (!all(is.finite(c(ax1, ay1, ax2, ay2)))) return(FALSE)
+
+    dx <- abs(ax2 - ax1)
+    dy <- abs(ay2 - ay1)
+    max_step <- max(fs * 2.1, 18.0)
+
+    # Rotated vertical text (e.g. rotated Y axis title at +-90 deg) stacks horizontally
+    if (abs(abs(rot1) - 90.0) <= 5.0) {
+      return(dy <= 2.0 && dx >= fs * 0.4 && dx <= max_step)
+    }
+    # Horizontal text stacks vertically along aligned anchor column
+    dx <= 2.0 && dy >= fs * 0.4 && dy <= max_step
+  }
+
+  for (k in seq_len(n_txt)) {
+    if (k > 1L && can_merge_with_prev(k - 1L, k)) {
+      block_ids[[k]] <- block_ids[[k - 1L]]
+      line_indices[[k]] <- line_indices[[k - 1L]] + 1L
+    } else {
+      block_num <- block_num + 1L
+      block_ids[[k]] <- sprintf("TB%04d", block_num)
+      line_indices[[k]] <- 1L
+    }
+  }
+
+  txt_strs <- ifelse(is.na(elements_df$text[idx]), "", elements_df$text[idx])
+  block_groups <- split(seq_len(n_txt), block_ids)
+  block_full_text <- vapply(block_groups, function(ks) paste(txt_strs[ks], collapse = "\n"), character(1L))
+  block_line_count <- vapply(block_groups, length, integer(1L))
+
+  lapply(seq_len(n_txt), function(k) {
+    i <- idx[[k]]
     lid <- elements_df$leaf_id[[i]]
     li <- if (!is.na(lid) && lid %in% names(l_map)) l_map[[lid]] else NA_integer_
     lni <- if (!is.na(lid) && lid %in% names(lin_map)) lin_map[[lid]] else NA_integer_
+    bid <- block_ids[[k]]
 
     bb <- c(elements_df$bbox_x0[[i]], elements_df$bbox_y0[[i]], elements_df$bbox_x1[[i]], elements_df$bbox_y1[[i]])
+    anc_pt <- if (has_anc && is.finite(elements_df$anchor_x[[i]]) && is.finite(elements_df$anchor_y[[i]])) {
+      json_array(round_pt(c(elements_df$anchor_x[[i]], elements_df$anchor_y[[i]])))
+    } else {
+      NULL
+    }
+    mw_pt <- if (has_mw && is.finite(elements_df$measured_width_pt[[i]])) {
+      round_pt(elements_df$measured_width_pt[[i]])
+    } else if (all(is.finite(bb))) {
+      round_pt(bb[[3L]] - bb[[1L]])
+    } else {
+      NULL
+    }
+    tanc_pt <- if (has_tanc && is.finite(elements_df$target_anchor_x[[i]]) && is.finite(elements_df$target_anchor_y[[i]])) {
+      json_array(round_pt(c(elements_df$target_anchor_x[[i]], elements_df$target_anchor_y[[i]])))
+    } else {
+      NULL
+    }
+
     list(
       element_id = elements_df$element_id[[i]],
       leaf_id = if (is.na(lid)) NULL else lid,
+      text_block_id = bid,
+      line_index = as.integer(line_indices[[k]]),
+      line_count = as.integer(block_line_count[[bid]]),
+      block_text = unname(block_full_text[[bid]]),
       panel_id = if (!is.na(lni) && !is.na(lineage_df$panel_id[[lni]])) lineage_df$panel_id[[lni]] else NULL,
       layer_id = if (!is.na(lni) && !is.na(lineage_df$layer_id[[lni]])) as.integer(lineage_df$layer_id[[lni]]) else NULL,
+      subplot = if (!is.na(li) && "subplot" %in% names(leaves_df) && !is.na(leaves_df$subplot[[li]])) as.integer(leaves_df$subplot[[li]]) else NULL,
       layout_slot = if (!is.na(li) && !is.na(leaves_df$layout_slot[[li]])) leaves_df$layout_slot[[li]] else NULL,
-      semantic_role = if (!is.na(li) && !is.na(leaves_df$semantic_role[[li]])) leaves_df$semantic_role[[li]] else "annotation",
+      semantic_role = role_of[[k]],
       edit_policy = if (!is.na(li) && !is.na(leaves_df$edit_policy[[li]])) leaves_df$edit_policy[[li]] else "movable",
-      text = if (is.na(elements_df$text[[i]])) "" else elements_df$text[[i]],
+      text = txt_strs[[k]],
       bbox_pt = if (all(is.finite(bb))) json_array(round_pt(bb)) else NULL,
+      anchor_pt = anc_pt,
+      measured_width_pt = mw_pt,
+      target_anchor_pt = tanc_pt,
       font_size = if (is.finite(elements_df$font_size[[i]])) elements_df$font_size[[i]] else NULL,
       font_family = if (!is.na(elements_df$font_family[[i]])) elements_df$font_family[[i]] else NULL,
       text_anchor = if (!is.na(elements_df$text_anchor[[i]])) elements_df$text_anchor[[i]] else NULL,
       rotation = if (is.finite(elements_df$rotation[[i]])) elements_df$rotation[[i]] else 0.0,
       fill = if (!is.na(elements_df$fill[[i]])) elements_df$fill[[i]] else NULL,
-      built_row_id = if ("built_row_id" %in% names(elements_df) && !is.na(elements_df$built_row_id[[i]])) as.integer(elements_df$built_row_id[[i]]) else NULL
+      built_row_id = if (has_brid && !is.na(elements_df$built_row_id[[i]])) as.integer(elements_df$built_row_id[[i]]) else NULL
     )
   })
 }

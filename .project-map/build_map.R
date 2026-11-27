@@ -84,6 +84,12 @@ if (!file.exists("DESCRIPTION")) {
 
 dcf <- as.list(read.dcf("DESCRIPTION")[1L, ])
 pkg_version <- dcf$Version %||% "0.0.0"
+schema_version <- {
+  u_lines <- if (file.exists("R/utils.R")) readLines("R/utils.R", warn = FALSE) else character()
+  m <- regmatches(u_lines, regexec("^GLOSS_SCHEMA_VERSION\\s*<-\\s*[\"']([^\"']+)[\"']", u_lines))
+  hits <- Filter(function(x) length(x) == 2L, m)
+  if (length(hits) > 0L) hits[[1L]][[2L]] else "1.0.0"
+}
 repo_url <- trimws(strsplit(dcf$URL %||% "https://github.com/YuLab-SMU/gloss", "[,[:space:]]+")[[1L]][[1L]])
 repo_url <- sub("/+$", "", repo_url)
 
@@ -210,7 +216,7 @@ core_modules <- list(
     id = "gloss_core.modules.mod_ir_lineage",
     name = "Engine IR & Structural Lineage",
     files = c("R/ir-lineage.R"),
-    tests = c("tests/testthat/test-ir-lineage.R"),
+    tests = c("tests/testthat/test-ir-lineage.R", "tests/testthat/test-v11-issues.R", "tests/testthat/test-v12-kernel.R"),
     phase = "Phase 4"
   )
 )
@@ -262,14 +268,14 @@ ecosystem_tools <- list(
   list(
     id = "ecosystem.skill_gloss",
     name = "Base Protocol Skill: gloss",
-    files = c("skills/gloss/SKILL.md"),
-    tests = character(),
+    files = c("skills/gloss/SKILL.md", "skills/gloss/scripts/focus_bridge.py", "skills/gloss/scripts/workspace_state.py"),
+    tests = c("skills/tests/test_workflows.py"),
     phase = "Phase 6"
   ),
   list(
     id = "ecosystem.skill_refine",
     name = "SVG Refinement Skill: gloss-svg-refine",
-    files = c("skills/gloss-svg-refine/SKILL.md", "skills/gloss-svg-refine/scripts/verify_svg_fidelity.py"),
+    files = c("skills/gloss-svg-refine/SKILL.md", "skills/gloss-svg-refine/scripts/apply_visual_patch.py", "skills/gloss-svg-refine/scripts/verify_svg_fidelity.py"),
     tests = c("skills/tests/test_workflows.py"),
     phase = "Phase 6"
   ),
@@ -290,7 +296,13 @@ ecosystem_tools <- list(
   list(
     id = "ecosystem.external_scripts",
     name = "Python / JS / DuckDB Toolchains",
-    files = c("skills/gloss-svg-refine/scripts/verify_svg_fidelity.py", "skills/gloss-audit/scripts/audit_bundle.py"),
+    files = c(
+      "skills/gloss/scripts/focus_bridge.py",
+      "skills/gloss/scripts/workspace_state.py",
+      "skills/gloss-svg-refine/scripts/apply_visual_patch.py",
+      "skills/gloss-svg-refine/scripts/verify_svg_fidelity.py",
+      "skills/gloss-audit/scripts/audit_bundle.py"
+    ),
     tests = c("skills/tests/test_workflows.py"),
     phase = "Phase 6"
   )
@@ -595,7 +607,8 @@ c4_lines <- c(
     ),
     meta = list(
       status = if ("gl_asset_map" %in% actual_exports) "implemented" else "planned",
-      schema_version = "1.0.0"
+      schema_version = schema_version,
+      package_version = pkg_version
     )
   ),
   append_extend(
@@ -763,6 +776,7 @@ status_payload <- list(
   format = "gloss-project-map-status",
   generated_at = now_ts,
   package_version = pkg_version,
+  schema_version = schema_version,
   git = list(
     sha = git_sha,
     branch = git_branch,

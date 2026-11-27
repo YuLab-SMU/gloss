@@ -1,6 +1,6 @@
 Package: gloss
 Title: Source Map and Asset Preparation Core for R Figures
-Version: 0.1.0
+Version: 0.2.0
 Authors@R:
     person("Yonghe", "Xia", email = "xiayh17@gmail.com", role = c("aut", "cre"))
 Description: Captures R figures as structured, cross-language source maps and

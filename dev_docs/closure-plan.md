@@ -1,14 +1,16 @@
-# gloss 全阶段闭环补齐跟踪计划（Closure Plan）
+# gloss 全阶段闭环补齐跟踪计划（Closure Plan — 已归档）
 
-本跟踪文档用于严格对照三阶段设计蓝图与 [`dev_docs/architecture.md`](architecture.md)，逐项完成并验收除 **“配极简底座 `gloss` Skill 并用真实大模型跑通工作流一”**（用户明确暂缓项）之外的全部剩余目标。
+> **归档状态**：本计划对应的 Schema v1.0 / v1.1 全部闭环项（含原暂缓的底座 `skills/gloss`）均已验收落地；后续内核演进请见 [`kernel-upgrade-plan.md`](kernel-upgrade-plan.md)（包版本 `0.2.0` / Schema `1.2.0`）。
+
+本跟踪文档用于严格对照三阶段设计蓝图与 [`dev_docs/architecture.md`](architecture.md)，逐项记录 Schema v1.0 → v1.1 阶段的闭环验收成果。
 
 ---
 
 ## 范围说明
 
-- **明确排除项（Out of Scope for This Batch）**
-  - `[ ]` *(暂缓)* 阶段 1.4：编写底座 `gloss` Skill 并用真实大模型跑通工作流一。
-- **本轮必须 100% 闭环的 5 大工作流（Tracks T1–T5）**
+- **后续已补齐项**
+  - `[x]` 阶段 1.4：底座 `skills/gloss/`（含 `focus_bridge.py` 与 `workspace_state.py`）已于 Schema v1.1 闭环补齐。
+- **本轮 100% 闭环的 5 大工作流（Tracks T1–T5）**
 
 ---
 

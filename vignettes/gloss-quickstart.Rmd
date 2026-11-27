@@ -64,19 +64,22 @@ tables directly in memory:
 
 ```{r inspect-query, eval = requireNamespace("ggplot2", quietly = TRUE)}
 map <- gl_asset_map(cap)
+c(package = map$package_version, schema = map$schema_version)
 str(map$ir$panels, max.level = 2)
 
-# Slice strictly to panel P2 (am == 1) and high-MPG cars
+# Slice strictly to panel P2 (am == 1) and high-MPG cars, with in-group context_summary
 q <- gl_query(cap, panel = "P2", rows = function(df) df$y > 25)
 q
 head(q$tables$built_layer1[, c("_row_id", "PANEL", "x", "y", "colour")])
+str(q$context_summary, max.level = 2)
 ```
 
 ## 3. Exporting a Portable Open Asset Bundle
 
 `gl_asset_bundle()` writes a self-contained `.gloss/` directory (or `.zip`
-archive) with SHA-256 verification in `manifest.json`, explicit column schemas
-in `tables/schema.json`, and 1-based `_row_id` keys on every CSV table:
+archive) with SHA-256 verification in `manifest.json`, lightweight
+`scene/texts.json` and `assets/preview.png`, explicit column schemas in
+`tables/schema.json`, and 1-based `_row_id` keys on every CSV table:
 
 ```{r bundle, eval = requireNamespace("ggplot2", quietly = TRUE)}
 bundle_path <- gl_asset_bundle(

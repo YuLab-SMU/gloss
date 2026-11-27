@@ -39,6 +39,15 @@
 #' @param parent Optional parent reference linking a recomputed capture to an
 #'   earlier capture (`gloss_capture`, `capture_id` string, or path to an
 #'   existing `.gloss/` bundle directory). Recorded as `parent_capture_id`.
+#' @param entities Optional explicit entity-role declarations mapping semantic
+#'   roles (e.g. `"subject"`, `"sample"`, `"feature"`, `"batch"`, `"timepoint"`)
+#'   to column names as a named character vector or named list (e.g.
+#'   `c(subject = "pat_id", batch = "seq_run")`). Explicit declarations take
+#'   precedence over heuristic cross-table entity detection.
+#' @param upstream Optional pre-plot upstream parent table (`data.frame` or
+#'   `list(data = df_all, note = "...", entity_column = "...", include_table = FALSE)`)
+#'   used to compute compact pre-plot exclusion accounting in `ir$data_funnel`
+#'   without duplicating large parent tables into `tables/` by default.
 #' @param ... Additional arguments forwarded to the engine's `capture_fn`.
 #'
 #' @return A `gloss_capture` S3 object.
@@ -61,6 +70,8 @@ gloss <- function(
     preview_dpi = 144,
     page = NULL,
     parent = NULL,
+    entities = NULL,
+    upstream = NULL,
     ...) {
 
   call_expr <- tryCatch({
@@ -160,6 +171,8 @@ gloss <- function(
     preview_dpi = as.integer(round(preview_dpi)),
     page = page_idx,
     parent_capture_id = parent_capture_id,
+    entities = entities,
+    upstream = upstream,
     call_expr = call_expr
   )
 
@@ -416,6 +429,8 @@ make_capture_context <- function(
     preview_dpi = 144L,
     page = NULL,
     parent_capture_id = NULL,
+    entities = NULL,
+    upstream = NULL,
     call_expr = NULL) {
 
   ctx <- new.env(parent = emptyenv())
@@ -432,6 +447,8 @@ make_capture_context <- function(
   ctx$preview_dpi <- as.integer(preview_dpi)
   ctx$page <- page
   ctx$parent_capture_id <- parent_capture_id
+  ctx$entities <- entities
+  ctx$upstream <- upstream
   ctx$call_expr <- call_expr
 
   ctx$ensure_device <- function() ensure_device_active(dev)
@@ -499,7 +516,33 @@ assemble_capture_result <- function(result, ctx, sources = NULL, input_obj = NUL
   leaves <- sem_done$leaves
   lineage <- sem_done$lineage
 
-  label_links <- result$label_links %||% sc$label_links %||% extract_repel_label_links(leaves, elements, lineage)
+  raw_tables <- result$tables %||% list()
+  norm_tbls <- stats::setNames(list(), character())
+  if (length(raw_tables) > 0L && !is.null(names(raw_tables))) {
+    for (nm in names(raw_tables)) {
+      if (nzchar(nm)) norm_tbls[[nm]] <- normalize_table_entry(raw_tables[[nm]], nm)
+    }
+  } else {
+    norm_tbls <- raw_tables
+  }
+
+  entities_list <- result$entities %||% extract_capture_entities(norm_tbls, explicit_entities = ctx$entities)
+  if (!is.null(ctx$upstream)) {
+    funnel_res <- build_upstream_data_funnel(
+      upstream = ctx$upstream,
+      tables = norm_tbls,
+      entities = entities_list,
+      call_expr = ctx$call_expr
+    )
+    if (!is.null(funnel_res$funnel)) {
+      ir$data_funnel <- funnel_res$funnel
+    }
+    if (!is.null(funnel_res$upstream_table) && !("upstream" %in% names(norm_tbls))) {
+      norm_tbls[["upstream"]] <- funnel_res$upstream_table
+    }
+  }
+
+  label_links <- result$label_links %||% sc$label_links %||% extract_label_links(leaves, elements, lineage)
 
   sess_info <- result$session %||% collect_session_info(input_obj = input_obj, call_expr = ctx$call_expr)
   src_list <- result$sources %||% collect_sources_inventory(sources = sources, session = sess_info)
@@ -513,12 +556,14 @@ assemble_capture_result <- function(result, ctx, sources = NULL, input_obj = NUL
     dense_leaves = sc$dense_leaves %||% character(),
     rasters = sc$rasters %||% list(),
     ir = ir,
-    tables = result$tables %||% list(),
+    tables = norm_tbls,
     lineage = lineage,
     sources = src_list,
     session = sess_info,
     preview_png = sc$preview_png,
     label_links = label_links,
+    entities = entities_list,
+    layout_tracks = result$layout_tracks %||% sc$layout_tracks %||% NULL,
     parent_capture_id = ctx$parent_capture_id
   )
 }
@@ -937,7 +982,7 @@ build_leaves_df <- function(leaves_meta, probes, svg_height_pt) {
   }, character(1L))
 
   n_ids <- length(ids)
-  data.frame(
+  df <- data.frame(
     leaf_id = ids,
     grob_name = vapply(leaves_meta, function(m) as.character(m$grob_name)[[1L]], character(1L)),
     grob_path = vapply(leaves_meta, function(m) as.character(m$grob_path)[[1L]], character(1L)),
@@ -962,9 +1007,12 @@ build_leaves_df <- function(leaves_meta, probes, svg_height_pt) {
     z_index = seq_len(n_ids),
     semantic_role = rep(NA_character_, n_ids),
     edit_policy = rep(NA_character_, n_ids),
+    subplot = rep(NA_integer_, n_ids),
     stringsAsFactors = FALSE,
     row.names = NULL
   )
+  df$attached_to <- I(vector("list", n_ids))
+  df
 }
 
 # --- SVG element extraction --------------------------------------------------
@@ -1555,6 +1603,9 @@ parse_svg_elements <- function(doc) {
   font_size <- rep(NA_real_, n)
   font_family <- rep(NA_character_, n)
   text_anchor <- rep(NA_character_, n)
+  anchor_x <- rep(NA_real_, n)
+  anchor_y <- rep(NA_real_, n)
+  measured_width_pt <- rep(NA_real_, n)
   rotation <- extract_rotation_deg(xml2::xml_attr(nodes, "transform"))
 
   is_text <- tag == "text"
@@ -1575,6 +1626,44 @@ parse_svg_elements <- function(doc) {
     ta <- svg_attr_or_style(tnodes, tstyle, "text-anchor")
     ta[is.na(ta) | !nzchar(ta)] <- "start"
     text_anchor[is_text] <- ta
+
+    # K5: Expose exact baseline anchor (x, y) and svglite textLength width
+    tl <- num_svg_attr(tnodes, "textLength")
+    miss_tl <- is.na(tl)
+    if (any(miss_tl)) {
+      tl[miss_tl] <- fs[miss_tl] * estimate_text_width_units(txt[is_text][miss_tl])
+    }
+    measured_width_pt[is_text] <- round_pt(tl)
+
+    tx_raw <- num_svg_attr(tnodes, "x")
+    ty_raw <- num_svg_attr(tnodes, "y")
+    ax <- ifelse(is.na(tx_raw), 0.0, tx_raw)
+    ay <- ifelse(is.na(ty_raw), 0.0, ty_raw)
+    t_tr <- xml2::xml_attr(tnodes, "transform")
+    has_ttr <- !is.na(t_tr)
+    if (any(has_ttr)) {
+      tt <- regmatches(t_tr[has_ttr], regexec("translate\\(\\s*([-0-9.eE]+)[ ,]+([-0-9.eE]+)\\s*\\)", t_tr[has_ttr]))
+      ax[has_ttr] <- ax[has_ttr] + vapply(tt, function(v) if (length(v) == 3L) as.numeric(v[[2L]]) else 0.0, numeric(1L))
+      ay[has_ttr] <- ay[has_ttr] + vapply(tt, function(v) if (length(v) == 3L) as.numeric(v[[3L]]) else 0.0, numeric(1L))
+    }
+    # Apply ancestor <g transform> matrices to baseline anchors if any exist in doc
+    root_el <- xml2::xml_root(nodes[[1L]])
+    if (length(xml2::xml_find_all(root_el, "//d1:g[@transform]", ns)) > 0L) {
+      for (ti in seq_along(tnodes)) {
+        ancs <- xml2::xml_find_all(tnodes[[ti]], "ancestor::d1:g[@transform]", ns)
+        if (length(ancs) == 0L) next
+        mat <- c(1, 0, 0, 1, 0, 0)
+        for (tstr in xml2::xml_attr(ancs, "transform")) {
+          mat <- compose_affine2d(mat, parse_svg_transform_matrix(tstr))
+        }
+        nx <- mat[[1L]] * ax[[ti]] + mat[[3L]] * ay[[ti]] + mat[[5L]]
+        ny <- mat[[2L]] * ax[[ti]] + mat[[4L]] * ay[[ti]] + mat[[6L]]
+        ax[[ti]] <- nx
+        ay[[ti]] <- ny
+      }
+    }
+    anchor_x[is_text] <- round_pt(ax)
+    anchor_y[is_text] <- round_pt(ay)
 
     trot <- rotation[is_text]
     miss_rot <- is.na(trot)
@@ -1608,6 +1697,11 @@ parse_svg_elements <- function(doc) {
     font_family = font_family,
     text_anchor = text_anchor,
     rotation = rotation,
+    anchor_x = anchor_x,
+    anchor_y = anchor_y,
+    measured_width_pt = measured_width_pt,
+    target_anchor_x = rep(NA_real_, n),
+    target_anchor_y = rep(NA_real_, n),
     clip_id = clips$clip_id,
     clip_x0 = clips$clip_x0,
     clip_y0 = clips$clip_y0,
@@ -1616,6 +1710,8 @@ parse_svg_elements <- function(doc) {
     built_row_id = rep(NA_integer_, n),
     group_id = rep(NA_character_, n),
     part_role = rep(NA_character_, n),
+    color_token = rep(NA_character_, n),
+    fill_token = rep(NA_character_, n),
     stringsAsFactors = FALSE
   )
 }
@@ -1844,7 +1940,14 @@ extract_repel_label_links <- function(leaves, elements, lineage) {
         entry <- list(
           label_element_id = tr$element_id[[1L]],
           leader_element_id = segs$element_id[[best_si]],
-          anchor_pt = json_array(round_pt(best_anchor))
+          anchor_pt = json_array(round_pt(best_anchor)),
+          target_anchor_pt = if ("target_anchor_x" %in% names(tr) &&
+                                 is.finite(tr$target_anchor_x[[1L]]) &&
+                                 is.finite(tr$target_anchor_y[[1L]])) {
+            json_array(round_pt(c(tr$target_anchor_x[[1L]], tr$target_anchor_y[[1L]])))
+          } else {
+            json_array(round_pt(best_anchor))
+          }
         )
         if (!is.null(box_id)) {
           entry$box_element_id <- box_id
@@ -1855,6 +1958,71 @@ extract_repel_label_links <- function(leaves, elements, lineage) {
         links[[length(links) + 1L]] <- entry
       }
     }
+  }
+
+  links
+}
+
+# K5: Generalized label links covering BOTH ggrepel (with leaders) and standard
+# non-repel data labels (GeomText, GeomLabel, BaseText) with exact target_anchor_pt.
+extract_label_links <- function(leaves, elements, lineage) {
+  links <- extract_repel_label_links(leaves, elements, lineage)
+  if (!is.data.frame(leaves) || nrow(leaves) == 0L ||
+      !is.data.frame(elements) || nrow(elements) == 0L) {
+    return(links)
+  }
+
+  linked_eids <- vapply(links, function(lk) as.character(lk$label_element_id %||% ""), character(1L))
+  dl_lids <- leaves$leaf_id[!is.na(leaves$semantic_role) & leaves$semantic_role == "data_label"]
+  if (length(dl_lids) == 0L) return(links)
+
+  has_target <- all(c("target_anchor_x", "target_anchor_y") %in% names(elements))
+  if (!has_target) return(links)
+
+  cand_idx <- which(
+    elements$tag == "text" &
+      !is.na(elements$leaf_id) &
+      elements$leaf_id %in% dl_lids &
+      !(elements$element_id %in% linked_eids) &
+      is.finite(elements$target_anchor_x) &
+      is.finite(elements$target_anchor_y)
+  )
+  if (length(cand_idx) == 0L) return(links)
+
+  # Optional GeomLabel enclosing boxes sharing the same leaf
+  box_idx_by_leaf <- split(
+    which(elements$tag %in% c("rect", "polygon") & !is.na(elements$leaf_id) & elements$leaf_id %in% dl_lids),
+    elements$leaf_id[elements$tag %in% c("rect", "polygon") & !is.na(elements$leaf_id) & elements$leaf_id %in% dl_lids]
+  )
+
+  for (ei in cand_idx) {
+    lid <- elements$leaf_id[[ei]]
+    tx <- 0.5 * (elements$bbox_x0[[ei]] + elements$bbox_x1[[ei]])
+    ty <- 0.5 * (elements$bbox_y0[[ei]] + elements$bbox_y1[[ei]])
+    box_id <- NULL
+    b_cands <- box_idx_by_leaf[[lid]]
+    if (!is.null(b_cands) && length(b_cands) > 0L && is.finite(tx) && is.finite(ty)) {
+      inside <- b_cands[
+        elements$bbox_x0[b_cands] - 2.0 <= tx & tx <= elements$bbox_x1[b_cands] + 2.0 &
+          elements$bbox_y0[b_cands] - 2.0 <= ty & ty <= elements$bbox_y1[b_cands] + 2.0
+      ]
+      if (length(inside) > 0L) {
+        box_id <- elements$element_id[[inside[[1L]]]]
+      }
+    }
+
+    ent <- list(
+      label_element_id = elements$element_id[[ei]],
+      leader_element_id = NULL,
+      target_anchor_pt = json_array(round_pt(c(elements$target_anchor_x[[ei]], elements$target_anchor_y[[ei]])))
+    )
+    if (!is.null(box_id)) {
+      ent$box_element_id <- box_id
+    }
+    if (!is.na(elements$built_row_id[[ei]])) {
+      ent$built_row_id <- as.integer(elements$built_row_id[[ei]])
+    }
+    links[[length(links) + 1L]] <- ent
   }
 
   links

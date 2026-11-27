@@ -32,7 +32,9 @@ engine_patchwork_capture <- function(x, ctx) {
   leaves <- sc$leaves
 
   subplots <- patchwork_collect_subplots(x_seeded)
-  panel_grobs_by_path <- patchwork_find_panel_grobs(gt)
+  pw_walk <- patchwork_walk_gtable(gt)
+  panel_grobs_by_path <- pw_walk$panel_grobs
+  subplot_cells_by_path <- pw_walk$cell_paths
 
   all_panels <- list()
   all_layers <- list()
@@ -47,7 +49,50 @@ engine_patchwork_capture <- function(x, ctx) {
   merged_card <- rep("unlinked", n_leaves)
   merged_n_rows <- rep(NA_integer_, n_leaves)
   merged_deg <- rep(NA_character_, n_leaves)
+  merged_subplot <- rep(NA_integer_, n_leaves)
+  merged_attached <- vector("list", n_leaves)
   merged_elements <- sc$elements
+
+  # Pre-split stripped vp_path & grob_path segments for fast subplot container matching (K2)
+  strip_coords <- function(s) sub("\\.[0-9]+-[0-9]+-[0-9]+-[0-9]+$", "", s)
+  leaf_vp_segs <- if (n_leaves > 0L) {
+    lapply(strsplit(leaves$vp_path %||% character(), "::", fixed = TRUE), strip_coords)
+  } else {
+    list()
+  }
+  leaf_grob_segs <- if (n_leaves > 0L) {
+    lapply(strsplit(leaves$grob_path %||% character(), "/", fixed = TRUE), strip_coords)
+  } else {
+    list()
+  }
+
+  match_subplot_leaves <- function(cell_specs, pgrob_names) {
+    if (n_leaves == 0L) return(integer())
+    hit <- logical(n_leaves)
+    # 1. Panel interior leaves (guaranteed match via panel grob names)
+    if (length(pgrob_names) > 0L) {
+      hit <- hit | vapply(leaf_grob_segs, function(segs) any(segs %in% pgrob_names), logical(1L))
+    }
+    # 2. Peripheral subplot leaves (axes, strips, xlab/ylab, titles, captions, guides)
+    if (length(cell_specs) > 0L) {
+      for (cs in cell_specs) {
+        req_chain <- cs$chain
+        cell_nm <- cs$name
+        # Skip collected top-level guide-boxes unless directly owned by this subplot
+        for (r in which(!hit)) {
+          vsegs <- leaf_vp_segs[[r]]
+          gsegs <- leaf_grob_segs[[r]]
+          # Verify every ancestor patchwork-table-* in req_chain appears, plus cell_nm itself
+          has_v <- (cell_nm %in% vsegs) && all(req_chain %in% vsegs)
+          has_g <- !has_v && (cell_nm %in% gsegs) && all(req_chain %in% gsegs)
+          if (has_v || has_g) {
+            hit[[r]] <- TRUE
+          }
+        }
+      }
+    }
+    which(hit)
+  }
 
   next_layer_id <- 0L
   sp_idx <- 0L
@@ -93,16 +138,9 @@ engine_patchwork_capture <- function(x, ctx) {
 
     pgrob_names <- vapply(pgrobs, function(g) g$name %||% "", character(1L))
     pgrob_names <- pgrob_names[nzchar(pgrob_names)]
+    cell_specs <- subplot_cells_by_path[[path_key]] %||% list()
 
-    leaf_idx <- if (length(pgrob_names) > 0L && n_leaves > 0L) {
-      which(vapply(
-        strsplit(leaves$grob_path, "/", fixed = TRUE),
-        function(segs) any(segs %in% pgrob_names),
-        logical(1L)
-      ))
-    } else {
-      integer()
-    }
+    leaf_idx <- match_subplot_leaves(cell_specs, pgrob_names)
 
     sub_gt <- if (length(pgrobs) > 0L) {
       list(
@@ -167,24 +205,37 @@ engine_patchwork_capture <- function(x, ctx) {
       }
     }
 
-    # Merge lineage rows back to global leaf positions
+    # Merge lineage, subplot ownership, and attached_to back to global leaf positions
     if (length(leaf_idx) > 0L && nrow(ext$lineage) == length(leaf_idx)) {
       lin <- ext$lineage
-      merged_panel_id[leaf_idx] <- lin$panel_id
+      merged_subplot[leaf_idx] <- as.integer(sp_idx)
+      has_pan <- !is.na(lin$panel_id)
+      if (any(has_pan)) {
+        merged_panel_id[leaf_idx[has_pan]] <- lin$panel_id[has_pan]
+      }
       has_lyr <- !is.na(lin$layer_id)
       if (any(has_lyr)) {
         merged_layer_id[leaf_idx[has_lyr]] <- as.integer(layer_offset + lin$layer_id[has_lyr])
+        merged_table_id[leaf_idx[has_lyr]] <- lin$table_id[has_lyr]
+        merged_card[leaf_idx[has_lyr]] <- lin$cardinality[has_lyr]
+        merged_n_rows[leaf_idx[has_lyr]] <- lin$n_rows[has_lyr]
       }
-      merged_table_id[leaf_idx] <- lin$table_id
-      merged_card[leaf_idx] <- lin$cardinality
-      merged_n_rows[leaf_idx] <- lin$n_rows
       if ("degradation_reason" %in% names(lin)) {
-        merged_deg[leaf_idx] <- lin$degradation_reason
+        has_deg <- !is.na(lin$degradation_reason)
+        if (any(has_deg)) merged_deg[leaf_idx[has_deg]] <- lin$degradation_reason[has_deg]
+      }
+      if ("attached_to" %in% names(lin) && is.list(lin$attached_to)) {
+        for (k in seq_along(leaf_idx)) {
+          if (!is.null(lin$attached_to[[k]])) {
+            merged_attached[[leaf_idx[[k]]]] <- lin$attached_to[[k]]
+          }
+        }
       }
     }
   }
 
   sc$elements <- merged_elements
+  sc$layout_tracks <- extract_gtable_layout_tracks(gt)
 
   lineage <- make_lineage_df(
     leaves = leaves,
@@ -193,10 +244,15 @@ engine_patchwork_capture <- function(x, ctx) {
     table_id = merged_table_id,
     cardinality = merged_card,
     n_rows = merged_n_rows,
-    degradation_reason = merged_deg
+    degradation_reason = merged_deg,
+    subplot = merged_subplot,
+    attached_to = merged_attached
   )
 
   guides_ir <- patchwork_extract_guides_ir(x_seeded, leaves, sc$elements, all_scales)
+  if (!is.null(guides_ir)) {
+    sc$elements <- tag_guide_element_tokens(sc$elements, guides_ir, all_scales)
+  }
   ir_out <- list(
     panels = all_panels,
     layers = all_layers,
@@ -293,13 +349,21 @@ is_ggplot_panel_grob <- function(g) {
   inherits(g, "gTree") && grepl("^panel-[0-9]+\\.", g$name %||% "")
 }
 
-# Walk patchwork's drawn gtable and map each patch path ("1/2", "2", ...) to
-# its list of ggplot panel gTree grobs.
-patchwork_find_panel_grobs <- function(gt) {
+# Walk patchwork's drawn gtable and map each patch path ("1/2", "2", ...) to:
+#   - panel_grobs: its list of ggplot panel gTree grobs
+#   - cell_paths:  ALL gtable layout cells owned by that subplot (axes, strips, xlab/ylab, titles, etc.)
+patchwork_walk_gtable <- function(gt) {
   found <- new.env(parent = emptyenv())
-  found$map <- list()
+  found$panel_grobs <- list()
+  found$cell_paths <- list()
 
-  walk_gt <- function(tbl, prefix) {
+  add_cell <- function(key, chain, nm) {
+    cur <- found$cell_paths[[key]] %||% list()
+    cur[[length(cur) + 1L]] <- list(chain = chain, name = nm)
+    found$cell_paths[[key]] <- cur
+  }
+
+  walk_gt <- function(tbl, prefix, chain) {
     if (!inherits(tbl, "gtable") || is.null(tbl$layout) || nrow(tbl$layout) == 0L) {
       return(invisible(NULL))
     }
@@ -308,20 +372,33 @@ patchwork_find_panel_grobs <- function(gt) {
       g <- tbl$grobs[[j]]
       if (grepl("^patchwork-table-[0-9]+$", nm)) {
         idx <- as.integer(sub("^patchwork-table-", "", nm))
-        walk_gt(g, c(prefix, idx))
+        walk_gt(g, c(prefix, idx), c(chain, nm))
       } else if (grepl("^panel-[0-9]+$", nm) && is_ggplot_panel_grob(g)) {
         idx <- as.integer(sub("^panel-", "", nm))
         key <- paste(c(prefix, idx), collapse = "/")
-        found$map[[key]] <- list(g)
+        found$panel_grobs[[key]] <- list(g)
+        add_cell(key, chain, nm)
       } else if (grepl("^panel; .*-[0-9]+$", nm) && inherits(g, "gtable")) {
         idx <- as.integer(sub("^.*-([0-9]+)$", "\\1", nm))
         key <- paste(c(prefix, idx), collapse = "/")
-        found$map[[key]] <- Filter(is_ggplot_panel_grob, g$grobs)
+        found$panel_grobs[[key]] <- Filter(is_ggplot_panel_grob, g$grobs)
+        add_cell(key, chain, nm)
+      } else if (grepl("-[0-9]+$", nm) && !grepl("^guide-box-collected", nm)) {
+        # Peripheral subplot cell (axis-*-<idx>, strip-*-<idx>, xlab-*-<idx>, ylab-*-<idx>, title-<idx>, etc.)
+        idx <- suppressWarnings(as.integer(sub("^.*-([0-9]+)$", "\\1", nm)))
+        if (!is.na(idx) && idx >= 1L) {
+          key <- paste(c(prefix, idx), collapse = "/")
+          add_cell(key, chain, nm)
+        }
       }
     }
     invisible(NULL)
   }
 
-  walk_gt(gt, integer())
-  found$map
+  walk_gt(gt, integer(), character())
+  list(panel_grobs = found$panel_grobs, cell_paths = found$cell_paths)
+}
+
+patchwork_find_panel_grobs <- function(gt) {
+  patchwork_walk_gtable(gt)$panel_grobs
 }

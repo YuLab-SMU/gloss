@@ -1,3 +1,24 @@
+# gloss 0.2.0
+
+Upgrades the `gloss` R kernel to **Package `0.2.0` / Schema `1.2.0`** while keeping the public API strictly at **8 exported functions** and preserving single-draw zero-redraw capture.
+
+## Protocol & Metadata Decoupling
+
+- Explicitly separates `package_version` (`0.2.0`) and `schema_version` (`1.2.0`) across `gloss_capture`, `asset-map.json`, and `manifest.json`.
+
+## Schema v1.2 Kernel Upgrades (K1–K6)
+
+- **Cross-Figure Entity Coordinate System (K1)**: adds optional `entities = NULL` to `gloss()` and top-level `entities` in `asset-map.json` (plus `entity_role` in `tables/schema.json`). Supports explicit declarations and heuristic recognition across non-unique long tables, `patchwork` cross-subplot merges, and `ComplexHeatmap` bidirectional row/column entities with deterministic `domain_sha256` set fingerprints.
+- **Semantic Layout Topology & Aspect Lock (K2)**: adds `aspect_lock` and `resize_mode` (`"free_xy"`, `"proportional_only"`, `"fixed_pt"`) on `ir.panels[]` (detecting `CoordFixed`, `CoordSf`, `CoordPolar`, `CoordQuickmap`, and square heatmap cells), `attached_to` topology and `subplot` ownership on `leaves.json`/`lineage` (fixing `patchwork` peripheral axes, strips, and titles, plus `ComplexHeatmap` annotations/dendrograms), and optional `scene.layout_tracks` grid track metadata.
+- **Semantic Style Tokens & Unified Guides (K3)**: adds stable `scale_id` on `ir.scales[]`, `scale_refs` on `ir.layers[]`, `scale_id`/`domain` on `ir.guides.entries[]`, `color_token`/`fill_token` on `elements.json`, and full item-level `ir.guides` extraction for `ComplexHeatmap` discrete legends and continuous colorbars.
+- **Property-Level Three-Tier Safe Edit Contracts (K4)**: preserves backward-compatible `edit_policy` while exporting `scene.role_contracts` (`locked`, `editable`, `gated`) for every standard `semantic_role`.
+- **Logical Text Blocks, Exact Measured Widths & Universal Label Anchors (K5)**: upgrades `scene/texts.json` with `text_block_id`, `line_index`, `block_text`, `anchor_pt`, `measured_width_pt`, and `target_anchor_pt`, and generalizes `scene.label_links` to cover non-`ggrepel` data labels (`GeomText`, `GeomLabel`, `BaseText`) with exact data-point anchors.
+- **Pre-Plot Data Funnel & Query Context Summary (K6)**: adds optional `upstream = NULL` to `gloss()` to emit compact `ir.data_funnel` pre-plot exclusion accounting, and enriches `gl_query()` with `context_summary` (matched entities plus in-panel/in-group mean, SD, median, IQR, `max_abs_z`, and `max_iqr_multiple`).
+
+## Schema v1.1 Highlights (Included in 0.2.0)
+
+- Row-level element bridging (`_raw_row_id`, `_group_key`, `tables/groups_*.json`, `built_row_id`, `group_id`, `part_role`), unified transformed/data panel domains with 11-stop continuous color ramps, item-level `ir.guides`, `row_accounting`, full `stat_params`/`geom_params` capture, `scene/texts.json`, `assets/preview.png`, `parent_capture_id` recomputation chain, multi-page selection (`page`), generic printable-object fallback, and mixed graphics fallback.
+
 # gloss 0.1.0
 
 Initial core release of **gloss** — the Source Map and Asset Preparation Core for R Figures.

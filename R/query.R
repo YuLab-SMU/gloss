@@ -449,6 +449,14 @@ gl_query <- function(
     }
   }
 
+  context_summary <- compute_query_context_summary(
+    cap = cap,
+    out_tables = out_tables,
+    matched_raw_rows = matched_raw_rows,
+    panel_by_id = panel_by_id,
+    layer_by_built = layer_by_built
+  )
+
   structure(
     list(
       leaves = leaves,
@@ -457,6 +465,7 @@ gl_query <- function(
       tables = out_tables,
       matched_raw_rows = matched_raw_rows,
       focus_bbox_pt = focus_bbox_pt,
+      context_summary = context_summary,
       filters = list(
         panel = panel,
         leaf = leaf,
@@ -466,6 +475,222 @@ gl_query <- function(
       )
     ),
     class = "gloss_query_result"
+  )
+}
+
+compute_metric_deviation <- function(sel_vals, grp_vals, col_name, raw_col = NULL) {
+  sv <- as.numeric(sel_vals)
+  sv <- sv[is.finite(sv)]
+  gv <- as.numeric(grp_vals)
+  gv <- gv[is.finite(gv)]
+  if (length(sv) == 0L || length(gv) == 0L) return(NULL)
+
+  g_mean <- mean(gv)
+  g_sd <- if (length(gv) >= 2L) stats::sd(gv) else NA_real_
+  g_med <- stats::median(gv)
+  g_iqr <- stats::IQR(gv)
+
+  max_z <- if (is.finite(g_sd) && g_sd > 0) max(abs(sv - g_mean) / g_sd) else NA_real_
+  max_iqr <- if (is.finite(g_iqr) && g_iqr > 0) max(abs(sv - g_med) / g_iqr) else NA_real_
+
+  out <- list(
+    column = col_name,
+    selected_mean = round(mean(sv), 6L),
+    selected_median = round(stats::median(sv), 6L),
+    group_mean = round(g_mean, 6L),
+    group_sd = if (is.finite(g_sd)) round(g_sd, 6L) else NULL,
+    group_median = round(g_med, 6L),
+    group_iqr = round(g_iqr, 6L),
+    max_abs_z = if (is.finite(max_z)) round(max_z, 4L) else NULL,
+    max_iqr_multiple = if (is.finite(max_iqr)) round(max_iqr, 4L) else NULL
+  )
+  if (!is.null(raw_col) && nzchar(raw_col) && !identical(raw_col, col_name)) {
+    out$raw_column <- raw_col
+  }
+  out
+}
+
+compute_query_context_summary <- function(cap, out_tables, matched_raw_rows, panel_by_id, layer_by_built) {
+  # 1. Resolve distinct matched entities across matched_raw_rows & out_tables
+  hit_entities <- list()
+  cap_entities <- cap$entities %||% list()
+  if (length(cap_entities) > 0L) {
+    for (ent in cap_entities) {
+      vals <- character()
+      for (b in (ent$bindings %||% list())) {
+        tid <- b$table_id
+        col <- b$column
+        if (!identical(b$axis, "row") || is.null(col) || !nzchar(col)) next
+
+        if (tid %in% names(matched_raw_rows) && tid %in% names(cap$tables)) {
+          full_df <- cap$tables[[tid]]$data
+          rids <- matched_raw_rows[[tid]]
+          rids <- rids[rids >= 1L & rids <= nrow(full_df)]
+          if (length(rids) > 0L && col %in% names(full_df)) {
+            v <- as.character(full_df[[col]][rids])
+            vals <- c(vals, v[!is.na(v) & nzchar(v)])
+          }
+        } else if (tid %in% names(out_tables)) {
+          sub_df <- out_tables[[tid]]
+          if (is.data.frame(sub_df) && nrow(sub_df) > 0L && col %in% names(sub_df)) {
+            v <- as.character(sub_df[[col]])
+            vals <- c(vals, v[!is.na(v) & nzchar(v)])
+          }
+        }
+      }
+      vals <- sort(unique(vals), method = "radix")
+      if (length(vals) > 0L) {
+        ek <- ent$name
+        if (ek %in% names(hit_entities)) {
+          ek <- paste0(ent$entity_role, ":", ent$name)
+        }
+        hit_entities[[ek]] <- list(
+          entity_role = ent$entity_role,
+          name = ent$name,
+          n = as.integer(length(vals)),
+          values = vals
+        )
+      }
+    }
+  }
+
+  # 2. Compute in-panel / in-group statistical baselines & deviations
+  comparisons <- list()
+  scales_ir <- cap$ir$scales %||% list()
+
+  resolve_group_label <- function(sub_rows, raw_df, lyr_ent) {
+    # Prefer raw discrete aesthetic column (colour / fill / group / shape)
+    if (is.data.frame(raw_df) && "_raw_row_id" %in% names(sub_rows) && !is.null(lyr_ent$aes)) {
+      rr <- unique(as.integer(sub_rows[["_raw_row_id"]]))
+      rr <- rr[!is.na(rr) & rr >= 1L & rr <= nrow(raw_df)]
+      if (length(rr) > 0L) {
+        for (an in c("colour", "fill", "group", "shape", "linetype")) {
+          fld <- lyr_ent$aes[[an]]
+          if (is.null(fld) || !nzchar(fld)) next
+          # Strip simple factor(...) wrapper when inspecting raw column name
+          cand_col <- sub("^factor\\(([^,)]+).*\\)$", "\\1", trimws(fld))
+          if (cand_col %in% names(raw_df)) {
+            u <- unique(as.character(raw_df[[cand_col]][rr]))
+            u <- u[!is.na(u)]
+            if (length(u) == 1L) {
+              return(list(group = u[[1L]], group_column = cand_col))
+            }
+          }
+        }
+      }
+    }
+    # Fall back to matching discrete scale map values on colour/fill
+    for (sc in scales_ir) {
+      if (!identical(sc$scale_type, "discrete")) next
+      an <- sc$aesthetic %||% ""
+      if (!(an %in% names(sub_rows)) || length(sc$map %||% list()) == 0L) next
+      vals <- unique(as.character(sub_rows[[an]]))
+      vals <- vals[!is.na(vals)]
+      if (length(vals) != 1L) next
+      for (m in sc$map) {
+        if (identical(toupper(as.character(m$value %||% "")), toupper(vals[[1L]]))) {
+          return(list(group = as.character(m$domain %||% vals[[1L]]), group_column = sc$field %||% an))
+        }
+      }
+    }
+    list(group = NULL, group_column = NULL)
+  }
+
+  for (tid in names(out_tables)) {
+    sub_df <- out_tables[[tid]]
+    if (!is.data.frame(sub_df) || nrow(sub_df) == 0L || !(tid %in% names(cap$tables))) next
+    ent <- cap$tables[[tid]]
+    full_df <- ent$data
+    if (!is.data.frame(full_df) || nrow(full_df) == 0L) next
+    lyr_ent <- layer_by_built[[tid]]
+
+    if (identical(ent$role, "built")) {
+      raw_tid <- if (!is.null(lyr_ent)) lyr_ent$raw_table else NULL
+      raw_df <- if (!is.null(raw_tid) && raw_tid %in% names(cap$tables)) cap$tables[[raw_tid]]$data else NULL
+      pfx <- if (grepl("^p[0-9]+_", tid)) sub("^(p[0-9]+)_.*$", "\\1_", tid) else ""
+
+      has_panel <- "PANEL" %in% names(sub_df) && "PANEL" %in% names(full_df)
+      has_group <- "group" %in% names(sub_df) && "group" %in% names(full_df) &&
+        length(unique(full_df$group[!is.na(full_df$group)])) > 1L
+
+      p_vals <- if (has_panel) as.character(sub_df$PANEL) else rep("1", nrow(sub_df))
+      g_vals <- if (has_group) as.character(sub_df$group) else rep("-1", nrow(sub_df))
+      fp_vals <- if (has_panel) as.character(full_df$PANEL) else rep("1", nrow(full_df))
+      fg_vals <- if (has_group) as.character(full_df$group) else rep("-1", nrow(full_df))
+
+      split_keys <- paste0(p_vals, "::", g_vals)
+      for (sk in unique(split_keys)) {
+        s_idx <- which(split_keys == sk)
+        pv <- p_vals[[s_idx[[1L]]]]
+        gv <- g_vals[[s_idx[[1L]]]]
+        f_idx <- which(fp_vals == pv & fg_vals == gv)
+        if (length(f_idx) == 0L) next
+
+        pid <- paste0(pfx, "P", pv)
+        pan <- if (pid %in% names(panel_by_id)) panel_by_id[[pid]] else NULL
+        sub_slice <- sub_df[s_idx, , drop = FALSE]
+        full_slice <- full_df[f_idx, , drop = FALSE]
+
+        glbl <- resolve_group_label(sub_slice, raw_df, lyr_ent)
+        grp_name <- glbl$group %||% if (has_group) paste0("group_", gv) else "_all"
+
+        metrics <- list()
+        for (ax in c("x", "y")) {
+          if (!(ax %in% names(sub_slice)) || !is.numeric(sub_slice[[ax]])) next
+          # Skip discrete coordinate axes (integer category indices 1..k)
+          ax_trans <- if (!is.null(pan)) pan[[paste0(ax, "_trans")]] else NULL
+          if (identical(ax_trans, "discrete")) next
+          raw_col_nm <- if (!is.null(lyr_ent$aes) && ax %in% names(lyr_ent$aes)) {
+            as.character(lyr_ent$aes[[ax]])[[1L]]
+          } else {
+            NULL
+          }
+          m <- compute_metric_deviation(sub_slice[[ax]], full_slice[[ax]], col_name = ax, raw_col = raw_col_nm)
+          if (!is.null(m)) {
+            metrics[[ax]] <- m
+          }
+        }
+
+        if (length(metrics) > 0L) {
+          comp <- list(
+            table_id = tid,
+            raw_table = raw_tid,
+            panel_id = pid,
+            group = grp_name,
+            group_column = glbl$group_column,
+            selected_n = as.integer(nrow(sub_slice)),
+            group_n = as.integer(nrow(full_slice)),
+            metrics = metrics
+          )
+          comparisons[[length(comparisons) + 1L]] <- comp
+        }
+      }
+    } else if (identical(ent$role, "raw") && length(out_tables) == 1L) {
+      # Raw-only table query (e.g. gl_query(cap, table = "raw", rows = ...))
+      num_cols <- setdiff(names(sub_df)[vapply(sub_df, is.numeric, logical(1L))], c("_row_id", "_raw_row_id"))
+      metrics <- list()
+      for (cn in num_cols) {
+        m <- compute_metric_deviation(sub_df[[cn]], full_df[[cn]], col_name = cn)
+        if (!is.null(m)) metrics[[cn]] <- m
+      }
+      if (length(metrics) > 0L) {
+        comparisons[[length(comparisons) + 1L]] <- list(
+          table_id = tid,
+          raw_table = tid,
+          panel_id = NULL,
+          group = "_all",
+          group_column = NULL,
+          selected_n = as.integer(nrow(sub_df)),
+          group_n = as.integer(nrow(full_df)),
+          metrics = metrics
+        )
+      }
+    }
+  }
+
+  list(
+    entities = hit_entities,
+    comparisons = comparisons
   )
 }
 

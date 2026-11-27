@@ -430,6 +430,85 @@ class TestGlossDownstreamWorkflows(unittest.TestCase):
         self.assertEqual(rc_res, 0)
         self.assertEqual(resolved["status"], "accepted")
 
+    def test_v12_contracts_tokens_entities_and_context_summary(self) -> None:
+        v12_bundle = self.workdir / "v12_study.gloss"
+        r_v12 = f"""
+        pkgload::load_all({json.dumps(str(REPO_ROOT))}, quiet = TRUE)
+        full_df <- data.frame(
+          patient_id = sprintf("P%03d", 1:12),
+          arm = rep(c("Ctrl", "Treat"), each = 6L),
+          qc = c(rep(TRUE, 5L), FALSE, rep(TRUE, 5L), FALSE),
+          x = c(1:6, 1:6),
+          y = c(10, 11, 10.5, 10.8, 36.0, 10, 20, 21, 20.4, 20.9, 21.1, 20),
+          stringsAsFactors = FALSE
+        )
+        df <- subset(full_df, qc)
+        p <- ggplot2::ggplot(df, ggplot2::aes(.data$x, .data$y, colour = .data$arm)) +
+          ggplot2::geom_point(size = 2.8) +
+          ggplot2::geom_hline(yintercept = 15, colour = "#E64B35") +
+          ggplot2::scale_colour_manual(values = c("Ctrl" = "#E64B35", "Treat" = "#4DBBD5")) +
+          ggplot2::labs(title = "Study Biomarker\\nCohort Comparison")
+        cap <- gloss(p, entities = c(subject = "patient_id"), upstream = list(data = full_df, note = "qc == TRUE"))
+        gl_asset_bundle(cap, path = {json.dumps(str(v12_bundle))})
+        """
+        proc = subprocess.run(["Rscript", "-e", r_v12], cwd=REPO_ROOT, capture_output=True, text=True, check=False)
+        self.assertEqual(proc.returncode, 0, msg=proc.stderr)
+
+        asset_map = json.loads((v12_bundle / "asset-map.json").read_text(encoding="utf-8"))
+        self.assertEqual(asset_map["package_version"], "0.2.0")
+        self.assertEqual(asset_map["schema_version"], "1.2.0")
+        self.assertIn("role_contracts", asset_map["scene"])
+        self.assertEqual(asset_map["ir"]["data_funnel"]["n_upstream_excluded"], 2)
+        self.assertTrue(any(e["entity_role"] == "subject" and e["name"] == "patient_id" for e in asset_map["entities"]))
+
+        # K5: Multiline title merged into a single text_block_id in texts.json
+        texts = json.loads((v12_bundle / "scene" / "texts.json").read_text(encoding="utf-8"))
+        titles = [t for t in texts if t["semantic_role"] == "plot_title"]
+        self.assertEqual(len(titles), 2)
+        self.assertEqual(titles[0]["text_block_id"], titles[1]["text_block_id"])
+        self.assertEqual(titles[0]["block_text"], "Study Biomarker\nCohort Comparison")
+
+        # K3 + K4: Contract-driven verifier allows uniform circle radius shrink (r=1.5),
+        # axis tick 45-deg rotation, AND token-aware palette remap leaving un-tokenized hline #E64B35 alone!
+        scene_svg = (v12_bundle / "scene" / "scene.svg").read_text(encoding="utf-8")
+        root = ET.fromstring(scene_svg)
+        pt_leaf = next(ln["leaf_id"] for ln in asset_map["lineage"] if ln.get("layer_id") == 1)
+        tick_leaves = {ln["leaf_id"] for ln in asset_map["lineage"] if ln.get("semantic_role") == "axis_tick"}
+        guide_leaves = set((asset_map["ir"].get("guides") or {}).get("leaf_ids") or [])
+
+        for g in root.iter():
+            lid = g.attrib.get("data-gloss-leaf")
+            if lid == pt_leaf:
+                for ch in g.iter():
+                    if ch.tag.endswith("circle"):
+                        ch.attrib["r"] = "1.50"
+                        if "style" in ch.attrib:
+                            ch.attrib["style"] = ch.attrib["style"].replace("#E64B35", "#0072B2")
+            elif lid in guide_leaves:
+                for ch in g.iter():
+                    if "style" in ch.attrib:
+                        ch.attrib["style"] = ch.attrib["style"].replace("#E64B35", "#0072B2")
+            elif lid in tick_leaves:
+                for ch in g.iter():
+                    if ch.tag.endswith("text"):
+                        ch.attrib["transform"] = "rotate(-45)"
+
+        ok_svg = self.workdir / "v12_contract_ok.svg"
+        ET.ElementTree(root).write(ok_svg, encoding="utf-8", xml_declaration=True)
+        rc_ok, rep_ok = self.run_cli(VERIFY_SCRIPT, "--bundle", str(v12_bundle), "--derived", str(ok_svg))
+        self.assertEqual(rc_ok, 0, msg=json.dumps(rep_ok, indent=2))
+        self.assertEqual(rep_ok["status"], "PASS")
+
+        # K6: focus_bridge.py box-to-rows returns matched patient_id entity & statistical context_summary
+        pan_bb = asset_map["ir"]["panels"][0]["bbox_pt"]
+        qbox = f"{pan_bb[0]},{pan_bb[1]},{pan_bb[2]},{pan_bb[1] + 0.25 * (pan_bb[3] - pan_bb[1])}"
+        rc_b, rep_b = self.run_cli(FOCUS_SCRIPT, "box-to-rows", "--bundle", str(v12_bundle), "--box", qbox)
+        self.assertEqual(rc_b, 0, msg=json.dumps(rep_b, indent=2))
+        self.assertEqual(rep_b["schema_version"], "1.2.0")
+        cs = rep_b["context_summary"]
+        self.assertEqual(cs["entities"]["patient_id"]["values"], ["P005"])
+        self.assertGreater(cs["comparisons"][0]["metrics"]["y"]["max_abs_z"], 1.5)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

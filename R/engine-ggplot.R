@@ -135,6 +135,9 @@ engine_ggplot_capture <- function(x, ctx) {
   )
 
   sc$elements <- extracted$elements
+  if (!is.null(extracted$layout_tracks)) {
+    sc$layout_tracks <- extracted$layout_tracks
+  }
 
   list(
     scene = sc,
@@ -191,7 +194,7 @@ extract_ggplot_ir <- function(
   )
 
   panel_match <- if (!is.null(built)) {
-    ggplot_match_panels(built, gtable, sub_leaves, panel_prefix = panel_prefix)
+    ggplot_match_panels(built, gtable, sub_leaves, panel_prefix = panel_prefix, plot = plot)
   } else {
     list(
       panels = list(),
@@ -203,10 +206,18 @@ extract_ggplot_ir <- function(
   }
 
   scales_ir <- if (!is.null(built)) {
-    ggplot_extract_scales(plot, built, panel_ids_by_num = panel_match$panel_ids_by_num)
+    ggplot_extract_scales(
+      plot,
+      built,
+      panel_ids_by_num = panel_match$panel_ids_by_num,
+      scale_prefix = panel_prefix
+    )
   } else {
     list()
   }
+
+  # K3: Attach deterministic scale_refs to each layer (excluding constant aes_params overrides)
+  layers_ir <- ggplot_attach_layer_scale_refs(layers_ir, scales_ir, plot = plot, built = built)
 
   lineage <- ggplot_build_lineage(
     built = built,
@@ -218,14 +229,15 @@ extract_ggplot_ir <- function(
     draw_method = draw_method
   )
 
-  # Bridge SVG elements -> built_row_id / group_id / part_role (ISS-ASSET-01)
+  # Bridge SVG elements -> built_row_id / group_id / part_role / color_token / fill_token
   elements_out <- ggplot_bridge_elements(
     elements = elements,
     leaves = sub_leaves,
     lineage = lineage,
     panels = panel_match$panels,
     layers_ir = layers_ir,
-    tables = tables
+    tables = tables,
+    scales_ir = scales_ir
   )
 
   ir_out <- list(
@@ -246,14 +258,22 @@ extract_ggplot_ir <- function(
     )
     if (!is.null(guides_ir)) {
       ir_out$guides <- guides_ir
+      elements_out <- tag_guide_element_tokens(elements_out, guides_ir, scales_ir)
     }
   }
+
+  layout_tracks <- extract_gtable_layout_tracks(
+    gtable,
+    panel_grob_to_num = panel_match$panel_grob_to_num,
+    panel_ids_by_num = panel_match$panel_ids_by_num
+  )
 
   list(
     ir = ir_out,
     tables = tables,
     lineage = lineage,
-    elements = elements_out
+    elements = elements_out,
+    layout_tracks = layout_tracks
   )
 }
 
@@ -649,7 +669,11 @@ sanitize_layer_params <- function(...) {
 extract_position_params <- function(pos) {
   if (is.null(pos)) return(NULL)
   out <- list()
-  for (nm in c("width", "height", "jitter.width", "jitter.height", "dodge.width", "vjust", "reverse")) {
+  p_fields <- c("width", "height", "jitter.width", "jitter.height", "dodge.width", "vjust", "reverse")
+  if (inherits(pos, "PositionNudge")) {
+    p_fields <- c(p_fields, "x", "y")
+  }
+  for (nm in p_fields) {
     v <- tryCatch(pos[[nm]], error = function(e) NULL)
     if (!is.null(v) && is.atomic(v) && length(v) == 1L && !is.na(v)) {
       out[[paste0("position_", nm)]] <- v
@@ -807,7 +831,7 @@ ggplot_scale_midpoint <- function(sc) {
   if (is.numeric(mid) && length(mid) == 1L && is.finite(mid)) as.numeric(mid) else NULL
 }
 
-ggplot_serialize_scale <- function(sc, plot, primary_aes = NULL, panel_ids = NULL) {
+ggplot_serialize_scale <- function(sc, plot, primary_aes = NULL, panel_ids = NULL, scale_id = NULL) {
   aesthetics <- tryCatch(as.character(sc$aesthetics), error = function(e) character())
   primary <- primary_aes %||% if (length(aesthetics) > 0L) aesthetics[[1L]] else "unknown"
   field <- ggplot_aesthetic_field(plot, unique(c(primary, aesthetics)))
@@ -919,6 +943,7 @@ ggplot_serialize_scale <- function(sc, plot, primary_aes = NULL, panel_ids = NUL
   }
 
   make_scale_ir(
+    scale_id = scale_id,
     aesthetic = primary,
     field = field,
     scale_type = scale_type,
@@ -937,9 +962,15 @@ ggplot_serialize_scale <- function(sc, plot, primary_aes = NULL, panel_ids = NUL
   )
 }
 
-ggplot_extract_scales <- function(plot, built, panel_ids_by_num = NULL) {
+ggplot_extract_scales <- function(plot, built, panel_ids_by_num = NULL, scale_prefix = "") {
   out <- list()
   lay <- gg_compat_layout_df(built)
+  pfx <- if (nzchar(scale_prefix)) paste0(scale_prefix, "_") else ""
+  next_sid <- function(aes_nm) {
+    idx <- length(out) + 1L
+    clean_aes <- gsub("[^A-Za-z0-9_]+", "_", as.character(aes_nm %||% "scale")[[1L]])
+    paste0(pfx, "S", idx, "_", clean_aes)
+  }
 
   panels_for_scale <- function(scale_col, scale_idx) {
     if (is.null(lay) || !(scale_col %in% names(lay))) return(NULL)
@@ -959,7 +990,9 @@ ggplot_extract_scales <- function(plot, built, panel_ids_by_num = NULL) {
     for (k in seq_along(px)) {
       if (is.null(px[[k]])) next
       pids <- if (multi_x) panels_for_scale("SCALE_X", k) else NULL
-      out[[length(out) + 1L]] <- ggplot_serialize_scale(px[[k]], plot, primary_aes = "x", panel_ids = pids)
+      out[[length(out) + 1L]] <- ggplot_serialize_scale(
+        px[[k]], plot, primary_aes = "x", panel_ids = pids, scale_id = next_sid("x")
+      )
     }
   }
   py <- gg_compat_panel_scales(built, "y")
@@ -968,7 +1001,9 @@ ggplot_extract_scales <- function(plot, built, panel_ids_by_num = NULL) {
     for (k in seq_along(py)) {
       if (is.null(py[[k]])) next
       pids <- if (multi_y) panels_for_scale("SCALE_Y", k) else NULL
-      out[[length(out) + 1L]] <- ggplot_serialize_scale(py[[k]], plot, primary_aes = "y", panel_ids = pids)
+      out[[length(out) + 1L]] <- ggplot_serialize_scale(
+        py[[k]], plot, primary_aes = "y", panel_ids = pids, scale_id = next_sid("y")
+      )
     }
   }
 
@@ -976,10 +1011,53 @@ ggplot_extract_scales <- function(plot, built, panel_ids_by_num = NULL) {
   for (sc in all_scales) {
     aesthetics <- tryCatch(as.character(sc$aesthetics), error = function(e) character())
     if (length(aesthetics) == 0L || aesthetics[[1L]] %in% c("x", "y")) next
-    out[[length(out) + 1L]] <- ggplot_serialize_scale(sc, plot, primary_aes = aesthetics[[1L]])
+    out[[length(out) + 1L]] <- ggplot_serialize_scale(
+      sc, plot, primary_aes = aesthetics[[1L]], scale_id = next_sid(aesthetics[[1L]])
+    )
   }
 
   out
+}
+
+ggplot_attach_layer_scale_refs <- function(layers_ir, scales_ir, plot = NULL, built = NULL) {
+  if (length(layers_ir) == 0L || length(scales_ir) == 0L) return(layers_ir)
+  raw_layers <- if (!is.null(built) && length(built$plot$layers) > 0L) {
+    built$plot$layers
+  } else if (!is.null(plot)) {
+    plot$layers %||% list()
+  } else {
+    list()
+  }
+
+  for (i in seq_along(layers_ir)) {
+    lyr <- layers_ir[[i]]
+    eff_aes <- lyr$aes %||% list()
+    if (length(eff_aes) == 0L) next
+    fixed_aes <- if (i <= length(raw_layers)) names(raw_layers[[i]]$aes_params %||% list()) else character()
+    # Normalize "color" alias to "colour"
+    if ("color" %in% fixed_aes) fixed_aes <- union(fixed_aes, "colour")
+    if ("colour" %in% fixed_aes) fixed_aes <- union(fixed_aes, "color")
+
+    refs <- stats::setNames(list(), character())
+    for (sc in scales_ir) {
+      sid <- sc$scale_id
+      an <- sc$aesthetic
+      if (is.null(sid) || is.null(an) || an %in% c("x", "y")) next
+      if (an %in% fixed_aes) next
+      aes_cands <- if (identical(an, "colour")) c("colour", "color") else an
+      hit <- intersect(aes_cands, names(eff_aes))
+      if (length(hit) == 0L) next
+      # If multiple scales share an aesthetic (e.g. ggnewscale), prefer matching field
+      fld <- eff_aes[[hit[[1L]]]]
+      if (!(an %in% names(refs)) || (!is.null(sc$field) && identical(sc$field, fld))) {
+        refs[[an]] <- sid
+      }
+    }
+    if (length(refs) > 0L) {
+      layers_ir[[i]]$scale_refs <- refs
+    }
+  }
+  layers_ir
 }
 
 # --- Panels matching, coordinate domains & shared axes (ISS-ASSET-02 & 05) ---
@@ -1018,7 +1096,46 @@ ggplot_discrete_breaks_pos <- function(scale) {
   })
 }
 
-ggplot_match_panels <- function(built, gtable, leaves, panel_prefix = "") {
+ggplot_panel_aspect_constraint <- function(coord_obj, pp, bbox_pt = NULL, plot = NULL, built = NULL) {
+  rendered_ratio <- function() {
+    if (!is.null(bbox_pt) && length(bbox_pt) == 4L && all(is.finite(bbox_pt))) {
+      w <- bbox_pt[[3L]] - bbox_pt[[1L]]
+      h <- bbox_pt[[4L]] - bbox_pt[[2L]]
+      if (is.finite(w) && is.finite(h) && w > 0 && h > 0) return(h / w)
+    }
+    NULL
+  }
+
+  # 1. Fixed-ratio / projection coordinates (CoordFixed, CoordEqual, CoordSf, CoordPolar, CoordQuickmap, CoordMap)
+  if (!is.null(coord_obj) &&
+      inherits(coord_obj, c("CoordFixed", "CoordSf", "CoordPolar", "CoordQuickmap", "CoordMap"))) {
+    asp <- tryCatch(coord_obj$aspect(pp), error = function(e) NULL)
+    if (is.null(asp) || !is.numeric(asp) || length(asp) != 1L || !is.finite(asp) || asp <= 0) {
+      if (inherits(coord_obj, "CoordFixed")) {
+        asp <- tryCatch(as.numeric(coord_obj$ratio), error = function(e) NULL)
+      } else if (inherits(coord_obj, "CoordPolar")) {
+        asp <- 1.0
+      }
+    }
+    if (is.null(asp) || !is.numeric(asp) || length(asp) != 1L || !is.finite(asp) || asp <= 0) {
+      asp <- rendered_ratio()
+    }
+    return(list(aspect_lock = asp, resize_mode = "proportional_only"))
+  }
+
+  # 2. Explicit theme(aspect.ratio = ...)
+  theme_ar <- tryCatch(
+    built$plot$theme$aspect.ratio %||% plot$theme$aspect.ratio,
+    error = function(e) NULL
+  )
+  if (is.numeric(theme_ar) && length(theme_ar) == 1L && is.finite(theme_ar) && theme_ar > 0) {
+    return(list(aspect_lock = as.numeric(theme_ar), resize_mode = "proportional_only"))
+  }
+
+  list(aspect_lock = NULL, resize_mode = "free_xy")
+}
+
+ggplot_match_panels <- function(built, gtable, leaves, panel_prefix = "", plot = NULL) {
   lay <- gg_compat_layout_df(built)
   if (is.null(lay) || nrow(lay) == 0L) {
     return(list(
@@ -1111,6 +1228,8 @@ ggplot_match_panels <- function(built, gtable, leaves, panel_prefix = "") {
     sx <- if (!is.na(sx_idx) && sx_idx <= length(px_scales)) px_scales[[sx_idx]] else NULL
     sy <- if (!is.na(sy_idx) && sy_idx <= length(py_scales)) py_scales[[sy_idx]] else NULL
 
+    asp_info <- ggplot_panel_aspect_constraint(coord_obj, pp, bbox_pt = bbox_pt, plot = plot, built = built)
+
     panels[[i]] <- make_panel_ir(
       panel_id = pid,
       facet_vars = fvars,
@@ -1128,7 +1247,9 @@ ggplot_match_panels <- function(built, gtable, leaves, panel_prefix = "") {
       x_breaks_pos = ggplot_discrete_breaks_pos(if (flipped) sy else sx),
       y_breaks_pos = ggplot_discrete_breaks_pos(if (flipped) sx else sy),
       x_axis_group = if (!is.na(sx_idx)) paste0(ag_pfx, "scale_x_", sx_idx) else NULL,
-      y_axis_group = if (!is.na(sy_idx)) paste0(ag_pfx, "scale_y_", sy_idx) else NULL
+      y_axis_group = if (!is.na(sy_idx)) paste0(ag_pfx, "scale_y_", sy_idx) else NULL,
+      aspect_lock = asp_info$aspect_lock,
+      resize_mode = asp_info$resize_mode
     )
   }
 
@@ -1274,6 +1395,204 @@ ggplot_match_children_to_layers <- function(kids, layers_ir, ontop = FALSE) {
   out
 }
 
+# K2: Derive rigid panel attachment topology (`attached_to`) for peripheral axes,
+# facet strips, axis titles, and titles from gtable layout adjacency + geometry.
+ggplot_compute_leaf_attachments <- function(gtable, leaves, panel_match) {
+  n <- nrow(leaves)
+  out <- vector("list", n)
+  panels <- panel_match$panels %||% list()
+  if (n == 0L || length(panels) == 0L) return(out)
+
+  all_pids <- vapply(panels, `[[`, character(1L), "panel_id")
+  panel_bboxes <- lapply(panels, function(p) {
+    bb <- unlist(p$bbox_pt)
+    if (length(bb) == 4L && all(is.finite(bb))) bb else NULL
+  })
+
+  # Index gtable panel cells (t, l, b, r) when full ggplot gtable is available
+  gt_has_layout <- !is.null(gtable) && inherits(gtable, "gtable") &&
+    !is.null(gtable$layout) && nrow(gtable$layout) > 0L
+  gt_panels <- list()
+  if (gt_has_layout) {
+    lay <- gtable$layout
+    pg_map <- panel_match$panel_grob_to_num %||% stats::setNames(integer(), character())
+    pid_map <- panel_match$panel_ids_by_num %||% stats::setNames(character(), character())
+    for (j in grep("^panel", lay$name)) {
+      pg <- gtable$grobs[[j]]
+      pid <- NULL
+      if (!is.null(pg) && !is.null(pg$name) && pg$name %in% names(pg_map)) {
+        pnum <- as.character(pg_map[[pg$name]])
+        if (pnum %in% names(pid_map)) pid <- unname(pid_map[[pnum]])
+      }
+      if (!is.null(pid)) {
+        gt_panels[[length(gt_panels) + 1L]] <- list(
+          panel_id = pid,
+          t = lay$t[[j]], l = lay$l[[j]], b = lay$b[[j]], r = lay$r[[j]]
+        )
+      }
+    }
+  }
+
+  resolve_local_panels <- function(sl_name, side, l_bb) {
+    if (length(all_pids) == 1L) return(all_pids)
+
+    # 1. Exact gtable grid adjacency when cell is present in gtable$layout
+    if (gt_has_layout && length(gt_panels) > 0L && sl_name %in% gtable$layout$name) {
+      ci <- match(sl_name, gtable$layout$name)
+      ct <- gtable$layout$t[[ci]]
+      cl <- gtable$layout$l[[ci]]
+      cb <- gtable$layout$b[[ci]]
+      cr <- gtable$layout$r[[ci]]
+      same_prefix <- sub("-[0-9].*$", "", sl_name)
+      peer_rows <- which(startsWith(gtable$layout$name, same_prefix))
+
+      if (side %in% c("bottom", "top")) {
+        cands <- Filter(function(p) p$r >= cl && p$l <= cr, gt_panels)
+        cands <- if (identical(side, "bottom")) {
+          Filter(function(p) p$b < ct, cands)
+        } else {
+          Filter(function(p) p$t > cb, cands)
+        }
+        if (length(cands) > 0L) {
+          if (startsWith(sl_name, "strip-")) {
+            dists <- vapply(cands, function(p) if (identical(side, "bottom")) ct - p$b else p$t - cb, numeric(1L))
+            min_d <- min(dists)
+            return(vapply(cands[dists == min_d], `[[`, character(1L), "panel_id"))
+          }
+          # For axes: include all column panels unless another peer axis intervenes between rows
+          dists <- vapply(cands, function(p) if (identical(side, "bottom")) ct - p$b else p$t - cb, numeric(1L))
+          min_d <- min(dists)
+          if (length(cands) > 1L) {
+            peer_ts <- gtable$layout$t[peer_rows]
+            peer_ls <- gtable$layout$l[peer_rows]
+            peer_rs <- gtable$layout$r[peer_rows]
+            keep_mask <- vapply(cands, function(p) {
+              if (identical(side, "bottom")) {
+                !any(peer_rs >= p$l & peer_ls <= p$r & peer_ts > p$b & peer_ts < ct)
+              } else {
+                !any(peer_rs >= p$l & peer_ls <= p$r & peer_ts < p$t & peer_ts > cb)
+              }
+            }, logical(1L))
+            cands <- if (any(keep_mask)) cands[keep_mask] else cands[dists == min_d]
+          }
+          return(vapply(cands, `[[`, character(1L), "panel_id"))
+        }
+      } else {
+        cands <- Filter(function(p) p$b >= ct && p$t <= cb, gt_panels)
+        cands <- if (identical(side, "left")) {
+          Filter(function(p) p$l > cr, cands)
+        } else {
+          Filter(function(p) p$r < cl, cands)
+        }
+        if (length(cands) > 0L) {
+          if (startsWith(sl_name, "strip-")) {
+            dists <- vapply(cands, function(p) if (identical(side, "left")) p$l - cr else cl - p$r, numeric(1L))
+            min_d <- min(dists)
+            return(vapply(cands[dists == min_d], `[[`, character(1L), "panel_id"))
+          }
+          dists <- vapply(cands, function(p) if (identical(side, "left")) p$l - cr else cl - p$r, numeric(1L))
+          min_d <- min(dists)
+          if (length(cands) > 1L) {
+            peer_ls <- gtable$layout$l[peer_rows]
+            peer_ts <- gtable$layout$t[peer_rows]
+            peer_bs <- gtable$layout$b[peer_rows]
+            keep_mask <- vapply(cands, function(p) {
+              if (identical(side, "left")) {
+                !any(peer_bs >= p$t & peer_ts <= p$b & peer_ls < p$l & peer_ls > cr)
+              } else {
+                !any(peer_bs >= p$t & peer_ts <= p$b & peer_ls > p$r & peer_ls < cl)
+              }
+            }, logical(1L))
+            cands <- if (any(keep_mask)) cands[keep_mask] else cands[dists == min_d]
+          }
+          return(vapply(cands, `[[`, character(1L), "panel_id"))
+        }
+      }
+    }
+
+    # 2. Geometric bbox alignment fallback (works seamlessly inside patchwork sub-facets)
+    if (all(is.finite(l_bb))) {
+      lx0 <- l_bb[[1L]]; ly0 <- l_bb[[2L]]; lx1 <- l_bb[[3L]]; ly1 <- l_bb[[4L]]
+      lcx <- 0.5 * (lx0 + lx1); lcy <- 0.5 * (ly0 + ly1)
+      if (side %in% c("bottom", "top")) {
+        aligned <- which(vapply(panel_bboxes, function(pb) {
+          !is.null(pb) && (pb[[3L]] >= lx0 - 2.0 && pb[[1L]] <= lx1 + 2.0)
+        }, logical(1L)))
+        if (length(aligned) == 0L) {
+          dists_x <- vapply(panel_bboxes, function(pb) if (is.null(pb)) Inf else abs(0.5 * (pb[[1L]] + pb[[3L]]) - lcx), numeric(1L))
+          aligned <- which.min(dists_x)
+        }
+        side_ok <- aligned[vapply(aligned, function(pi) {
+          pb <- panel_bboxes[[pi]]
+          if (identical(side, "bottom")) pb[[4L]] <= ly1 + 6.0 else pb[[2L]] >= ly0 - 6.0
+        }, logical(1L))]
+        pool <- if (length(side_ok) > 0L) side_ok else aligned
+        if (length(pool) > 0L) {
+          vdists <- vapply(pool, function(pi) {
+            pb <- panel_bboxes[[pi]]
+            if (identical(side, "bottom")) abs(ly0 - pb[[4L]]) else abs(pb[[2L]] - ly1)
+          }, numeric(1L))
+          min_vd <- min(vdists)
+          return(all_pids[pool[vdists <= min_vd + 2.0]])
+        }
+      } else {
+        aligned <- which(vapply(panel_bboxes, function(pb) {
+          !is.null(pb) && (pb[[4L]] >= ly0 - 2.0 && pb[[2L]] <= ly1 + 2.0)
+        }, logical(1L)))
+        if (length(aligned) == 0L) {
+          dists_y <- vapply(panel_bboxes, function(pb) if (is.null(pb)) Inf else abs(0.5 * (pb[[2L]] + pb[[4L]]) - lcy), numeric(1L))
+          aligned <- which.min(dists_y)
+        }
+        side_ok <- aligned[vapply(aligned, function(pi) {
+          pb <- panel_bboxes[[pi]]
+          if (identical(side, "left")) pb[[1L]] >= lx0 - 6.0 else pb[[3L]] <= lx1 + 6.0
+        }, logical(1L))]
+        pool <- if (length(side_ok) > 0L) side_ok else aligned
+        if (length(pool) > 0L) {
+          hdists <- vapply(pool, function(pi) {
+            pb <- panel_bboxes[[pi]]
+            if (identical(side, "left")) abs(pb[[1L]] - lx1) else abs(lx0 - pb[[3L]])
+          }, numeric(1L))
+          min_hd <- min(hdists)
+          return(all_pids[pool[hdists <= min_hd + 2.0]])
+        }
+      }
+    }
+
+    all_pids
+  }
+
+  for (r in seq_len(n)) {
+    if (!is.na(panel_match$leaf_panel[[r]])) next
+    sl <- as.character(leaves$layout_slot[[r]] %||% "")[[1L]]
+    if (!nzchar(sl)) next
+    l_bb <- c(leaves$bbox_x0[[r]], leaves$bbox_y0[[r]], leaves$bbox_x1[[r]], leaves$bbox_y1[[r]])
+
+    if (grepl("^axis-(t|b|l|r)", sl)) {
+      sc <- sub("^axis-(t|b|l|r).*$", "\\1", sl)
+      side <- switch(sc, t = "top", b = "bottom", l = "left", r = "right")
+      ax <- if (side %in% c("top", "bottom")) "x" else "y"
+      out[[r]] <- make_attachment(resolve_local_panels(sl, side, l_bb), side = side, align_axis = ax)
+    } else if (grepl("^strip-(t|b|l|r)", sl)) {
+      sc <- sub("^strip-(t|b|l|r).*$", "\\1", sl)
+      side <- switch(sc, t = "top", b = "bottom", l = "left", r = "right")
+      ax <- if (side %in% c("top", "bottom")) "x" else "y"
+      out[[r]] <- make_attachment(resolve_local_panels(sl, side, l_bb), side = side, align_axis = ax)
+    } else if (grepl("^xlab-(t|b)", sl)) {
+      side <- if (startsWith(sl, "xlab-t")) "top" else "bottom"
+      out[[r]] <- make_attachment(all_pids, side = side, align_axis = "x")
+    } else if (grepl("^ylab-(l|r)", sl)) {
+      side <- if (startsWith(sl, "ylab-r")) "right" else "left"
+      out[[r]] <- make_attachment(all_pids, side = side, align_axis = "y")
+    } else if (grepl("^(title|subtitle)(-|$)", sl)) {
+      out[[r]] <- make_attachment(all_pids, side = "top", align_axis = "x")
+    } else if (grepl("^caption(-|$)", sl)) {
+      out[[r]] <- make_attachment(all_pids, side = "bottom", align_axis = "x")
+    }
+  }
+  out
+}
+
 ggplot_build_lineage <- function(
     built,
     gtable,
@@ -1297,9 +1616,11 @@ ggplot_build_lineage <- function(
   n_rows_vec <- rep(NA_integer_, n)
   deg_reasons <- rep(NA_character_, n)
 
+  attached_list <- ggplot_compute_leaf_attachments(gtable, leaves, panel_match)
+
   if (is.null(built) || length(layers_ir) == 0L) {
     return(make_lineage_df(leaves, panel_ids, layer_ids, table_ids, cardinalities, n_rows_vec,
-                           degradation_reason = deg_reasons))
+                           degradation_reason = deg_reasons, attached_to = attached_list))
   }
 
   child_to_layer <- stats::setNames(integer(), character())
@@ -1398,13 +1719,14 @@ ggplot_build_lineage <- function(
     table_id = table_ids,
     cardinality = cardinalities,
     n_rows = n_rows_vec,
-    degradation_reason = deg_reasons
+    degradation_reason = deg_reasons,
+    attached_to = attached_list
   )
 }
 
 # --- Element-to-built-row & composite part_role bridging (ISS-ASSET-01) ------
 
-ggplot_bridge_elements <- function(elements, leaves, lineage, panels, layers_ir, tables) {
+ggplot_bridge_elements <- function(elements, leaves, lineage, panels, layers_ir, tables, scales_ir = list()) {
   if (!is.data.frame(elements) || nrow(elements) == 0L ||
       !is.data.frame(lineage) || nrow(lineage) == 0L) {
     return(elements)
@@ -1569,7 +1891,7 @@ ggplot_bridge_elements <- function(elements, leaves, lineage, panels, layers_ir,
       next
     }
 
-    # Case 4: Text & Repel labels (match by exact label text + nearest anchor)
+    # Case 4: Text & Repel labels (match by exact label text or multiline split + target_anchor_pt)
     if (geom_cls %in% LABEL_GEOMS) {
       is_txt <- el_tags == "text"
       is_seg <- el_tags %in% c("line", "polyline", "path")
@@ -1579,29 +1901,69 @@ ggplot_bridge_elements <- function(elements, leaves, lineage, panels, layers_ir,
 
       if ("label" %in% names(bdf) && any(is_txt)) {
         lbl_vals <- as.character(bdf$label[row_pool])
-        proj <- if (!is.null(pan)) {
-          bc <- built_centers(row_pool)
-          panel_rendered_to_px(pan, bc$x, bc$y)
+        # K5: Compute exact un-nudged data target anchor coordinates in SVG pt
+        target_proj <- if (!is.null(pan)) {
+          tx_ren <- if ("x_orig" %in% names(bdf) && is.numeric(bdf$x_orig)) {
+            as.numeric(bdf$x_orig[row_pool])
+          } else if ("x" %in% names(bdf)) {
+            xv <- as.numeric(bdf$x[row_pool])
+            if (identical(lyr$position, "PositionNudge") && !is.null(lyr$params$position_x)) {
+              xv <- xv - as.numeric(lyr$params$position_x)
+            }
+            xv
+          } else {
+            rep(NA_real_, length(row_pool))
+          }
+          ty_ren <- if ("y_orig" %in% names(bdf) && is.numeric(bdf$y_orig)) {
+            as.numeric(bdf$y_orig[row_pool])
+          } else if ("y" %in% names(bdf)) {
+            yv <- as.numeric(bdf$y[row_pool])
+            if (identical(lyr$position, "PositionNudge") && !is.null(lyr$params$position_y)) {
+              yv <- yv - as.numeric(lyr$params$position_y)
+            }
+            yv
+          } else {
+            rep(NA_real_, length(row_pool))
+          }
+          panel_rendered_to_px(pan, tx_ren, ty_ren)
         } else {
           list(px = rep(NA_real_, length(row_pool)), py = rep(NA_real_, length(row_pool)))
         }
+        disp_proj <- if (!is.null(pan)) {
+          bc <- built_centers(row_pool)
+          panel_rendered_to_px(pan, bc$x, bc$y)
+        } else {
+          target_proj
+        }
+        lbl_lines_list <- lapply(lbl_vals, function(s) {
+          if (is.na(s)) character() else strsplit(s, "\n", fixed = TRUE)[[1L]]
+        })
         used_r <- logical(length(row_pool))
         for (k in which(is_txt)) {
           ei <- el_idx[[k]]
           txt_s <- elements$text[[ei]]
           if (is.na(txt_s)) next
           cands <- which(!used_r & !is.na(lbl_vals) & lbl_vals == txt_s)
+          is_multiline_hit <- FALSE
+          if (length(cands) == 0L) {
+            cands <- which(vapply(lbl_lines_list, function(ls) txt_s %in% ls, logical(1L)))
+            is_multiline_hit <- length(cands) > 0L
+          }
           if (length(cands) == 0L) next
-          pick <- if (length(cands) == 1L || !all(is.finite(proj$px[cands]))) {
+          pick <- if (length(cands) == 1L || !all(is.finite(disp_proj$px[cands]))) {
             cands[[1L]]
           } else {
-            dists <- sqrt((proj$px[cands] - el_cx[[k]])^2 + (proj$py[cands] - el_cy[[k]])^2)
+            dists <- sqrt((disp_proj$px[cands] - el_cx[[k]])^2 + (disp_proj$py[cands] - el_cy[[k]])^2)
             cands[[which.min(dists)]]
           }
-          used_r[[pick]] <- TRUE
+          if (!is_multiline_hit) used_r[[pick]] <- TRUE
           br <- row_pool[[pick]]
           elements$built_row_id[[ei]] <- as.integer(br)
           if (has_gkey) elements$group_id[[ei]] <- bdf[["_group_key"]][[br]]
+          if (is.finite(target_proj$px[[pick]]) && is.finite(target_proj$py[[pick]])) {
+            elements$target_anchor_x[[ei]] <- round_pt(target_proj$px[[pick]])
+            elements$target_anchor_y[[ei]] <- round_pt(target_proj$py[[pick]])
+          }
         }
       }
       next
@@ -1654,6 +2016,60 @@ ggplot_bridge_elements <- function(elements, leaves, lineage, panels, layers_ir,
           br <- valid_rows[[pick]]
           elements$built_row_id[[el_idx[[k]]]] <- as.integer(br)
           if (has_gkey) elements$group_id[[el_idx[[k]]]] <- bdf[["_group_key"]][[br]]
+        }
+      }
+    }
+  }
+
+  # K3: Assign semantic style tokens (`color_token` / `fill_token`) to scale-driven data elements
+  if (length(scales_ir) > 0L) {
+    scale_by_id <- stats::setNames(list(), character())
+    for (sc in scales_ir) {
+      if (!is.null(sc$scale_id) && nzchar(sc$scale_id)) {
+        scale_by_id[[sc$scale_id]] <- sc
+      }
+    }
+    for (r in seq_len(nrow(lineage))) {
+      li <- lineage$layer_id[[r]]
+      tid <- lineage$table_id[[r]]
+      lid <- lineage$leaf_id[[r]]
+      if (is.na(li) || is.na(tid) || !(tid %in% names(tables))) next
+      lyr <- layer_by_id[[as.character(li)]]
+      srefs <- lyr$scale_refs
+      if (is.null(srefs) || length(srefs) == 0L) next
+
+      sc_col <- if (!is.null(srefs$colour) && srefs$colour %in% names(scale_by_id)) scale_by_id[[srefs$colour]] else NULL
+      sc_fill <- if (!is.null(srefs$fill) && srefs$fill %in% names(scale_by_id)) scale_by_id[[srefs$fill]] else NULL
+      if (is.null(sc_col) && is.null(sc_fill)) next
+
+      el_idx <- which(!is.na(elements$leaf_id) & elements$leaf_id == lid)
+      if (length(el_idx) == 0L) next
+      bdf <- tables[[tid]]$data
+      if (!is.data.frame(bdf) || nrow(bdf) == 0L) next
+
+      has_gkey <- "_group_key" %in% names(bdf)
+      gkey_first_row <- if (has_gkey) {
+        u_gk <- unique(bdf[["_group_key"]])
+        stats::setNames(match(u_gk, bdf[["_group_key"]]), u_gk)
+      } else {
+        integer()
+      }
+
+      for (ei in el_idx) {
+        br <- elements$built_row_id[[ei]]
+        if (is.na(br) && has_gkey && !is.na(elements$group_id[[ei]]) &&
+            elements$group_id[[ei]] %in% names(gkey_first_row)) {
+          br <- gkey_first_row[[elements$group_id[[ei]]]]
+        }
+        if (is.na(br) || br < 1L || br > nrow(bdf)) next
+
+        if (!is.null(sc_col) && "colour" %in% names(bdf)) {
+          tok <- format_style_token(sc_col, mapped_value = bdf$colour[[br]])
+          if (!is.na(tok)) elements$color_token[[ei]] <- tok
+        }
+        if (!is.null(sc_fill) && "fill" %in% names(bdf)) {
+          tok <- format_style_token(sc_fill, mapped_value = bdf$fill[[br]])
+          if (!is.na(tok)) elements$fill_token[[ei]] <- tok
         }
       }
     }
@@ -1858,9 +2274,15 @@ ggplot_extract_guides <- function(leaves, elements, scales_ir, collected = FALSE
       )
     }
 
+    matched_scale_ids <- unique(Filter(
+      function(x) is.character(x) && length(x) == 1L && nzchar(x),
+      lapply(matched_scales, function(s) s$scale_id)
+    ))
     ent <- list(
       guide_id = sprintf("G%d", ci),
       kind = if (is_cbar) "colorbar" else "legend",
+      scale_id = if (length(matched_scale_ids) > 0L) matched_scale_ids[[1L]] else NULL,
+      scale_ids = json_array(unlist(matched_scale_ids, use.names = FALSE)),
       aesthetics = json_array(guide_aes),
       bbox_pt = bbox_of_idx(g_idx),
       leaf_ids = json_array(g_lids),

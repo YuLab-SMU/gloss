@@ -126,14 +126,26 @@ engine_heatmap_capture <- function(x, ctx) {
   register_ha_block <- function(ha, hm_key, side, safe_nm) {
     if (is.null(ha) || !methods::is(ha, "HeatmapAnnotation")) return(invisible(NULL))
     anno_res <- heatmap_extract_annotations(ha, side = side, safe_nm = safe_nm)
+    anno_scale_by_field <- stats::setNames(character(), character())
     if (length(anno_res$scales) > 0L) {
-      st$scales <- c(st$scales, anno_res$scales)
+      for (asc in anno_res$scales) {
+        st$scales[[length(st$scales) + 1L]] <- asc
+        if (!is.null(asc$field) && !is.null(asc$scale_id)) {
+          anno_scale_by_field[[asc$field]] <- asc$scale_id
+        }
+      }
     }
     for (atbl in anno_res$tables) {
       st$layer_counter <- st$layer_counter + 1L
       li <- st$layer_counter
       atbl$layer_id <- li
       st$tables[[atbl$table_id]] <- atbl
+      srefs <- stats::setNames(list(), character())
+      for (an in atbl$anno_names) {
+        if (an %in% names(anno_scale_by_field)) {
+          srefs[[an]] <- anno_scale_by_field[[an]]
+        }
+      }
       st$layers[[length(st$layers) + 1L]] <- make_layer_ir(
         layer_id = li,
         geom = "HeatmapAnnotation",
@@ -142,7 +154,8 @@ engine_heatmap_capture <- function(x, ctx) {
         aes = list(annotation = json_array(atbl$anno_names)),
         raw_table = atbl$table_id,
         built_table = atbl$table_id,
-        params = list(side = side, heatmap = hm_key)
+        params = list(side = side, heatmap = hm_key),
+        scale_refs = if (length(srefs) > 0L) srefs else NULL
       )
       dim_kind <- if (side %in% c("top", "bottom", "column")) "col" else "row"
       for (an in atbl$anno_names) {
@@ -155,6 +168,7 @@ engine_heatmap_capture <- function(x, ctx) {
           dim = dim_kind,
           layer_id = li,
           table_id = atbl$table_id,
+          scale_id = if (an %in% names(anno_scale_by_field)) unname(anno_scale_by_field[[an]]) else NULL,
           total_nrow = as.integer(nrow(atbl$data))
         )
       }
@@ -194,6 +208,8 @@ engine_heatmap_capture <- function(x, ctx) {
         role = "raw",
         key = key_col,
         layer_id = li,
+        matrix_rownames = rownames(m),
+        matrix_colnames = colnames(m),
         data = df
       )
 
@@ -220,8 +236,13 @@ engine_heatmap_capture <- function(x, ctx) {
 
       # 3. Matrix color mapping dictionary
       cm <- tryCatch(h@matrix_color_mapping, error = function(e) NULL)
+      main_sid <- NULL
       if (!is.null(cm)) {
-        st$scales[[length(st$scales) + 1L]] <- heatmap_color_mapping_to_scale(cm, field = nm)
+        main_sid <- paste0(safe_nm, "_main_fill")
+        st$scales[[length(st$scales) + 1L]] <- heatmap_color_mapping_to_scale(
+          cm, field = nm, scale_id = main_sid
+        )
+        st$ht_scale_map <- c(st$ht_scale_map %||% stats::setNames(character(), character()), stats::setNames(main_sid, nm))
       }
 
       # 4. HeatmapBody layer recipe
@@ -232,7 +253,8 @@ engine_heatmap_capture <- function(x, ctx) {
         position = "PositionIdentity",
         aes = list(fill = nm),
         raw_table = tbl_id,
-        built_table = tbl_id
+        built_table = tbl_id,
+        scale_refs = if (!is.null(main_sid)) list(fill = main_sid) else NULL
       )
 
       # 5. Attached annotations (tables + scales + HeatmapAnnotation layers)
@@ -276,6 +298,7 @@ engine_heatmap_capture <- function(x, ctx) {
   cardinalities <- rep("unlinked", n_leaves)
   n_rows_vec <- rep(NA_integer_, n_leaves)
   deg_reasons <- rep(NA_character_, n_leaves)
+  attached_list <- vector("list", n_leaves)
 
   panels <- list()
   vp_to_panel <- stats::setNames(character(), character())
@@ -336,6 +359,8 @@ engine_heatmap_capture <- function(x, ctx) {
 
       nel <- leaves$n_elements[[r]]
       el_idx <- which(!is.na(elements$leaf_id) & elements$leaf_id == leaves$leaf_id[[r]])
+      ht_sid <- if (!is.null(st$ht_scale_map) && ht_nm %in% names(st$ht_scale_map)) st$ht_scale_map[[ht_nm]] else NULL
+      ht_sc <- if (!is.null(ht_sid)) Filter(function(s) identical(s$scale_id, ht_sid), st$scales)[[1L]] else NULL
       if (!is.na(n_cells) && nel == n_cells) {
         cardinalities[[r]] <- "1:1"
         if (length(el_idx) == n_cells) {
@@ -346,6 +371,16 @@ engine_heatmap_capture <- function(x, ctx) {
           if (all(is.finite(bb)) && bb[[2L]] > bb[[1L]]) {
             row_pos <- pmin(n_r, pmax(1L, as.integer(floor((el_cy - bb[[1L]]) / (bb[[2L]] - bb[[1L]]) * n_r)) + 1L))
             elements$built_row_id[el_idx] <- as.integer(r_idx_vec[row_pos])
+          }
+          if (!is.null(ht_sc)) {
+            if (identical(ht_sc$scale_type, "continuous")) {
+              elements$fill_token[el_idx] <- paste0(ht_sid, "::continuous")
+            } else {
+              for (ei in el_idx) {
+                tok <- format_style_token(ht_sc, mapped_value = elements$fill[[ei]])
+                if (!is.na(tok)) elements$fill_token[[ei]] <- tok
+              }
+            }
           }
         }
       } else if (!is.na(n_cells) && nel == 1L && n_cells > 1L) {
@@ -439,6 +474,26 @@ engine_heatmap_capture <- function(x, ctx) {
         }
       }
 
+      for (r in cands) {
+        # K2: Attach every annotation leaf (marks + label) to matching heatmap_body slice panels
+        target_body_pids <- vapply(
+          Filter(function(p) {
+            identical(p$panel_role, "heatmap_body") &&
+              (identical(p$facet_vars$heatmap, ht_nm) || !(ht_nm %in% known_hm)) &&
+              (if (is_col_dim) identical(p$facet_vars$col_slice, sl_idx) else identical(p$facet_vars$row_slice, sl_idx))
+          }, panels),
+          `[[`, character(1L), "panel_id"
+        )
+        if (length(target_body_pids) > 0L) {
+          att_side <- if (reg$side %in% c("top", "bottom", "left", "right")) reg$side else if (is_col_dim) "top" else "right"
+          attached_list[[r]] <- make_attachment(
+            target_body_pids,
+            side = att_side,
+            align_axis = if (is_col_dim) "x" else "y"
+          )
+        }
+      }
+
       for (r in keep) {
         panel_ids[[r]] <- apid
         layer_ids[[r]] <- reg$layer_id
@@ -461,11 +516,67 @@ engine_heatmap_capture <- function(x, ctx) {
           if (length(el_idx) == length(sl_indices) && length(sl_indices) > 0L) {
             elements$built_row_id[el_idx] <- as.integer(sl_indices)
           }
+          if (!is.null(reg$scale_id)) {
+            a_sc_hits <- Filter(function(s) identical(s$scale_id, reg$scale_id), st$scales)
+            if (length(a_sc_hits) > 0L) {
+              a_sc <- a_sc_hits[[1L]]
+              if (identical(a_sc$scale_type, "continuous")) {
+                elements$fill_token[el_idx] <- paste0(reg$scale_id, "::continuous")
+              } else {
+                for (ei in el_idx) {
+                  tok <- format_style_token(a_sc, mapped_value = elements$fill[[ei]])
+                  if (!is.na(tok)) elements$fill_token[[ei]] <- tok
+                }
+              }
+            }
+          }
         }
       }
     }
   }
 
+  # K2: Attach ComplexHeatmap dendrograms & row/column name leaves to body slice panels
+  body_panels_list <- Filter(function(p) identical(p$panel_role, "heatmap_body"), panels)
+  if (n_leaves > 0L && length(body_panels_list) > 0L) {
+    for (r in seq_len(n_leaves)) {
+      if (!is.null(attached_list[[r]]) || !is.na(panel_ids[[r]])) next
+      vp <- leaves$vp_path[[r]] %||% ""
+      if (!nzchar(vp)) next
+      segs <- strsplit(vp, "::", fixed = TRUE)[[1L]]
+      # Match <ht>_dend_row_<k>, <ht>_dend_column_<k>, <ht>_row_names_<k>, <ht>_column_names_<k>
+      m_seg <- grep("_(dend_row|dend_column|row_names|column_names|row_title|column_title)_([0-9]+)$", segs, value = TRUE)
+      if (length(m_seg) == 0L) next
+      seg <- m_seg[[length(m_seg)]]
+      mm <- regmatches(seg, regexec("^(.+)_(dend_row|dend_column|row_names|column_names|row_title|column_title)_([0-9]+)$", seg))[[1L]]
+      if (length(mm) != 4L) next
+      h_nm <- mm[[2L]]
+      kind_s <- mm[[3L]]
+      sl_k <- as.integer(mm[[4L]])
+      is_col_k <- grepl("column", kind_s, fixed = TRUE)
+
+      t_pans <- Filter(function(p) {
+        (identical(p$facet_vars$heatmap, h_nm) || !(h_nm %in% known_hm)) &&
+          (if (is_col_k) identical(p$facet_vars$col_slice, sl_k) else identical(p$facet_vars$row_slice, sl_k))
+      }, body_panels_list)
+      if (length(t_pans) == 0L) next
+      t_pids <- vapply(t_pans, `[[`, character(1L), "panel_id")
+      ref_bb <- unlist(t_pans[[1L]]$bbox_pt)
+      l_cx <- 0.5 * (leaves$bbox_x0[[r]] + leaves$bbox_x1[[r]])
+      l_cy <- 0.5 * (leaves$bbox_y0[[r]] + leaves$bbox_y1[[r]])
+      side_s <- if (is_col_k) {
+        if (length(ref_bb) == 4L && is.finite(l_cy) && l_cy > 0.5 * (ref_bb[[2L]] + ref_bb[[4L]])) "bottom" else "top"
+      } else {
+        if (length(ref_bb) == 4L && is.finite(l_cx) && l_cx > 0.5 * (ref_bb[[1L]] + ref_bb[[3L]])) "right" else "left"
+      }
+      attached_list[[r]] <- make_attachment(t_pids, side = side_s, align_axis = if (is_col_k) "x" else "y")
+    }
+  }
+
+  # Full item-level ComplexHeatmap legend guides extraction (K3)
+  guides_ir <- heatmap_extract_guides(leaves, elements, st$scales)
+  if (!is.null(guides_ir)) {
+    elements <- tag_guide_element_tokens(elements, guides_ir, st$scales)
+  }
   sc$elements <- elements
 
   lineage <- make_lineage_df(
@@ -475,11 +586,10 @@ engine_heatmap_capture <- function(x, ctx) {
     table_id = table_ids,
     cardinality = cardinalities,
     n_rows = n_rows_vec,
-    degradation_reason = deg_reasons
+    degradation_reason = deg_reasons,
+    attached_to = attached_list
   )
 
-  # Optional ComplexHeatmap legend guides summary (ISS-ASSET-03)
-  guides_ir <- heatmap_extract_guides(leaves, elements, st$scales)
   ir_out <- list(
     panels = panels,
     layers = st$layers,
@@ -502,22 +612,168 @@ heatmap_extract_guides <- function(leaves, elements, scales_ir) {
   if (!is.data.frame(leaves) || nrow(leaves) == 0L) return(NULL)
   leg_idx <- which(grepl("legend", leaves$vp_path, ignore.case = TRUE))
   if (length(leg_idx) == 0L) return(NULL)
-  valid <- leg_idx[is.finite(leaves$bbox_x0[leg_idx]) & is.finite(leaves$bbox_y0[leg_idx]) &
-                     is.finite(leaves$bbox_x1[leg_idx]) & is.finite(leaves$bbox_y1[leg_idx])]
-  bb <- if (length(valid) > 0L) {
+
+  bbox_of_idx <- function(idx_vec) {
+    valid <- idx_vec[
+      is.finite(leaves$bbox_x0[idx_vec]) & is.finite(leaves$bbox_y0[idx_vec]) &
+        is.finite(leaves$bbox_x1[idx_vec]) & is.finite(leaves$bbox_y1[idx_vec])
+    ]
+    if (length(valid) == 0L) return(NULL)
     json_array(round_pt(c(
       min(leaves$bbox_x0[valid]), min(leaves$bbox_y0[valid]),
       max(leaves$bbox_x1[valid]), max(leaves$bbox_y1[valid])
     )))
-  } else {
-    NULL
   }
+
+  # Partition legend leaves into per-legend containers:
+  # Every ComplexHeatmap legend puts title at VP `P` and body at `P::GRID.VP.*`.
+  # Assigning each leaf to the shortest legend leaf `vp_path` that is a `::`-prefix
+  # of its own `vp_path` cleanly groups each title + body together without merging siblings.
+  leg_vps <- leaves$vp_path[leg_idx]
+  u_vps <- unique(leg_vps)
+  u_vps_ord <- u_vps[order(nchar(u_vps))]
+  containers <- character(length(leg_idx))
+  for (k in seq_along(leg_idx)) {
+    vp <- leg_vps[[k]]
+    owner <- vp
+    for (cand in u_vps_ord) {
+      if (identical(vp, cand) || startsWith(vp, paste0(cand, "::"))) {
+        owner <- cand
+        break
+      }
+    }
+    containers[[k]] <- owner
+  }
+
+  entries <- list()
+  unique_containers <- unique(containers)
+  for (ci in seq_along(unique_containers)) {
+    ck <- unique_containers[[ci]]
+    g_idx <- leg_idx[containers == ck]
+    g_lids <- leaves$leaf_id[g_idx]
+    g_els <- elements[!is.na(elements$leaf_id) & elements$leaf_id %in% g_lids, , drop = FALSE]
+    if (nrow(g_els) == 0L) next
+
+    # Identify title leaf (direct child of container VP `ck` with text, when deeper body leaves exist)
+    is_direct <- leaves$vp_path[g_idx] == ck
+    has_deeper <- any(!is_direct)
+    title_lids <- if (has_deeper) {
+      g_lids[is_direct & leaves$grob_class[g_idx] == "text"]
+    } else {
+      character()
+    }
+    title_txt <- NULL
+    if (length(title_lids) > 0L) {
+      t_rows <- g_els[g_els$leaf_id %in% title_lids & g_els$tag == "text" & !is.na(g_els$text), , drop = FALSE]
+      if (nrow(t_rows) > 0L) title_txt <- paste(t_rows$text, collapse = " ")
+    }
+
+    body_lids <- setdiff(g_lids, title_lids)
+    body_els <- g_els[g_els$leaf_id %in% body_lids, , drop = FALSE]
+    body_txts <- body_els[body_els$tag == "text" & !is.na(body_els$text), , drop = FALSE]
+    body_rects <- body_els[body_els$tag %in% c("rect", "polygon", "circle", "image"), , drop = FALSE]
+    body_ticks <- body_els[body_els$tag %in% c("line", "polyline", "path"), , drop = FALSE]
+
+    # Match against scales_ir by title/name/field or label overlap
+    lbl_strs <- trimws(as.character(body_txts$text))
+    matched_sc <- NULL
+    for (sc in scales_ir) {
+      if (!is.null(title_txt) && (identical(sc$name, title_txt) || identical(sc$field, title_txt))) {
+        matched_sc <- sc
+        break
+      }
+    }
+    if (is.null(matched_sc) && length(lbl_strs) > 0L) {
+      for (sc in scales_ir) {
+        sc_lbls <- unique(c(
+          as.character(unlist(sc$labels)),
+          vapply(sc$map, function(m) as.character(m$label %||% ""), character(1L)),
+          vapply(sc$map, function(m) as.character(m$domain %||% ""), character(1L))
+        ))
+        if (any(lbl_strs %in% sc_lbls)) {
+          matched_sc <- sc
+          break
+        }
+      }
+    }
+
+    is_cbar <- if (!is.null(matched_sc)) {
+      identical(matched_sc$scale_type, "continuous")
+    } else {
+      nrow(body_rects) > max(10L, nrow(body_txts) * 2L) || nrow(body_ticks) > 0L
+    }
+
+    items <- list()
+    if (is_cbar) {
+      items[[1L]] <- list(
+        domain = if (!is.null(matched_sc) && !is.null(matched_sc$limits)) matched_sc$limits else list(),
+        bar_elements = json_array(body_rects$element_id),
+        tick_elements = json_array(body_ticks$element_id),
+        label_elements = json_array(body_txts$element_id)
+      )
+    } else if (nrow(body_txts) > 0L) {
+      # Pair each discrete label text with its nearest swatch element by center distance
+      lbl_to_dom <- stats::setNames(character(), character())
+      if (!is.null(matched_sc)) {
+        for (m in (matched_sc$map %||% list())) {
+          dm <- as.character(m$domain %||% "")
+          lb <- as.character(m$label %||% dm)
+          if (nzchar(lb) && !(lb %in% names(lbl_to_dom))) lbl_to_dom[[lb]] <- dm
+        }
+      }
+      t_cy <- 0.5 * (body_txts$bbox_y0 + body_txts$bbox_y1)
+      t_cx <- 0.5 * (body_txts$bbox_x0 + body_txts$bbox_x1)
+      r_cy <- 0.5 * (body_rects$bbox_y0 + body_rects$bbox_y1)
+      r_cx <- 0.5 * (body_rects$bbox_x0 + body_rects$bbox_x1)
+      used_r <- logical(nrow(body_rects))
+
+      for (ti in seq_len(nrow(body_txts))) {
+        sw_ids <- character()
+        avail <- which(!used_r)
+        if (length(avail) > 0L && is.finite(t_cx[[ti]]) && is.finite(t_cy[[ti]])) {
+          # Weight vertical alignment strongly for standard vertical swatch-label rows
+          dists <- sqrt((r_cx[avail] - t_cx[[ti]])^2 * 0.25 + (r_cy[avail] - t_cy[[ti]])^2 * 4.0)
+          if (any(is.finite(dists))) {
+            pick <- avail[[which.min(dists)]]
+            used_r[[pick]] <- TRUE
+            sw_ids <- body_rects$element_id[[pick]]
+          }
+        }
+        lb <- body_txts$text[[ti]]
+        dm <- if (lb %in% names(lbl_to_dom)) unname(lbl_to_dom[[lb]]) else lb
+        items[[length(items) + 1L]] <- list(
+          domain = dm,
+          label = lb,
+          swatch_elements = json_array(sw_ids),
+          label_elements = json_array(body_txts$element_id[[ti]])
+        )
+      }
+    }
+
+    sid <- if (!is.null(matched_sc)) matched_sc$scale_id else NULL
+    aes_v <- if (!is.null(matched_sc)) matched_sc$aesthetic %||% "fill" else "fill"
+    ent <- list(
+      guide_id = sprintf("G%d", ci),
+      kind = if (is_cbar) "colorbar" else "legend",
+      scale_id = sid,
+      scale_ids = json_array(if (!is.null(sid)) sid else character()),
+      aesthetics = json_array(aes_v),
+      bbox_pt = bbox_of_idx(g_idx),
+      leaf_ids = json_array(g_lids),
+      items = json_array(items)
+    )
+    if (!is.null(title_txt) && nzchar(title_txt)) {
+      ent$title <- title_txt
+    }
+    entries[[length(entries) + 1L]] <- ent
+  }
+
   list(
     collected = TRUE,
-    bbox_pt = bb,
+    bbox_pt = bbox_of_idx(leg_idx),
     leaf_ids = json_array(leaves$leaf_id[leg_idx]),
     aesthetics = json_array(unique(vapply(scales_ir, function(s) s$aesthetic %||% "fill", character(1L)))),
-    entries = list()
+    entries = json_array(entries)
   )
 }
 
@@ -574,7 +830,7 @@ heatmap_format_order_slices <- function(slices, labels = NULL) {
   })
 }
 
-heatmap_color_mapping_to_scale <- function(cm, field = NULL) {
+heatmap_color_mapping_to_scale <- function(cm, field = NULL, scale_id = NULL) {
   cm_type <- tryCatch(as.character(cm@type)[[1L]], error = function(e) "unknown")
   scale_type <- if (identical(cm_type, "discrete")) "discrete" else "continuous"
   lvls <- tryCatch(cm@levels, error = function(e) NULL)
@@ -621,6 +877,7 @@ heatmap_color_mapping_to_scale <- function(cm, field = NULL) {
   }
 
   make_scale_ir(
+    scale_id = scale_id,
     aesthetic = "fill",
     field = field %||% cm_name,
     scale_type = scale_type,
@@ -665,7 +922,8 @@ heatmap_extract_annotations <- function(ha, side, safe_nm) {
     if (!methods::is(a, "SingleAnnotation")) next
     cm <- tryCatch(a@color_mapping, error = function(e) NULL)
     if (!is.null(cm)) {
-      scales[[length(scales) + 1L]] <- heatmap_color_mapping_to_scale(cm, field = an)
+      a_sid <- paste0(safe_nm, "_", side, "_", sanitize_heatmap_id(an, fallback = "anno"), "_fill")
+      scales[[length(scales) + 1L]] <- heatmap_color_mapping_to_scale(cm, field = an, scale_id = a_sid)
     }
     vals <- heatmap_probe_anno_values(a)
     if (is.matrix(vals) && nrow(vals) > 0L) {
@@ -696,6 +954,7 @@ heatmap_extract_annotations <- function(ha, side, safe_nm) {
         role = "annotation",
         key = character(),
         layer_id = NULL,
+        anno_dim = if (side %in% c("top", "bottom", "column")) "col" else "row",
         anno_names = unique(unlist(col_owner, use.names = FALSE)),
         data = as.data.frame(cols, stringsAsFactors = FALSE, check.names = FALSE)
       )
@@ -709,6 +968,7 @@ heatmap_extract_annotations <- function(ha, side, safe_nm) {
           role = "annotation",
           key = character(),
           layer_id = NULL,
+          anno_dim = if (side %in% c("top", "bottom", "column")) "col" else "row",
           anno_names = own,
           data = as.data.frame(sub_cols, stringsAsFactors = FALSE, check.names = FALSE)
         )

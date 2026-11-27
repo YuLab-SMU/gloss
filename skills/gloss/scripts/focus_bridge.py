@@ -116,6 +116,152 @@ def load_group_index(bundle_dir: Path, built_tid: str) -> dict[str, list[int]]:
     return out
 
 
+def _quantile_r7(sorted_vals: list[float], p: float) -> float:
+    n = len(sorted_vals)
+    if n == 1:
+        return sorted_vals[0]
+    h = (n - 1) * p
+    lo = int(math.floor(h))
+    hi = min(n - 1, lo + 1)
+    return sorted_vals[lo] + (h - lo) * (sorted_vals[hi] - sorted_vals[lo])
+
+
+def _metric_deviation(sel_vals: list[float], grp_vals: list[float], col_name: str, raw_col: str | None = None) -> dict | None:
+    if not sel_vals or not grp_vals:
+        return None
+    g_mean = sum(grp_vals) / len(grp_vals)
+    g_sd = (
+        math.sqrt(sum((v - g_mean) ** 2 for v in grp_vals) / (len(grp_vals) - 1))
+        if len(grp_vals) >= 2
+        else None
+    )
+    gs = sorted(grp_vals)
+    ss = sorted(sel_vals)
+    g_med = _quantile_r7(gs, 0.5)
+    g_iqr = _quantile_r7(gs, 0.75) - _quantile_r7(gs, 0.25)
+    max_z = max(abs(v - g_mean) / g_sd for v in sel_vals) if (g_sd and g_sd > 0) else None
+    max_iqr = max(abs(v - g_med) / g_iqr for v in sel_vals) if g_iqr > 0 else None
+    out: dict = {
+        "column": col_name,
+        "selected_mean": round(sum(sel_vals) / len(sel_vals), 6),
+        "selected_median": round(_quantile_r7(ss, 0.5), 6),
+        "group_mean": round(g_mean, 6),
+        "group_sd": round(g_sd, 6) if g_sd is not None else None,
+        "group_median": round(g_med, 6),
+        "group_iqr": round(g_iqr, 6),
+        "max_abs_z": round(max_z, 4) if max_z is not None else None,
+        "max_iqr_multiple": round(max_iqr, 4) if max_iqr is not None else None,
+    }
+    if raw_col and raw_col != col_name:
+        out["raw_column"] = raw_col
+    return out
+
+
+def compute_focus_context_summary(bundle_dir: Path, asset_map: dict, targets: list[dict]) -> dict:
+    # 1. Resolve matched entities from asset_map["entities"]
+    raw_rows_by_tid: dict[str, set[int]] = {}
+    for t in targets:
+        tid = t.get("table_id")
+        if tid:
+            raw_rows_by_tid.setdefault(tid, set()).update(int(r) for r in (t.get("row_ids") or []))
+
+    csv_cache: dict[str, list[dict[str, str]]] = {}
+
+    def get_csv(tid: str) -> list[dict[str, str]]:
+        if tid not in csv_cache:
+            csv_cache[tid] = load_csv(bundle_dir / "tables" / f"{tid}.csv")
+        return csv_cache[tid]
+
+    hit_entities: dict[str, dict] = {}
+    for ent in asset_map.get("entities") or []:
+        vals: set[str] = set()
+        for b in ent.get("bindings") or []:
+            if b.get("axis") != "row":
+                continue
+            btid = b.get("table_id")
+            col = b.get("column")
+            if not btid or not col or btid not in raw_rows_by_tid:
+                continue
+            rset = raw_rows_by_tid[btid]
+            for row in get_csv(btid):
+                rid_s = row.get("_row_id", "")
+                if rid_s.isdigit() and int(rid_s) in rset:
+                    v = (row.get(col) or "").strip()
+                    if v and v != "NA":
+                        vals.add(v)
+        if vals:
+            svals = sorted(vals)
+            ek = ent["name"]
+            if ek in hit_entities:
+                ek = f"{ent.get('entity_role', 'entity')}:{ek}"
+            hit_entities[ek] = {
+                "entity_role": ent.get("entity_role"),
+                "name": ent["name"],
+                "n": len(svals),
+                "values": svals,
+            }
+
+    # 2. Compute in-panel / in-group deviation summaries
+    panel_by_id = {p["panel_id"]: p for p in asset_map.get("ir", {}).get("panels", [])}
+    layer_by_id = {int(l["layer_id"]): l for l in asset_map.get("ir", {}).get("layers", []) if l.get("layer_id") is not None}
+    comparisons: list[dict] = []
+
+    for t in targets:
+        btid = t.get("built_table")
+        b_rids = set(int(r) for r in (t.get("built_row_ids") or []))
+        if not btid or not b_rids:
+            continue
+        full_rows = get_csv(btid)
+        if not full_rows:
+            continue
+        sel_rows = [r for r in full_rows if r.get("_row_id", "").isdigit() and int(r["_row_id"]) in b_rids]
+        if not sel_rows:
+            continue
+
+        pid = t.get("panel_id")
+        pan = panel_by_id.get(pid) if pid else None
+        lyr = layer_by_id.get(int(t["layer_id"])) if t.get("layer_id") is not None else None
+        has_group = len({r.get("group", "-1") for r in full_rows if r.get("group")}) > 1
+
+        by_key: dict[tuple[str, str], list[dict[str, str]]] = {}
+        for r in sel_rows:
+            k = (r.get("PANEL", "1"), r.get("group", "-1") if has_group else "-1")
+            by_key.setdefault(k, []).append(r)
+
+        for (pv, gv), s_slice in by_key.items():
+            f_slice = [
+                r
+                for r in full_rows
+                if r.get("PANEL", "1") == pv and (not has_group or r.get("group", "-1") == gv)
+            ]
+            if not f_slice:
+                continue
+            metrics: dict[str, dict] = {}
+            for ax in ("x", "y"):
+                if pan and pan.get(f"{ax}_trans") == "discrete":
+                    continue
+                sv = [v for v in (parse_num(r.get(ax)) for r in s_slice) if v is not None]
+                gv_nums = [v for v in (parse_num(r.get(ax)) for r in f_slice) if v is not None]
+                raw_col = (lyr.get("aes") or {}).get(ax) if lyr else None
+                m = _metric_deviation(sv, gv_nums, ax, raw_col=raw_col)
+                if m:
+                    metrics[ax] = m
+            if metrics:
+                comparisons.append(
+                    {
+                        "table_id": btid,
+                        "raw_table": lyr.get("raw_table") if lyr else None,
+                        "panel_id": pid,
+                        "group": f"group_{gv}" if has_group else "_all",
+                        "selected_n": len(s_slice),
+                        "group_n": len(f_slice),
+                        "metrics": metrics,
+                    }
+                )
+
+    return {"entities": hit_entities, "comparisons": comparisons}
+
+
 def box_to_rows(bundle_dir: Path, box: list[float], note: str | None = None) -> dict:
     bx = [min(box[0], box[2]), min(box[1], box[3]), max(box[0], box[2]), max(box[1], box[3])]
     asset_map = json.loads((bundle_dir / "asset-map.json").read_text(encoding="utf-8"))
@@ -256,15 +402,17 @@ def box_to_rows(bundle_dir: Path, box: list[float], note: str | None = None) -> 
             target["row_ids"] = sorted(matched_brows)
         targets.append(target)
 
+    ctx_summary = compute_focus_context_summary(bundle_dir, asset_map, targets)
     payload: dict = {
         "format": "gloss-focus",
-        "schema_version": "1.1.0",
+        "schema_version": asset_map.get("schema_version", "1.2.0"),
         "capture_id": asset_map.get("capture_id"),
         "kind": "selection",
         "author": "human",
         "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "query_box_pt": [round(v, 3) for v in bx],
         "targets": targets,
+        "context_summary": ctx_summary,
     }
     if note:
         payload["note"] = note
@@ -393,7 +541,7 @@ def rows_to_overlay(
 
     focus_doc: dict = {
         "format": "gloss-focus",
-        "schema_version": "1.1.0",
+        "schema_version": asset_map.get("schema_version", "1.2.0"),
         "capture_id": asset_map.get("capture_id"),
         "kind": "highlight",
         "author": "agent",

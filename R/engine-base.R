@@ -161,18 +161,21 @@ base_plot_region_state <- function(width, height) {
     usr <- graphics::par("usr")
     xlog <- isTRUE(graphics::par("xlog"))
     ylog <- isTRUE(graphics::par("ylog"))
+    pty <- tryCatch(as.character(graphics::par("pty"))[[1L]], error = function(e) "m")
     list(
       bbox = c(x[[1L]], y[[1L]], x[[2L]], y[[2L]]),
       usr = as.double(usr),
       xlog = xlog,
-      ylog = ylog
+      ylog = ylog,
+      pty = pty
     )
   }, error = function(e) {
     list(
       bbox = rep(NA_real_, 4L),
       usr = rep(NA_real_, 4L),
       xlog = FALSE,
-      ylog = FALSE
+      ylog = FALSE,
+      pty = "m"
     )
   })
 }
@@ -327,6 +330,7 @@ replay_base_display_list <- function(rp, width, height, dense = 10000) {
         usr = reg$usr,
         xlog = reg$xlog,
         ylog = reg$ylog,
+        pty = reg$pty %||% "m",
         fig = fig_idx[[k]],
         in_plot = in_plot,
         dl_idx = k
@@ -352,7 +356,8 @@ replay_base_display_list <- function(rp, width, height, dense = 10000) {
   leaves_df <- if (length(leaf_rows) == 0L) {
     empty_leaves_df()
   } else {
-    data.frame(
+    n_lr <- length(leaf_rows)
+    df_l <- data.frame(
       leaf_id = vapply(leaf_rows, `[[`, character(1L), "leaf_id"),
       grob_name = vapply(leaf_rows, `[[`, character(1L), "grob_name"),
       grob_path = vapply(leaf_rows, `[[`, character(1L), "grob_path"),
@@ -367,18 +372,21 @@ replay_base_display_list <- function(rp, width, height, dense = 10000) {
       xscale1 = vapply(leaf_rows, function(r) r$usr[[2L]], numeric(1L)),
       yscale0 = vapply(leaf_rows, function(r) r$usr[[3L]], numeric(1L)),
       yscale1 = vapply(leaf_rows, function(r) r$usr[[4L]], numeric(1L)),
-      n_elements = integer(length(leaf_rows)),
-      dense = rep(FALSE, length(leaf_rows)),
-      clip_id = rep(NA_character_, length(leaf_rows)),
-      clip_x0 = rep(NA_real_, length(leaf_rows)),
-      clip_y0 = rep(NA_real_, length(leaf_rows)),
-      clip_x1 = rep(NA_real_, length(leaf_rows)),
-      clip_y1 = rep(NA_real_, length(leaf_rows)),
-      z_index = seq_len(length(leaf_rows)),
-      semantic_role = rep(NA_character_, length(leaf_rows)),
-      edit_policy = rep(NA_character_, length(leaf_rows)),
+      n_elements = integer(n_lr),
+      dense = rep(FALSE, n_lr),
+      clip_id = rep(NA_character_, n_lr),
+      clip_x0 = rep(NA_real_, n_lr),
+      clip_y0 = rep(NA_real_, n_lr),
+      clip_x1 = rep(NA_real_, n_lr),
+      clip_y1 = rep(NA_real_, n_lr),
+      z_index = seq_len(n_lr),
+      semantic_role = rep(NA_character_, n_lr),
+      edit_policy = rep(NA_character_, n_lr),
+      subplot = rep(NA_integer_, n_lr),
       stringsAsFactors = FALSE
     )
+    df_l$attached_to <- I(vector("list", n_lr))
+    df_l
   }
 
   leaves_df <- attach_leaf_clips(leaves_df, scene_doc)
@@ -637,6 +645,7 @@ base_extract_ir_and_lineage <- function(dl, leaf_rows, leaves_df, elements_df = 
   table_ids <- rep(NA_character_, n)
   cardinalities <- rep("unlinked", n)
   n_rows_vec <- rep(NA_integer_, n)
+  attached_list <- vector("list", n)
 
   for (r in seq_len(n)) {
     lr <- leaf_rows[[r]]
@@ -645,6 +654,7 @@ base_extract_ir_and_lineage <- function(dl, leaf_rows, leaves_df, elements_df = 
       if (!(fkey %in% names(fig_to_panel))) {
         pid <- sprintf("P%d", length(panels) + 1L)
         fig_to_panel[[fkey]] <- pid
+        is_sq <- identical(lr$pty %||% "m", "s")
         # ISS-ASSET-02: Unify x_domain/y_domain with ggplot as linear post-transform
         # rendering coordinates (par("usr")), while x_data_domain/y_data_domain store
         # raw inverse-transformed units (10^usr when xlog/ylog is TRUE).
@@ -659,7 +669,9 @@ base_extract_ir_and_lineage <- function(dl, leaf_rows, leaves_df, elements_df = 
           x_trans = if (isTRUE(lr$xlog)) "log-10" else "identity",
           y_trans = if (isTRUE(lr$ylog)) "log-10" else "identity",
           domain_space = "transformed",
-          expansion_included = TRUE
+          expansion_included = TRUE,
+          aspect_lock = if (is_sq) 1.0 else NULL,
+          resize_mode = if (is_sq) "proportional_only" else "free_xy"
         )
       }
       panel_ids[[r]] <- fig_to_panel[[fkey]]
@@ -701,8 +713,49 @@ base_extract_ir_and_lineage <- function(dl, leaf_rows, leaves_df, elements_df = 
           if (identical(cardinalities[[r]], "1:1") && length(el_idx) == nr) {
             elements_df$built_row_id[el_idx] <- seq_len(nr)
           }
+          # K5: Project exact data target anchors for BaseText data labels
+          if (identical(extracted$geom, "BaseText") && all(c("x", "y") %in% names(extracted$data))) {
+            pan_obj <- panels[[match(panel_ids[[r]], vapply(panels, `[[`, character(1L), "panel_id"))]]
+            xv <- as.numeric(extracted$data$x)
+            yv <- as.numeric(extracted$data$y)
+            if (isTRUE(lr$xlog)) xv <- apply_axis_trans(xv, "log-10")
+            if (isTRUE(lr$ylog)) yv <- apply_axis_trans(yv, "log-10")
+            proj <- panel_rendered_to_px(pan_obj, xv, yv)
+            txt_idx <- el_idx[elements_df$tag[el_idx] == "text"]
+            if (length(txt_idx) == nr) {
+              elements_df$built_row_id[txt_idx] <- seq_len(nr)
+              elements_df$target_anchor_x[txt_idx] <- round_pt(proj$px)
+              elements_df$target_anchor_y[txt_idx] <- round_pt(proj$py)
+            }
+          }
         }
       }
+    }
+  }
+
+  # K2: Attach base margin components (axis, title, mtext) to their owning figure panel
+  for (r in seq_len(n)) {
+    if (!is.na(panel_ids[[r]])) next
+    lr <- leaf_rows[[r]]
+    fkey <- as.character(lr$fig)
+    if (!(fkey %in% names(fig_to_panel))) next
+    pid <- fig_to_panel[[fkey]]
+    if (lr$grob_name %in% c("axis", "title", "mtext")) {
+      pan_obj <- panels[[match(pid, vapply(panels, `[[`, character(1L), "panel_id"))]]
+      pbb <- unlist(pan_obj$bbox_pt)
+      el_idx <- which(!is.na(elements_df$leaf_id) & elements_df$leaf_id == leaves_df$leaf_id[[r]])
+      side_s <- "bottom"
+      if (length(el_idx) > 0L && length(pbb) == 4L && all(is.finite(pbb))) {
+        cx <- mean(0.5 * (elements_df$bbox_x0[el_idx] + elements_df$bbox_x1[el_idx]), na.rm = TRUE)
+        cy <- mean(0.5 * (elements_df$bbox_y0[el_idx] + elements_df$bbox_y1[el_idx]), na.rm = TRUE)
+        if (is.finite(cx) && is.finite(cy)) {
+          if (cy < pbb[[2L]]) side_s <- "top"
+          else if (cy > pbb[[4L]]) side_s <- "bottom"
+          else if (cx < pbb[[1L]]) side_s <- "left"
+          else if (cx > pbb[[3L]]) side_s <- "right"
+        }
+      }
+      attached_list[[r]] <- make_attachment(pid, side = side_s, align_axis = if (side_s %in% c("top", "bottom")) "x" else "y")
     }
   }
 
@@ -712,7 +765,8 @@ base_extract_ir_and_lineage <- function(dl, leaf_rows, leaves_df, elements_df = 
     layer_id = layer_ids,
     table_id = table_ids,
     cardinality = cardinalities,
-    n_rows = n_rows_vec
+    n_rows = n_rows_vec,
+    attached_to = attached_list
   )
 
   list(

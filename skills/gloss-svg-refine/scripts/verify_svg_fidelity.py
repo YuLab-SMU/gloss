@@ -431,6 +431,26 @@ def verify_fidelity(
         for lf in json.loads(leaves_json_path.read_text(encoding="utf-8")):
             leaves_meta[lf["leaf_id"]] = lf
 
+    elements_json_path = bundle_dir / "scene" / "elements.json"
+    elements_by_leaf: dict[str, list[dict]] = {}
+    if elements_json_path.exists():
+        for em in json.loads(elements_json_path.read_text(encoding="utf-8")):
+            lid_em = em.get("leaf_id")
+            if lid_em:
+                elements_by_leaf.setdefault(lid_em, []).append(em)
+
+    role_contracts: dict[str, dict] = asset_map.get("scene", {}).get("role_contracts") or {}
+    token_expected_hex: dict[str, str] = {}
+    for sc in asset_map.get("ir", {}).get("scales", []):
+        sid = sc.get("scale_id")
+        if not sid:
+            continue
+        for m in sc.get("map", []):
+            dom = str(m.get("domain", ""))
+            val = str(m.get("value", "")).upper()
+            if dom and val.startswith("#"):
+                token_expected_hex[f"{sid}::{dom}"] = val[:7] if len(val) == 9 else val
+
     orig_leaves = index_svg_leaves(scene_svg_path)
     der_leaves = index_svg_leaves(derived_svg)
 
@@ -438,6 +458,8 @@ def verify_fidelity(
     checked_primitives = 0
     checked_texts = 0
     color_remaps: dict[str, set[str]] = {}
+    token_remaps: dict[str, set[str]] = {}
+    tokenized_present = False
 
     for lin in asset_map.get("lineage", []):
         lid = lin["leaf_id"]
@@ -448,6 +470,9 @@ def verify_fidelity(
             geom = str(layers_by_id.get(int(layer_id), {}).get("geom", ""))
             sem_role = str(lin.get("semantic_role") or leaves_meta.get(lid, {}).get("semantic_role") or "")
             edit_pol = str(lin.get("edit_policy") or leaves_meta.get(lid, {}).get("edit_policy") or "")
+            rc = role_contracts.get(sem_role, {})
+            editable_props = set(rc.get("editable") or [])
+            allow_point_resize = "point_size" in editable_props
             is_label_layer = (
                 sem_role in ("data_label", "leader_line")
                 or edit_pol == "movable"
@@ -460,6 +485,7 @@ def verify_fidelity(
 
             o_prims = orig_leaves.get(lid, [])
             d_prims = der_leaves.get(lid, [])
+            meta_prims = elements_by_leaf.get(lid, [])
 
             if is_label_layer and allow_label_move:
                 o_txts = Counter(p["text"] for p in o_prims if p["tag"] == "text" and p["text"].strip())
@@ -519,7 +545,12 @@ def verify_fidelity(
                     dcx, dcy = (db[0] + db[2]) / 2.0, (db[1] + db[3]) / 2.0
                     ow, oh = ob[2] - ob[0], ob[3] - ob[1]
                     dw, dh = db[2] - db[0], db[3] - db[1]
-                    max_delta = max(abs(ocx - dcx), abs(ocy - dcy), abs(ow - dw), abs(oh - dh))
+                    # K4 contract: when `point_size` is editable on data_mark circles,
+                    # center (cx, cy) remains strictly locked while uniform radius r may resize.
+                    if op["tag"] == "circle" and allow_point_resize:
+                        max_delta = max(abs(ocx - dcx), abs(ocy - dcy))
+                    else:
+                        max_delta = max(abs(ocx - dcx), abs(ocy - dcy), abs(ow - dw), abs(oh - dh))
                     if max_delta > tol_pt:
                         violations.append(
                             {
@@ -534,10 +565,30 @@ def verify_fidelity(
                             }
                         )
 
+                emeta = meta_prims[idx] if idx < len(meta_prims) else {}
+                ctok = emeta.get("color_token")
+                ftok = emeta.get("fill_token")
+                if ctok or ftok:
+                    tokenized_present = True
                 for prop in ("fill", "stroke"):
                     ov, dv = op.get(prop), dp.get(prop)
                     if ov and dv and ov != "none" and dv != "none":
-                        color_remaps.setdefault(ov.upper(), set()).add(dv.upper())
+                        ov_u = ov.upper()
+                        dv_u = dv.upper()
+                        if prop == "fill":
+                            if ftok:
+                                tok = ftok
+                            elif ctok and ov_u == token_expected_hex.get(ctok):
+                                tok = ctok
+                            else:
+                                tok = None
+                        else:
+                            tok = ctok if (ctok and ov_u == token_expected_hex.get(ctok)) else None
+                        if tok:
+                            token_remaps.setdefault(tok, set()).add(dv_u)
+                            color_remaps.setdefault(ov_u, set()).add(dv_u)
+                        elif not emeta or ("color_token" not in emeta and "fill_token" not in emeta):
+                            color_remaps.setdefault(ov_u, set()).add(dv_u)
 
         elif slot.startswith("axis"):
             # Axis tick numeric/category strings must never be altered silently
@@ -564,12 +615,26 @@ def verify_fidelity(
                         )
 
     # Verify discrete scale palette consistency across data leaves & guide-box legend keys
+    # K3: When color_token / fill_token metadata is present, check per-token consistency
+    # so static reference lines sharing a raw hex color never cause false positives.
     scale_colors = {
         str(m.get("value", "")).upper()
         for sc in asset_map.get("ir", {}).get("scales", [])
         for m in sc.get("map", [])
         if str(m.get("value", "")).startswith("#")
     }
+    if tokenized_present:
+        for tok, dcs in token_remaps.items():
+            if tok.endswith("::continuous"):
+                continue
+            if len(dcs) > 1:
+                violations.append(
+                    {
+                        "kind": "inconsistent_scale_color",
+                        "token": tok,
+                        "observed_colors": sorted(dcs),
+                    }
+                )
     remapped_scale_colors: dict[str, set[str]] = {}
     for oc, dcs in color_remaps.items():
         if oc not in scale_colors:
@@ -578,7 +643,7 @@ def verify_fidelity(
         if not non_self:
             continue
         remapped_scale_colors[oc] = non_self
-        if len(dcs) > 1:
+        if not tokenized_present and len(dcs) > 1:
             violations.append(
                 {
                     "kind": "inconsistent_scale_color",

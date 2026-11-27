@@ -1,7 +1,7 @@
-# gloss 问题与缺口全景清单：资产最后一公里 · 智能体三元协作 · 捕获边界脆弱性
+# gloss 问题与缺口全景清单：资产最后一公里 · 智能体三元协作 · 捕获边界脆弱性（已验收归档）
 
-> **状态**：**全部 23 项问题已完成 Schema v1.1.0 闭环落地与跨语言回归验证**（R 内核 + 包外 `skills/`）  
-> **关联架构规范**：[`architecture.md`](architecture.md) · [`closure-plan.md`](closure-plan.md) · [`AGENTS.md`](../AGENTS.md)
+> **归档状态**：**全部 23 项问题已完成 Schema v1.1.0 闭环落地与跨语言回归验证**（R 内核 + 包外 `skills/`，测试基线 811 PASS + Python 端到端全绿）。下文保留原始问题诊断作为历史验收依据；下一阶段演进（包版本 `0.2.0` / Schema `1.2.0`）见 [`kernel-upgrade-plan.md`](kernel-upgrade-plan.md)。  
+> **关联架构规范**：[`architecture.md`](architecture.md) · [`closure-plan.md`](closure-plan.md) · [`kernel-upgrade-plan.md`](kernel-upgrade-plan.md) · [`AGENTS.md`](../AGENTS.md)
 
 ---
 
@@ -22,43 +22,43 @@
 
 ## 2. 全景问题总览矩阵（23 项）
 
-### 主轴 A：资产组织“最后一公里”信息断层（支撑高精度交互、精修与审稿）
+### 主轴 A：资产组织“最后一公里”信息断层（支撑高精度交互、精修与审稿 — v1.1 全部已验收）
 
-| 编号 | 缺口主题 | 源码现状核查（`R/` 真实实现对比） | 主要受阻的下游场景 | 职责落位 | 优先级 |
+| 编号 | 缺口主题 | 历史诊断与 v1.1 验收实现记录 | 主要受阻的下游场景 | 职责落位 | 验收状态 |
 | :--- | :--- | :--- | :--- | :---: | :---: |
-| **ISS-ASSET-01** | **行级双向桥接断层**<br/>（缺 `element ↔ built_row ↔ raw_row`） | `built_layer*.csv` 仅有独立顺序 `_row_id`，无回指 `_raw_row_id` 或聚合分组键；`elements.json` 仅有组内 `ordinal`，无 `built_row_id` / `part_role` | Workbench 悬停看样本、点图筛表、点表高亮图元、箱线图点击反查原始组 | R 内核 Schema | **P0** |
-| **ISS-ASSET-02** | **坐标逆变换与连续色板断层**<br/>（缺 `scene_coord`、域空间声明、连续 `stops`） | 缺顶层原点/Y轴方向声明；**隐蔽冲突**：`ggplot` 的 `x_domain` 存变换后+padding 值，而 `base` 却存反算回原空间的数值；连续色板塞在离散 `map` 里缺标准 `stops`/`oob`/`na_value` | 拉框刷选（Brushing）、`>10^4` 密集光栅层像素反查数据、连续渐变色板替换 | R 内核 Schema | **P0** |
-| **ISS-ASSET-04** | **面板内语义角色与可变性锁混杂**<br/>（缺 `semantic_role`、`edit_policy`、引线锚点、`z_index`） | 虽已有 `clip_x0..clip_y1`，但无 `semantic_role` 与 `edit_policy`（迫使 `verify_svg_fidelity.py` 硬编码 `LABEL_GEOMS` 猜权限）；无 `ggrepel` 标签↔引线↔数据锚点绑定；无 `z_index` | `gloss-svg-refine` 数学级锁死数据点、移动标签同步牵引引线、防越界被 `<clipPath>` 裁断 | R 内核 Schema | **P0** |
-| **ISS-ASSET-06** | **静默丢行账本与统计参数漏采**<br/>（缺 `row_accounting` + 漏采 `stat_params`） | 多 `raw_layer*` 已支持，但**存在实锤漏采 Bug**：`engine-ggplot.R:288` 只读了 `lyr$aes_params`，漏掉 `stat_params` 与 `geom_params`（如 `method`/`level`/`bins`/`fun.data` 全丢）；完全无 `NA`/`oob` 丢行账本 | `gloss-audit` 审稿核查误差棒口径（SD vs SE vs 95% CI）及图注样本量 `n` 与实际落点差异 | R 内核 Schema | **P1** |
-| **ISS-ASSET-03** | **图例内部黑盒**<br/>（缺“图例键图元 ↔ 比例尺值”项级绑定） | 单张 `ggplot` 完全未导出 `ir.guides`；`patchwork` 仅导出外框 `bbox_pt` 与整体 `leaf_ids`，未拆到 `domain ↔ swatch_elements + label_elements` | Workbench 点击图例项显隐分组；多通道（颜色+形状+线型）精准同步换色 | R 内核 Schema | **P1** |
-| **ISS-ASSET-05** | **矩阵切片与跨面板共享轴断层**<br/>（缺 `axis_group` 与 `order_slice`） | `ComplexHeatmap` 的 `ir.panels` 仅记切片序号未记全局 `row_order` 起止区间，且侧边/顶部注释条叶子 `panel_id = NA`，无跨面板共享轴组 ID | 热图悬停某基因时“主图整行 + 侧边注释柱状图”同步高亮；`patchwork` 对齐轴联动 | R 内核多引擎 | **P2** |
+| **ISS-ASSET-01** | **行级双向桥接**<br/>（`element ↔ built_row ↔ raw_row`） | 已在 `built_layer*.csv` 增加 `_raw_row_id` / `_group_key` 与 `tables/groups_*.json`，并在 `elements.json` 写出 `built_row_id` / `group_id` / `part_role` | Workbench 悬停看样本、点图筛表、点表高亮图元、箱线图点击反查原始组 | R 内核 Schema | **已验收 (P0)** |
+| **ISS-ASSET-02** | **坐标逆变换与连续色板**<br/>（`scene.coord`、统一域空间、连续 `stops`） | 已导出 `scene.coord`，统一 `ggplot`/`base` 的 `x_domain`/`y_domain` 为变换后渲染域并提供 `x_data_domain`/`y_data_domain` 与 11-stop 连续色标 `stops`/`oob`/`na_value` | 拉框刷选（Brushing）、`>10^4` 密集光栅层像素反查数据、连续渐变色板替换 | R 内核 Schema | **已验收 (P0)** |
+| **ISS-ASSET-04** | **面板内语义角色与可变性锁**<br/>（`semantic_role`、`edit_policy`、`label_links`、`z_index`） | 已在 `leaves`/`lineage` 输出 `semantic_role`、`edit_policy`、`z_index`、`clip_bbox_pt` 及 `scene.label_links`（v1.2 进一步升级为 `role_contracts` 属性契约） | `gloss-svg-refine` 数学级锁死数据点、移动标签同步牵引引线、防越界被 `<clipPath>` 裁断 | R 内核 Schema | **已验收 (P0)** |
+| **ISS-ASSET-06** | **静默丢行账本与统计参数**<br/>（`row_accounting` + 完整 `stat_params`/`geom_params`） | 已合并采集 `stat_params`/`geom_params`/`aes_params`/`position` 参数并记录 `row_accounting`（`n_dropped_na`、`n_dropped_oob`、`dropped_raw_row_ids`） | `gloss-audit` 审稿核查误差棒口径（SD vs SE vs 95% CI）及图注样本量 `n` 与实际落点差异 | R 内核 Schema | **已验收 (P1)** |
+| **ISS-ASSET-03** | **图例项级绑定**<br/>（`ir.guides.entries[].items`） | 已在 `ggplot`/`patchwork` 导出项级 `swatch_elements`/`label_elements` 与 colorbar 元素（v1.2 补齐 `ComplexHeatmap` 全项级解析与 `scale_id` 令牌） | Workbench 点击图例项显隐分组；多通道（颜色+形状+线型）精准同步换色 | R 内核 Schema | **已验收 (P1)** |
+| **ISS-ASSET-05** | **矩阵切片与跨面板共享轴**<br/>（`axis_group` 与 `order_slice`） | 已为 `ComplexHeatmap` 注释条补建 `annotation` 面板，并在 `ir.panels` 写出 `row_axis_group`/`col_axis_group`/`row_slice_range`/`col_slice_range` 与 `x_axis_group`/`y_axis_group` | 热图悬停某基因时“主图整行 + 侧边注释柱状图”同步高亮；`patchwork` 对齐轴联动 | R 内核多引擎 | **已验收 (P2)** |
 
-### 主轴 B：“人 ↔ 图表 ↔ 智能体”三元共在协作与异构感知缺口
+### 主轴 B：“人 ↔ 图表 ↔ 智能体”三元共在协作与异构感知（v1.1 全部已验收）
 
-| 编号 | 协作维度 | 源码与 `skills/` 现状核查 | 核心收益 | 职责落位 | 优先级 |
+| 编号 | 协作维度 | v1.1 验收实现记录 | 核心收益 | 职责落位 | 验收状态 |
 | :--- | :--- | :--- | :--- | :---: | :---: |
-| **ISS-AGENT-02** | **智能体异构感知分层缺失**<br/>（缺独立 `scene/texts.json` 与 `assets/preview.png`） | 几千个散点与几十条关键文字混装在数 MB 的 `scene/elements.json` 中；无同尺寸标准栅格预览图供 VLM 审美快览 | Agent 仅读 `<10 KB` 的 `texts.json` 即可秒抓所有显著性标注与重叠文本；VLM 看 `preview.png` 审美 + 符号表求真零幻觉 | **R 内核轻量增量** | **P0** |
-| **ISS-AGENT-01** | **双向指代协议缺失**<br/>（缺统一 `focus.json` / `overlay.json` 寻址契约） | 仅有单向 R 内存查询 `gl_query()`；缺人机共用的选区与图面高亮回投 JSON 契约 | 人在前端拉框直接转为符号上下文喂给 AI；AI 查出异常样本直接回投图面高亮与归因便签 | **外围开放契约** + `gl_query` 互转 | **P1** |
-| **ISS-AGENT-03** | **双轨修改闭环未解耦**<br/>（缺声明式 Visual Patch 规范与回源重跑版本链） | `gloss-svg-refine` 目前让大模型直接写脚本改整份 SVG XML；`manifest.json` 无计算层重跑演化字段 `parent_capture_id`，`sources` 缺入口表达式线索 | 表现层用十几行 JSON Patch 安全派生避免改坏 SVG；计算层修改 R 代码重跑形成可追溯 `capture_id` 演化链 | **外围协议/脚本** + 内核轻量字段 | **P1** |
-| **ISS-AGENT-04** | **多轮人机共享工作态缺失**<br/>（缺只读源包旁侧的 `.gloss-work/` 伴随态规范） | 底座入口 `skills/gloss` 尚未建立；审计疑点、人工确认/驳回结论与精修历史无文件级持久化锚点 | 严守 `.gloss/` 只读不可变前提下，支持跨天、跨会话、跨 Agent（Audit → 人工裁决 → Refine）无缝接力 | **纯外围开放契约** | **P2** |
+| **ISS-AGENT-02** | **智能体异构感知分层**<br/>（`scene/texts.json` 与 `assets/preview.png`） | 已默认剥离 `<10 KB` 紧凑 `scene/texts.json` 并由冻结显示列表零重跑导出 `assets/preview.png` | Agent 仅读 `texts.json` 即可秒抓所有显著性标注与重叠文本；VLM 看 `preview.png` 审美 + 符号表求真零幻觉 | **R 内核轻量增量** | **已验收 (P0)** |
+| **ISS-AGENT-01** | **双向指代协议**<br/>（`focus.json` / `overlay.json`） | 已落地 `skills/gloss/scripts/focus_bridge.py`（`box-to-rows` / `rows-to-overlay`）并与 `gl_query()` 双向收敛互通 | 人在前端拉框直接转为符号上下文喂给 AI；AI 查出异常样本直接回投图面高亮与归因便签 | **外围开放契约** + `gl_query` 互转 | **已验收 (P1)** |
+| **ISS-AGENT-03** | **双轨修改闭环**<br/>（声明式 Visual Patch + `parent_capture_id`） | 已落地 `apply_visual_patch.py` 执行器与 `gloss(..., parent = ...)` / `call_expr` 版本演化链 | 表现层用 JSON Patch 安全派生避免改坏 SVG；计算层修改 R 代码重跑形成可追溯 `capture_id` 演化链 | **外围协议/脚本** + 内核轻量字段 | **已验收 (P1)** |
+| **ISS-AGENT-04** | **多轮人机共享工作态**<br/>（只读源包旁侧 `.gloss.work/` 伴随态） | 已落地 `skills/gloss/SKILL.md` 与 `workspace_state.py`，管理 `focus.json` / `threads.json` / `patches/` / `derived/` | 严守 `.gloss/` 只读不可变前提下，支持跨天、跨会话、跨 Agent 无缝接力 | **纯外围开放契约** | **已验收 (P2)** |
 
-### 主轴 C：零侵入抓拍的上游耦合与边缘捕获脆弱性（底座护城河）
+### 主轴 C：零侵入抓拍的上游耦合与边缘捕获脆弱性（v1.1 全部已验收）
 
-| 编号 | 所属模块 | 问题简述 | 当前退化/故障表现 | 优先级 |
+| 编号 | 所属模块 | 历史诊断主题 | v1.1 验收实现记录 | 验收状态 |
 | :--- | :--- | :--- | :--- | :---: |
-| **ISS-EXT-01** | `engine-registry.R` | 非 `ggplot`/`grob` 类的可打印外壳对象（`ggsurvplot`、`pheatmap`、`trellis`）直接传入 `gloss(obj)` | 直接 `cli_abort` 报错无匹配引擎，未自动落入通用打印检测兜底流 | **P0** |
-| **ISS-GG-01** | `engine-ggplot.R` | 重写 `print.*` 的魔改扩展（`ggbreak`、`aplot`、`ggpubr`）缺失 `gtable` 映射 | 图层血缘全部退化为 `unlinked`；无种子随机层二次构建存在偏移风险 | **P0** |
-| **ISS-GG-02** | `engine-ggplot.R` | 强耦合 `ggplot2` 内部槽位及面板子节点固定偏移公式 `nk == n_layers + 4L` | 单层为空（`zeroGrob`）即可连坐导致同面板其余图层全部 `unlinked`；对 S7 重构脆弱 | **P0** |
-| **ISS-PROTO-01** | `ir-lineage.R` / `query.R` | 缺少显式“血缘精度梯队与退化原因”标记，且 `gl_query(box = ...)` 仅筛到表级未收敛到行级 | 下游无法区分“背景装饰无表”与“匹配失败退化”；框选仍返回整面板全表 | **P1** |
-| **ISS-GG-03** | `capture.R` / `ir-lineage.R` | 绘图期 `makeContent()` 动态裂变/淘汰扩展（`ggrepel`、`ggforce`、`ggraph`）破坏行序对齐 | 退化为粗粒度 `1:M`/`N:1`；极端数量巧合相等时可能被误判为静态 `"1:1"` | **P1** |
-| **ISS-SVG-01** | `capture.R` | 单颗空 grob 导致探针数与顶层 `<g>` 数失配，以及嵌套 `transform`/圆弧/CJK 字宽误差 | 一颗空探针触发整页回退为无分组 ID 的裸 SVG；中文文本包围盒宽度低估约 40% | **P1** |
-| **ISS-BASE-01** | `engine-base.R` | 高阶 `base` 绘图函数语义蒸发，且低阶原语参数提取不全 | 仅提取了 `plotXY`/`rect`/`polygon`，`segments`/`arrows`/`symbols`/`abline` 均 `unlinked` | **P1** |
-| **ISS-MIX-01** | `capture.R` | 同页混用 `base` + `grid`（如 `gridBase`）直接抛错 | `detect_page_kind() == "mixed"` 时直接 `cli_abort` 阻断捕获 | **P1** |
-| **ISS-PW-01** | `engine-patchwork.R` | `patchwork` 混嵌 `wrap_elements()`、非标准随机层及内部 `layout$name` 耦合 | 包装块内无面板/血缘；第三方随机层未锁种子导致二次构建偏移 | **P2** |
-| **ISS-HM-01** | `engine-heatmap.R` | 耦合 `ComplexHeatmap` S4 私有槽位、`@fun@var_env$value` 闭包与 viewport 正则 | 复杂注释（`anno_boxplot`/`anno_mark`）无注释表；含特殊字符的热图名存在正则歧义 | **P2** |
-| **ISS-GG-04** | `engine-ggplot.R` | 多标度覆盖扩展（`ggnewscale`）字段错配 | 第二套同名美学标度被错误绑定到第一层的字段名 | **P2** |
-| **ISS-BASE-02** | `engine-base.R` | `base` 步进回放依赖对 `svglite` 输出流的逐行字符串与单引号正则切分 | 若 `svglite` 调整属性顺序、引号或折行格式，裁切框追踪与 `<g>` 包裹易失效 | **P2** |
-| **ISS-DEV-01** | `capture.R` / `engine-base.R` | 多页连续绘图（如 `plot(lm_fit)` 四联诊断图）仅保留最后一页 | 前 `N - 1` 页仅发告警后丢弃，无法按页索引捕获 | **P3** |
+| **ISS-EXT-01** | `engine-registry.R` / `capture.R` | 非 `ggplot`/`grob` 可打印外壳对象 | 已增加 `draw_generic_printable()` 嗅探 `gtable` 槽位或 `print`/`show` 自动兜底分派 | **已验收 (P0)** |
+| **ISS-GG-01** | `engine-ggplot.R` | 重写 `print.*` 的魔改扩展 | 已增加 `pin_ggplot_stochastic_seeds()` 与基于 `grob_path` 的 `custom_print_heuristic` 回退匹配 | **已验收 (P0)** |
+| **ISS-GG-02** | `engine-ggplot.R` | 内部槽位耦合与空图层连坐断链 | 已抽离 `gg_compat_*()` 访问层并改为逐层独立匹配，空 `zeroGrob` 图层不再连坐 | **已验收 (P0)** |
+| **ISS-PROTO-01** | `ir-lineage.R` / `query.R` | 血缘精度梯队与框选行收敛 | 已导出 `lineage_tier` / `degradation_reason`，`gl_query(box = ...)` 精确收敛到数据行（含光栅逆投影） | **已验收 (P1)** |
+| **ISS-GG-03** | `capture.R` / `ir-lineage.R` | `makeContent()` 动态裂变误判 | 已检测 `is_dynamic_make_content_leaf()` 并标记 `dynamic_makeContent`，防止基数误判为静态 `1:1` | **已验收 (P1)** |
+| **ISS-SVG-01** | `capture.R` | 空探针对齐、嵌套 `transform`、圆弧与 CJK 字宽 | 已过滤孤立 `<defs>` 仅对齐有效 `<use>`，补齐椭圆弧极值、祖先矩阵级联与 CJK 宽字符估算 | **已验收 (P1)** |
+| **ISS-BASE-01** | `engine-base.R` | `base` 低阶原语参数表提取 | 已补齐 `segments`/`arrows`/`symbols`/`abline`/`xspline`/`text` 调用表与元素桥接 | **已验收 (P1)** |
+| **ISS-MIX-01** | `capture.R` | `base` + `grid` 混排页阻断 | 已落地 `make_mixed_fallback_engine()` 降级兜底流，保住 `original.svg`、`elements`/`texts` 与 `sources` | **已验收 (P1)** |
+| **ISS-PW-01** | `engine-patchwork.R` | `patchwork` 异构块与随机层 | 已支持 `wrap_elements()` 兼容与 `patchwork_pin_stochastic_seeds()` 非变异种子锁定 | **已验收 (P2)** |
+| **ISS-HM-01** | `engine-heatmap.R` | `ComplexHeatmap` 闭包与正则耦合 | 已改为已知热图/注释名字面量最长前缀匹配并扩展 `heatmap_probe_anno_values()` 闭包探测 | **已验收 (P2)** |
+| **ISS-GG-04** | `engine-ggplot.R` | 多标度覆盖字段匹配 | 已优先检查图层自身重命名映射再回退至顶层映射 | **已验收 (P2)** |
+| **ISS-BASE-02** | `engine-base.R` | `base` 步进回放与引号兼容 | 已同时兼容单/双引号属性与异常回退至未包裹有效 SVG 文档 | **已验收 (P2)** |
+| **ISS-DEV-01** | `capture.R` / `engine-base.R` | 多页连续绘图页选择与记录 | 已支持 `gloss(..., page = k)` 按页选取并将跳过的页记录入 `omitted.json` | **已验收 (P3)** |
 
 ---
 
