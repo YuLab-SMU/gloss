@@ -11,17 +11,24 @@ permissions:
   contents: write
 
 concurrency:
-  group: "gloss-pages-${{ github.ref }}"
+  group: "gloss-pages"
   cancel-in-progress: false
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout gloss core
         uses: actions/checkout@v4
         with:
+          path: core
           fetch-depth: 0
+
+      - name: Checkout site & project-map branch
+        uses: actions/checkout@v4
+        with:
+          ref: site
+          path: site
 
       - name: Setup R
         uses: r-lib/actions/setup-r@v2
@@ -31,11 +38,17 @@ jobs:
       - name: Install R package dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          working-directory: core
           extra-packages: any::devtools, any::testthat
 
       - name: Run live alignment probe & test suite
         run: |
-          Rscript .project-map/build_map.R --run-tests --strict --summary "$GITHUB_STEP_SUMMARY"
+          Rscript site/project-map/build_map.R \
+            --repo-dir core \
+            --map-dir site/project-map \
+            --run-tests \
+            --strict \
+            --summary "$GITHUB_STEP_SUMMARY"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -64,9 +77,9 @@ jobs:
             --use-hash-history \
             --title "gloss Project Map" \
             --output .pages-dist/map \
-            .project-map/model
-          cp .project-map/status.json .pages-dist/status.json
-          cp .project-map/status.json .pages-dist/map/status.json
+            site/project-map/model
+          cp site/project-map/status.json .pages-dist/status.json
+          cp site/project-map/status.json .pages-dist/map/status.json
           touch .pages-dist/.nojekyll
 
       - name: Deploy to gh-pages branch
@@ -77,4 +90,4 @@ jobs:
           publish_branch: gh-pages
           publish_dir: .pages-dist
           force_orphan: true
-          commit_message: "chore(pages): update portal, 3D space, and LikeC4 map from ${{ github.sha }}"
+          commit_message: "chore(pages): update portal, 3D space, and LikeC4 map from main@${{ github.sha }}"
