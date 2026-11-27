@@ -1,0 +1,379 @@
+{
+  "format": "gloss-project-map-status",
+  "generated_at": "2026-11-27T09:02:00Z",
+  "package_version": "0.2.0",
+  "schema_version": "1.2.0",
+  "git": {
+    "sha": "02ac7d9",
+    "branch": "main",
+    "subject": "feat: upgrade gloss kernel to v0.2.0 (Schema v1.2) with entities, layout topology, style tokens, contracts, text blocks, and funnel/context summaries"
+  },
+  "summary": {
+    "exports_implemented": 8,
+    "exports_total": 8,
+    "modules_implemented": 7,
+    "modules_total": 7,
+    "engines_implemented": 5,
+    "engines_total": 5,
+    "guardrails_passed": 5,
+    "guardrails_total": 5,
+    "all_guardrails_passed": true,
+    "r_files": 14,
+    "r_loc": 11077,
+    "test_files": 16,
+    "tests": {
+      "ran": false,
+      "passed": null,
+      "failed": null,
+      "warnings": null,
+      "skipped": null,
+      "by_file": []
+    }
+  },
+  "guardrails": [
+    {
+      "id": "principles.g_exports",
+      "name": "Export Surface Alignment (8 APIs)",
+      "pass": true,
+      "detail": "8/8 canonical exports aligned in NAMESPACE"
+    },
+    {
+      "id": "principles.g_suggests",
+      "name": "Engine Dependencies in Suggests",
+      "pass": true,
+      "detail": "ggplot2, patchwork, ComplexHeatmap isolated in Suggests"
+    },
+    {
+      "id": "principles.g_cran_hygiene",
+      "name": "CRAN & R Hygiene",
+      "pass": true,
+      "detail": "0 <<- super-assignments, 0 .GlobalEnv writes, 0 stray Rplots*.pdf"
+    },
+    {
+      "id": "principles.g_core_boundary",
+      "name": "Strict In-Core Boundary",
+      "pass": true,
+      "detail": "14 lean R files in R/ (11077 LOC); zero agent/MCP/UI/codec bloat"
+    },
+    {
+      "id": "principles.g_tests",
+      "name": "Unit Test & Build Health",
+      "pass": true,
+      "detail": "16 test files (62 test_that blocks); pass --run-tests for live execution"
+    }
+  ],
+  "apis": [
+    {
+      "id": "gloss_core.public_api.fn_gloss",
+      "name": "gloss",
+      "phase": "Phase 2",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gloss.Rd",
+      "source_file": "R/capture.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_asset_map",
+      "name": "gl_asset_map",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_asset_map.Rd",
+      "source_file": "R/package-assets.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_asset_bundle",
+      "name": "gl_asset_bundle",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_asset_bundle.Rd",
+      "source_file": "R/package-assets.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_scene",
+      "name": "gl_scene",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_scene.Rd",
+      "source_file": "R/query.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_tables",
+      "name": "gl_tables",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_tables.Rd",
+      "source_file": "R/query.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_sources",
+      "name": "gl_sources",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_sources.Rd",
+      "source_file": "R/query.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_query",
+      "name": "gl_query",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_query.Rd",
+      "source_file": "R/query.R",
+      "source_exists": true
+    },
+    {
+      "id": "gloss_core.public_api.fn_register_engine",
+      "name": "gl_register_engine",
+      "phase": "Phase 1",
+      "status": "implemented",
+      "exported": true,
+      "rd_doc": true,
+      "rd_path": "man/gl_register_engine.Rd",
+      "source_file": "R/engine-registry.R",
+      "source_exists": true
+    }
+  ],
+  "modules": [
+    {
+      "id": "gloss_core.modules.mod_utils",
+      "name": "Contract & Open Serialization",
+      "phase": "Phase 1",
+      "status": "implemented",
+      "files": ["R/utils.R", "R/gloss-package.R"],
+      "tests": "tests/testthat/test-capture-contract.R",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 778,
+      "test_blocks": 3,
+      "live_passed": null,
+      "live_failed": null
+    },
+    {
+      "id": "gloss_core.modules.mod_registry",
+      "name": "Engine Registry & Load Hook",
+      "phase": "Phase 1",
+      "status": "implemented",
+      "files": ["R/engine-registry.R", "R/zzz.R"],
+      "tests": "tests/testthat/test-engine-registry.R",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 249,
+      "test_blocks": 4,
+      "live_passed": null,
+      "live_failed": null
+    },
+    {
+      "id": "gloss_core.modules.mod_capture",
+      "name": "Device Capture & SVG Instrumentation",
+      "phase": "Phase 2",
+      "status": "implemented",
+      "files": "R/capture.R",
+      "tests": "tests/testthat/test-capture.R",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 2049,
+      "test_blocks": 8,
+      "live_passed": null,
+      "live_failed": null
+    },
+    {
+      "id": "gloss_core.modules.mod_sources",
+      "name": "Source Context Inventory",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "files": "R/sources.R",
+      "tests": "tests/testthat/test-sources.R",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 423,
+      "test_blocks": 3,
+      "live_passed": null,
+      "live_failed": null
+    },
+    {
+      "id": "gloss_core.modules.mod_package_assets",
+      "name": "Asset Map & Bundle Packager",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "files": "R/package-assets.R",
+      "tests": "tests/testthat/test-package-assets.R",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 845,
+      "test_blocks": 5,
+      "live_passed": null,
+      "live_failed": null
+    },
+    {
+      "id": "gloss_core.modules.mod_query",
+      "name": "In-Memory Query & Slicing",
+      "phase": "Phase 3",
+      "status": "implemented",
+      "files": "R/query.R",
+      "tests": "tests/testthat/test-query.R",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 785,
+      "test_blocks": 1,
+      "live_passed": null,
+      "live_failed": null
+    },
+    {
+      "id": "gloss_core.modules.mod_ir_lineage",
+      "name": "Engine IR & Structural Lineage",
+      "phase": "Phase 4",
+      "status": "implemented",
+      "files": "R/ir-lineage.R",
+      "tests": ["tests/testthat/test-ir-lineage.R", "tests/testthat/test-v11-issues.R", "tests/testthat/test-v12-kernel.R"],
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 1438,
+      "test_blocks": 12,
+      "live_passed": null,
+      "live_failed": null
+    }
+  ],
+  "engines": [
+    {
+      "id": "gloss_core.engines.eng_grid",
+      "name": "grid",
+      "pkg": "grid",
+      "phase": "Phase 2",
+      "status": "implemented",
+      "files": "R/engine-grid.R",
+      "tests": "tests/testthat/test-capture.R",
+      "source_exists": true,
+      "test_exists": true,
+      "dependency_bucket": "Imports",
+      "loc": 39
+    },
+    {
+      "id": "gloss_core.engines.eng_ggplot",
+      "name": "ggplot2",
+      "pkg": "ggplot2",
+      "phase": "Phase 4",
+      "status": "implemented",
+      "files": "R/engine-ggplot.R",
+      "tests": "tests/testthat/test-engine-ggplot.R",
+      "source_exists": true,
+      "test_exists": true,
+      "dependency_bucket": "Suggests",
+      "loc": 2304
+    },
+    {
+      "id": "gloss_core.engines.eng_patchwork",
+      "name": "patchwork",
+      "pkg": "patchwork",
+      "phase": "Phase 5",
+      "status": "implemented",
+      "files": "R/engine-patchwork.R",
+      "tests": "tests/testthat/test-engine-patchwork.R",
+      "source_exists": true,
+      "test_exists": true,
+      "dependency_bucket": "Suggests",
+      "loc": 404
+    },
+    {
+      "id": "gloss_core.engines.eng_heatmap",
+      "name": "ComplexHeatmap",
+      "pkg": "ComplexHeatmap",
+      "phase": "Phase 5",
+      "status": "implemented",
+      "files": "R/engine-heatmap.R",
+      "tests": "tests/testthat/test-engine-heatmap.R",
+      "source_exists": true,
+      "test_exists": true,
+      "dependency_bucket": "Suggests",
+      "loc": 980
+    },
+    {
+      "id": "gloss_core.engines.eng_base",
+      "name": "base",
+      "pkg": "grDevices",
+      "phase": "Phase 5",
+      "status": "implemented",
+      "files": "R/engine-base.R",
+      "tests": "tests/testthat/test-engine-base.R",
+      "source_exists": true,
+      "test_exists": true,
+      "dependency_bucket": "Imports",
+      "loc": 783
+    }
+  ],
+  "ecosystem": [
+    {
+      "id": "ecosystem.skill_gloss",
+      "name": "Base Protocol Skill: gloss",
+      "phase": "Phase 6",
+      "status": "implemented",
+      "files": ["skills/gloss/SKILL.md", "skills/gloss/scripts/focus_bridge.py", "skills/gloss/scripts/workspace_state.py"],
+      "tests": "skills/tests/test_workflows.py",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 962
+    },
+    {
+      "id": "ecosystem.skill_refine",
+      "name": "SVG Refinement Skill: gloss-svg-refine",
+      "phase": "Phase 6",
+      "status": "implemented",
+      "files": ["skills/gloss-svg-refine/SKILL.md", "skills/gloss-svg-refine/scripts/apply_visual_patch.py", "skills/gloss-svg-refine/scripts/verify_svg_fidelity.py"],
+      "tests": "skills/tests/test_workflows.py",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 1317
+    },
+    {
+      "id": "ecosystem.skill_audit",
+      "name": "Semantic Audit Skill: gloss-audit",
+      "phase": "Phase 6",
+      "status": "implemented",
+      "files": ["skills/gloss-audit/SKILL.md", "skills/gloss-audit/scripts/audit_bundle.py"],
+      "tests": "skills/tests/test_workflows.py",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 549
+    },
+    {
+      "id": "ecosystem.skill_report",
+      "name": "Report Skill: gloss-report",
+      "phase": "Phase 6",
+      "status": "implemented",
+      "files": "skills/gloss-report/SKILL.md",
+      "tests": [],
+      "source_exists": true,
+      "test_exists": false,
+      "loc": 50
+    },
+    {
+      "id": "ecosystem.external_scripts",
+      "name": "Python / JS / DuckDB Toolchains",
+      "phase": "Phase 6",
+      "status": "implemented",
+      "files": ["skills/gloss/scripts/focus_bridge.py", "skills/gloss/scripts/workspace_state.py", "skills/gloss-svg-refine/scripts/apply_visual_patch.py", "skills/gloss-svg-refine/scripts/verify_svg_fidelity.py", "skills/gloss-audit/scripts/audit_bundle.py"],
+      "tests": "skills/tests/test_workflows.py",
+      "source_exists": true,
+      "test_exists": true,
+      "loc": 2589
+    }
+  ]
+}

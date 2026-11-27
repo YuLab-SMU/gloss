@@ -1,0 +1,310 @@
+// gloss Project Map — Canonical Design Intent Model
+// Source of truth: AGENTS.md & dev_docs/architecture.md
+//
+// Live implementation status, file metrics, test counts, and guardrail verdicts
+// are automatically injected into these elements by `90-live-status.c4`
+// (generated via `Rscript project-map/build_map.R`).
+
+model {
+  user = actor "R Analyst / AI Coding Agent" {
+    description "Authors R figures in an active R session or consumes portable .gloss assets for Q&A, publication SVG refinement, and statistical auditing."
+  }
+
+  // ---------------------------------------------------------------------------
+  // 1. Design Principles & Automated Alignment Guardrails
+  // ---------------------------------------------------------------------------
+  principles = system "Design Principles & Alignment Guardrails" {
+    description "Canonical architectural invariants from AGENTS.md paired with live code-vs-intent verification checks."
+    link https://github.com/YuLab-SMU/gloss/blob/main/AGENTS.md "AGENTS.md"
+    link https://github.com/YuLab-SMU/gloss/blob/main/dev_docs/architecture.md "Architecture Spec"
+
+    p1_source_map = principle "P1 · Compiler Source Map, Not Gatekeeper" {
+      description "Faithfully observe and record device groups, viewports, engine IR, and neutral lineage cardinalities. Verification belongs to upper-layer semantic tools, never low-level capture gates."
+    }
+
+    p2_core_boundary = principle "P2 · Strict In-Core Boundary" {
+      description "The R package owns only live-R graphics device instrumentation, engine IR extraction, runtime source inventory, and open-format packaging. Agents, MCP, Workbench, and SVG refinement live outside core."
+    }
+
+    p3_single_capture = principle "P3 · Single Capture, Layered Payload" {
+      description "Asset Map and Asset Bundle serialize from the same in-memory gloss_capture object so figures (including stochastic jitter/UMAP) are never redrawn during packaging."
+    }
+
+    p4_file_first = principle "P4 · File-First, Zero Proprietary Codecs" {
+      description "Emit standard UTF-8 SVG, JSON, and CSV (or Parquet) readable directly by Python, JS, DuckDB, R, and coding agents without custom binary decoders or background R processes."
+    }
+
+    p5_minimal_surface = principle "P5 · Minimal Export Surface (8 APIs)" {
+      description "Keep NAMESPACE tight at exactly 8 exported functions and keep built-in engines in-repo with package dependencies strictly in Suggests."
+    }
+
+    // Automated Guardrail Monitors (colored dynamically by 90-live-status.c4)
+    g_exports = guardrail "Guardrail · Export Surface Alignment (8 APIs)" {
+      description "Verifies NAMESPACE exports match the 8 canonical functions in AGENTS.md with zero unexpected exports."
+    }
+
+    g_suggests = guardrail "Guardrail · Engine Dependencies in Suggests" {
+      description "Verifies ggplot2, patchwork, ComplexHeatmap stay in DESCRIPTION Suggests and never leak into Imports."
+    }
+
+    g_cran_hygiene = guardrail "Guardrail · CRAN & R Hygiene" {
+      description "Checks R/ and tests/ for forbidden super-assignment (<<-), .GlobalEnv writes, and stray Rplots.pdf artifacts."
+    }
+
+    g_core_boundary = guardrail "Guardrail · Strict In-Core Boundary" {
+      description "Verifies R/ contains no out-of-core agent runners, MCP servers, binary codecs, or embedded UI code."
+    }
+
+    g_tests = guardrail "Guardrail · Unit Test & Build Health" {
+      description "Tracks live testthat suite coverage across core modules and engines."
+    }
+
+    p5_minimal_surface -[governs]-> g_exports "Enforces 8-API contract"
+    p5_minimal_surface -[governs]-> g_suggests "Enforces Suggests isolation"
+    p2_core_boundary -[governs]-> g_core_boundary "Prevents v1 scope creep"
+    p1_source_map -[governs]-> g_tests "Verifies neutral capture facts"
+    p4_file_first -[governs]-> g_cran_hygiene "Verifies clean open packaging"
+  }
+
+  // ---------------------------------------------------------------------------
+  // 2. gloss R Core Package (In-Core Boundary)
+  // ---------------------------------------------------------------------------
+  gloss_core = system "gloss R Core Package" {
+    description "Lightweight R core package: single-draw device capture, Engine IR extraction, structural lineage, runtime source inventory, and open asset packaging."
+    technology "R (>= 4.2.0), svglite, xml2, jsonlite, digest"
+    link https://github.com/YuLab-SMU/gloss/blob/main/DESCRIPTION "DESCRIPTION"
+    link https://github.com/YuLab-SMU/gloss/blob/main/NAMESPACE "NAMESPACE"
+
+    public_api = container "Public API Surface (8 Exports)" {
+      description "The minimal, stable exported interface of gloss."
+
+      fn_gloss = api "gloss()" {
+        #phase2
+        description "Draw once on svglite, instrument dual SVG + viewport probes, extract Engine IR, lineage, and sources into a gloss_capture object."
+      }
+      fn_asset_map = api "gl_asset_map()" {
+        #phase3
+        description "Serialize compact asset-map.json index from an in-memory gloss_capture without redrawing."
+      }
+      fn_asset_bundle = api "gl_asset_bundle()" {
+        #phase3
+        description "Package portable .gloss/ directory or .zip bundle with manifest.json, omitted.json, dual SVG, CSV tables, and sources."
+      }
+      fn_scene = api "gl_scene()" {
+        #phase3
+        description "Inspect captured page metadata, dual SVG descriptors, leaves, elements, rasters, and panels in memory."
+      }
+      fn_tables = api "gl_tables()" {
+        #phase3
+        description "Access raw and engine-built data frames from an in-memory gloss_capture."
+      }
+      fn_sources = api "gl_sources()" {
+        #phase3
+        description "Inspect explicit, runtime_observed, and sniffed_hint source inventory table."
+      }
+      fn_query = api "gl_query()" {
+        #phase3
+        description "Composable structural, spatial (SVG bbox), and tabular slicing over an in-memory gloss_capture."
+      }
+      fn_register_engine = api "gl_register_engine()" {
+        #phase1
+        description "Register built-in or third-party plotting engines by S3/S4 class and page kind."
+      }
+    }
+
+    modules = container "Core Internal Modules" {
+      description "Six focused internal modules plus contract utilities and engine registry."
+
+      mod_utils = module "Contract & Open Serialization" {
+        #phase1
+        technology "R/utils.R"
+        description "gloss_capture S3 contract, deterministic capture_id, SHA-256 helpers, UTF-8 JSON/CSV writers with 1-based _row_id, and column schema inference."
+      }
+
+      mod_registry = module "Engine Registry & Load Hook" {
+        #phase1
+        technology "R/engine-registry.R, R/zzz.R"
+        description "Private package environment registry, class-hierarchy & priority dispatch, page_kind candidate disambiguation, and lazy Suggests checks."
+      }
+
+      mod_capture = module "Device Capture & SVG Instrumentation" {
+        #phase2
+        technology "R/capture.R"
+        description "svglite::svgstring() single-draw dual SVG capture, grid display-list leaf wrapping, draw-time gloss_probe viewport recorder, <defs>/<use> inlining, xml2 geometry parsing, and dense PNG rasterization."
+      }
+
+      mod_sources = module "Source Context Inventory" {
+        #phase3
+        technology "R/sources.R"
+        description "Collects explicit files/docs/inline snippets, runtime_observed session/package/git metadata, and knitr/Rscript sniffed_hint pointers."
+      }
+
+      mod_package_assets = module "Asset Map & Bundle Packager" {
+        #phase3
+        technology "R/package-assets.R"
+        description "Layered open-format serialization for asset-map.json and .gloss/ dir/zip bundles with SHA-256 manifest.json, column/row filtering, and omitted.json."
+      }
+
+      mod_query = module "In-Memory Query & Slicing" {
+        #phase3
+        technology "R/query.R"
+        description "Read-only inspection and panel/leaf/spatial-box/row slicing on gloss_capture objects."
+      }
+
+      mod_ir_lineage = module "Engine IR & Structural Lineage" {
+        #phase4
+        technology "R/ir-lineage.R"
+        description "Normalizes panel coordinate domains, scale/palette dictionaries, layer specs, and neutral element-to-table cardinalities (1:1, N:1, 1:M, stat_aggregated)."
+      }
+    }
+
+    engines = container "Built-in Plotting Engines (Suggests)" {
+      description "Five built-in plotting adapters registered via gl_register_engine() with package dependencies kept strictly in Suggests."
+
+      eng_grid = engine "grid Engine" {
+        #phase2
+        technology "R/engine-grid.R (grid)"
+        description "Captures raw grid grobs, gLists, gTrees, gtables, grid drawing functions, and recorded grid plots."
+      }
+
+      eng_ggplot = engine "ggplot2 Engine" {
+        #phase4
+        technology "R/engine-ggplot.R (Suggests: ggplot2)"
+        description "Single-build ggplot_build -> ggplot_gtable -> grid.draw extracting raw/built tables, scale/palette maps, layer recipes, facets, and neutral lineage."
+      }
+
+      eng_patchwork = engine "patchwork Engine" {
+        #phase5
+        technology "R/engine-patchwork.R (Suggests: patchwork)"
+        description "Composite multi-plot IR extraction with per-subplot panel and table namespaces without double-building stochastic subplots."
+      }
+
+      eng_heatmap = engine "ComplexHeatmap Engine" {
+        #phase5
+        technology "R/engine-heatmap.R (Suggests: ComplexHeatmap)"
+        description "Single draw() capture preserving draw-time clustering permutations (row_order/column_order) in ir.orders, matrix/annotation tables, and color maps."
+      }
+
+      eng_base = engine "base Graphics Engine" {
+        #phase5
+        technology "R/engine-base.R (grDevices/graphics)"
+        description "Step-by-step display-list replay on svglite isolating per-call <g id='L...'> leaves and par('usr')/par('plt') plot regions."
+      }
+    }
+
+    // Internal Core Wiring
+    public_api.fn_gloss -> modules.mod_capture "Orchestrates single-draw capture"
+    public_api.fn_register_engine -> modules.mod_registry "Registers engine spec"
+    public_api.fn_asset_map -> modules.mod_package_assets "Serializes asset-map.json"
+    public_api.fn_asset_bundle -> modules.mod_package_assets "Writes .gloss/ or .zip"
+    public_api.fn_scene -> modules.mod_query "Reads scene view"
+    public_api.fn_tables -> modules.mod_query "Reads data frames"
+    public_api.fn_sources -> modules.mod_query "Reads source table"
+    public_api.fn_query -> modules.mod_query "Slices leaves, elements & rows"
+
+    modules.mod_capture -> modules.mod_registry "Dispatches by class & page_kind"
+    modules.mod_capture -> engines "Invokes engine capture_fn"
+    modules.mod_capture -> modules.mod_sources "Snapshots provenance & session"
+    modules.mod_capture -> modules.mod_utils "Builds validated gloss_capture"
+    engines -> modules.mod_ir_lineage "Normalizes IR & lineage"
+    modules.mod_package_assets -> modules.mod_utils "Writes UTF-8 JSON, CSV & SHA-256"
+    modules.mod_query -> modules.mod_utils "Validates gloss_capture"
+  }
+
+  // ---------------------------------------------------------------------------
+  // 3. Open File Contracts (Zero Proprietary Codecs)
+  // ---------------------------------------------------------------------------
+  open_assets = system "Open File Contracts" {
+    description "Language-neutral UTF-8 SVG, JSON, and CSV/Parquet files forming the strict boundary between the R core and the external ecosystem."
+
+    asset_map = artifact "Asset Map (asset-map.json)" {
+      #phase3
+      technology "JSON (~tens of KB)"
+      description "Lightweight global catalog of page geometry, SVG digests, Engine IR (panels, layers, scales, orders), table column summaries, lineage, and source pointers."
+    }
+
+    asset_bundle = artifact "Asset Bundle (figure.gloss/ or .zip)" {
+      #phase3
+      technology "UTF-8 SVG + JSON + CSV + PNG"
+      description "Self-contained portable bundle: manifest.json, asset-map.json, omitted.json, assets/original.svg, scene/{scene.svg,leaves.json,elements.json,rasters/}, tables/{schema.json,*.csv}, sources/."
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 4. Outer Ecosystem (Strictly Out-of-Core)
+  // ---------------------------------------------------------------------------
+  ecosystem = system "Outer Ecosystem (Out-of-Core)" {
+    #out_of_core
+    #phase6
+    description "Independent skills, live bridge, static frontend, and cross-language scripts collaborating exclusively over Asset Map & Asset Bundle contracts."
+
+    skill_gloss = external_tool "Base Protocol Skill: gloss" {
+      #out_of_core
+      #phase6
+      technology "SKILL.md"
+      description "Entry protocol guiding AI coding agents to read asset-map.json first, plan task context packets, and selectively unpack tables/sources."
+    }
+
+    skill_refine = external_tool "SVG Refinement Skill: gloss-svg-refine" {
+      #out_of_core
+      #phase6
+      technology "SKILL.md"
+      description "Publication-grade label repulsion, typography hierarchy, legend layout, and palette updates producing derived SVGs linked via parent_manifest_sha256."
+    }
+
+    skill_audit = external_tool "Semantic Audit Skill: gloss-audit" {
+      #out_of_core
+      #phase6
+      technology "SKILL.md"
+      description "High-level verification checking manuscript claims, sample sizes, statistical summaries, and derived SVG geometric fidelity against bundle tables."
+    }
+
+    skill_report = external_tool "Report Skill: gloss-report" {
+      #out_of_core
+      #phase6
+      technology "SKILL.md"
+      description "Synthesizes traceable multi-figure analysis reports backed by table rows, leaf IDs, and methods docs."
+    }
+
+    gloss_mcp = external_tool "Live R Bridge: gloss-mcp" {
+      #out_of_core
+      #phase6
+      technology "Thin 4-tool MCP Adapter"
+      description "Optional bridge for interactive RStudio/Positron sessions or million-row tables: capture_figure, get_asset_map, query_slice, create_bundle."
+    }
+
+    workbench = external_tool "Static Frontend: Workbench" {
+      #out_of_core
+      #phase6
+      technology "Static SPA (Browser)"
+      description "Zero-decoder browser inspector for .gloss bundles: layer outline tree, raw/built data tables, bidirectional brushing, and original-vs-derived SVG diff."
+    }
+
+    external_scripts = external_tool "Python / JS / DuckDB Toolchains" {
+      #out_of_core
+      #phase6
+      technology "pandas, polars, DuckDB, lxml"
+      description "Direct batch analytics and automated publishing pipelines reading standard SVG/JSON/CSV without installing R."
+    }
+
+    skill_gloss -> skill_refine "Delegates visual refinement"
+    skill_gloss -> skill_audit "Delegates statistical/caption verification"
+    skill_gloss -> skill_report "Delegates multi-figure reporting"
+  }
+
+  // ---------------------------------------------------------------------------
+  // Top-Level System Flows
+  // ---------------------------------------------------------------------------
+  user -> gloss_core.public_api.fn_gloss "Captures R figure + sources"
+  gloss_core.modules.mod_package_assets -[emits]-> open_assets.asset_map "gl_asset_map()"
+  gloss_core.modules.mod_package_assets -[emits]-> open_assets.asset_bundle "gl_asset_bundle()"
+
+  ecosystem.skill_gloss -[consumes]-> open_assets.asset_map "Reads compact map first"
+  ecosystem.skill_gloss -[consumes]-> open_assets.asset_bundle "Reads targeted CSV/SVG slices"
+  ecosystem.workbench -[consumes]-> open_assets.asset_bundle "Opens .gloss dir / zip"
+  ecosystem.external_scripts -[consumes]-> open_assets.asset_bundle "Batch SQL / Python / JS"
+  ecosystem.gloss_mcp -[bridges]-> gloss_core.public_api "Calls 4 core functions in live R"
+  ecosystem.skill_gloss -[bridges]-> ecosystem.gloss_mcp "Optional live-session queries"
+
+  principles -[governs]-> gloss_core "Guards architecture, surface & CRAN hygiene"
+}

@@ -1,0 +1,133 @@
+// gloss Project Map — LikeC4 Specification
+// Defines semantic element kinds, alignment status tags, and relationship types.
+
+specification {
+  color done #16A34A
+  color planned #64748B
+  color drift #DC2626
+  color contract #0284C7
+  color ecosystem #7C3AED
+  color principle #D97706
+  color core #0F766E
+
+  tag implemented {
+    color done
+  }
+  tag planned {
+    color planned
+  }
+  tag drift {
+    color drift
+  }
+  tag out_of_core {
+    color ecosystem
+  }
+  tag guardrail_pass {
+    color done
+  }
+  tag guardrail_fail {
+    color drift
+  }
+
+  tag phase1
+  tag phase2
+  tag phase3
+  tag phase4
+  tag phase5
+  tag phase6
+
+  element actor {
+    style {
+      shape person
+      color slate
+    }
+  }
+
+  element system {
+    style {
+      shape rectangle
+      color core
+    }
+  }
+
+  element container {
+    style {
+      shape rectangle
+      color slate
+    }
+  }
+
+  element module {
+    style {
+      shape component
+      color core
+    }
+  }
+
+  element engine {
+    style {
+      shape component
+      color core
+    }
+  }
+
+  element api {
+    style {
+      shape rectangle
+      color contract
+    }
+  }
+
+  element artifact {
+    style {
+      shape document
+      color contract
+    }
+  }
+
+  element principle {
+    style {
+      shape rectangle
+      color principle
+      border dashed
+    }
+  }
+
+  element guardrail {
+    style {
+      shape rectangle
+      color done
+    }
+  }
+
+  element external_tool {
+    style {
+      shape browser
+      color ecosystem
+    }
+  }
+
+  relationship emits {
+    notation "Emits open asset"
+    line solid
+    color contract
+  }
+
+  relationship consumes {
+    notation "Consumes open file contract"
+    line solid
+    color contract
+  }
+
+  relationship governs {
+    notation "Governs / enforces"
+    line dashed
+    color principle
+  }
+
+  relationship bridges {
+    notation "Optional live-session bridge"
+    line dotted
+    color ecosystem
+  }
+}

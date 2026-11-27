@@ -1,0 +1,93 @@
+name: GitHub Pages (Portal + 3D Space + LikeC4 Map)
+
+on:
+  push:
+    branches: ["site"]
+  pull_request:
+    branches: ["site"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "gloss-pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gloss core (main)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: core
+          fetch-depth: 0
+
+      - name: Checkout site & project-map
+        uses: actions/checkout@v4
+        with:
+          path: site
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install R package dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: core
+          extra-packages: any::devtools, any::testthat
+
+      - name: Run live alignment probe & test suite
+        run: |
+          Rscript site/project-map/build_map.R \
+            --repo-dir core \
+            --map-dir site/project-map \
+            --run-tests \
+            --strict \
+            --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: site/package-lock.json
+
+      - name: Build Portal Home & 3D Architecture Space
+        working-directory: site
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+        run: |
+          npm ci
+          npm run lint
+          npm test
+          npm run build
+
+      - name: Assemble GitHub Pages bundle (+ LikeC4 Project Map)
+        run: |
+          rm -rf .pages-dist
+          mkdir -p .pages-dist
+          cp -R site/dist/* .pages-dist/
+          npx --yes likec4@latest build \
+            --base "/${{ github.event.repository.name }}/map/" \
+            --use-hash-history \
+            --title "gloss Project Map" \
+            --output .pages-dist/map \
+            site/project-map/model
+          cp site/project-map/status.json .pages-dist/status.json
+          cp site/project-map/status.json .pages-dist/map/status.json
+          touch .pages-dist/.nojekyll
+
+      - name: Deploy to gh-pages branch
+        if: github.ref == 'refs/heads/site' && github.event_name != 'pull_request'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: .pages-dist
+          force_orphan: true
+          commit_message: "chore(pages): update portal, 3D space, and LikeC4 map from site@${{ github.sha }}"
